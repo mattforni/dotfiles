@@ -1,4 +1,4 @@
-# ~/.bash_functions: included by ~/.bashrc to make life easier
+# ~/.bashrc.functions: included by ~/.bashrc to make life easier
 # General functions
 u() {
   N=$1
