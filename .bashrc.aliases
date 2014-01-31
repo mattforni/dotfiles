@@ -1,0 +1,15 @@
+# ~/.bashrc.aliases: included by ~/.bashrc to make life easier
+# General aliases
+alias edtbashrc="vim ~/.bashrc"
+alias srcbashrc="source ~/.bashrc"
+alias edtalias="vim ~/.bashrc.aliases"
+alias edtfuncs="vim ~/.bashrc.functions"
+
+# LS(1) aliases
+alias ll="ls -l"
+alias la="ls -a"
+alias lla="ls -la"
+
+# Screen aliases
+alias sls="screen -ls"
+
