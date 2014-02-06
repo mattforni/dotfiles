@@ -1,4 +1,30 @@
 [user]
 	name = Matt Fornaciari 
 	email = mattforni@gmail.com
+[color]
+    ui = auto
+[color "diff"]
+    meta = yellow bold
+    frag = magenta ul
+    old = red bold
+    new = green
+[color "status"]
+    added = green
+    changed = yellow bold
+    untracked = cyan
+[alias]
+    a = add
+    aa = add . -u
+    b = branch
+    bl = blame
+    c = commit
+    cm = commit -m
+    d = diff
+    co = checkout
+    l = log
+    lg = log --graph --decorate --pretty=oneline --abbrev-commit
+    ph = push
+    pl = pull
+    r = reset HEAD
+    s = status
 

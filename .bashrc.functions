@@ -10,6 +10,30 @@ u() {
   done 
 }
 
+log() {
+  local OPTIND
+
+  PRINT=0
+
+  while getopts "p" OPTION; do
+    case "$OPTION" in
+      p) PRINT=1;;
+      ?) return;;
+    esac
+  done
+  shift $((OPTIND-1))
+
+  SCRIPT_PATH=$(readlink -f $1)
+  if [[ -z $SCRIPT_PATH || ! -e $SCRIPT_PATH || ! -x $SCRIPT_PATH ]]; then 
+    echo "Try again with a valid executable ..."
+  else
+    LOG_FILE="$(basename ${SCRIPT_PATH%.*}).log.$(date +%Y%m%dT%H%M%S)"
+    PRINT_STR=$([ "$PRINT" == 1 ] && echo "| tee" || echo ">")
+    eval "$SCRIPT_PATH 2>&1 $PRINT_STR $LOG_FILE"
+    echo "'$SCRIPT_PATH' output logged to '$LOG_FILE'"
+  fi
+}
+
 psag() {
   local OPTIND
 
