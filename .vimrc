@@ -19,6 +19,14 @@ set visualbell
 set cmdheight=2
 " Display line numbers
 set number
+" Set highlighting on search
+set hlsearch
+
+"" Sets up highlighting groups
+highlight whitespace ctermbg=red guibg=red
+match whitespace /\s\+$/
+" Automatically highlight extra whitespace
+autocmd ColorScheme * highlight whitespace ctermbg=red guibg=red
 
 "" NERDTree settings
 " Automatically open NERDTree

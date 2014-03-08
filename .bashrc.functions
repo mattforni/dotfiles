@@ -1,15 +1,10 @@
-# ~/.bashrc.functions: included by ~/.bashrc to make life easier
-# General functions
-u() {
-  N=$1
-  if [[ -z $N ]]; then
-    N=1
-  fi
-  while [ $(( N -= 1 )) -ge 0 ]; do
-    cd ..
-  done 
-}
+## ~/.bashrc.functions: included by ~/.bashrc to make life easier
+## General functions
 
+# LOG
+# function to execute a program and log all output to a file
+# -p (optional) prints the output to the terminal as well
+# $1 (mandatory) specifies an executable to run
 log() {
   local OPTIND
 
@@ -23,9 +18,13 @@ log() {
   done
   shift $((OPTIND-1))
 
+  if [[ -z $1 ]]; then
+    echo "Must provide an executable to run"
+    return
+  fi
   SCRIPT_PATH=$(readlink -f $1)
-  if [[ -z $SCRIPT_PATH || ! -e $SCRIPT_PATH || ! -x $SCRIPT_PATH ]]; then 
-    echo "Try again with a valid executable ..."
+  if [[ -z $SCRIPT_PATH || ! -e $SCRIPT_PATH || ! -x $SCRIPT_PATH ]]; then
+    echo "Must provide a valid executable"
   else
     LOG_FILE="$(basename ${SCRIPT_PATH%.*}).log.$(date +%Y%m%dT%H%M%S)"
     PRINT_STR=$([ "$PRINT" == 1 ] && echo "| tee" || echo ">")
@@ -34,6 +33,47 @@ log() {
   fi
 }
 
+# NUMF
+# function to count the number of files in a directory
+# -a (optional) includes hidden files in the count
+# $1 (optional) specifies a directory, the default is the current directory
+numf() {
+  local OPTIND
+
+  ALL=0
+
+  while getopts "a" OPTION; do
+    case $OPTION in
+      a) ALL=1;;
+      ?) return;;
+    esac
+  done
+  shift $((OPTIND-1))
+
+  LS_ARGS="."
+  SUBTRACT=0
+  if [[ ! -z $1 ]]; then
+    DIR_PATH=$(readlink -f $1)
+    if [[ ! -d $DIR_PATH ]]; then
+      echo "'$DIR_PATH' is not a valid directory."
+      return;
+    fi
+    LS_ARGS=$DIR_PATH
+  fi
+  if [ $ALL -eq 1 ]; then
+    LS_ARGS="-a $LS_ARGS"
+    # Subtract 2 from the final for . and .. links
+    SUBTRACT=2
+  fi
+
+  NUM_FILES=`ls $LS_ARGS | wc -l`
+  echo "Found $(($NUM_FILES - $SUBTRACT)) file(s)"
+}
+
+# PSAG
+# function to grep through p output
+# -k (optional) kills any matching processes
+# $1 (mandatory) a string for which to grep
 psag() {
   local OPTIND
 
@@ -47,15 +87,33 @@ psag() {
   done
   shift $((OPTIND-1))
 
-  QUERY=$1
-  if [[ -z $QUERY ]]; then
-    echo "Try again with something to grep for ..."
+  if [[ -z $1 ]]; then
+    echo "Must provide something to grep for"
     return
   fi
+  QUERY=$1
   CMD="ps aux | grep '$QUERY'"
   if [ $KILL -eq 1 ]; then
     CMD="$CMD | awk {'print \$2'} | sudo xargs kill"
   fi
   eval "$CMD"
+}
+
+# U
+# function to travel up the directory chain
+# $1 (optional) the number of times to go up, defaults to 1
+u() {
+  N=1
+  if [[ ! -z $1 ]]; then
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+      N=$1
+    else
+      echo "u only takes numbers as arguments"
+      return
+    fi
+  fi
+  while [ $(( N -= 1 )) -ge 0 ]; do
+    cd ..
+  done
 }
 
