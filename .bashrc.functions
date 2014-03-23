@@ -1,6 +1,40 @@
 ## ~/.bashrc.functions: included by ~/.bashrc to make life easier
 ## General functions
 
+# FAG
+# function to find files matching a particular pattern and then
+# grep through them for another pattern
+# -p (optional) instructs find to search by path instead of name
+# $1 (mandatory) specifies a pattern of filename in which to search
+# $2 (mandatory) specifies a patter for which to grep
+fag() {
+  local OPTIND
+
+  BY_PATH=0
+  while getopts "p" OPTION; do
+    case "$OPTION" in
+      p) BY_PATH=1;;
+      ?) return;;
+    esac
+  done
+  shift $((OPTIND-1))
+
+  if [[ -z $1 ]]; then
+    echo "Must provide a pattern of file in which to search"
+    return
+  fi
+  if [[ -z $2 ]]; then
+    echo "Must provide a pattern for which to grep"
+    return
+  fi
+
+  FIND_BY="-name"
+  if [ $BY_PATH -eq 1 ]; then
+    FIND_BY="-path"
+  fi
+  find -L . $FIND_BY "$1" | xargs grep -r "$2"
+}
+
 # LOG
 # function to execute a program and log all output to a file
 # -p (optional) prints the output to the terminal as well

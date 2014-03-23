@@ -44,12 +44,12 @@ esac
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
     else
-	color_prompt=
+        color_prompt=
     fi
 fi
 
@@ -89,14 +89,21 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # their own file to keep this file lean and mean.
 ALIAS_FILE=~/.bashrc.aliases
 if [ -f $ALIAS_FILE ]; then
-    . $ALIAS_FILE 
+    . $ALIAS_FILE
 fi
 
 # Include any function definitions which have been abstracted into
 # their own file to keep this file lean and mean.
 FUNCTION_FILE=~/.bashrc.functions
 if [ -f $FUNCTION_FILE ]; then
-    . $FUNCTION_FILE 
+    . $FUNCTION_FILE
+fi
+
+# Include any local definitions which have been abstracted into
+# their own file to keep this file lean and mean.
+LOCAL_FILE=~/.bashrc.local
+if [ -f $LOCAL_FILE ]; then
+    . $LOCAL_FILE
 fi
 
 # enable programmable completion features (you don't need to enable
