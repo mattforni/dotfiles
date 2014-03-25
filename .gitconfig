@@ -1,17 +1,3 @@
-[user]
-	name = Matt Fornaciari 
-	email = mattforni@gmail.com
-[color]
-    ui = auto
-[color "diff"]
-    meta = yellow bold
-    frag = magenta ul
-    old = red bold
-    new = green
-[color "status"]
-    added = green
-    changed = yellow bold
-    untracked = cyan
 [alias]
     a = add
     aa = add . -u
@@ -27,4 +13,20 @@
     pl = pull
     r = reset HEAD
     s = status
+[color]
+    ui = auto
+[color "diff"]
+    meta = yellow bold
+    frag = magenta ul
+    old = red bold
+    new = green
+[color "status"]
+    added = green
+    changed = yellow bold
+    untracked = cyan
+[core]
+    editor = vim
+[user]
+    name = Matt Fornaciari
+    email = mattforni@gmail.com
 
