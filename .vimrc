@@ -1,4 +1,4 @@
-"" ~/.vimrc: used to configure vim 
+"" ~/.vimrc: used to configure vim
 
 "" General vim settings
 " Use four spaces instead of tabs by default
