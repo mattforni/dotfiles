@@ -1,13 +1,13 @@
 ## ~/.bashrc.functions: included by ~/.bashrc to make life easier
 ## General functions
 
-# FAG
+# FINDG
 # function to find files matching a particular pattern and then
 # grep through them for another pattern
 # -p (optional) instructs find to search by path instead of name
 # $1 (mandatory) specifies a pattern of filename in which to search
 # $2 (mandatory) specifies a patter for which to grep
-fag() {
+findg() {
   local OPTIND
 
   BY_PATH=0
