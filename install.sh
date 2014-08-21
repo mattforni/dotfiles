@@ -7,6 +7,7 @@ read INSTALL
 if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
     CURR_DIRECTORY=$(dirname `readlink -f $0`)
     cp -r $CURR_DIRECTORY/* $HOME
+    rm -f $HOME/$(basename $0)
     source $HOME/.bashrc
     echo "Productivity tools installed!"
 else
