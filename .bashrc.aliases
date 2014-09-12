@@ -12,4 +12,5 @@ alias lla="ls -la"
 
 # Screen aliases
 alias sls="screen -ls"
+alias sra="screen -d -RR"
 
