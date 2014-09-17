@@ -1,12 +1,12 @@
 #!/bin/bash
 
 HOME=$(readlink -f ~)
-EXCLUDED=($(basename $0) install README.md)
+EXCLUDED=($(basename $0) install README.md .git .gitignore)
 echo -n "Install productivity tools to '$HOME'? [Y/n] "
 read INSTALL
 if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
     CURR_DIRECTORY=$(dirname `readlink -f $0`)
-    cp -r $CURR_DIRECTORY/* $HOME
+    cp -r $CURR_DIRECTORY/. $HOME
     for ITEM in ${EXCLUDED[@]}; do
         rm -rf $HOME/$ITEM
     done
