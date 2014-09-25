@@ -5,10 +5,13 @@
     bl = blame
     c = commit
     cm = commit -m
-    d = diff
     co = checkout
+    d = diff
     l = log
     lg = log --graph --decorate --pretty=oneline --abbrev-commit
+    lol = log --graph --oneline
+    lss = diff --name-status --staged
+    lsu = diff --name-status
     ph = push
     pl = pull
     r = reset HEAD
