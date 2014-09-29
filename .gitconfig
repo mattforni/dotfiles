@@ -15,6 +15,7 @@
     ph = push
     pl = pull
     r = reset HEAD
+    rv = remote -v
     s = status
     u = update-index --assume-unchanged
 [color]
