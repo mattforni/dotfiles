@@ -4,6 +4,7 @@
     b = branch
     bl = blame
     c = commit
+    ca = commit --amend
     cm = commit -m
     co = checkout
     d = diff
