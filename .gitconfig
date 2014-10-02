@@ -6,6 +6,7 @@
     c = commit
     cm = commit -m
     d = diff
+    drb = branch -d -r
     co = checkout
     l = log
     lg = log --graph --decorate --pretty=oneline --abbrev-commit
