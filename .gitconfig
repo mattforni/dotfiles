@@ -4,15 +4,21 @@
     b = branch
     bl = blame
     c = commit
+    ca = commit --amend
     cm = commit -m
     d = diff
     drb = branch -d -r
     co = checkout
+    d = diff
     l = log
     lg = log --graph --decorate --pretty=oneline --abbrev-commit
+    lol = log --graph --oneline
+    lss = diff --name-status --staged
+    lsu = diff --name-status
     ph = push
     pl = pull
     r = reset HEAD
+    rv = remote -v
     s = status
     u = update-index --assume-unchanged
 [color]
