@@ -1,9 +1,10 @@
 # ~/.bashrc.aliases: included by ~/.bashrc to make life easier
 # General aliases
-alias edtbashrc="vim ~/.bashrc"
-alias srcbashrc="source ~/.bashrc"
 alias edtalias="vim ~/.bashrc.aliases"
+alias edtbashrc="vim ~/.bashrc"
 alias edtfuncs="vim ~/.bashrc.functions"
+alias srcbashrc="source ~/.bashrc"
+alias upgrade="sudo apt-get update && sudo apt-get upgrade"
 
 # LS(1) aliases
 alias ll="ls -l"
