@@ -32,7 +32,7 @@ findg() {
   if [ $BY_PATH -eq 1 ]; then
     FIND_BY="-path"
   fi
-  find -L . $FIND_BY "$1" | xargs grep -r "$2"
+  find -L . $FIND_BY "$1" | xargs grep -rn "$2"
 }
 
 # LOG
