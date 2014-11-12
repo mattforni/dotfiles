@@ -5,7 +5,7 @@ alias edtbashrc="vim ~/.bashrc"
 alias edtfuncs="vim ~/.bashrc.functions"
 alias restnow="sudo shutdown -r now"
 alias srcbashrc="source ~/.bashrc"
-alias upgrade="sudo apt-get update && sudo apt-get upgrade"
+alias upgrade="sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove"
 
 # LS(1) aliases
 alias ll="ls -l"
