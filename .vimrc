@@ -35,6 +35,8 @@ autocmd VimEnter * NERDTree
 autocmd VimEnter * wincmd p
 " Make NERDTree show hidden files
 let NERDTreeShowHidden=1
+" Filter out *.swp files
+let NERDTreeIgnore = ['\.swp$']
 " Close vim when NERDTree is the last buffer
 function! s:CloseIfOnlyNerdTreeLeft()
   if exists("t:NERDTreeBufName")
