@@ -2,8 +2,8 @@
 ## General functions
 
 # FINDG
-# function to find files matching a particular pattern and then
-# grep through them for another pattern
+# Function to find files matching a particular pattern and then
+# grep through them for another pattern.
 # -p (optional) instructs find to search by path instead of name
 # $1 (mandatory) specifies a pattern of filename in which to search
 # $2 (mandatory) specifies a patter for which to grep
@@ -35,8 +35,69 @@ findg() {
   find -L . $FIND_BY "$1" | xargs grep -rn "$2"
 }
 
+# KNOWN-HOSTS
+# Function to easily perform operations on the current
+# users known_hosts file. At present the function supports
+# 'find', 'add' and 'show', all of which are idempotent.
+# $1 (mandatory) specifies an action to execute {'add', 'find', 'show'}
+# $2 (mandatory for 'add' and 'find') a hostname or IP
+known-hosts() {
+  KNOWN_HOSTS=~/.ssh/known_hosts
+
+  if [ "$1" == "add" ]; then
+    # Check parameters
+    if [[ -z $2 ]]; then
+      echo "Must provide a host or IP to add"
+      return
+    fi
+
+    # Attempt to retrieve the rsa token from the provided host
+    KEY=`ssh-keyscan -t rsa -H $2`
+    if [[ -z $KEY ]]; then
+      echo "'$2' is not a valid host or is unreachable"
+      return
+    fi
+
+    # Abort if there is already an entry for the provided host
+    FOUND=`ssh-keygen -H -F $2`
+    if [[ ! -z $FOUND ]]; then
+      echo "There is already an entry for '$2' in $KNOWN_HOSTS"
+      return
+    fi
+
+    # Add the new entry to known_hosts
+    echo $KEY >> $KNOWN_HOSTS
+    echo "Added an entry for '$2' in $KNOWN_HOSTS"
+  elif [ "$1" == "find" ]; then
+    # Check parameters
+    if [[ -z $2 ]]; then
+      echo "Must provide a host or IP to find"
+      return
+    fi
+
+    # Attempt to find the provided host in known_hosts
+    FOUND=`ssh-keygen -H -F $2`
+    if [[ -z $FOUND ]]; then
+      echo "An entry for '$2' was not found in $KNOWN_HOSTS"
+    else
+      echo -e $FOUND
+    fi
+  elif [ "$1" == "show" ]; then
+    less $KNOWN_HOSTS
+  else
+    # Check parameters
+    if [[ -z $1 ]]; then
+      echo "Must provide an action. Try 'add', 'find' or 'show'"
+      return
+    fi
+
+    echo "'$1' is not a valid action. Try 'add', 'find' or 'show'"
+    return
+  fi
+}
+
 # LOG
-# function to execute a program and log all output to a file
+# Function to execute a program and log all output to a file.
 # -p (optional) prints the output to the terminal as well
 # $1 (mandatory) specifies an executable to run
 log() {
@@ -68,7 +129,7 @@ log() {
 }
 
 # NUMF
-# function to count the number of files in a directory
+# Function to count the number of files in a directory.
 # -a (optional) includes hidden files in the count
 # $1 (optional) specifies a directory, the default is the current directory
 numf() {
@@ -105,7 +166,7 @@ numf() {
 }
 
 # PSAG
-# function to grep through p output
+# Function to grep through ps output.
 # -k (optional) kills any matching processes
 # $1 (mandatory) a string for which to grep
 psag() {
@@ -134,7 +195,7 @@ psag() {
 }
 
 # U
-# function to travel up the directory chain
+# Function to travel up the directory chain.
 # $1 (optional) the number of times to go up, defaults to 1
 u() {
   N=1
