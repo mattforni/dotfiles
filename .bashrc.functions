@@ -82,6 +82,22 @@ known-hosts() {
     else
       echo -e $FOUND
     fi
+  elif [ "$1" == "remove" ]; then
+    # Check parameters
+    if [[ -z $2 ]]; then
+      echo "Must provide a host or IP to remove"
+      return
+    fi
+
+    # Attempt to find the provided host in known_hosts
+    FOUND=`ssh-keygen -H -F $2`
+    if [[ -z $FOUND ]]; then
+      echo "An entry for '$2' was not found in $KNOWN_HOSTS"
+      return
+    fi
+
+    ssh-keygen -R $2
+    echo "Removed '$2' from $KNOWN_HOSTS"
   elif [ "$1" == "show" ]; then
     less $KNOWN_HOSTS
   else
