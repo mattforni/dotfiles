@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOME=$(readlink -f ~)
-EXCLUDED=($(basename $0) install README.md .git .gitignore)
+EXCLUDED=($(basename $0) install settings README.md .git .gitignore)
 echo -n "Install productivity tools to '$HOME'? [Y/n] "
 read INSTALL
 if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
