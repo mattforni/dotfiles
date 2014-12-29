@@ -34,4 +34,7 @@
     untracked = cyan
 [core]
     editor = vim
+[user]
+    name = Matthew Fornaciari
+    email = mattforni@gmail.com
 
