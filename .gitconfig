@@ -1,6 +1,7 @@
 [alias]
     a = add
-    aa = add . -u
+    aa = add -A
+    at = add -u
     b = branch
     bl = blame
     c = commit
@@ -18,6 +19,8 @@
     ph = push
     pl = pull
     r = reset HEAD
+    ra = remote add
+    rr = remote remove
     rv = remote -v
     s = status
     u = update-index --assume-unchanged
@@ -36,7 +39,6 @@
     editor = vim
 [push]
 	default = simple
-[user]
-    name = Matthew Fornaciari
-    email = mattforni@gmail.com
+[credential]
+    helper = cache --timeout=86400
 
