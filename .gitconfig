@@ -20,7 +20,7 @@
     pl = pull
     r = reset HEAD
     ra = remote add
-    rr = remote remove
+    rr = remote rm
     rv = remote -v
     s = status
     u = update-index --assume-unchanged
@@ -38,7 +38,7 @@
 [core]
     editor = vim
 [push]
-	default = simple
+	default = current
 [credential]
     helper = cache --timeout=86400
 
