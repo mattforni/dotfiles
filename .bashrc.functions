@@ -205,7 +205,7 @@ psag() {
   QUERY=$1
   CMD="ps aux | grep -v grep | grep '$QUERY'"
   if [ $KILL -eq 1 ]; then
-    CMD="$CMD | awk {'print \$2'} | sudo xargs kill"
+    CMD="$CMD | awk {'print \$2'} | sudo xargs kill -9"
   fi
   eval "$CMD"
 }
