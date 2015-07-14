@@ -1,5 +1,6 @@
 # ~/.bashrc.aliases: included by ~/.bashrc to make life easier
 # General aliases
+alias bell="echo -ne '\007'"
 alias edtalias="vim ~/.bashrc.aliases"
 alias edtbashrc="vim ~/.bashrc"
 alias edtfuncs="vim ~/.bashrc.functions"
