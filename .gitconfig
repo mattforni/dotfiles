@@ -28,7 +28,7 @@
     u = update-index --assume-unchanged
 
     me = "config user.name 'Matthew Fornaciari'"
-    personal = "config user.email 'mattforni@gmail.com'"
+    home = "config user.email 'mattforni@gmail.com'"
     work = "config user.email 'mfornaciari@salesforce.com'"
 [color]
     ui = auto
