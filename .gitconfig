@@ -1,4 +1,5 @@
 [alias]
+    # Workflow based aliases
     a = add
     aa = add -A
     at = add -u
@@ -17,7 +18,6 @@
     lol = log --graph --oneline
     lss = diff --name-status --staged
     lsu = diff --name-status
-    m = merge
     ph = push
     pl = pull
     r = reset HEAD
@@ -25,8 +25,13 @@
     rr = remote rm
     rv = remote -v
     s = status
+    st = stash
+    std = stash drop
+    stp = stash pop
+    sts = stash show
     u = update-index --assume-unchanged
 
+    # Config based aliases
     me = "config user.name 'Matthew Fornaciari'"
     home = "config user.email 'mattforni@gmail.com'"
     work = "config user.email 'mfornaciari@salesforce.com'"
