@@ -49,7 +49,7 @@
 [core]
     editor = vim
 [push]
-	default = current
+    default = current
 [credential]
     helper = cache --timeout=86400
 
