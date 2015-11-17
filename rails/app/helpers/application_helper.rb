@@ -21,7 +21,7 @@ module ApplicationHelper
     stylesheet = asset_exists?(page, 'css') ? page : nil
 
     # And start working toward less specific
-    stylesheet = controller if asset_exists? controller, 'css'
+    stylesheet = controller if stylesheet.nil? and asset_exists? controller, 'css'
 
     if stylesheet.nil?
       # Then iterate through all portions of the controller
