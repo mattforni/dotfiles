@@ -15,18 +15,31 @@ module ApplicationHelper
     action = params[:action]
     controller = params[:controller]
     page = File.join(controller, action)
+    controller_parts = controller.split('/')
 
-    stylesheet = nil 
-    if asset_exists? page, 'css'
-      stylesheet = page 
-    elsif asset_exists? controller, 'css'
-      stylesheet = controller
-    elsif asset_exists? 'application', 'css'
-      stylesheet = 'application'
+    # Start at the most specific
+    stylesheet = asset_exists?(page, 'css') ? page : nil
+
+    # And start working toward less specific
+    stylesheet = controller if asset_exists? controller, 'css'
+
+    if stylesheet.nil?
+      # Then iterate through all portions of the controller
+      (1..controller_parts.length).each do |index|
+        controller_path = controller_parts.slice(0, index).join('/')
+
+        # If the asset exists stop searching
+        if asset_exists? controller_path, 'css'
+          stylesheet = controller_path
+          break
+        end
+      end
     end
 
-    return stylesheet_link_tag stylesheet, media: 'all', 'data-turbolinks-track' => true if !stylesheet.nil?
-    nil
+    # Fallback to the application if nothing was found
+    stylesheet = 'application' if stylesheet.nil? and asset_exists? 'application', 'css'
+
+    stylesheet_link_tag stylesheet, media: 'all', 'data-turbolinks-track' => true if !stylesheet.nil?
   end
 end
 
