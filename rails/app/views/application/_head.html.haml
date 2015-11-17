@@ -1,0 +1,7 @@
+%head
+  %title=@title || ''
+  = favicon_link_tag if asset_exists? (@favicon || 'favicon'), 'ico'
+  = include_styles
+  = javascript_include_tag 'application', 'data-turbolinks-track' => true
+  = csrf_meta_tags
+

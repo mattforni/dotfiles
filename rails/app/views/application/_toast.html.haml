@@ -1,7 +1,7 @@
-- if !(toast.nil? or toast.empty?)
+- if !(message.nil? or message.empty?)
   #toast{class: error ? 'error' : ''}
     #message
-      = toast
+      = message
     #dismiss-toast
       X
 
