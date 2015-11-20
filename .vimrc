@@ -2,7 +2,7 @@
 
 "" General vim settings
 " Use four spaces instead of tabs by default
-set tabstop=4 shiftwidth=4 expandtab autoindent
+set tabstop=2 shiftwidth=2 expandtab autoindent
 " Better command-line completion
 set wildmenu
 " Show partial commands in the last line of the screen
