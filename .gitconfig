@@ -18,6 +18,7 @@
     lol = log --graph --oneline
     lss = diff --name-status --staged
     lsu = diff --name-status
+    mg = merge
     ph = push
     pl = pull
     r = reset HEAD

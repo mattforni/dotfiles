@@ -1,7 +1,11 @@
-"" ~/.vimrc: used to configure vim
+"" Set up pathogen
+execute pathogen#infect()
+call pathogen#helptags()
+syntax on
+filetype plugin indent on
 
 "" General vim settings
-" Use four spaces instead of tabs by default
+" Use two spaces instead of tabs by default
 set tabstop=2 shiftwidth=2 expandtab autoindent
 " Better command-line completion
 set wildmenu
@@ -22,13 +26,16 @@ set number
 " Set highlighting on search
 set hlsearch
 
+"" Set up rust source
+let g:ycm_rust_src_path="/home//Developer/rust-master/src/"
+
 "" Sets up highlighting groups
 highlight whitespace ctermbg=red guibg=red
 match whitespace /\s\+$/
 " Automatically highlight extra whitespace
 autocmd ColorScheme * highlight whitespace ctermbg=red guibg=red
 
-"" NERDTree settings
+"" Set up NERDTree
 " Automatically open NERDTree
 autocmd VimEnter * NERDTree
 " Move cursor the non-NERDTree pane
@@ -48,8 +55,4 @@ function! s:CloseIfOnlyNerdTreeLeft()
   endif
 endfunction
 autocmd WinEnter * call s:CloseIfOnlyNerdTreeLeft()
-
-"" File specific settings
-" Use two spaces for ruby files
-autocmd Filetype ruby setlocal tabstop=2 shiftwidth=2 expandtab
 
