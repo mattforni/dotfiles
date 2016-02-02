@@ -1,3 +1,7 @@
+colorscheme darkblue
+set background=dark
+set backspace=2
+
 "" Set up pathogen
 execute pathogen#infect()
 call pathogen#helptags()
