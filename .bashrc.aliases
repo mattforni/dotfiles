@@ -19,3 +19,7 @@ alias scr="screen -S"
 alias sls="screen -ls"
 alias sra="screen -d -RR"
 
+# Cargo aliases
+alias cb="cargo build"
+alias crun="cargo run"
+
