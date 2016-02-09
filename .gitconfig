@@ -4,6 +4,8 @@
     aa = add -A
     at = add -u
     b = branch
+    bd = branch -d
+    bdf = branch -D
     bl = blame
     c = commit
     ca = commit --amend
@@ -35,7 +37,6 @@
     # Config based aliases
     me = "config user.name 'Matthew Fornaciari'"
     home = "config user.email 'mattforni@gmail.com'"
-    work = "config user.email 'mfornaciari@salesforce.com'"
 [color]
     ui = auto
 [color "diff"]
