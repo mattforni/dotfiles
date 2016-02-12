@@ -35,8 +35,9 @@
     u = update-index --assume-unchanged
 
     # Config based aliases
-    me = "config user.name 'Matthew Fornaciari'"
-    home = "config user.email 'mattforni@gmail.com'"
+    name = "config user.name 'Matthew Fornaciari'"
+    gremlin = "config user.email 'mattforni@gmail.com'"
+    personal = "config user.email 'matt@gremlininc.com'"
 [color]
     ui = auto
 [color "diff"]
