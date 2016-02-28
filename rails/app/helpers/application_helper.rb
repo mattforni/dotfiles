@@ -11,35 +11,43 @@ module ApplicationHelper
     render partial: 'application/toast', locals: {message: message, error: error}
   end
 
-  def include_styles
+  def include_assets(type)
+    return if type != 'css' and type != 'js'
+
     action = params[:action]
     controller = params[:controller]
     page = File.join(controller, action)
     controller_parts = controller.split('/')
 
     # Start at the most specific
-    stylesheet = asset_exists?(page, 'css') ? page : nil
+    asset = asset_exists?(page, type) ? page : nil
 
     # And start working toward less specific
-    stylesheet = controller if stylesheet.nil? and asset_exists? controller, 'css'
+    asset = controller if asset.nil? and asset_exists? controller, type
 
-    if stylesheet.nil?
+    if asset.nil?
       # Then iterate through all portions of the controller
       (1..controller_parts.length).each do |index|
         controller_path = controller_parts.slice(0, index).join('/')
 
         # If the asset exists stop searching
-        if asset_exists? controller_path, 'css'
-          stylesheet = controller_path
+        if asset_exists? controller_path, type
+          asset = controller_path
           break
         end
       end
     end
 
     # Fallback to the application if nothing was found
-    stylesheet = 'application' if stylesheet.nil? and asset_exists? 'application', 'css'
+    asset = 'application' if asset.nil? and asset_exists? 'application', type
 
-    stylesheet_link_tag stylesheet, media: 'all', 'data-turbolinks-track' => true if !stylesheet.nil?
+    return if asset.nil?
+
+    if type == 'css'
+      stylesheet_link_tag asset, media: 'all', 'data-turbolinks-track' => true
+    elsif type == 'js'
+      javascript_include_tag asset, 'data-turbolinks-track' => true
+    end
   end
 end
 

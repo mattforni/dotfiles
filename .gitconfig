@@ -15,6 +15,7 @@
     conl = config --list
     d = diff
     drb = branch -d -r
+    forget = update-index --assume-unchanged
     l = log
     lg = log --graph --decorate --pretty=oneline --abbrev-commit
     lol = log --graph --oneline
@@ -28,11 +29,11 @@
     rr = remote rm
     rv = remote -v
     s = status
-    st = stash
-    std = stash drop
-    stp = stash pop
-    sts = stash show
-    u = update-index --assume-unchanged
+    sth = stash
+    sthd = stash drop
+    sthp = stash pop
+    sths = stash show
+
 
     # Config based aliases
     name = "config user.name 'Matthew Fornaciari'"
