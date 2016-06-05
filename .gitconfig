@@ -6,6 +6,7 @@
     b = branch
     bd = branch -d
     bdf = branch -D
+    bu = branch -u
     bl = blame
     c = commit
     ca = commit --amend
@@ -33,7 +34,6 @@
     sthd = stash drop
     sthp = stash pop
     sths = stash show
-
 
     # Config based aliases
     name = "config user.name 'Matthew Fornaciari'"
