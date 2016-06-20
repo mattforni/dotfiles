@@ -6,8 +6,9 @@
     b = branch
     bd = branch -d
     bdf = branch -D
-    bu = branch -u
     bl = blame
+    bm = branch -m
+    bu = branch -u
     c = commit
     ca = commit --amend
     cm = commit -m
