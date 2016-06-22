@@ -23,6 +23,7 @@ findg() {
     echo "Must provide a pattern of file in which to search"
     return
   fi
+
   if [[ -z $2 ]]; then
     echo "Must provide a pattern for which to grep"
     return
@@ -33,6 +34,18 @@ findg() {
     FIND_BY="-path"
   fi
   find -L . $FIND_BY "$1" | xargs grep -rn "$2"
+}
+
+# IGNORE
+# Function to add patterns to the .gitignore file
+# $1 (mandatory) specifies a pattern to ignore
+ignore() {
+  if [[ -z $1 ]]; then
+    echo "Must provide a pattern to ignore"
+    return
+  fi
+
+  echo "$1" >> .gitignore
 }
 
 # KNOWN-HOSTS
