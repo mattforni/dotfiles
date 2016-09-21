@@ -36,6 +36,19 @@ findg() {
   find -L . $FIND_BY "$1" | xargs grep -rn "$2"
 }
 
+# GRN
+# Function to grep the current directory
+# (recursively) for the provided pattern.
+# $1 (mandatory) specifies a pattern to find
+grn() {
+  if [[ -z $1 ]]; then
+    echo "Must provide a pattern to find"
+    return
+  fi
+
+  grep -rn "$1" .
+}
+
 # IGNORE
 # Function to add patterns to the .gitignore file
 # $1 (mandatory) specifies a pattern to ignore
@@ -240,4 +253,3 @@ u() {
     cd ..
   done
 }
-
