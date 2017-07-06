@@ -26,7 +26,8 @@
     mg = merge
     ph = push
     pl = pull
-    r = reset HEAD
+    reh = reset HEAD
+    reh1 = reset HEAD~1
     ra = remote add
     rr = remote rm
     rv = remote -v
