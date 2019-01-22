@@ -27,5 +27,7 @@ alias ct="cargo test -- --nocapture"
 
 # Docker aliases
 alias docker-clean='docker rm $(docker ps -a -q -f status=exited)'
-alias docker-clean-all='docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)'
+alias docker-clean-all='docker-stop; docker-clean; docker-clean-images'
+alias docker-clean-images='docker rmi $(docker images -a -q)'
+alias docker-stop='docker stop $(docker ps -a -q)'
 
