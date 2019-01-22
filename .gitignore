@@ -1,3 +1,4 @@
 # Ignore all swap files created by vim
 *.swp
 
+.bashrc.local

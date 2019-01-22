@@ -26,7 +26,6 @@ alias cr="cargo run"
 alias ct="cargo test -- --nocapture"
 
 # Docker aliases
-alias docker-clean='docker rm $(docker ps -a -q); docker rmi $(docker images -q)'
-alias docker-init='docker-restart; eval "$(docker-machine start)"; eval "$(docker-machine env default)"'
-alias docker-restart='docker-machine restart default'
+alias docker-clean='docker rm $(docker ps -a -q -f status=exited)'
+alias docker-clean-all='docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)'
 
