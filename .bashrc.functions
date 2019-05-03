@@ -1,6 +1,9 @@
 ## ~/.bashrc.functions: included by ~/.bashrc to make life easier
 ## General functions
 
+## ~/.bashrc.functions: included by ~/.bashrc to make life easier
+## General functions
+
 # FINDG
 # Function to find files matching a particular pattern and then
 # grep through them for another pattern.
@@ -234,6 +237,13 @@ psag() {
     CMD="$CMD | awk {'print \$2'} | sudo xargs kill -9"
   fi
   eval "$CMD"
+}
+
+# TODO
+# Function to generate a report of TODOs in the given folder and sub-folders.
+todo() {
+  echo "There are $(grep -Ilrn --exclude="*\.git*" TODO . | wc -l) TODOs in this project"
+  echo -n "$(grep -Ilrn --exclude="*\.git*" TODO .)"
 }
 
 # U
