@@ -239,13 +239,6 @@ psag() {
   eval "$CMD"
 }
 
-# TODO
-# Function to generate a report of TODOs in the given folder and sub-folders.
-todo() {
-  echo "There are $(grep -Ilrn --exclude="*\.git*" TODO . | wc -l) TODOs in this project"
-  echo -n "$(grep -Ilrn --exclude="*\.git*" TODO .)"
-}
-
 # U
 # Function to travel up the directory chain.
 # $1 (optional) the number of times to go up, defaults to 1
