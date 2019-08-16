@@ -39,24 +39,3 @@ match whitespace /\s\+$/
 " Automatically highlight extra whitespace
 autocmd ColorScheme * highlight whitespace ctermbg=red guibg=red
 
-"" Set up NERDTree
-" Automatically open NERDTree
-autocmd VimEnter * NERDTree
-" Move cursor the non-NERDTree pane
-autocmd VimEnter * wincmd p
-" Make NERDTree show hidden files
-let NERDTreeShowHidden=1
-" Filter out *.swp files
-let NERDTreeIgnore = ['\.swp$']
-" Close vim when NERDTree is the last buffer
-function! s:CloseIfOnlyNerdTreeLeft()
-  if exists("t:NERDTreeBufName")
-    if bufwinnr(t:NERDTreeBufName) != -1
-      if winnr("$") == 1
-        q
-      endif
-    endif
-  endif
-endfunction
-autocmd WinEnter * call s:CloseIfOnlyNerdTreeLeft()
-
