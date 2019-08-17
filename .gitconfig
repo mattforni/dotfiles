@@ -11,6 +11,7 @@
     bu = branch -u
     c = commit
     ca = commit --amend
+    cara = commit --amend --reset-author
     cm = commit -m
     co = checkout
     con = config
