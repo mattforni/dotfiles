@@ -1,6 +1,7 @@
 #!/bin/bash
 
-HOME=$(readlink -f ~)
+## TODO this needs a lot of work to be usable
+
 EXCLUDED=($(basename $0) README.md .git .gitignore)
 echo -n "Install productivity tools to '$HOME'? [Y/n] "
 read INSTALL
