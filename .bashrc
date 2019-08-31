@@ -106,6 +106,13 @@ if [ -f $LOCAL_FILE ]; then
     . $LOCAL_FILE
 fi
 
+# Include any gremlin definitions which have been abstracted into
+# their own file to keep this file lean and mean.
+GREMLIN_FILE=~/.bashrc.gremlin
+if [ -f $GREMLIN_FILE ]; then
+    . $GREMLIN_FILE
+fi
+
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).

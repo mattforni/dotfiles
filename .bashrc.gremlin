@@ -1,0 +1,4 @@
+alias swagger-local="docker pull callmeforni/swagger-ui && docker run -p 1080:8080 callmeforni/swagger-ui"
+alias swagger-local="docker pull callmeforni/swagger-ui && docker run -p 2080:8080 callmeforni/swagger-ui:staging"
+alias swagger-local="docker pull callmeforni/swagger-ui && docker run -p 3080:8080 callmeforni/swagger-ui:production"
+
