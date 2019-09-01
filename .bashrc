@@ -106,6 +106,13 @@ if [ -f $LOCAL_FILE ]; then
     . $LOCAL_FILE
 fi
 
+# Include any go definitions which have been abstracted into
+# their own file to keep this file lean and mean.
+GO_FILE=~/.bashrc.go
+if [ -f $GO_FILE]; then
+    . $GO_FILE
+fi
+
 # Include any gremlin definitions which have been abstracted into
 # their own file to keep this file lean and mean.
 GREMLIN_FILE=~/.bashrc.gremlin
