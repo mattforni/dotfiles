@@ -109,7 +109,7 @@ fi
 # Include any go definitions which have been abstracted into
 # their own file to keep this file lean and mean.
 GO_FILE=~/.bashrc.go
-if [ -f $GO_FILE]; then
+if [ -f $GO_FILE ]; then
     . $GO_FILE
 fi
 
