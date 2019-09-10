@@ -39,6 +39,20 @@ findg() {
   find -L . $FIND_BY "$1" | xargs grep -rn "$2"
 }
 
+# DOCKER-KILL
+# Function to kill a docker process by name
+# $1 (mandatory) specifies the name of the process(es) to kill
+docker-kill() {
+  if [[ -z $1 ]]; then
+    echo "Must provide a name of the process(es) to kill"
+    return
+  fi
+
+  NAME="$1"
+  echo "Killing processes that contain '$NAME'"
+  docker ps | grep $NAME | awk {'print $1'} | xargs docker kill
+}
+
 # GRN
 # Function to grep the current directory
 # (recursively) for the provided pattern.
