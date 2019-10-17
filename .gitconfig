@@ -40,7 +40,7 @@
 
     # Config based aliases
     name = "config user.name 'Matthew Fornaciari'"
-    gremlin = "config user.email 'matt@gremlininc.com'"
+    gremlin = "config user.email 'matt@gremlin.com'"
     personal = "config user.email 'mattforni@gmail.com'"
 [color]
     ui = auto
