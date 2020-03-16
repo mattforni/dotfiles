@@ -1,14 +1,7 @@
+"" Sets up VIM
 colorscheme darkblue
 set background=dark
 set backspace=2
-
-"" Set up pathogen
-execute pathogen#infect()
-call pathogen#helptags()
-syntax on
-filetype plugin indent on
-
-"" General vim settings
 " Use two spaces instead of tabs by default
 set tabstop=2 shiftwidth=2 expandtab autoindent
 " Better command-line completion
@@ -30,8 +23,22 @@ set number
 " Set highlighting on search
 set hlsearch
 
-"" Set up rust source
-let g:ycm_rust_src_path="/home//Developer/rust-master/src/"
+"" Sets up netrw
+let g:netrw_banner = 0
+let g:netrw_liststyle = 3
+let g:netrw_browse_split = 2
+let g:netrw_altv = 1
+let g:netrw_winsize = 20
+
+augroup setup_netrw
+  autocmd!
+  autocmd VimEnter * :Vexplore
+  autocmd filetype netrw call NetrwMapping()
+augroup END
+
+function! NetrwMapping()
+  noremap <buffer> o <CR>
+endfunction
 
 "" Sets up highlighting groups
 highlight whitespace ctermbg=red guibg=red
