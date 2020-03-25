@@ -13,7 +13,7 @@ syntax enable       " Enable syntax highlighting
 " Highlight trailing whitespace
 highlight whitespace ctermbg=red guibg=red
 match whitespace /\s\+$/
-autocmd ColorScheme * highlight whitespace ctermbg=red guibg=red
+autocmd colorscheme * highlight whitespace ctermbg=red guibg=red
 
 "" Searching
 set incsearch       " Search as characters are entered
@@ -26,6 +26,7 @@ set expandtab       " Use spaces for <TAB>
 
 "" NERDTree
 autocmd vimenter * NERDTree " Start NERDTree on load
+autocmd vimenter * wincmd p " Select the previous buffer
 let g:NERDTreeWinSize=20    " Sets width of NERDTree
 " Close NERDTree if only buffer
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
