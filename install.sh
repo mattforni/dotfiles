@@ -4,7 +4,7 @@ EXCLUDED=($(basename $0) README.md .git .gitignore)
 echo -n "Install productivity tools to '$HOME'? [Y/n] "
 read INSTALL
 if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
-    DIR=$(pwd)
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     echo "Copying files from $DIR ..."
     cp -r $DIR/. $HOME
     for ITEM in ${EXCLUDED[@]}; do
