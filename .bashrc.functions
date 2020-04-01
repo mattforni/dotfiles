@@ -39,6 +39,20 @@ findg() {
   find -L . $FIND_BY "$1" | xargs grep -rn "$2"
 }
 
+# DOCKER-ATTACH
+# Function to attach to a docker process by ID
+# $1 (mandatory) specifies the ID of the container
+docker-attach() {
+  if [[ -z $1 ]]; then
+    echo "Must provide an ID of a containter to attach"
+    return
+  fi
+
+  ID="$1"
+  echo "Attaching to container '$ID'"
+  docker exec -it $ID /bin/bash
+}
+
 # DOCKER-KILL
 # Function to kill a docker process by name
 # $1 (mandatory) specifies the name of the process(es) to kill
