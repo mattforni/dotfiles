@@ -1,16 +1,9 @@
 # ~/.zshrc: executed by zsh(1) for non-login shells.
 
-## Configure the history file
-# Set all zsh(1) session to append to history instead of overwriting
-setopt APPEND_HISTORY
-# When appending a command to the history remove all previous instances from the history
-setopt HIST_IGNORE_ALL_DUPS
-# Remove command lines from the history list when the first character on the line is a space
-setopt HIST_IGNORE_SPACE
-# Remove superfluous blanks from each command line being added to the history list
-setopt HIST_REDUCE_BLANKS
-# Save 1000 lines to the history
-SAVEHIST=1000
+source ~/.zsh/history.zsh
+
+alias edit-zshrc="vim ~/.zshrc"
+alias src-zshrc="source ~/.zshrc"
 
 # Include any alias definitions which have been abstracted into
 # their own file to keep this file lean and mean.
