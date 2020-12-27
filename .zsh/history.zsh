@@ -1,7 +1,5 @@
-# Sourced from [my-oh-my-zsh](https://github.com/mattjj/my-oh-my-zsh)
-#
+# Inspired by [my-oh-my-zsh](https://github.com/mattjj/my-oh-my-zsh)
 # Sets history options.
-#
 
 HISTFILE="$HOME/.zhistory"
 HISTSIZE=10000000
