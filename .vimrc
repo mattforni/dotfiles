@@ -20,9 +20,12 @@ set incsearch       " Search as characters are entered
 set hlsearch        " Highlight matches
 
 "" Spaces & Tabs
-set tabstop=2       " Number of visual spaces per <TAB>
-set softtabstop=2   " Number of spaces in <TAB> when editing
-set expandtab       " Use spaces for <TAB>
+set tabstop=2               " Number of visual spaces per <TAB>
+set softtabstop=2           " Number of spaces in <TAB> when editing
+set shiftwidth=2            " Number of spaces to use when indenting
+set expandtab               " Use spaces for <TAB>
+set autoindent              " Autoindent new lines to the same depth
+filetype plugin indent on   " Determine next indentation level based on filetype
 
 "" NERDTree
 autocmd vimenter * NERDTree " Start NERDTree on load
