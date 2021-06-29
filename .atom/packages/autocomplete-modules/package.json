@@ -1,0 +1,70 @@
+{
+  "_from": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball",
+  "_id": "autocomplete-modules@2.3.0",
+  "_inBundle": false,
+  "_integrity": "sha512-bY63RYPBU71Um9vPtd+ZhxEv5RdsgHEalBZ4sBczC59bZczIItc0C0jQaT0IhD01YmJkNe5oyS8aWWhRyYZFsg==",
+  "_location": "/autocomplete-modules",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "remote",
+    "raw": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball",
+    "rawSpec": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball",
+    "saveSpec": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball",
+    "fetchSpec": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball",
+  "_shasum": "d8fa61d9426c6e38dc6b3e39611f8798d92062e1",
+  "_spec": "https://www.atom.io/api/packages/autocomplete-modules/versions/2.3.0/tarball",
+  "_where": "/private/var/folders/zm/xt2_z2hn3ksfj5663vjjxlmw0000gn/T/apm-install-dir-2021528-8323-ty4ung.5hj4r",
+  "bugs": {
+    "url": "https://github.com/nkt/atom-autocomplete-modules/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "bluebird": "3.5.1",
+    "extract-module-exports": "^1.1.2",
+    "find-babel-config": "1.1.0",
+    "fuzzaldrin": "2.1.0",
+    "lodash.escaperegexp": "4.1.2",
+    "lodash.get": "4.4.2",
+    "resolve-from": "^4.0.0"
+  },
+  "deprecated": false,
+  "description": "Autocomplete for require/import statements",
+  "devDependencies": {
+    "eslint": "^5.14.1"
+  },
+  "engines": {
+    "atom": ">=0.174.0 <2.0.0"
+  },
+  "homepage": "https://github.com/nkt/atom-autocomplete-modules#readme",
+  "keywords": [
+    "javascript",
+    "require",
+    "import",
+    "module",
+    "autocomplete",
+    "autocomplete-plus",
+    "npm",
+    "node"
+  ],
+  "license": "MIT",
+  "main": "./lib/main.js",
+  "name": "autocomplete-modules",
+  "providedServices": {
+    "autocomplete.provider": {
+      "versions": {
+        "4.0.0": "getCompletionProvider"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nkt/atom-autocomplete-modules.git"
+  },
+  "version": "2.3.0"
+}
