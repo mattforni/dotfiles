@@ -61,3 +61,5 @@
 [credential]
     helper = cache --timeout=86400
 
+[pull]
+    ff = only
