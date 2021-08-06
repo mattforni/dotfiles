@@ -2,6 +2,7 @@
     # Workflow based aliases
     a = add
     aa = add -A
+    aliases = config --get-regexp alias
     at = add -u
     b = branch
     bd = branch -d
@@ -37,6 +38,7 @@
     sthd = stash drop
     sthp = stash pop
     sths = stash show
+    wip = !git aa && git commit -a -m \"WIP\"
 
     # Config based aliases
     name = "config user.name 'Matthew Fornaciari'"
