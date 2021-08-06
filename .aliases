@@ -19,6 +19,7 @@ alias lla="ls -la"
 alias scr="screen -S"
 alias sls="screen -ls"
 alias sra="screen -d -RR"
+alias skill="screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs kill"
 
 # Cargo aliases
 alias cb="cargo build"
