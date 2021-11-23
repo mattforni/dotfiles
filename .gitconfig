@@ -13,6 +13,8 @@
     c = commit
     ca = commit --amend
     cara = commit --amend --reset-author
+    cln = clean -dfx
+    clnd = clean -dfxn
     cm = commit -m
     co = checkout
     con = config
