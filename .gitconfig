@@ -43,9 +43,10 @@
     wip = !git aa && git commit -a -m \"WIP\"
 
     # Config based aliases
-    name = "config user.name 'Matthew Fornaciari'"
     gremlin = "config user.email 'matt@gremlin.com'"
-    personal = "config user.email 'mattforni@gmail.com'"
+    mattforni = "config user.email 'mattforni@gmail.com'"
+    name = "config user.name 'Matthew Fornaciari'"
+    quitcarbon = "config user.email 'forni@quitcarbon.com'"
 [color]
     ui = auto
 [color "diff"]
