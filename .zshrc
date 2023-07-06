@@ -26,5 +26,3 @@ if [ -f $LOCAL_FILE ]; then
     . $LOCAL_FILE
 fi
 
-
-source /Users/forni/.config/broot/launcher/bash/br
