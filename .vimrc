@@ -27,6 +27,9 @@ set expandtab               " Use spaces for <TAB>
 set autoindent              " Autoindent new lines to the same depth
 filetype plugin indent on   " Determine next indentation level based on filetype
 
+"" Enable Pathogen
+execute pathogen#infect()
+
 "" NERDTree
 autocmd vimenter * NERDTree " Start NERDTree on load
 autocmd vimenter * wincmd p " Select the previous buffer
