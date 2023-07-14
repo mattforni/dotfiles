@@ -26,5 +26,10 @@ if [ -f $LOCAL_FILE ]; then
     . $LOCAL_FILE
 fi
 
+path_directories=("/usr/local/opt/postgresql@15/bin")
+for directory in "${path_directores[@]}"; do
+  if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
+    export PATH=${PATH}:${directory}
+  fi
+done
 
-source /Users/forni/.config/broot/launcher/bash/br
