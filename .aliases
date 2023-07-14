@@ -1,34 +1,35 @@
-# ~/.bashrc.aliases: included by ~/.bashrc to make life easier
-# General aliases
+# ~/.aliases: included by ~/.zshrc to make life easier
+# General Aliases
 alias bell="echo -ne '\007'"
-alias edit-alias="vim ~/.bashrc.aliases"
-alias edit-bashrc="vim ~/.bashrc"
-alias edit-funcs="vim ~/.bashrc.functions"
-alias edit-local="vim ~/.bashrc.local"
-alias restnow="sudo shutdown -r now"
-alias src-bashrc=". ~/.bashrc"
+alias ed-aliases="vim ~/.aliases"
+alias ed-functions="vim ~/.functions"
+alias ed-local="vim ~/.local"
+alias rest-now="sudo shutdown -r now"
 alias todo="grep -Irn --exclude=\"*\.git*\" \"TODO\" ."
 alias upgrade="sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove"
 
-# LS(1) aliases
+# LS(1) Aliases
 alias ll="ls -l"
 alias la="ls -a"
 alias lla="ls -la"
 
-# Screen aliases
+# Screen Aliases
 alias scr="screen -S"
 alias sls="screen -ls"
 alias sra="screen -d -RR"
 alias skill="screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs kill"
 
-# Cargo aliases
+# Cargo Aliases
 alias cb="cargo build"
 alias cr="cargo run"
 alias ct="cargo test -- --nocapture"
 
-# Docker aliases
+# Docker Aliases
 alias docker-clean='docker rm $(docker ps -a -q -f status=exited)'
 alias docker-clean-all='docker-stop; docker-clean; docker-clean-images'
 alias docker-clean-images='docker rmi $(docker images -a -q)'
 alias docker-stop='docker stop $(docker ps -a -q)'
+
+# VSCode Aliases
+alias ed-vsc-settings='vim ~/.vscode/settings.json'
 

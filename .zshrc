@@ -2,28 +2,41 @@
 
 source ~/.zsh/history.zsh
 
-alias edit-zshrc="vim ~/.zshrc"
-alias src-zshrc="source ~/.zshrc"
+alias ed-zsh="vim ~/.zshrc"
+alias src-zsh="source ~/.zshrc"
+alias sendit="cp -R ~/.aliases \
+  ~/.bashrc \
+  ~/.bash_profile \
+  ~/.functions \
+  ~/.gitconfig \
+  ~/.profile \
+  ~/.screenrc \
+  ~/.vim \
+  ~/.vimrc \
+  ~/.zsh \
+  ~/.zshrc \
+  ~/install.sh \
+  ~/Development/dotfiles"
 
 # Include any alias definitions which have been abstracted into
 # their own file to keep this file lean and mean.
-ALIAS_FILE=~/.aliases
-if [ -f $ALIAS_FILE ]; then
-    . $ALIAS_FILE
+alias_file=~/.aliases
+if [ -f $alias_file ]; then
+    . $alias_file
 fi
 
 # Include any function definitions which have been abstracted into
 # their own file to keep this file lean and mean.
-FUNCTION_FILE=~/.functions
-if [ -f $FUNCTION_FILE ]; then
-    . $FUNCTION_FILE
+function_file=~/.functions
+if [ -f $function_file ]; then
+    . $function_file
 fi
 
 # Include any local definitions which have been abstracted into
 # their own file to keep this file lean and mean.
-LOCAL_FILE=~/.local
-if [ -f $LOCAL_FILE ]; then
-    . $LOCAL_FILE
+local_file=~/.local
+if [ -f $local_file ]; then
+    . $local_file
 fi
 
 directories=("/usr/local/opt/postgresql@15/bin")
