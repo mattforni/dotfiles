@@ -115,10 +115,10 @@ fi
 
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-path_directories=("$HOME/.rvm/bin")
-for directory in "${path_directores[@]}"; do
+directories=("/usr/local/opt/postgresql@15/bin")
+for directory in "${directories[@]}"; do
   if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
-    export PATH=${PATH}:${directory}
+    export PATH="${PATH}:${directory}"
   fi
 done
 
