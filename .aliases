@@ -33,3 +33,7 @@ alias docker-stop='docker stop $(docker ps -a -q)'
 # VSCode Aliases
 alias ed-vsc-settings='vim ~/.vscode/settings.json'
 
+# Rails Aliases
+alias rc='type rails >/dev/null 2>&1 && rails console || echo "Rails not found"'
+alias rs='type rails >/dev/null 2>&1 && rails server || echo "Rails not found"'
+
