@@ -113,3 +113,12 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+path_directories=("$HOME/.rvm/bin")
+for directory in "${path_directores[@]}"; do
+  if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
+    export PATH=${PATH}:${directory}
+  fi
+done
+
