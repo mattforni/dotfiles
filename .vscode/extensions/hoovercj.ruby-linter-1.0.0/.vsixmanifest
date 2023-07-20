@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Language="en-US" Id="ruby-linter" Version="1.0.0" Publisher="hoovercj"/>
+    <DisplayName>ruby-linter</DisplayName>
+    <Description xml:space="preserve">An extension to use built in ruby linting in vscode</Description>
+    <Tags>ruby</Tags>
+    <Categories>Linters</Categories>
+    <GalleryFlags>Public</GalleryFlags>
+    <Properties>
+      
+        <Property Id="Microsoft.VisualStudio.Services.Links.Source" Value="https://github.com/hoovercj/vscode-ruby-linter.git" />
+        <Property Id="Microsoft.VisualStudio.Services.Links.Getstarted" Value="https://github.com/hoovercj/vscode-ruby-linter.git" />
+        <Property Id="Microsoft.VisualStudio.Services.Links.Repository" Value="https://github.com/hoovercj/vscode-ruby-linter.git" />
+      
+      
+      <Property Id="Microsoft.VisualStudio.Services.Links.Learn" Value="https://github.com/hoovercj/vscode-ruby-linter" />
+      
+      
+    </Properties>
+    <License>extension/LICENSE.txt</License>
+    <Icon>extension/images/ruby.png</Icon>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+  </Installation>
+  <Dependencies/>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true" /><Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true" /><Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/images/ruby.png" Addressable="true" />
+  </Assets>
+</PackageManifest>

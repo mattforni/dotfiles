@@ -1,0 +1,17 @@
+{
+	"chatgpt.command_why_broken": "Check the following code for bugs and provide repair suggestions 🐛",
+	"chatgpt.command_explain_code": "Explain the following code in detail 💬",
+	"chatgpt.command_refactor_code": "Refactor this code and tell me what did you change 🔧",
+	"chatgpt.command_add_tests": "Add tests for the following code 🧪",
+	"chatgpt.command_custom_prompt": "Custom prompt ❓",
+	"chatgpt.command_update_APIkey": "Bind your own API key🔀🔑",
+	"chatgpt.command_validate_APIkey": "Validate API key ✔️🔑",
+	"chatgpt.command_refresh_APIkey": "Refresh API key 🔄🔑",
+	"chatgpt.command_display_language": "Set language 🌍",
+	"chatgpt.command_setProxy": "Set up a custom proxy server 🌐",
+	"chatgpt.command_query": "Ask a question ❓",
+	"chatgpt.command_add_predefined_prompt":"Add predefined prompt ➕",
+	"chatgpt.command_list_clear": "Clear list 🗑️",
+	"chatgpt.command_export_markdown": "Export markdown 📤",
+	"chatgpt.command_choose_predefined_prompt": "Select predefined prompt 🔍"
+}
