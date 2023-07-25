@@ -1,0 +1,12 @@
+{
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs":"active",
+    "[html.erb]": {
+        "editor.wordWrap":"wordWrapColumn",
+        "editor.wordWrapColumn":"120"
+    },
+    "files.trimTrailingWhitespace": true,
+    "ruby.rubocop.autoCorrectOnSave": true
+}
+
+

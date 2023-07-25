@@ -13,6 +13,7 @@ alias sendit="cp -R ~/.aliases \
   ~/.screenrc \
   ~/.vim \
   ~/.vimrc \
+  ~/.vscode \
   ~/.zsh \
   ~/.zshrc \
   ~/install.sh \
