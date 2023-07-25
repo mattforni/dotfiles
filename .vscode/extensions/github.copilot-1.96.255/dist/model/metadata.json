@@ -1,0 +1,11 @@
+{
+    "LicenseTerm": "This content may only be used with the \"Microsoft (R) Visual Studio (R) IntelliCode Extension\" and the \"Microsoft (R) Visual Studio (R) Code IntelliCode Extension\". It is licensed to you under the Microsoft Software License Terms located at https://go.microsoft.com/fwlink/?linkid=2087344.",
+    "Version": "1.1.0",
+    "ModelName": "IntelliCodeCompose_Multilingual",
+    "ConfidenceThreshold": 0.39,
+    "n_embd": 512,
+    "n_head": 8,
+    "n_layer": 8,
+    "beam_size": 4,
+    "max_input_size": 768
+}

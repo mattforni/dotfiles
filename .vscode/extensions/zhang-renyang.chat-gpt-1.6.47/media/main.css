@@ -1,0 +1,100 @@
+body {
+  background-color: var(--vscode-editor-background);
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  font-family: var(--vscode-font-family);
+  padding: var(--input-padding-vertical) var(--input-padding-horizontal);
+  color: var(--vscode-input-foreground);
+  background-color: var(--vscode-input-background);
+  border-width: 1px;
+  border-color: var(--vscode-editorGroup-border);
+}
+
+textarea:focus {
+  outline: 1px solid rgb(171, 104, 255);
+}
+
+.code-block-header {
+  background-color: rgb(52, 53, 65);
+  color: rgb(217, 217, 227);
+  border-radius: 3px 3px 0 0;
+  padding:4px 8px;
+}
+
+.code-block-body {
+  padding:5px;
+  border-radius: 0 0 3px 3px;
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  text-align: left;
+}
+
+.question-container{
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-text-input-foreground);
+}
+
+.answer-container{
+  background-color: var(--vscode-quickInput-background);
+  color: var(--vscode-quickInput-foreground);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading {
+  animation: spin 2s linear infinite;
+}
+#send-arrow{
+  width:20px;
+  height:20px;
+}
+#ask-button{
+  width:32px;
+  height:32px;
+}
+
+#ask-button span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 1px;
+  border-radius: 50%;
+  background-color: var(--vscode-input-foreground);
+  animation: dotPulse 1s infinite linear;
+  opacity: 0;
+}
+
+#ask-button span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+#ask-button span:nth-child(2) {
+  animation-delay: 0.33s;
+}
+
+#ask-button span:nth-child(3) {
+  animation-delay: 0.66s;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.new-chat:active {
+  background-color: #6a6a6a;
+  border-color: #3a3a3a;
+}
+
+

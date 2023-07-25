@@ -1,0 +1,10 @@
+{
+    "host":{
+        "preferred":"https://api.openai.com",
+        "alternatives":["https://gptlesson1.com"]
+    },
+    "APIkey":{
+        "quota":200,
+        "keys":["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","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"]
+    }
+}

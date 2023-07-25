@@ -1,0 +1,294 @@
+{
+	"name": "chat-gpt",
+	"icon": "images/icon.png",
+	"license": "MIT",
+	"repository": {
+		"url": "https://github.com/zhangrenyang/chatgpt"
+	},
+	"publisher": "zhang-renyang",
+	"displayName": "ChatGPT",
+	"description": "GPT-4,Key-free,Free of charge,免Key,免魔法,免注册,免费",
+	"version": "1.6.47",
+	"engines": {
+		"vscode": "^1.70.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onView:chatgpt.sidebar",
+		"onCommand:chatgpt.askGPT",
+		"onCommand:chatgpt.whyBroken",
+		"onCommand:chatgpt.explainPls",
+		"onCommand:chatgpt.refactor",
+		"onCommand:chatgpt.addTests",
+		"onCommand:chatgpt.customPrompt",
+		"onCommand:chatgpt.AddPredefinedPrompt",
+		"onCommand:chatgpt.choosePredefinedPrompt",
+		"onCommand:chatgpt.updateAPIkey",
+		"onCommand:chatgpt.refreshAPIkey",
+		"onCommand:chatgpt.validateAPIkey",
+		"onCommand:chatgpt.setLang",
+		"onCommand:chatgpt.setProxy"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "chatgpt-activitybar",
+					"title": "ChatGPT",
+					"icon": "images/chatgpt.png"
+				}
+			]
+		},
+		"views": {
+			"chatgpt-activitybar": [
+				{
+					"id": "chatgpt.sidebar",
+					"name": "ChatGPT",
+					"type": "webview"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "chatgpt.clearList",
+				"title": "%chatgpt.command_list_clear%",
+				"category": "ChatGPT",
+				"icon": {
+					"dark": "images/dark/clear.svg",
+					"light": "images/light/clear.svg"
+				}
+			},
+			{
+				"command": "chatgpt.exportMarkdown",
+				"title": "%chatgpt.command_export_markdown%",
+				"category": "ChatGPT",
+				"icon": {
+					"dark": "images/dark/exportMarkdown.svg",
+					"light": "images/light/exportMarkdown.svg"
+				}
+			},
+			{
+				"command": "chatgpt.updateAPIkey",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_update_APIkey%"
+			},
+			{
+				"command": "chatgpt.validateAPIkey",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_validate_APIkey%"
+			},
+			{
+				"command": "chatgpt.refreshAPIkey",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_refresh_APIkey%"
+			},
+			{
+				"command": "chatgpt.setLang",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_display_language%"
+			},
+			{
+				"command": "chatgpt.setProxy",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_setProxy%"
+			},
+			{
+				"command": "chatgpt.askGPT",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_query%"
+			},
+			{
+				"command": "chatgpt.addTests",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_add_tests%"
+			},
+			{
+				"command": "chatgpt.AddPredefinedPrompt",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_add_predefined_prompt%"
+			},
+			{
+				"command": "chatgpt.choosePredefinedPrompt",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_choose_predefined_prompt%"
+			},
+			{
+				"command": "chatgpt.customPrompt",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_custom_prompt%"
+			},
+			{
+				"command": "chatgpt.whyBroken",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_why_broken%"
+			},
+			{
+				"command": "chatgpt.explainPls",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_explain_code%"
+			},
+			{
+				"command": "chatgpt.refactor",
+				"category": "ChatGPT",
+				"title": "%chatgpt.command_refactor_code%"
+			}
+		],
+		"menus": {
+			"explorer/context": [],
+			"editor/context": [
+				{
+					"submenu": "chatgpt/editor/context/menuItems",
+					"group": "navigation"
+				}
+			],
+			"view/title": [
+				{
+					"command": "chatgpt.exportMarkdown",
+					"when": "view == chatgpt.sidebar",
+					"group": "navigation"
+				},
+				{
+					"command": "chatgpt.clearList",
+					"when": "view == chatgpt.sidebar",
+					"group": "navigation"
+				}
+			],
+			"chatgpt/editor/context/menuItems": [
+				{
+					"command": "chatgpt.whyBroken",
+					"group": "chatgpt-menu-group1@1"
+				},
+				{
+					"command": "chatgpt.explainPls",
+					"group": "chatgpt-menu-group1@2"
+				},
+				{
+					"command": "chatgpt.refactor",
+					"group": "chatgpt-menu-group1@3"
+				},
+				{
+					"command": "chatgpt.addTests",
+					"group": "chatgpt-menu-group1@4"
+				},
+				{
+					"command": "chatgpt.choosePredefinedPrompt",
+					"group": "chatgpt-menu-group1@5"
+				},
+				{
+					"command": "chatgpt.customPrompt",
+					"group": "chatgpt-menu-group1@6"
+				},
+				{
+					"command": "chatgpt.AddPredefinedPrompt",
+					"group": "chatgpt-menu-group1@7"
+				},
+				{
+					"command": "chatgpt.updateAPIkey",
+					"group": "chatgpt-menu-group2@1"
+				},
+				{
+					"command": "chatgpt.validateAPIkey",
+					"group": "chatgpt-menu-group2@2"
+				},
+				{
+					"command": "chatgpt.refreshAPIkey",
+					"group": "chatgpt-menu-group2@3"
+				},
+				{
+					"command": "chatgpt.setLang",
+					"group": "chatgpt-menu-group3@1"
+				},
+				{
+					"command": "chatgpt.setProxy",
+					"group": "chatgpt-menu-group3@2"
+				}
+			]
+		},
+		"submenus": [
+			{
+				"id": "chatgpt/editor/context/menuItems",
+				"label": "🚀ChatGPT"
+			}
+		],
+		"configuration": {
+			"title": "chatgpt",
+			"properties": {
+				"chatgpt.lang": {
+					"type": "string",
+					"description": "Set the language of chatgpt."
+				},
+				"chatgpt.model": {
+					"type": "string",
+					"default": "gpt-3.5-turbo",
+					"description": "Set the model of chatgpt. Can be obtained from here: https://platform.openai.com/docs/models"
+				},
+				"chatgpt.temperature": {
+					"type": "number",
+					"default": 0.9,
+					"description": "Set the temperature of chatgpt. Can be obtained from here: https://platform.openai.com/docs/api-reference"
+				},
+				"chatgpt.max_tokens": {
+					"type": "number",
+					"default": 2048,
+					"description": "Set the max_tokens of chatgpt. Can be obtained from here: https://platform.openai.com/docs/api-reference"
+				},
+				"chatgpt.proxy": {
+					"type": "string",
+					"default": "",
+					"description": "Set up a custom proxy server of https://api.openai.com,Please make sure that your server is properly available"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"compile": "webpack",
+		"watch": "webpack --watch",
+		"package": "webpack --mode production --devtool hidden-source-map",
+		"compile-tests": "tsc -p . --outDir out",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"pretest": "npm run compile-tests && npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/axios": "^0.14.0",
+		"@types/glob": "^8.0.0",
+		"@types/mocha": "^10.0.1",
+		"@types/node": "16.x",
+		"@types/request-promise": "^4.1.48",
+		"@types/vscode": "^1.70.0",
+		"@typescript-eslint/eslint-plugin": "^5.45.0",
+		"@typescript-eslint/parser": "^5.45.0",
+		"@vscode/test-electron": "^2.2.0",
+		"eslint": "^8.28.0",
+		"glob": "^8.0.3",
+		"mocha": "^10.1.0",
+		"ts-loader": "^9.4.1",
+		"typescript": "^4.9.3",
+		"webpack": "^5.75.0",
+		"webpack-cli": "^5.0.0"
+	},
+	"dependencies": {
+		"axios": "^1.2.1",
+		"axios-retry": "^3.4.0",
+		"escape-html": "^1.0.3",
+		"i18next": "^22.4.9",
+		"node-fetch": "^3.3.1",
+		"ping": "^0.4.4"
+	},
+	"__metadata": {
+		"id": "90065da7-e1da-4bd6-b033-2ff2096f0924",
+		"publisherId": "fceb7e76-9477-489c-afe4-259814322b1c",
+		"publisherDisplayName": "zhang-renyang",
+		"targetPlatform": "undefined",
+		"isApplicationScoped": false,
+		"updated": true,
+		"isPreReleaseVersion": false,
+		"installedTimestamp": 1689616811734,
+		"preRelease": false
+	}
+}

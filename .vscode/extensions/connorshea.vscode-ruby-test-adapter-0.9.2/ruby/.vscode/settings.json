@@ -1,0 +1,10 @@
+{
+  "rubyTestExplorer.filePattern": [
+    "*_test.rb",
+    "test_*.rb",
+    "*_spec.rb"
+  ],
+  "rubyTestExplorer.minitestDirectory": "./minispecs/",
+  "rubyTestExplorer.rspecDirectory": "./rspecs/",
+  "rubyTestExplorer.testFramework": "rspec"
+}
