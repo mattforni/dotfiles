@@ -34,8 +34,8 @@ alias docker-stop='docker stop $(docker ps -a -q)'
 alias ed-vsc-settings='vim ~/.vscode/settings.json'
 
 # Rails Aliases
-alias rc='type rails >/dev/null 2>&1 && rails console || echo "Rails not found"'
-alias rs='type rails >/dev/null 2>&1 && rails server || echo "Rails not found"'
+alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'
+alias rs='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails server'
 
 # Heroku Aliases
 alias rc-stage='heroku run rails console --app easy-e-stage'
