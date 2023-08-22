@@ -6,7 +6,12 @@
         "editor.wordWrapColumn":"120"
     },
     "files.trimTrailingWhitespace": true,
-    "ruby.rubocop.autoCorrectOnSave": true
+    "ruby.rubocop.autoCorrectOnSave": true,
+    "[ruby]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false
+    }
 }
 
 
