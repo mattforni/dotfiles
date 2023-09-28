@@ -1,17 +1,19 @@
 {
     "editor.bracketPairColorization.enabled": true,
     "editor.guides.bracketPairs":"active",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.rubocop": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "ruby.rubocop.autoCorrectOnSave": true,
     "[html.erb]": {
         "editor.wordWrap":"wordWrapColumn",
         "editor.wordWrapColumn":"120"
     },
-    "files.trimTrailingWhitespace": true,
-    "ruby.rubocop.autoCorrectOnSave": true,
     "[ruby]": {
         "editor.tabSize": 2,
         "editor.insertSpaces": true,
         "editor.detectIndentation": false
     }
 }
-
 

@@ -1,0 +1,2 @@
+"use strict";var l=Object.defineProperty;var t=Object.getOwnPropertyDescriptor;var r=Object.getOwnPropertyNames;var g=Object.prototype.hasOwnProperty;var d=(a,e,o,n)=>{if(e&&typeof e=="object"||typeof e=="function")for(let i of r(e))!g.call(a,i)&&i!==o&&l(a,i,{get:()=>e[i],enumerable:!(n=t(e,i))||n.enumerable});return a};var s=a=>d(l({},"__esModule",{value:!0}),a);var b={};module.exports=s(b);
+//# sourceMappingURL=extensionApi.js.map
