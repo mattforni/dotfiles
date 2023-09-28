@@ -47,3 +47,5 @@ for directory in "${directories[@]}"; do
   fi
 done
 
+export EDITOR=vim
+
