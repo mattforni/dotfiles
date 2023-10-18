@@ -36,6 +36,7 @@ alias ed-vsc-settings='vim ~/.vscode/settings.json'
 # Rails Aliases
 alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'
 alias rs='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails server'
+alias rk='bundle exec sidekiq -c 2'
 
 # Heroku Aliases
 alias rc-stage='heroku run rails console --app easy-e-stage'
