@@ -16,6 +16,7 @@ alias sendit="cp -R ~/.aliases \
   ~/.vscode \
   ~/.zsh \
   ~/.zshrc \
+  ~/bin \
   ~/install.sh \
   ~/Development/dotfiles"
 
@@ -40,7 +41,7 @@ if [ -f $local_file ]; then
     . $local_file
 fi
 
-directories=("/usr/local/opt/postgresql@15/bin")
+directories=("/usr/local/opt/postgresql@15/bin", "$HOME/bin")
 for directory in "${directories[@]}"; do
   if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
     export PATH="${PATH}:${directory}"
