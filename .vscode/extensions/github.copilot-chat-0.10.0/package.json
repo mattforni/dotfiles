@@ -1,0 +1,574 @@
+{
+	"name": "copilot-chat",
+	"displayName": "GitHub Copilot Chat",
+	"description": "AI chat features powered by Copilot",
+	"version": "0.10.0",
+	"build": "1",
+	"internalAIKey": "1058ec22-3c95-4951-8443-f26c1f325911",
+	"ariaKey": "0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255",
+	"buildType": "prod",
+	"publisher": "GitHub",
+	"preview": true,
+	"homepage": "https://github.com/features/copilot",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/vscode-copilot-release"
+	},
+	"bugs": {
+		"url": "https://github.com/microsoft/vscode-copilot-release/issues"
+	},
+	"qna": "https://github.com/github-community/community/discussions/categories/copilot",
+	"icon": "assets/Copilot-App-Icon.png",
+	"pricing": "Trial",
+	"engines": {
+		"vscode": "^1.84.0-20231025",
+		"npm": ">=9.0.0",
+		"node": ">=18.0.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Machine Learning",
+		"Education",
+		"Snippets"
+	],
+	"keywords": [
+		"ai",
+		"openai",
+		"codex",
+		"pilot",
+		"snippets",
+		"documentation",
+		"autocomplete",
+		"intellisense",
+		"refactor",
+		"javascript",
+		"python",
+		"typescript",
+		"php",
+		"go",
+		"golang",
+		"ruby",
+		"c++",
+		"c#",
+		"java",
+		"kotlin",
+		"co-pilot"
+	],
+	"badges": [
+		{
+			"url": "https://img.shields.io/badge/GitHub%20Copilot-Subscription%20Required-orange",
+			"href": "https://github.com/github-copilot/signup",
+			"description": "%github.copilot.badge.signUp%"
+		},
+		{
+			"url": "https://img.shields.io/github/stars/github/copilot-docs?style=social",
+			"href": "https://github.com/github/copilot-docs",
+			"description": "%github.copilot.badge.star%"
+		},
+		{
+			"url": "https://img.shields.io/youtube/channel/views/UC7c3Kb6jYCRj4JOHHZTxKsQ?style=social",
+			"href": "https://www.youtube.com/@GitHub/search?query=copilot",
+			"description": "%github.copilot.badge.youtube%"
+		},
+		{
+			"url": "https://img.shields.io/twitter/follow/github?style=social",
+			"href": "https://twitter.com/github",
+			"description": "%github.copilot.badge.twitter%"
+		}
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./dist/extension",
+	"l10n": "./l10n",
+	"enabledApiProposals": [
+		"interactive",
+		"interactiveUserActions",
+		"chatProvider",
+		"codeActionAI",
+		"findTextInFiles",
+		"textSearchProvider",
+		"terminalDataWriteEvent",
+		"terminalExecuteCommandEvent",
+		"terminalSelection",
+		"terminalQuickFixProvider",
+		"handleIssueUri",
+		"readonlyMessage",
+		"chatVariables",
+		"mappedEditsProvider",
+		"aiRelatedInformation",
+		"chatAgents",
+		"chatAgents2",
+		"chatAgents2Additions",
+		"defaultChatAgent"
+	],
+	"contributes": {
+		"interactiveSession": [
+			{
+				"label": "GitHub Copilot",
+				"id": "copilot",
+				"icon": "",
+				"when": "!github.copilot.interactiveSession.disabled"
+			}
+		],
+		"viewsWelcome": [
+			{
+				"view": "workbench.panel.chat.view.copilot",
+				"contents": "%github.copilot.viewsWelcome.signIn%",
+				"when": "!github.copilot.activated && !github.copilot.offline && !github.copilot.interactiveSession.individual.disabled && !github.copilot.interactiveSession.individual.expired && !github.copilot.interactiveSession.enterprise.disabled"
+			},
+			{
+				"view": "workbench.panel.chat.view.copilot",
+				"contents": "%github.copilot.viewsWelcome.individual%",
+				"when": "github.copilot.interactiveSession.individual.disabled"
+			},
+			{
+				"view": "workbench.panel.chat.view.copilot",
+				"contents": "%github.copilot.viewsWelcome.individual.expired%",
+				"when": "github.copilot.interactiveSession.individual.expired"
+			},
+			{
+				"view": "workbench.panel.chat.view.copilot",
+				"contents": "%github.copilot.viewsWelcome.enterprise%",
+				"when": "github.copilot.interactiveSession.enterprise.disabled"
+			},
+			{
+				"view": "workbench.panel.chat.view.copilot",
+				"contents": "%github.copilot.viewsWelcome.offline%",
+				"when": "github.copilot.offline"
+			}
+		],
+		"commands": [
+			{
+				"command": "github.copilot.interactiveEditor.explain",
+				"title": "%github.copilot.command.explainThis%",
+				"enablement": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.interactiveEditor.generate",
+				"title": "%github.copilot.command.generateThis%",
+				"enablement": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.interactiveEditor.generateDocs",
+				"title": "%github.copilot.command.generateDocs%",
+				"enablement": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.interactiveEditor.generateTests",
+				"title": "%github.copilot.command.generateTests%",
+				"enablement": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.interactiveEditor.fix",
+				"title": "%github.copilot.command.fixThis%",
+				"enablement": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.interactiveSession.feedback",
+				"title": "%github.copilot.command.sendChatFeedback%",
+				"enablement": "github.copilot.activated && !github.copilot.interactiveSession.disabled",
+				"icon": "$(feedback)",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.debug.workbenchState",
+				"title": "%github.copilot.command.logWorkbenchState%",
+				"category": "Developer"
+			},
+			{
+				"command": "github.copilot.ghpr.applySuggestion",
+				"title": "%github.copilot.command.applySuggestionWithCopilot%",
+				"icon": "$(sparkle)",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.terminal.explainTerminalSelection",
+				"title": "%github.copilot.command.explainTerminalSelection%",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.terminal.explainTerminalSelectionContextMenu",
+				"title": "%github.copilot.command.explainTerminalSelectionContextMenu%",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.terminal.explainTerminalLastCommand",
+				"title": "%github.copilot.command.explainTerminalLastCommand%",
+				"category": "GitHub Copilot"
+			},
+			{
+				"command": "github.copilot.terminal.suggestCommand",
+				"title": "%github.copilot.command.suggestCommand%",
+				"category": "GitHub Copilot"
+			}
+		],
+		"configuration": {
+			"title": "Copilot",
+			"properties": {
+				"github.copilot.editor.enableCodeActions": {
+					"type": "boolean",
+					"default": true,
+					"description": "%github.copilot.config.enableCodeActions%"
+				},
+				"github.copilot.editor.iterativeFixing": {
+					"type": "boolean",
+					"default": true,
+					"description": "%github.copilot.config.iterativeFixing%"
+				},
+				"github.copilot.chat.localeOverride": {
+					"type": "string",
+					"enum": [
+						"auto",
+						"en",
+						"fr",
+						"it",
+						"de",
+						"es",
+						"ru",
+						"zh-CN",
+						"zh-TW",
+						"ja",
+						"ko",
+						"cs",
+						"pt-br",
+						"tr",
+						"pl"
+					],
+					"enumDescriptions": [
+						"Use VS Code's configured display language",
+						"English",
+						"français",
+						"italiano",
+						"Deutsch",
+						"español",
+						"русский",
+						"中文(简体)",
+						"中文(繁體)",
+						"日本語",
+						"한국어",
+						"čeština",
+						"português",
+						"Türkçe",
+						"polski"
+					],
+					"default": "auto",
+					"markdownDescription": "%github.copilot.config.localeOverride%"
+				},
+				"github.copilot.chat.welcomeMessage": {
+					"type": "string",
+					"default": "first",
+					"markdownDescription": "%github.copilot.config.welcomeMessage%",
+					"markdownEnumDescriptions": [
+						"%github.copilot.config.welcomeMessage.first%",
+						"%github.copilot.config.welcomeMessage.always%",
+						"%github.copilot.config.welcomeMessage.never%"
+					],
+					"enum": [
+						"first",
+						"always",
+						"never"
+					]
+				}
+			}
+		},
+		"configurationDefaults": {
+			"terminal.integrated.commandsToSkipShell": [
+				"github.copilot.terminal.suggestCommand"
+			]
+		},
+		"keybindings": [
+			{
+				"command": "github.copilot.terminal.suggestCommand",
+				"key": "ctrl+i",
+				"mac": "cmd+i",
+				"when": "terminalFocus"
+			}
+		],
+		"submenus": [
+			{
+				"id": "copilot",
+				"label": "Copilot"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"submenu": "copilot",
+					"when": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+					"group": "1_copilot@0"
+				}
+			],
+			"copilot": [
+				{
+					"command": "inlineChat.start",
+					"when": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+					"group": "copilot@1"
+				},
+				{
+					"command": "github.copilot.interactiveEditor.explain",
+					"when": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+					"group": "copilotAction@1"
+				},
+				{
+					"command": "github.copilot.interactiveEditor.fix",
+					"when": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+					"group": "copilotAction@2"
+				},
+				{
+					"command": "github.copilot.interactiveEditor.generateDocs",
+					"when": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+					"group": "copilotAction@3"
+				},
+				{
+					"command": "github.copilot.interactiveEditor.generateTests",
+					"when": "!github.copilot.interactiveSession.disabled && !editorReadonly",
+					"group": "copilotAction@4"
+				}
+			],
+			"terminal/context": [
+				{
+					"command": "github.copilot.terminal.explainTerminalSelectionContextMenu",
+					"group": "1_copilot@0"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "github.copilot.interactiveSession.feedback",
+					"when": "github.copilot.activated && !github.copilot.interactiveSession.disabled"
+				},
+				{
+					"command": "github.copilot.debug.workbenchState",
+					"when": "true"
+				},
+				{
+					"command": "github.copilot.terminal.explainTerminalSelectionContextMenu",
+					"when": "false"
+				}
+			],
+			"view/title": [
+				{
+					"command": "github.copilot.interactiveSession.feedback",
+					"when": "view == workbench.panel.chat.view.copilot",
+					"group": "navigation"
+				}
+			],
+			"comments/comment/title": [
+				{
+					"command": "github.copilot.ghpr.applySuggestion",
+					"title": "Apply Suggestion with Copilot",
+					"group": "inline@0",
+					"when": "commentController =~ /^github-review/ && !(comment =~ /hasSuggestion/)"
+				}
+			]
+		},
+		"icons": {
+			"copilot-logo": {
+				"description": "%github.copilot.icon%",
+				"default": {
+					"fontPath": "assets/copilot.woff",
+					"fontCharacter": "\\0041"
+				}
+			},
+			"copilot-warning": {
+				"description": "%github.copilot.icon%",
+				"default": {
+					"fontPath": "assets/copilot.woff",
+					"fontCharacter": "\\0042"
+				}
+			},
+			"copilot-notconnected": {
+				"description": "%github.copilot.icon%",
+				"default": {
+					"fontPath": "assets/copilot.woff",
+					"fontCharacter": "\\0043"
+				}
+			}
+		},
+		"iconFonts": [
+			{
+				"id": "copilot-font",
+				"src": [
+					{
+						"path": "assets/copilot.woff",
+						"format": "woff"
+					}
+				]
+			}
+		],
+		"terminalQuickFixes": [
+			{
+				"id": "copilot-chat.fixWithCopilot",
+				"commandLineMatcher": ".+",
+				"commandExitResult": "error",
+				"outputMatcher": {
+					"anchor": "bottom",
+					"length": 1,
+					"lineMatcher": ".+",
+					"offset": 0
+				},
+				"kind": "explain"
+			}
+		]
+	},
+	"extensionPack": [
+		"GitHub.copilot"
+	],
+	"scripts": {
+		"postinstall": "tsx ./script/postinstall.ts",
+		"prepare": "tsx script/setup/prepare.ts",
+		"husky:install": "husky install",
+		"vscode:prepublish": "npm run build",
+		"vscode-dts:dev": "npx vscode-dts dev && mv vscode.proposed.*.ts src/extension",
+		"build": "tsx .esbuild.ts",
+		"compile": "tsx .esbuild.ts --dev",
+		"watch": "npm-run-all -p watch:*",
+		"watch:esbuild": "tsx .esbuild.ts --watch --dev",
+		"watch:tsc-extension": "tsc --noEmit --watch --project tsconfig.json",
+		"watch:tsc-simulation-workbench": "tsc --noEmit --watch --project test/simulation/workbench/tsconfig.json",
+		"typecheck": "tsc --noEmit -project tsconfig.json && tsc --noEmit --project test/simulation/workbench/tsconfig.json",
+		"lint": "eslint src test --max-warnings=0 --ext ts",
+		"tsfmt": "node tsfmt ./tsfmt.json -r --verify",
+		"pretest": "npm run build_test",
+		"test": "npm-run-all test:*",
+		"test:extension": "tsx ./test/runTest.ts --insiders",
+		"test:unit": "mocha -u tdd dist/test-unit.js --require source-map-support/register --exit",
+		"test:unit_jest": "jest --forceExit --detectOpenHandles",
+		"build_test": "tsc test/run.ts --esModuleInterop",
+		"get_token": "tsx script/setup/getToken.ts",
+		"patch-release": "tsx script/build/applyPatchForRelease.ts",
+		"patch-prerelease": "tsx script/build/applyPatchForRelease.ts -- --prerelease",
+		"prettier": "prettier --list-different --write --cache .",
+		"simulate:debug": "run-script-os",
+		"simulate:debug:win32": ".venv\\Scripts\\activate.bat && node dist/simulationMain.js --n=10",
+		"simulate:debug:darwin:linux": ". .venv/bin/activate && node dist/simulationMain.js --n=10",
+		"simulate": "node dist/simulationMain.js",
+		"simulate-ci": "node dist/simulationMain.js --ci --require-cache",
+		"simulate-baseline": "node dist/simulationMain.js --update-baseline",
+		"setup": "python script/setup/setup.py && npm run get_token",
+		"setup:dotnet": "run-script-os",
+		"setup:dotnet:darwin:linux": "curl -O https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh && chmod u+x dotnet-install.sh && ./dotnet-install.sh --version latest --quality GA --channel STS && rm dotnet-install.sh",
+		"setup:dotnet:win32": "Invoke-WebRequest -Uri https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1 && chmod u+x dotnet-install.ps1 && ./dotnet-install.ps1 --version latest --quality GA --channel STS && rm dotnet-install.ps1",
+		"aml": "python test/aml/run.py",
+		"package": "vsce package"
+	},
+	"devDependencies": {
+		"@github/prettier-config": "0.0.6",
+		"@jest/globals": "^29.6.1",
+		"@nteract/messaging": "^7.0.10",
+		"@types/js-yaml": "^4.0.5",
+		"@types/kerberos": "^1.1.2",
+		"@types/minimist": "^1.2.2",
+		"@types/mocha": "^10.0.1",
+		"@types/node": "^18.11.9",
+		"@types/picomatch": "^2.3.0",
+		"@types/react": "^18.2.21",
+		"@types/react-dom": "^18.2.7",
+		"@types/sinon": "^10.0.13",
+		"@types/tar": "^6.1.5",
+		"@types/tunnel": "^0.0.3",
+		"@types/uuid": "^9.0.1",
+		"@types/vscode": "^1.74.0",
+		"@typescript-eslint/eslint-plugin": "^5.59.9",
+		"@typescript-eslint/parser": "^5.56.0",
+		"@typescript-eslint/typescript-estree": "^5.59.11",
+		"@vscode/dts": "^0.4.0",
+		"@vscode/test-electron": "^2.3.0",
+		"@vscode/vsce": "2.19.0",
+		"@vscode/zeromq": "0.1.6",
+		"csv-parse": "^5.5.0",
+		"dotenv": "^16.3.1",
+		"electron": "^25.8.4",
+		"esbuild": "^0.19.3",
+		"eslint": "^8.38.0",
+		"eslint-import-resolver-typescript": "^3.5.5",
+		"eslint-plugin-header": "^3.1.1",
+		"eslint-plugin-import": "^2.27.5",
+		"eslint-plugin-jsdoc": "^46.2.6",
+		"eslint-plugin-local": "^1.0.0",
+		"eslint-plugin-no-only-tests": "^3.1.0",
+		"fantasticon": "^2.0.0",
+		"get-port": "^5.1.1",
+		"glob": "^10.2.7",
+		"husky": "^8.0.3",
+		"ignore-loader": "^0.1.2",
+		"jest": "^29.6.1",
+		"js-yaml": "^4.1.0",
+		"lint-staged": "^13.2.2",
+		"minimist": "^1.2.8",
+		"mobx": "^6.10.2",
+		"mobx-react-lite": "^4.0.4",
+		"mocha": "^10.2.0",
+		"monaco-editor": "^0.41.0",
+		"npm-run-all": "^4.1.5",
+		"outdent": "^0.8.0",
+		"picomatch": "^2.3.1",
+		"prettier": "2.8.7",
+		"proxy": "^1.0.2",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"run-script-os": "^1.1.6",
+		"sinon": "^15.1.2",
+		"tar": "^6.1.15",
+		"tree-sitter-c-sharp": "^0.20.0",
+		"tree-sitter-cli": "^0.20.8",
+		"tree-sitter-cpp": "^0.20.0",
+		"tree-sitter-go": "^0.19.1",
+		"tree-sitter-java": "^0.19.1",
+		"tree-sitter-javascript": "^0.19.0",
+		"tree-sitter-python": "^0.20.1",
+		"tree-sitter-ruby": "^0.19.0",
+		"tree-sitter-typescript": "^0.20.1",
+		"ts-dedent": "^2.2.0",
+		"ts-jest": "^29.1.1",
+		"ts-loader": "^9.4.2",
+		"ts-node": "^10.9.1",
+		"tsx": "^3.13.0",
+		"typescript": "^5.0.4",
+		"typescript-formatter": "^7.2.2",
+		"zeromq": "github:rebornix/zeromq.js#a19e8e373b3abc677f91b936d3f00d49b1b61792",
+		"zlib": "^1.0.5"
+	},
+	"dependencies": {
+		"@adobe/helix-fetch": "github:devm33/helix-fetch#eaa2f1344d93625e1bddb83d6846be5eea007e94",
+		"@microsoft/tiktokenizer": "^1.0.2",
+		"@roamhq/mac-ca": "^1.0.7",
+		"@vscode/extension-telemetry": "^0.8.4",
+		"applicationinsights": "^2.9.0",
+		"ignore": "^5.2.4",
+		"@humanwhocodes/gitignore-to-minimatch": "1.0.2",
+		"isbinaryfile": "^5.0.0",
+		"jsonc-parser": "^3.2.0",
+		"open": "^8.4.2",
+		"p-limit": "^3.0.0",
+		"source-map-support": "^0.5.21",
+		"tunnel": "^0.0.6",
+		"vscode-languageserver-textdocument": "~1.0.2",
+		"vscode-tas-client": "^0.1.63",
+		"vscode-uri": "^3.0.7",
+		"web-tree-sitter": "^0.20.8"
+	},
+	"lint-staged": {
+		"!(test/simulation/fixtures/**)*.{ts,js},!.test-scenarios/**/*,!test/aml/**/*": [
+			"npm run tsfmt --",
+			"npm run lint --"
+		]
+	},
+	"isPreRelease": false,
+	"__metadata": {
+		"id": "7ec7d6e6-b89e-4cc5-a59b-d6c4d238246f",
+		"publisherId": "7c1c19cd-78eb-4dfb-8999-99caf7679002",
+		"publisherDisplayName": "GitHub",
+		"targetPlatform": "undefined",
+		"isApplicationScoped": false,
+		"updated": true,
+		"isPreReleaseVersion": false,
+		"installedTimestamp": 1698899738251,
+		"preRelease": false
+	}
+}
