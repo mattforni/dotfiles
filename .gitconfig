@@ -47,6 +47,7 @@
     mattforni = "config user.email 'mattforni@gmail.com'"
     name = "config user.name 'Matthew Fornaciari'"
     quitcarbon = "config user.email 'forni@quitcarbon.com'"
+	cob = !checkout-branch.sh
 [color]
     ui = auto
 [color "diff"]
