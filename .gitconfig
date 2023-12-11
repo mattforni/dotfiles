@@ -40,7 +40,7 @@
     sthd = stash drop
     sthp = stash pop
     sths = stash show
-    wip = !git aa && git commit -a -m \"WIP\"
+    wip = "!f() { git add -A && git commit -a -m \"WIP on $(git rev-parse --abbrev-ref HEAD)\"; }; f"
 
     # Config based aliases
     gremlin = "config user.email 'matt@gremlin.com'"

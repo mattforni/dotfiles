@@ -49,4 +49,5 @@ for directory in "${directories[@]}"; do
 done
 
 export EDITOR=vim
+export SENTRY_DSN=https://4c4614666a0fe239ed412c64d3ae8a5e@o4505636134584320.ingest.sentry.io/4505636144021504
 
