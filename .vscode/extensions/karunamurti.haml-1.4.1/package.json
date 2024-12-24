@@ -73,7 +73,8 @@
 		"updated": false,
 		"isPreReleaseVersion": false,
 		"installedTimestamp": 1689358814194,
-		"preRelease": false
+		"preRelease": false,
+		"size": 213935
 	},
 	"devDependencies": {
 		"vscode": "^1.0.0",

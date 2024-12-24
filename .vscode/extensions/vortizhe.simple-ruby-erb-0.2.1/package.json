@@ -111,6 +111,7 @@
 		"updated": false,
 		"isPreReleaseVersion": false,
 		"installedTimestamp": 1689358251193,
-		"preRelease": false
+		"preRelease": false,
+		"size": 186936
 	}
 }

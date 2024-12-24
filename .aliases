@@ -15,9 +15,10 @@ alias lla="ls -la"
 
 # Screen Aliases
 alias scr="screen -S"
+alias skill="screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs kill"
 alias sls="screen -ls"
 alias sra="screen -d -RR"
-alias skill="screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs kill"
+alias sw="screen -wipe"
 
 # Cargo Aliases
 alias cb="cargo build"
@@ -41,3 +42,7 @@ alias rk='bundle exec sidekiq -c 2'
 # Heroku Aliases
 alias rc-stage='heroku run rails console --app easy-e-stage'
 alias rc-prod='heroku run rails console --app easy-e-prod'
+
+# Git Aliases
+alias gp='git pull'
+

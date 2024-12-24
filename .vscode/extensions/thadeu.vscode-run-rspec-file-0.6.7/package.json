@@ -1,0 +1,182 @@
+{
+	"name": "vscode-run-rspec-file",
+	"displayName": "vscode-run-rspec-file",
+	"description": "Provide simple command to Run RSpec File",
+	"version": "0.6.7",
+	"publisher": "Thadeu",
+	"icon": "rspec.png",
+	"galleryBanner": {
+		"color": "#232323",
+		"theme": "dark"
+	},
+	"engines": {
+		"vscode": "^1.82.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Snippets",
+		"Extension Packs",
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:extension.runAllFilesOnRspec",
+		"onCommand:extension.runFileOnRspec",
+		"onCommand:extension.runLineOnRspec",
+		"onCommand:extension.runOpenSpec",
+		"onCommand:extension.runOnLastSpec",
+		"onCommand:extension.runAllOpenedFiles"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/thadeu/vscode-run-rspec-file.git"
+	},
+	"homepage": "https://github.com/thadeu/vscode-run-rspec-file",
+	"main": "./out/src/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "ruby",
+				"extensions": [
+					".rb"
+				]
+			}
+		],
+		"commands": [
+			{
+				"command": "extension.runAllFilesOnRspec",
+				"title": "RSpec: Run All Files on RSpec"
+			},
+			{
+				"command": "extension.runAllOpenedFiles",
+				"title": "RSpec: Run Opened Files"
+			},
+			{
+				"command": "extension.runFileOnRspec",
+				"title": "RSpec: Run File on RSpec"
+			},
+			{
+				"command": "extension.runLineOnRspec",
+				"title": "RSpec: Run Line on RSpec"
+			},
+			{
+				"command": "extension.runOpenSpec",
+				"title": "RSpec: Run Open spec this file"
+			},
+			{
+				"command": "extension.runOnLastSpec",
+				"title": "RSpec: Run On Last Spec"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "extension.runLineOnRspec",
+				"key": "cmd+l",
+				"when": "editorLangId == 'ruby'"
+			},
+			{
+				"command": "extension.runAllOpenedFiles",
+				"key": "cmd+alt+j",
+				"when": "editorLangId == 'ruby'"
+			},
+			{
+				"command": "extension.runFileOnRspec",
+				"key": "cmd+alt+l",
+				"when": "editorLangId == 'ruby'"
+			},
+			{
+				"command": "extension.runOpenSpec",
+				"key": "cmd+alt+o",
+				"when": "editorLangId == 'ruby'"
+			},
+			{
+				"command": "extension.runOnLastSpec",
+				"key": "cmd+y",
+				"when": "editorLangId == 'ruby'"
+			}
+		],
+		"configuration": {
+			"title": "vscode-run-rspec-file",
+			"properties": {
+				"vscode-run-rspec-file.controller-spec-directory": {
+					"type": "string",
+					"default": "controllers",
+					"description": "The directory to place controller specs in."
+				},
+				"vscode-run-rspec-file.custom-command": {
+					"type": "string",
+					"default": "bundle exec rspec --color",
+					"description": "RSpec command to be used when running specs. Example: \"bundle exec rspec --color\""
+				},
+				"vscode-run-rspec-file.folder": {
+					"type": "string",
+					"default": "spec",
+					"description": "Set an custom folder to run tests Example: \"test\""
+				},
+				"vscode-run-rspec-file.suffix": {
+					"type": "string",
+					"default": "spec",
+					"description": "Set an custom suffix files tests Example: \"test\""
+				},
+				"vscode-run-rspec-file.integration": {
+					"type": "string",
+					"default": "rails",
+					"description": "Set your app mode. Example: \"rails\" or \"other\""
+				}
+			}
+		}
+	},
+	"keywords": [
+		"Ruby on Rails",
+		"Rspec",
+		"RSpec",
+		"Spec",
+		"Ruby",
+		"TDD",
+		"Testing"
+	],
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "npx rspack --mode production --config ./webpack.config.js",
+		"watch": "npx rspack --watch --mode production --config ./webpack.config.js",
+		"publish": "npx vsce publish",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test",
+		"test:unit": "vitest"
+	},
+	"devDependencies": {
+		"@rspack/cli": "^0.3.4",
+		"@types/lodash.compact": "^3.0.7",
+		"@types/lodash.get": "^4.4.7",
+		"@types/lodash.uniq": "^4.5.7",
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^20.6.0",
+		"@types/vscode": "^1.82.0",
+		"lodash.compact": "^3.0.1",
+		"lodash.uniq": "^4.5.0",
+		"ts-loader": "^9.4.4",
+		"tslint": "^5.20.1",
+		"typescript": "5",
+		"vite-tsconfig-paths": "^4.2.1",
+		"vitest": "^0.34.4",
+		"vsce": "^2.15.0",
+		"vscode": "^1.1.37",
+		"webpack": "^5.88.2",
+		"webpack-cli": "^5.1.4"
+	},
+	"dependencies": {
+		"lodash.get": "^4.4.2",
+		"lodash.isempty": "^4.4.0"
+	},
+	"__metadata": {
+		"id": "6a6cd353-e54a-4af6-bba1-e89298b1ff3e",
+		"publisherId": "54b6b728-de15-41eb-8600-f6870c22b0cb",
+		"publisherDisplayName": "thadeu",
+		"targetPlatform": "undefined",
+		"isApplicationScoped": false,
+		"updated": true,
+		"isPreReleaseVersion": false,
+		"installedTimestamp": 1706804954329,
+		"pinned": false,
+		"preRelease": false
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"chatgpt.command_why_broken": "檢查下面代碼是否有BUG並給出修復建議 🐛",
+	"chatgpt.command_explain_code": "詳細講解下面代碼 💬",
+	"chatgpt.command_refactor_code": "重構下面代碼並告訴我你改動了哪裡 🔧",
+	"chatgpt.command_add_tests": "為下面的代碼添加測試 🧪",
+	"chatgpt.command_custom_prompt": "自定義提問 ❓",
+	"chatgpt.command_update_APIkey": "綁定自己的API key🔀🔑",
+	"chatgpt.command_unbind_APIkey": "解綁自己的API key🗑️🔑",
+	"chatgpt.command_validate_APIkey": "驗證API key ✔️🔑",
+	"chatgpt.command_refresh_APIkey": "刷新API key 🔄🔑",
+	"chatgpt.command_display_language": "修改顯示語言 🌍",
+	"chatgpt.command_setProxy": "設置自定義的代理伺服器 🌐",
+	"chatgpt.command_unsetProxy": "取消代理服务器设置 🌐",
+	"chatgpt.command_add_predefined_prompt":"增加預定義提示詞 ➕",
+	"chatgpt.command_edit_predefined_prompt":"修改預定義提示詞 ✏️",
+	"chatgpt.command_query": "發起提問 ❓",
+	"chatgpt.command_list_clear": "清空列表 🗑️",
+	"chatgpt.command_export_markdown": "導出markdown 📤",
+	"chatgpt.command_choose_predefined_prompt": "選擇預定義提示詞 🔍"
+}
