@@ -2,3 +2,7 @@
 *.log
 *.swp
 
+.vscode/extensions
+.claude/shell-snapshots
+.claude/statsig
+.claude/todos
