@@ -2,7 +2,7 @@
     "editor.bracketPairColorization.enabled": true,
     "editor.guides.bracketPairs":"active",
     "editor.codeActionsOnSave": {
-        "source.fixAll.rubocop": "explicit"
+        "source.fixAll.rubocop": true
     },
     "files.trimTrailingWhitespace": true,
     "ruby.rubocop.autoCorrectOnSave": true,
