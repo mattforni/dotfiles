@@ -1,0 +1,17 @@
+[
+  {
+    "content": "Analyze E2E test failures from the report",
+    "status": "completed",
+    "activeForm": "Analyzed E2E test failures from the report"
+  },
+  {
+    "content": "Fix failing E2E tests",
+    "status": "completed",
+    "activeForm": "Fixed E2E test heading conflicts"
+  },
+  {
+    "content": "Re-run E2E tests to verify fixes",
+    "status": "in_progress",
+    "activeForm": "Re-running E2E tests to verify fixes"
+  }
+]

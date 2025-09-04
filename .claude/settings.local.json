@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source ~/.functions)",
+      "Bash(source ~/.aliases)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

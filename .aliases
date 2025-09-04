@@ -3,7 +3,6 @@
 alias bell="echo -ne '\007'"
 alias ed-aliases="vim ~/.aliases"
 alias ed-functions="vim ~/.functions"
-alias ed-local="vim ~/.local"
 alias rest-now="sudo shutdown -r now"
 alias todo="grep -Irn --exclude=\"*\.git*\" \"TODO\" ."
 alias upgrade="sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove"
@@ -36,13 +35,7 @@ alias ed-vsc-settings='vim ~/.vscode/settings.json'
 
 # Rails Aliases
 alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'
-alias rs='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails server'
+alias rf='type foreman >/dev/null 2>&1 && bundle exec foreman start'
 alias rk='bundle exec sidekiq -c 2'
-
-# Heroku Aliases
-alias rc-stage='heroku run rails console --app easy-e-stage'
-alias rc-prod='heroku run rails console --app easy-e-prod'
-
-# Git Aliases
-alias gp='git pull'
+alias rs='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails server'
 
