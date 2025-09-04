@@ -1,9 +1,0 @@
-{
-  "commands": [
-    {
-      "name": "push",
-      "description": "Update CLAUDE.md, commit all changes, push, and create PR with informative messages",
-      "prompt": "Let's make any informative updates to @CLAUDE.md, add all the files, commit with an informative message, push, and create the PR with an informative message. Remember to use 'rebuild' as the base branch for the PR."
-    }
-  ]
-}
