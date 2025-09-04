@@ -284,3 +284,86 @@ u() {
     cd ..
   done
 }
+
+# SYNC-DOTS
+# Function to sync dotfiles from home directory back to repository
+# -d (optional) dry run mode - shows what would be synced without making changes
+# This function handles both files and directories
+sync-dots() {
+  local OPTIND
+  local DRY_RUN=0
+
+  while getopts "d" OPTION; do
+    case "$OPTION" in
+      d) DRY_RUN=1;;
+      ?) return;;
+    esac
+  done
+  shift $((OPTIND-1))
+
+  # Define the dotfiles repository path
+  DOTFILES_REPO="$HOME/Development/dotfiles"
+
+  # Check if we're in the dotfiles repo or can find it
+  if [ ! -d "$DOTFILES_REPO" ]; then
+    echo "Dotfiles repository not found at $DOTFILES_REPO"
+    return 1
+  fi
+
+  # List of dotfiles to sync (both files and directories)
+  DOTFILES=(
+    ".aliases"
+    ".bashrc"
+    ".bash_profile"
+    ".functions"
+    ".gitconfig"
+    ".profile"
+    ".screenrc"
+    ".vimrc"
+    ".zshrc"
+    ".vscode"
+    ".claude/commands"
+    ".claude/plugins"
+    "bin"
+  )
+
+  if [ $DRY_RUN -eq 1 ]; then
+    echo "DRY RUN: Showing what would be synced..."
+    echo
+  fi
+
+  # Sync each dotfile/directory
+  for item in "${DOTFILES[@]}"; do
+    SOURCE="$HOME/$item"
+    DEST="$DOTFILES_REPO/$item"
+
+    if [ -e "$SOURCE" ]; then
+      if [ $DRY_RUN -eq 1 ]; then
+        if [ -d "$SOURCE" ]; then
+          echo "Would sync directory: $item"
+        else
+          echo "Would sync file: $item"
+        fi
+      else
+        if [ -d "$SOURCE" ]; then
+          # For directories, use rsync to sync contents
+          echo "Syncing directory: $item"
+          # Create parent directory if needed for subdirectories like .claude/command
+          mkdir -p "$(dirname "$DEST")"
+          rsync -av --delete "$SOURCE/" "$DEST/"
+        else
+          # For files, use cp
+          echo "Syncing file: $item"
+          cp "$SOURCE" "$DEST"
+        fi
+      fi
+    else
+      echo "Skipping $item (not found in home directory)"
+    fi
+  done
+
+  if [ $DRY_RUN -eq 0 ]; then
+    echo
+    echo "Sync complete! Review changes with 'cd $DOTFILES_REPO && git status'"
+  fi
+}
