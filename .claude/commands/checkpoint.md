@@ -5,8 +5,7 @@ allowed-tools:
   Bash(git push:*),
   Bash(git status:*),
   Bash(git stash:*)
-argument-hint: [feature-name]
-description: Create a new feature branch from latest main and define scope
+description: Creates a checkpoint for the current work in progress
 ---
 
 **Usage:** `/checkpoint [optional-message]`
@@ -14,9 +13,9 @@ description: Create a new feature branch from latest main and define scope
 **Description:** Comprehensive checkpoint that analyzes all changes, updates documentation, commits everything, and pushes to remote.
 
 **What it does:**
-1. Analyzes all git changes (staged, unstaged, untracked)
-2. Updates ENG documentation with relevant technical changes
-3. Updates CLAUDE.md with new patterns, components, or guidelines
+1. Makes sure we are on a branch before doing anything.
+2. Analyzes all git changes (staged, unstaged, untracked)
+3. Updates CLAUDE.md with new patterns, components, architectures, or guidelines
 4. Stages all changes in the working directory
 5. Creates an informative commit message based on the changes
 6. Commits everything with proper attribution
