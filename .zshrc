@@ -2,24 +2,6 @@
 
 source ~/.zsh/history.zsh
 
-alias ed-zsh="vim ~/.zshrc"
-alias src-zsh="source ~/.zshrc"
-alias sendit="cp -R ~/.aliases \
-  ~/.bashrc \
-  ~/.bash_profile \
-  ~/.functions \
-  ~/.gitconfig \
-  ~/.profile \
-  ~/.screenrc \
-  ~/.vim \
-  ~/.vimrc \
-  ~/.vscode \
-  ~/.zsh \
-  ~/.zshrc \
-  ~/bin \
-  ~/install.sh \
-  ~/Development/dotfiles"
-
 # Include any alias definitions which have been abstracted into
 # their own file to keep this file lean and mean.
 alias_file=~/.aliases
@@ -32,6 +14,15 @@ fi
 function_file=~/.functions
 if [ -f $function_file ]; then
     . $function_file
+fi
+
+# Load environment variables from .env.local if it exists
+# Using set -a to export all variables automatically
+env_file=~/.env.local
+if [ -f $env_file ]; then
+    set -a
+    . $env_file
+    set +a
 fi
 
 directories=("/usr/local/opt/postgresql@15/bin", "$HOME/bin")
