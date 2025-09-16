@@ -7,3 +7,4 @@
 .claude/statsig
 .claude/todos
 .env.local
+.claude/settings.local.json
