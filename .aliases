@@ -2,6 +2,7 @@
 # General Aliases
 alias bell="echo -ne '\007'"
 alias ed-aliases="vim ~/.aliases"
+alias ed-env="vim ~/.env.local"
 alias ed-functions="vim ~/.functions"
 alias rest-now="sudo shutdown -r now"
 alias todo="grep -Irn --exclude=\"*\.git*\" \"TODO\" ."
@@ -32,6 +33,29 @@ alias docker-stop='docker stop $(docker ps -a -q)'
 
 # VSCode Aliases
 alias ed-vsc-settings='vim ~/.vscode/settings.json'
+
+# Zsh Aliases
+alias ed-zsh="vim ~/.zshrc"
+alias src-zsh="source ~/.zshrc"
+
+# Dotfiles Management
+alias send-it="cp -R ~/.aliases \
+  ~/.bashrc \
+  ~/.bash_profile \
+  ~/.env.local \
+  ~/.functions \
+  ~/.gitconfig \
+  ~/.profile \
+  ~/.screenrc \
+  ~/.vim \
+  ~/.zsh \
+  ~/.zshrc \
+  ~/bin \
+  ~/install.sh \
+  ~/Development/dotfiles"
+
+# Claude Aliases
+alias cc="claude"
 
 # Rails Aliases
 alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'
