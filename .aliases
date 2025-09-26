@@ -42,7 +42,7 @@ alias src-zsh="source ~/.zshrc"
 alias send-it="cp -R ~/.aliases \
   ~/.bashrc \
   ~/.bash_profile \
-  ~/.env.local \
+  ~/.claude \
   ~/.functions \
   ~/.gitconfig \
   ~/.profile \

@@ -8,3 +8,5 @@
 .claude/todos
 .env.local
 .claude/settings.local.json
+.claude/projects/
+.claude/ide/
