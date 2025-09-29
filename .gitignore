@@ -10,3 +10,5 @@
 .claude/settings.local.json
 .claude/projects/
 .claude/ide/
+.claude/file-history
+.claude/history.jsonl
