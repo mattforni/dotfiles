@@ -17,12 +17,10 @@ if [ -f $function_file ]; then
 fi
 
 # Load environment variables from .env.local if it exists
-# Using set -a to export all variables automatically
-env_file=~/.env.local
-if [ -f $env_file ]; then
-    set -a
-    . $env_file
-    set +a
+# Walks up the directory tree from PWD looking for .env.local
+# Falls back to global ~/.env.local if no local file is found
+if type find_and_source_env &>/dev/null; then
+    find_and_source_env
 fi
 
 directories=("/usr/local/opt/postgresql@15/bin", "$HOME/bin")

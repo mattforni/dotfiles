@@ -367,3 +367,29 @@ sync-dots() {
     echo "Sync complete! Review changes with 'cd $DOTFILES_REPO && git status'"
   fi
 }
+
+# FIND-AND-SOURCE-ENV
+# Function to find and source .env.local files
+# Walks up the directory tree from PWD looking for .env.local
+# Falls back to global ~/.env.local if no local file is found
+find_and_source_env() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/.env.local" ]]; then
+            set -a
+            . "$dir/.env.local"
+            set +a
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+
+    # Fall back to global .env.local
+    if [[ -f ~/.env.local ]]; then
+        set -a
+        . ~/.env.local
+        set +a
+        return 0
+    fi
+    return 1
+}
