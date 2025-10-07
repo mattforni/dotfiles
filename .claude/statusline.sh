@@ -20,6 +20,7 @@ RED='\033[91m'            # Bright red for dirty status
 BLUE='\033[94m'           # Bright blue for branch
 ORANGE='\033[38;5;208m'   # Orange for git stats
 PURPLE='\033[38;5;141m'   # Purple for output style
+GRAY='\033[90m'           # Gray for version info
 
 # Git info (skip optional locks for performance)
 if git rev-parse --git-dir > /dev/null 2>&1; then
@@ -28,7 +29,7 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
 
     # Branch name
     branch=$(git branch --show-current 2>/dev/null || echo "detached")
-    
+
     # Git status - check if working tree is clean
     if git diff-index --quiet HEAD -- 2>/dev/null; then
         status_symbol="${GREEN}✓${RESET}"
@@ -37,19 +38,26 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
         status_symbol="${RED}✗${RESET}"
         status_text="${RED}dirty${RESET}"
     fi
-    
+
     # Additional git stats
     ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
     behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
-    
+
     # Staged/unstaged/untracked counts
     staged=$(git diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
     unstaged=$(git diff --numstat 2>/dev/null | wc -l | tr -d ' ')
     untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
-    
-    # Build git info string
-    git_info="${BLUE}${BOLD}${repo}:${branch}${RESET} ${status_symbol}"
-    
+
+    # Total changes
+    total_changes=$((staged + unstaged + untracked))
+
+    # Build git info string with repo:branch and change count
+    if [ "$total_changes" != "0" ]; then
+        git_info="🌿 ${BLUE}${BOLD}${repo}:${branch}${RESET} ${CYAN}(${total_changes})${RESET} ${status_symbol}"
+    else
+        git_info="🌿 ${BLUE}${BOLD}${repo}:${branch}${RESET} ${status_symbol}"
+    fi
+
     # Add sync status if ahead/behind
     if [ "$ahead" != "0" ] || [ "$behind" != "0" ]; then
         git_info="${git_info} ${ORANGE}"
@@ -57,8 +65,8 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
         [ "$behind" != "0" ] && git_info="${git_info}↓${behind}"
         git_info="${git_info}${RESET}"
     fi
-    
-    # Add change counts if any
+
+    # Add detailed change breakdown if any
     if [ "$staged" != "0" ] || [ "$unstaged" != "0" ] || [ "$untracked" != "0" ]; then
         git_info="${git_info} ${ORANGE}("
         [ "$staged" != "0" ] && git_info="${git_info}+${staged}"
@@ -70,10 +78,16 @@ else
     git_info="${RED}no git${RESET}"
 fi
 
-# Build Claude info string
-claude_info="${MAGENTA}${BOLD}${model_display}${RESET}"
+# Build Claude info string with version
+claude_info="🤖 ${MAGENTA}${BOLD}${model_display}${RESET}"
 [ "$output_style" != "default" ] && claude_info="${claude_info} ${PURPLE}[${output_style}]${RESET}"
-claude_info="${claude_info} ${YELLOW}v${version}${RESET}"
 
-# Output the complete status line
-printf "${CYAN}${BOLD}Claude${RESET} ${claude_info} ${CYAN}│${RESET} ${git_info}\n"
+# Add version to Claude info
+if [ "$latest_version" != "unknown" ] && [ -n "$latest_version" ]; then
+    claude_info="${claude_info} ${GRAY}v${version}${RESET}"
+else
+    claude_info="${claude_info} ${GRAY}v${version}${RESET}"
+fi
+
+# Output the complete status line with emojis and tabs
+printf "${CYAN}${BOLD}${RESET}${claude_info} ${git_info}"
