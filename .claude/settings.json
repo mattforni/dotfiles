@@ -1,4 +1,8 @@
 {
-  "model": "opus",
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline.sh"
+  },
+  "outputStyle": "Concise"
 }
