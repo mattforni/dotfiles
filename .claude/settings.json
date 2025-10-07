@@ -1,8 +1,9 @@
 {
-  "alwaysThinkingEnabled": true,
   "statusLine": {
     "type": "command",
-    "command": "bash ~/.claude/statusline.sh"
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
   },
-  "outputStyle": "Concise"
+  "outputStyle": "Concise",
+  "alwaysThinkingEnabled": true
 }
