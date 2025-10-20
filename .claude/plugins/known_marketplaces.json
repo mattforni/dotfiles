@@ -1,0 +1,10 @@
+{
+  "claude-code-plugins": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/anthropics/claude-code.git"
+    },
+    "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-code-plugins",
+    "lastUpdated": "2025-10-17T02:49:17.549Z"
+  }
+}

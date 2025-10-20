@@ -12,3 +12,5 @@
 .claude/ide/
 .claude/file-history
 .claude/history.jsonl
+.claude/debug/
+.claude/plugins/marketplaces/
