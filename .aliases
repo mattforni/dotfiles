@@ -38,22 +38,6 @@ alias ed-vsc-settings='vim ~/.vscode/settings.json'
 alias ed-zsh="vim ~/.zshrc"
 alias src-zsh="source ~/.zshrc"
 
-# Dotfiles Management
-alias send-it="cp -R ~/.aliases \
-  ~/.bashrc \
-  ~/.bash_profile \
-  ~/.claude \
-  ~/.functions \
-  ~/.gitconfig \
-  ~/.profile \
-  ~/.screenrc \
-  ~/.vim \
-  ~/.zsh \
-  ~/.zshrc \
-  ~/bin \
-  ~/install.sh \
-  ~/Development/dotfiles"
-
 # Claude Aliases
 alias cc="claude"
 
@@ -62,4 +46,3 @@ alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'
 alias rf='type foreman >/dev/null 2>&1 && bundle exec foreman start'
 alias rk='bundle exec sidekiq -c 2'
 alias rs='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails server'
-

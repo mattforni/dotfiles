@@ -6,5 +6,21 @@
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-code-plugins",
     "lastUpdated": "2025-10-17T02:49:17.549Z"
+  },
+  "superpowers-marketplace": {
+    "source": {
+      "source": "github",
+      "repo": "obra/superpowers-marketplace"
+    },
+    "installLocation": "/Users/forni/.claude/plugins/marketplaces/superpowers-marketplace",
+    "lastUpdated": "2025-10-31T13:53:43.020Z"
+  },
+  "claude-code-workflows": {
+    "source": {
+      "source": "github",
+      "repo": "wshobson/agents"
+    },
+    "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-code-workflows",
+    "lastUpdated": "2025-11-07T03:58:01.625Z"
   }
 }
