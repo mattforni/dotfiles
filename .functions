@@ -321,9 +321,11 @@ sync-dots() {
     ".screenrc"
     ".vimrc"
     ".zshrc"
-    ".vscode"
+    ".vscode/settings.json"
     ".claude/commands"
     ".claude/plugins"
+    ".claude/CLAUDE.md"
+    ".claude/settings.json"
     "bin"
   )
 
@@ -340,7 +342,11 @@ sync-dots() {
     if [ -e "$SOURCE" ]; then
       if [ $DRY_RUN -eq 1 ]; then
         if [ -d "$SOURCE" ]; then
-          echo "Would sync directory: $item"
+          if [[ "$item" == ".claude/plugins" ]]; then
+            echo "Would sync directory: $item (excluding: .credentials.json, installed_plugins.json, cache/)"
+          else
+            echo "Would sync directory: $item"
+          fi
         else
           echo "Would sync file: $item"
         fi
@@ -350,7 +356,16 @@ sync-dots() {
           echo "Syncing directory: $item"
           # Create parent directory if needed for subdirectories like .claude/command
           mkdir -p "$(dirname "$DEST")"
-          rsync -av --delete "$SOURCE/" "$DEST/"
+          # Exclude sensitive files from .claude/plugins
+          if [[ "$item" == ".claude/plugins" ]]; then
+            rsync -av --delete \
+              --exclude '.credentials.json' \
+              --exclude 'installed_plugins.json' \
+              --exclude 'cache/' \
+              "$SOURCE/" "$DEST/"
+          else
+            rsync -av --delete "$SOURCE/" "$DEST/"
+          fi
         else
           # For files, use cp
           echo "Syncing file: $item"

@@ -3,6 +3,8 @@
 *.swp
 
 .vscode/extensions
+.vscode/cli
+.vscode/argv.json
 .claude/shell-snapshots
 .claude/statsig
 .claude/todos
@@ -14,3 +16,6 @@
 .claude/history.jsonl
 .claude/debug/
 .claude/plugins/marketplaces/
+.claude/.credentials.json
+.claude/plugins/installed_plugins.json
+.claude/plugins/cache/
