@@ -323,6 +323,7 @@ sync-dots() {
     ".zshrc"
     ".vscode/settings.json"
     ".claude/commands"
+    ".claude/mcps"
     ".claude/plugins"
     ".claude/CLAUDE.md"
     ".claude/settings.json"

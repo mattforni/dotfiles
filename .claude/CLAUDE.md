@@ -1,1 +1,3 @@
 - Ask interactive questions one at a time when clarification is needed
+- Please ask any clarifying questions one at a time so I can be thoughtful in responding?
+- I do not want you to use hyphens ever
