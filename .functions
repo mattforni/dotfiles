@@ -325,6 +325,7 @@ sync-dots() {
     ".claude/commands"
     ".claude/mcps"
     ".claude/plugins"
+    ".claude/skills"
     ".claude/CLAUDE.md"
     ".claude/settings.json"
     "bin"

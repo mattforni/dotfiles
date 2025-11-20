@@ -101,11 +101,12 @@
     "pr-review-toolkit@claude-code-plugins": true,
     "commit-commands@claude-code-plugins": true,
     "feature-dev@claude-code-plugins": true,
-    "superpowers@superpowers-marketplace": true,
+    "superpowers@superpowers-marketplace": false,
     "elements-of-style@superpowers-marketplace": true,
     "episodic-memory@superpowers-marketplace": true,
     "superpowers-lab@superpowers-marketplace": true,
-    "frontend-mobile-development@claude-code-workflows": true
+    "frontend-mobile-development@claude-code-workflows": true,
+    "linear-lifecycle@skillset": true
   },
   "outputStyle": "Concise",
   "alwaysThinkingEnabled": false
