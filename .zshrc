@@ -41,3 +41,4 @@ export PATH="$PATH:$HOME/.rvm/bin"
 
 # Enable RVM to automatically use Ruby version from .ruby-version files
 cd . # Trigger RVM auto-switch on shell start
+export PATH="$HOME/.local/bin:$PATH"
