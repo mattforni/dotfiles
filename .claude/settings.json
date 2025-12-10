@@ -55,7 +55,15 @@
       "mcp__notion__notion-get-comments",
       "mcp__plugin_episodic-memory_episodic-memory__search",
       "mcp__todoist__add-tasks",
-      "mcp__todoist__find-projects"
+      "mcp__todoist__find-projects",
+      "mcp__gmail__read_email",
+      "mcp__gmail__draft_email",
+      "mcp__gmail__search_emails",
+      "mcp__gmail__modify_email",
+      "mcp__gmail__delete_email",
+      "WebFetch(domain:job-boards.greenhouse.io)",
+      "WebFetch(domain:jobs.ashbyhq.com)",
+      "Bash(pbcopy)"
     ],
     "deny": [],
     "ask": []
