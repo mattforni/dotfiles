@@ -1,0 +1,104 @@
+{
+  "version": 2,
+  "plugins": {
+    "pr-review-toolkit@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/claude-code-plugins/pr-review-toolkit/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-10-24T00:56:05.763Z",
+        "lastUpdated": "2025-10-24T00:56:05.763Z",
+        "gitCommitSha": "b4b858a11500393159bcdd64752be0e4f64864d5",
+        "isLocal": true
+      }
+    ],
+    "commit-commands@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/claude-code-plugins/commit-commands/unknown",
+        "version": "unknown",
+        "installedAt": "2025-10-24T00:56:05.763Z",
+        "lastUpdated": "2025-10-24T00:56:05.763Z",
+        "gitCommitSha": "b4b858a11500393159bcdd64752be0e4f64864d5",
+        "isLocal": true
+      }
+    ],
+    "feature-dev@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/claude-code-plugins/feature-dev/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-10-24T00:56:05.763Z",
+        "lastUpdated": "2025-10-24T00:56:05.763Z",
+        "gitCommitSha": "b4b858a11500393159bcdd64752be0e4f64864d5",
+        "isLocal": true
+      }
+    ],
+    "superpowers@superpowers-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/superpowers-marketplace/superpowers/3.2.3",
+        "version": "3.2.3",
+        "installedAt": "2025-10-31T13:53:53.384Z",
+        "lastUpdated": "2025-10-31T13:53:53.384Z",
+        "gitCommitSha": "d46dddd32c86069e68c1d2b6fe6fa06ad957f232",
+        "isLocal": false
+      }
+    ],
+    "elements-of-style@superpowers-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/superpowers-marketplace/elements-of-style/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-11-04T16:09:21.200Z",
+        "lastUpdated": "2025-11-04T16:09:21.200Z",
+        "gitCommitSha": "6099c505c2a8eb066f3777f83a97d9d828f7954c",
+        "isLocal": false
+      }
+    ],
+    "episodic-memory@superpowers-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/superpowers-marketplace/episodic-memory/1.0.9",
+        "version": "1.0.9",
+        "installedAt": "2025-11-04T16:09:59.960Z",
+        "lastUpdated": "2025-11-04T16:09:59.960Z",
+        "gitCommitSha": "0ede59bb569b370250e1990ae13866722127f754",
+        "isLocal": false
+      }
+    ],
+    "superpowers-lab@superpowers-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/superpowers-marketplace/superpowers-lab/0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2025-11-04T16:11:10.043Z",
+        "lastUpdated": "2025-11-04T16:11:10.043Z",
+        "gitCommitSha": "e2bea3b300f8370ec1fe650fde608c815458dd0b",
+        "isLocal": false
+      }
+    ],
+    "frontend-mobile-development@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/claude-code-workflows/frontend-mobile-development/unknown",
+        "version": "unknown",
+        "installedAt": "2025-11-10T15:02:34.652Z",
+        "lastUpdated": "2025-11-10T15:02:34.652Z",
+        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4",
+        "isLocal": true
+      }
+    ],
+    "linear-lifecycle@skillset": [
+      {
+        "scope": "user",
+        "installPath": "/Users/forni/.claude/plugins/cache/skillset/linear-lifecycle/unknown",
+        "version": "unknown",
+        "installedAt": "2025-11-19T23:58:43.747Z",
+        "lastUpdated": "2025-11-19T23:58:43.747Z",
+        "gitCommitSha": "95e4384cad8227479c4c1f2d8d3a90d7e37b2537",
+        "isLocal": true
+      }
+    ]
+  }
+}

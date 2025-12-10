@@ -43,6 +43,7 @@ alias cc="claude"
 
 # Rails Aliases
 alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'
+alias rc-railway='railway ssh "bundle exec rails console"'
 alias rf='type foreman >/dev/null 2>&1 && bundle exec foreman start'
 alias rk='bundle exec sidekiq -c 2'
 alias rs='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails server'
