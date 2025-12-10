@@ -302,7 +302,7 @@ sync-dots() {
   shift $((OPTIND-1))
 
   # Define the dotfiles repository path
-  DOTFILES_REPO="$HOME/Development/dotfiles"
+  DOTFILES_REPO="$HOME/Craft/Development/dotfiles"
 
   # Check if we're in the dotfiles repo or can find it
   if [ ! -d "$DOTFILES_REPO" ]; then
