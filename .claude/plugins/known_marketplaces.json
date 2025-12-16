@@ -13,7 +13,7 @@
       "repo": "obra/superpowers-marketplace"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/superpowers-marketplace",
-    "lastUpdated": "2025-11-20T00:40:29.055Z"
+    "lastUpdated": "2025-12-16T14:11:50.028Z"
   },
   "claude-code-workflows": {
     "source": {
@@ -21,7 +21,7 @@
       "repo": "wshobson/agents"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-code-workflows",
-    "lastUpdated": "2025-11-20T00:40:31.189Z"
+    "lastUpdated": "2025-12-11T21:50:30.371Z"
   },
   "skillset": {
     "source": {
@@ -29,6 +29,14 @@
       "repo": "mattforni/skillset"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/skillset",
-    "lastUpdated": "2025-11-21T20:15:33.980Z"
+    "lastUpdated": "2025-12-12T21:29:00.925Z"
+  },
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2025-12-16T13:53:24.283Z"
   }
 }
