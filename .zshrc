@@ -23,6 +23,9 @@ if type find_and_source_env &>/dev/null; then
     find_and_source_env
 fi
 
+# Always source global .env.local for tokens and secrets
+[[ -f ~/.env.local ]] && source ~/.env.local
+
 directories=("/usr/local/opt/postgresql@15/bin", "$HOME/bin")
 for directory in "${directories[@]}"; do
   if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
@@ -42,3 +45,10 @@ export PATH="$PATH:$HOME/.rvm/bin"
 # Enable RVM to automatically use Ruby version from .ruby-version files
 cd . # Trigger RVM auto-switch on shell start
 export PATH="$HOME/.local/bin:$PATH"
+
+# bun completions
+[ -s "/Users/forni/.bun/_bun" ] && source "/Users/forni/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

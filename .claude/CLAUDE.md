@@ -29,3 +29,9 @@
 
 **Token:** Stored as `NOTION_TOKEN` env var in `~/.zshrc`. Config references it via `${NOTION_TOKEN}`.
 Manage integrations at https://www.notion.so/profile/integrations
+
+## Linear Ticket Preferences
+
+When creating new Linear tickets:
+- Always set status to **Todo**
+- Always assign to **Forni** (me)
