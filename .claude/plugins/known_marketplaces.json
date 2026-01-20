@@ -5,7 +5,7 @@
       "url": "https://github.com/anthropics/claude-code.git"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-code-plugins",
-    "lastUpdated": "2025-11-20T00:40:27.484Z"
+    "lastUpdated": "2026-01-17T00:43:09.920Z"
   },
   "superpowers-marketplace": {
     "source": {
@@ -37,6 +37,6 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2025-12-24T15:53:38.963Z"
+    "lastUpdated": "2026-01-20T03:03:43.145Z"
   }
 }
