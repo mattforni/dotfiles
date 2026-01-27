@@ -35,3 +35,16 @@ Manage integrations at https://www.notion.so/profile/integrations
 When creating new Linear tickets:
 - Always set status to **Todo**
 - Always assign to **Forni** (me)
+
+## Email Preferences
+
+- Subject lines should use title case (capitalize as if a book title)
+- Never explicitly sign emails (Gmail handles signatures automatically)
+- End emails with "Cheers and chat soon!"
+- Reply to existing email threads instead of creating new ones when following up
+- When including scheduling link, format as: "Here's [my scheduling link](https://app.reclaim.ai/m/forni/chat) if that's easier."
+
+## Todoist Preferences
+
+- Tasks that need scheduling go on the following Monday
+- Monday morning planning sessions are used to schedule these tasks

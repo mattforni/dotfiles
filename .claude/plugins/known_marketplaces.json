@@ -5,7 +5,7 @@
       "url": "https://github.com/anthropics/claude-code.git"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-code-plugins",
-    "lastUpdated": "2026-01-17T00:43:09.920Z"
+    "lastUpdated": "2026-01-26T22:39:24.728Z"
   },
   "superpowers-marketplace": {
     "source": {
@@ -29,7 +29,7 @@
       "repo": "mattforni/skillset"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/skillset",
-    "lastUpdated": "2025-12-12T21:29:00.925Z"
+    "lastUpdated": "2026-01-27T14:37:08.575Z"
   },
   "claude-plugins-official": {
     "source": {
@@ -37,6 +37,6 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-01-20T03:03:43.145Z"
+    "lastUpdated": "2026-01-27T15:14:23.703Z"
   }
 }
