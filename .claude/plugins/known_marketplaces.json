@@ -29,7 +29,7 @@
       "repo": "mattforni/skillset"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/skillset",
-    "lastUpdated": "2026-01-27T14:37:08.575Z"
+    "lastUpdated": "2026-01-28T14:33:44.268Z"
   },
   "claude-plugins-official": {
     "source": {
@@ -37,6 +37,6 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/Users/forni/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-01-27T15:14:23.703Z"
+    "lastUpdated": "2026-01-28T14:22:47.923Z"
   }
 }

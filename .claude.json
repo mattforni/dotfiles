@@ -1,5 +1,5 @@
 {
-  "numStartups": 404,
+  "numStartups": 411,
   "installMethod": "native",
   "autoUpdates": false,
   "theme": "dark-daltonized",
@@ -20,35 +20,35 @@
     "enter-to-steer-in-relatime": 400,
     "todo-list": 401,
     "# for memory": 322,
-    "install-github-app": 401,
+    "install-github-app": 411,
     "drag-and-drop-images": 403,
-    "paste-images-mac": 401,
+    "paste-images-mac": 411,
     "double-esc": 108,
-    "continue": 401,
-    "shift-tab": 401,
+    "continue": 411,
+    "shift-tab": 411,
     "image-paste": 395,
-    "shift-enter": 401,
+    "shift-enter": 411,
     "custom-agents": 402,
     "permissions": 403,
     "custom-commands": 397,
     "terminal-setup": 42,
-    "git-worktrees": 401,
+    "git-worktrees": 411,
     "plan-mode-for-complex-tasks": 365,
     "double-esc-code-restore": 403,
     "tab-toggle-thinking": 307,
     "ultrathink-keyword": 363,
     "stickers-command": 384,
-    "default-permission-mode-config": 401,
+    "default-permission-mode-config": 411,
     "rename-conversation": 404,
-    "frontend-design-plugin": 395,
+    "frontend-design-plugin": 405,
     "config-thinking-mode": 361,
-    "guest-passes": 402,
+    "guest-passes": 411,
     "desktop-app": 400,
     "web-app": 400,
     "mobile-app": 400,
-    "install-slack-app": 400,
+    "install-slack-app": 410,
     "btw-side-question": 352,
-    "agent-flag": 392
+    "agent-flag": 407
   },
   "memoryUsageCount": 8,
   "promptQueueUseCount": 3483,
@@ -134,12 +134,16 @@
     "tengu_cache_plum_violet": false,
     "tengu_file_write_optimization": false,
     "tengu_scarf_coffee": false,
-    "tengu_keybinding_customization_release": false,
-    "tengu_pr_status_cli": false,
+    "tengu_keybinding_customization_release": true,
+    "tengu_pr_status_cli": true,
     "tengu_marble_kite": false,
-    "tengu_kv7_prompt_sort": false,
+    "tengu_kv7_prompt_sort": true,
     "tengu_plum_vx3": false,
-    "tengu_cork_m4q": false
+    "tengu_cork_m4q": false,
+    "tengu_compact_cache_prefix": false,
+    "tengu_marble_anvil": false,
+    "tengu_tst_kx7": false,
+    "tengu_coral_fern": false
   },
   "hasSeenStashHint": true,
   "firstStartTime": "2025-08-26T06:45:04.792Z",
@@ -241,29 +245,18 @@
       "hasClaudeMdExternalIncludesApproved": false,
       "hasClaudeMdExternalIncludesWarningShown": false,
       "exampleFiles": [
-        "I don't have enough data to provide five frequently modified files representing core application logic. The provided list only contains 3 modifications across 2 files (README.md and CLAUDE.md), which are documentation files rather than application logic.",
+        "I don't have enough data to provide a reliable answer. The git history shows only 3 total modifications across 2 files (README.md and CLAUDE.md), which are both documentation files rather than core application logic.",
         "",
-        "To give you accurate results, I would need a git history showing:",
-        "- More files with higher modification counts",
-        "- Files that represent actual application code (e.g., .js, .py, .ts, .java files, etc.)",
-        "- A larger dataset to identify patterns",
+        "To identify five frequently modified files representing core application logic, I would need:",
+        "- A much larger dataset with actual source code files (e.g., .py, .js, .ts, .java, etc.)",
+        "- Files with modification counts indicating active development",
+        "- Files from diverse directories showing different components",
         "",
-        "Could you provide a more complete list of modified files from the git history?"
+        "Could you provide a more complete git history with additional files and their modification counts?"
       ],
-      "exampleFilesGeneratedAt": 1765472053405,
+      "exampleFilesGeneratedAt": 1769550772519,
       "hasCompletedProjectOnboarding": true,
-      "lastCost": 0.49203575,
-      "lastAPIDuration": 115659,
-      "lastToolDuration": 938,
-      "lastDuration": 849299,
-      "lastLinesAdded": 16,
-      "lastLinesRemoved": 7,
-      "lastTotalInputTokens": 6483,
-      "lastTotalOutputTokens": 3805,
-      "lastTotalCacheCreationInputTokens": 31629,
-      "lastTotalCacheReadInputTokens": 393509,
       "lastTotalWebSearchRequests": 0,
-      "lastSessionId": "ded120ba-0eb7-490e-8069-8b363e3ccff0",
       "reactVulnerabilityCache": {
         "detected": false,
         "package": null,
@@ -271,25 +264,38 @@
         "version": null,
         "packageManager": null
       },
-      "lastAPIDurationWithoutRetries": 112018,
+      "lastAPIDurationWithoutRetries": 152102,
       "lastModelUsage": {
         "claude-haiku-4-5-20251001": {
-          "inputTokens": 4865,
-          "outputTokens": 524,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 0,
+          "inputTokens": 1631,
+          "outputTokens": 1981,
+          "cacheReadInputTokens": 33959,
+          "cacheCreationInputTokens": 18727,
           "webSearchRequests": 0,
-          "costUSD": 0.007485
+          "costUSD": 0.038340650000000004
         },
         "claude-opus-4-5-20251101": {
-          "inputTokens": 1618,
-          "outputTokens": 3281,
-          "cacheReadInputTokens": 393509,
-          "cacheCreationInputTokens": 31629,
+          "inputTokens": 152,
+          "outputTokens": 6807,
+          "cacheReadInputTokens": 539760,
+          "cacheCreationInputTokens": 27997,
           "webSearchRequests": 0,
-          "costUSD": 0.48455075
+          "costUSD": 0.61579625
         }
-      }
+      },
+      "lastCost": 0.6541369,
+      "lastAPIDuration": 152126,
+      "lastToolDuration": 23182,
+      "lastDuration": 56079897,
+      "lastLinesAdded": 8,
+      "lastLinesRemoved": 16,
+      "lastTotalInputTokens": 1783,
+      "lastTotalOutputTokens": 8788,
+      "lastTotalCacheCreationInputTokens": 46724,
+      "lastTotalCacheReadInputTokens": 573719,
+      "lastFpsAverage": 3.52,
+      "lastFpsLow1Pct": 94.67,
+      "lastSessionId": "c7db7cca-c28b-483f-99f8-6857d6768b7c"
     },
     "/Users/forni/Craft/Development/atelic": {
       "allowedTools": [],
@@ -549,7 +555,7 @@
       "enabledMcpjsonServers": [],
       "disabledMcpjsonServers": [],
       "hasTrustDialogAccepted": true,
-      "projectOnboardingSeenCount": 2,
+      "projectOnboardingSeenCount": 19,
       "hasClaudeMdExternalIncludesApproved": false,
       "hasClaudeMdExternalIncludesWarningShown": false,
       "exampleFiles": [
@@ -560,7 +566,7 @@
         "plugin.json"
       ],
       "exampleFilesGeneratedAt": 1769524136305,
-      "lastTotalWebSearchRequests": 2,
+      "lastTotalWebSearchRequests": 0,
       "reactVulnerabilityCache": {
         "detected": false,
         "package": null,
@@ -568,38 +574,27 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 3.4433122499999995,
-      "lastAPIDuration": 578106,
-      "lastAPIDurationWithoutRetries": 577997,
-      "lastToolDuration": 107251,
-      "lastDuration": 1424179,
-      "lastLinesAdded": 5,
-      "lastLinesRemoved": 10,
-      "lastTotalInputTokens": 67640,
-      "lastTotalOutputTokens": 25091,
-      "lastTotalCacheCreationInputTokens": 176331,
-      "lastTotalCacheReadInputTokens": 3304257,
+      "lastAPIDurationWithoutRetries": 257772,
       "lastModelUsage": {
         "claude-haiku-4-5-20251001": {
-          "inputTokens": 61145,
-          "outputTokens": 2589,
+          "inputTokens": 15587,
+          "outputTokens": 990,
           "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 0,
+          "cacheCreationInputTokens": 13305,
           "webSearchRequests": 0,
-          "costUSD": 0.07409
+          "costUSD": 0.03716825
         },
         "claude-opus-4-5-20251101": {
-          "inputTokens": 6495,
-          "outputTokens": 22502,
-          "cacheReadInputTokens": 3304257,
-          "cacheCreationInputTokens": 176331,
-          "webSearchRequests": 2,
-          "costUSD": 3.369222249999999
+          "inputTokens": 1235,
+          "outputTokens": 9425,
+          "cacheReadInputTokens": 1756043,
+          "cacheCreationInputTokens": 79009,
+          "webSearchRequests": 0,
+          "costUSD": 1.6136277499999996
         }
       },
-      "lastSessionId": "d7c32afc-e520-45b2-b502-6edd23cfb420",
-      "lastFpsAverage": 14.43,
-      "lastFpsLow1Pct": 68.43
+      "lastFpsAverage": 11.86,
+      "lastFpsLow1Pct": 40.91
     },
     "/Users/forni/Craft/Development": {
       "allowedTools": [],
@@ -770,37 +765,39 @@
       },
       "hasCompletedProjectOnboarding": true,
       "exampleFilesGeneratedAt": 1769448344222,
-      "lastAPIDurationWithoutRetries": 389570,
+      "lastAPIDurationWithoutRetries": 1577781,
       "lastTotalWebSearchRequests": 0,
       "lastModelUsage": {
         "claude-haiku-4-5-20251001": {
-          "inputTokens": 20892,
-          "outputTokens": 2191,
+          "inputTokens": 69203,
+          "outputTokens": 3193,
           "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 0,
+          "cacheCreationInputTokens": 33376,
           "webSearchRequests": 0,
-          "costUSD": 0.03184700000000001
+          "costUSD": 0.126888
         },
         "claude-opus-4-5-20251101": {
-          "inputTokens": 601,
-          "outputTokens": 15312,
-          "cacheReadInputTokens": 2430972,
-          "cacheCreationInputTokens": 166323,
+          "inputTokens": 4916,
+          "outputTokens": 78689,
+          "cacheReadInputTokens": 20119172,
+          "cacheCreationInputTokens": 910709,
           "webSearchRequests": 0,
-          "costUSD": 2.6408097500000003
+          "costUSD": 17.743322249999988
         }
       },
-      "lastCost": 2.6726567499999994,
-      "lastAPIDuration": 389605,
-      "lastToolDuration": 90267,
-      "lastDuration": 1589276,
-      "lastLinesAdded": 0,
-      "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 21493,
-      "lastTotalOutputTokens": 17503,
-      "lastTotalCacheCreationInputTokens": 166323,
-      "lastTotalCacheReadInputTokens": 2430972,
-      "lastSessionId": "bd056c3c-e0ce-4196-ae4f-8668899b7589"
+      "lastCost": 17.87021024999999,
+      "lastAPIDuration": 1578027,
+      "lastToolDuration": 255768,
+      "lastDuration": 4679576,
+      "lastLinesAdded": 2124,
+      "lastLinesRemoved": 602,
+      "lastTotalInputTokens": 74119,
+      "lastTotalOutputTokens": 81882,
+      "lastTotalCacheCreationInputTokens": 944085,
+      "lastTotalCacheReadInputTokens": 20119172,
+      "lastSessionId": "610f2724-3395-443d-bc0f-a16ac8be7e3b",
+      "lastFpsAverage": 10.3,
+      "lastFpsLow1Pct": 13.28
     },
     "/Users/forni/Craft/Development/atelic-api": {
       "allowedTools": [],
@@ -821,52 +818,46 @@
       },
       "exampleFiles": [
         "activity.rb",
-        "user.rb",
         "strava_service.rb",
-        "activities/strava_controller.rb",
-        "application_helper.rb"
+        "user.rb",
+        "strava_controller.rb",
+        "application_controller.rb"
       ],
-      "exampleFilesGeneratedAt": 1768671366490,
+      "exampleFilesGeneratedAt": 1769606869304,
       "hasCompletedProjectOnboarding": true,
-      "lastAPIDurationWithoutRetries": 2161394,
+      "lastAPIDurationWithoutRetries": 551445,
       "lastTotalWebSearchRequests": 0,
       "lastModelUsage": {
         "claude-haiku-4-5-20251001": {
-          "inputTokens": 153207,
-          "outputTokens": 9627,
-          "cacheReadInputTokens": 1004517,
-          "cacheCreationInputTokens": 125309,
+          "inputTokens": 29827,
+          "outputTokens": 1883,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 4263,
           "webSearchRequests": 0,
-          "costUSD": 0.4584299499999998
+          "costUSD": 0.04457075
         },
         "claude-opus-4-5-20251101": {
-          "inputTokens": 8414,
-          "outputTokens": 75147,
-          "cacheReadInputTokens": 19404324,
-          "cacheCreationInputTokens": 929513,
+          "inputTokens": 282,
+          "outputTokens": 12808,
+          "cacheReadInputTokens": 3302113,
+          "cacheCreationInputTokens": 221802,
           "webSearchRequests": 0,
-          "costUSD": 17.43236325
-        },
-        "claude-sonnet-4-5-20250929": {
-          "inputTokens": 4857,
-          "outputTokens": 10419,
-          "cacheReadInputTokens": 312660,
-          "cacheCreationInputTokens": 63834,
-          "webSearchRequests": 0,
-          "costUSD": 0.5040315000000001
+          "costUSD": 3.3589290000000003
         }
       },
-      "lastCost": 18.3948247,
-      "lastAPIDuration": 2161569,
-      "lastToolDuration": 1034108,
-      "lastDuration": 178914398,
-      "lastLinesAdded": 1232,
-      "lastLinesRemoved": 290,
-      "lastTotalInputTokens": 166478,
-      "lastTotalOutputTokens": 95193,
-      "lastTotalCacheCreationInputTokens": 1118656,
-      "lastTotalCacheReadInputTokens": 20721501,
-      "lastSessionId": "1be300b5-1589-4d1b-b699-852831adf203"
+      "lastCost": 3.4034997500000004,
+      "lastAPIDuration": 551596,
+      "lastToolDuration": 59588,
+      "lastDuration": 1915897,
+      "lastLinesAdded": 102,
+      "lastLinesRemoved": 25,
+      "lastTotalInputTokens": 30109,
+      "lastTotalOutputTokens": 14691,
+      "lastTotalCacheCreationInputTokens": 226065,
+      "lastTotalCacheReadInputTokens": 3302113,
+      "lastFpsAverage": 12.76,
+      "lastFpsLow1Pct": 17.22,
+      "lastSessionId": "9c698b11-9a11-47c7-a57f-69e591b60544"
     },
     "/Users/forni/Eudaimonia": {
       "allowedTools": [],
@@ -886,24 +877,24 @@
         "packageManager": null
       },
       "hasCompletedProjectOnboarding": true,
-      "lastAPIDurationWithoutRetries": 23963,
+      "lastAPIDurationWithoutRetries": 429393,
       "lastTotalWebSearchRequests": 0,
       "lastModelUsage": {
         "claude-haiku-4-5-20251001": {
-          "inputTokens": 2736,
-          "outputTokens": 195,
+          "inputTokens": 4978,
+          "outputTokens": 441,
           "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 0,
+          "cacheCreationInputTokens": 9187,
           "webSearchRequests": 0,
-          "costUSD": 0.003711
+          "costUSD": 0.01866675
         },
         "claude-opus-4-5-20251101": {
-          "inputTokens": 838,
-          "outputTokens": 712,
-          "cacheReadInputTokens": 156972,
-          "cacheCreationInputTokens": 36284,
+          "inputTokens": 1006,
+          "outputTokens": 16276,
+          "cacheReadInputTokens": 1618603,
+          "cacheCreationInputTokens": 70372,
           "webSearchRequests": 0,
-          "costUSD": 0.327251
+          "costUSD": 1.6610565000000002
         }
       },
       "exampleFiles": [
@@ -918,17 +909,79 @@
         "Please provide git history data that includes source code files (such as .py, .js, .java, etc.) with their modification counts."
       ],
       "exampleFilesGeneratedAt": 1768934152511,
-      "lastCost": 0.330962,
-      "lastAPIDuration": 23967,
-      "lastToolDuration": 4010,
-      "lastDuration": 30525,
-      "lastLinesAdded": 0,
-      "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 3574,
-      "lastTotalOutputTokens": 907,
-      "lastTotalCacheCreationInputTokens": 36284,
-      "lastTotalCacheReadInputTokens": 156972,
-      "lastSessionId": "1cc7ef6b-1eee-428f-8131-b43339773282"
+      "lastCost": 1.6797232500000003,
+      "lastAPIDuration": 429427,
+      "lastToolDuration": 8724,
+      "lastDuration": 13976616,
+      "lastLinesAdded": 29,
+      "lastLinesRemoved": 28,
+      "lastTotalInputTokens": 5984,
+      "lastTotalOutputTokens": 16717,
+      "lastTotalCacheCreationInputTokens": 79559,
+      "lastTotalCacheReadInputTokens": 1618603,
+      "lastSessionId": "27fd354c-d874-4cb1-abc6-7bab32657f20",
+      "lastFpsAverage": 4.63,
+      "lastFpsLow1Pct": 72.19
+    },
+    "/Users/forni/Craft/Development/template-webapp-core": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 0,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false,
+      "reactVulnerabilityCache": {
+        "detected": false,
+        "package": null,
+        "packageName": null,
+        "version": null,
+        "packageManager": null
+      },
+      "exampleFiles": [
+        "AppLayout.tsx",
+        "__root.tsx",
+        "button.tsx",
+        "main.tsx",
+        "globals.css"
+      ],
+      "exampleFilesGeneratedAt": 1769535612477,
+      "hasCompletedProjectOnboarding": true,
+      "lastCost": 1.936146,
+      "lastAPIDuration": 214154,
+      "lastAPIDurationWithoutRetries": 214101,
+      "lastToolDuration": 57683,
+      "lastDuration": 1115870,
+      "lastLinesAdded": 53,
+      "lastLinesRemoved": 60,
+      "lastTotalInputTokens": 15598,
+      "lastTotalOutputTokens": 11009,
+      "lastTotalCacheCreationInputTokens": 58682,
+      "lastTotalCacheReadInputTokens": 2592609,
+      "lastTotalWebSearchRequests": 0,
+      "lastFpsAverage": 7.19,
+      "lastFpsLow1Pct": 32.42,
+      "lastModelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 15429,
+          "outputTokens": 921,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.020034000000000003
+        },
+        "claude-opus-4-5-20251101": {
+          "inputTokens": 169,
+          "outputTokens": 10088,
+          "cacheReadInputTokens": 2592609,
+          "cacheCreationInputTokens": 58682,
+          "webSearchRequests": 0,
+          "costUSD": 1.9161119999999998
+        }
+      },
+      "lastSessionId": "017c6aab-04b9-4d8e-8cbb-1aec5d9fce15"
     }
   },
   "isQualifiedForDataSharing": false,
@@ -937,7 +990,7 @@
   "lastOnboardingVersion": "2.0.65",
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
-  "changelogLastFetched": 1769524588888,
+  "changelogLastFetched": 1769610832738,
   "hasIdeOnboardingBeenShown": {
     "cursor": true
   },
@@ -946,10 +999,10 @@
     "79795095-8267-472e-989f-f75e9b534c67": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1769524136248
+      "timestamp": 1769606867924
     }
   },
-  "lastReleaseNotesSeen": "2.1.20",
+  "lastReleaseNotesSeen": "2.1.22",
   "claudeCodeFirstTokenDate": "2025-08-26T06:48:13.574086Z",
   "hasOpusPlanDefault": false,
   "lastPlanModeUse": 1769443022919,
@@ -968,7 +1021,7 @@
         "referral_link": "https://claude.ai/referral/rvzTzReemw"
       },
       "referrer_reward": null,
-      "timestamp": 1769524138087
+      "timestamp": 1769606867929
     }
   },
   "githubRepoPaths": {
@@ -1007,6 +1060,9 @@
     ],
     "mattforni/eudaimonia": [
       "/Users/forni/Eudaimonia"
+    ],
+    "theproductforge/template-webapp-core": [
+      "/Users/forni/Craft/Development/template-webapp-core"
     ]
   },
   "autoUpdatesProtectedForNative": true,
@@ -1031,7 +1087,7 @@
   "groveConfigCache": {
     "01abafb0-d3f3-45ea-9e49-4968a27bb9b6": {
       "grove_enabled": true,
-      "timestamp": 1769446826958
+      "timestamp": 1769535610719
     }
   },
   "skillUsage": {
@@ -1064,8 +1120,24 @@
       "lastUsedAt": 1769013273669
     },
     "hoist-permissions": {
+      "usageCount": 6,
+      "lastUsedAt": 1769610187461
+    },
+    "sdlc:plan": {
+      "usageCount": 3,
+      "lastUsedAt": 1769531014894
+    },
+    "sdlc:review": {
       "usageCount": 4,
-      "lastUsedAt": 1769449153598
+      "lastUsedAt": 1769608629408
+    },
+    "sdlc:complete": {
+      "usageCount": 4,
+      "lastUsedAt": 1769610673858
+    },
+    "sdlc:iterate": {
+      "usageCount": 14,
+      "lastUsedAt": 1769610589870
     }
   },
   "anonymousId": "claudecode.v1.0a54b6b7-36ee-4a0c-a9c4-fa26de48bd63",
