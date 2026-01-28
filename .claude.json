@@ -574,27 +574,38 @@
         "version": null,
         "packageManager": null
       },
-      "lastAPIDurationWithoutRetries": 257772,
+      "lastAPIDurationWithoutRetries": 312923,
       "lastModelUsage": {
         "claude-haiku-4-5-20251001": {
-          "inputTokens": 15587,
-          "outputTokens": 990,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 13305,
+          "inputTokens": 35297,
+          "outputTokens": 3148,
+          "cacheReadInputTokens": 57516,
+          "cacheCreationInputTokens": 127081,
           "webSearchRequests": 0,
-          "costUSD": 0.03716825
+          "costUSD": 0.21563985
         },
         "claude-opus-4-5-20251101": {
-          "inputTokens": 1235,
-          "outputTokens": 9425,
-          "cacheReadInputTokens": 1756043,
-          "cacheCreationInputTokens": 79009,
+          "inputTokens": 186,
+          "outputTokens": 10305,
+          "cacheReadInputTokens": 2974706,
+          "cacheCreationInputTokens": 150622,
           "webSearchRequests": 0,
-          "costUSD": 1.6136277499999996
+          "costUSD": 2.6872955000000003
         }
       },
-      "lastFpsAverage": 11.86,
-      "lastFpsLow1Pct": 40.91
+      "lastFpsAverage": 9.61,
+      "lastFpsLow1Pct": 29.36,
+      "lastCost": 2.902935350000001,
+      "lastAPIDuration": 313050,
+      "lastToolDuration": 45626,
+      "lastDuration": 824236,
+      "lastLinesAdded": 16,
+      "lastLinesRemoved": 24,
+      "lastTotalInputTokens": 35483,
+      "lastTotalOutputTokens": 13453,
+      "lastTotalCacheCreationInputTokens": 277703,
+      "lastTotalCacheReadInputTokens": 3032222,
+      "lastSessionId": "f6930726-9aed-4c02-a163-976814df3a5e"
     },
     "/Users/forni/Craft/Development": {
       "allowedTools": [],
@@ -990,7 +1001,7 @@
   "lastOnboardingVersion": "2.0.65",
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
-  "changelogLastFetched": 1769610832738,
+  "changelogLastFetched": 1769611017566,
   "hasIdeOnboardingBeenShown": {
     "cursor": true
   },
@@ -1002,7 +1013,7 @@
       "timestamp": 1769606867924
     }
   },
-  "lastReleaseNotesSeen": "2.1.22",
+  "lastReleaseNotesSeen": "2.1.20",
   "claudeCodeFirstTokenDate": "2025-08-26T06:48:13.574086Z",
   "hasOpusPlanDefault": false,
   "lastPlanModeUse": 1769443022919,
