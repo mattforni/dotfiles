@@ -5,6 +5,20 @@
 - Ask clarifying questions one at a time and present options to select from with an option to provide additional context
 - Only run tests in the foreground and do not leave tests running. There have been several instances where my computer has ground to a stop due to a bunch of long running, unfettered test processes that I have to go manually kill
 
+## General Behavior
+
+- When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
+- Do not overstate or exaggerate the quality of results. If something looks like it works but has not been thoroughly validated, say so. Let the user judge quality.
+
+## Workflow Conventions
+
+- When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
+- When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
+
+## Code Review
+
+- During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
+
 ## MCP Servers
 
 ### Notion MCP (Official)
@@ -48,3 +62,17 @@ When creating new Linear tickets:
 
 - Tasks that need scheduling go on the following Monday
 - Monday morning planning sessions are used to schedule these tasks
+
+## Code Project Conventions
+
+- Root level directories should be 3-4 characters that clearly identify contents (e.g., `src/`, `docs/`, `adr/`, `lib/`)
+
+## Problem Solving Approach
+
+- Always be problem-first. Understand the problem deeply before jumping to solutions or tooling. Technology serves the problem, not the other way around.
+
+## Research Documentation
+
+- Research outputs should be one-pagers. Brevity is the soul of wit.
+- Capture the essential insights, not everything learned along the way.
+- If it can't fit on one page, it needs to be split into multiple focused topics.
