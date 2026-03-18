@@ -10,10 +10,10 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-info()  { echo -e "${GREEN}[+]${NC} $1"; }
-warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
-error() { echo -e "${RED}[x]${NC} $1"; }
-header() { echo -e "\n${BOLD}=== $1 ===${NC}\n"; }
+info()  { printf "${GREEN}[+]${NC} %s\n" "$1"; }
+warn()  { printf "${YELLOW}[!]${NC} %s\n" "$1"; }
+error() { printf "${RED}[x]${NC} %s\n" "$1" >&2; }
+header() { printf "\n${BOLD}=== %s ===${NC}\n\n" "$1"; }
 
 # Track what was installed for summary
 SUMMARY=()
@@ -56,10 +56,10 @@ header "Machine name"
 
 CURRENT_NAME=$(scutil --get ComputerName 2>/dev/null || echo "unknown")
 info "Current machine name: ${BOLD}${CURRENT_NAME}${NC}"
-read -rp "$(echo -e "${BOLD}Change it? [y/N]${NC} ")" RENAME_CHOICE
+read -rp "${BOLD}Change it? [y/N]${NC} " RENAME_CHOICE
 
 if [[ "$RENAME_CHOICE" =~ ^[Yy]$ ]]; then
-  read -rp "$(echo -e "${BOLD}New machine name:${NC} ")" NEW_NAME
+  read -rp "${BOLD}New machine name:${NC} " NEW_NAME
   if [[ -n "$NEW_NAME" ]]; then
     sudo scutil --set ComputerName "$NEW_NAME"
     sudo scutil --set LocalHostName "$NEW_NAME"
@@ -86,7 +86,7 @@ header "Post core setup"
 # GitHub CLI authentication
 if command -v gh &>/dev/null; then
   if ! gh auth status &>/dev/null 2>&1; then
-    read -rp "$(echo -e "  ${BOLD}Authenticate GitHub CLI (gh auth login)? [y/N]${NC} ")" GH_AUTH
+    read -rp "  ${BOLD}Authenticate GitHub CLI (gh auth login)? [y/N]${NC} " GH_AUTH
     if [[ "$GH_AUTH" =~ ^[Yy]$ ]]; then
       gh auth login
       SUMMARY+=("GitHub CLI authenticated")
@@ -98,9 +98,9 @@ fi
 
 # SSH key generation
 if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
-  read -rp "$(echo -e "  ${BOLD}Generate ed25519 SSH key? [y/N]${NC} ")" SSH_CHOICE
+  read -rp "  ${BOLD}Generate ed25519 SSH key? [y/N]${NC} " SSH_CHOICE
   if [[ "$SSH_CHOICE" =~ ^[Yy]$ ]]; then
-    read -rp "$(echo -e "  ${BOLD}Email for SSH key:${NC} ")" SSH_EMAIL
+    read -rp "  ${BOLD}Email for SSH key:${NC} " SSH_EMAIL
     if [[ -n "$SSH_EMAIL" ]]; then
       ssh-keygen -t ed25519 -C "$SSH_EMAIL"
       eval "$(ssh-agent -s)"
@@ -126,7 +126,7 @@ trap "rm -f '$TEMP_BREWFILE'" EXIT
 
 prompt_install() {
   local label="$1" brew_line="$2"
-  read -rp "$(echo -e "  ${BOLD}Install ${label}? [y/N]${NC} ")" choice
+  read -rp "  ${BOLD}Install ${label}? [y/N]${NC} " choice
   if [[ "$choice" =~ ^[Yy]$ ]]; then
     [[ -n "$brew_line" ]] && echo "$brew_line" >> "$TEMP_BREWFILE"
     return 0
@@ -199,7 +199,7 @@ fi
 # Zero Home tooling
 ###############################################################################
 echo ""
-read -rp "$(echo -e "${BOLD}Install Zero Home tooling? [y/N]${NC} ")" ZERO_CHOICE
+read -rp "${BOLD}Install Zero Home tooling? [y/N]${NC} " ZERO_CHOICE
 
 if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
   header "Installing Zero Home tooling"
@@ -231,7 +231,7 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
 
   # Global npm packages
   info "Installing global npm packages..."
-  npm install -g pnpm corepack || true
+  npm install -g pnpm corepack
   SUMMARY+=("pnpm and corepack installed globally")
 
   # Playwright
@@ -247,12 +247,12 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
 
   # tfenv
   if command -v tfenv &>/dev/null; then
-    if ! tfenv list 2>/dev/null | grep -q "1.13.3"; then
+    if ! tfenv list 2>/dev/null | grep -Fxq "1.13.3"; then
       info "Installing Terraform 1.13.3..."
       tfenv install 1.13.3
     fi
     tfenv use 1.13.3
-    info "Terraform $(terraform --version -json 2>/dev/null | head -1 || echo '1.13.3') active"
+    info "Terraform $(tfenv version-name) active"
     SUMMARY+=("Terraform 1.13.3 configured")
   fi
 
@@ -266,7 +266,7 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
   fi
 
   # Storyblok login
-  read -rp "$(echo -e "  ${BOLD}Log in to Storyblok CLI? [y/N]${NC} ")" STORYBLOK_LOGIN
+  read -rp "  ${BOLD}Log in to Storyblok CLI? [y/N]${NC} " STORYBLOK_LOGIN
   if [[ "$STORYBLOK_LOGIN" =~ ^[Yy]$ ]]; then
     storyblok login
     SUMMARY+=("Storyblok CLI authenticated")
@@ -278,7 +278,7 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
     gcloud components update --quiet
     SUMMARY+=("gcloud components updated")
 
-    read -rp "$(echo -e "  ${BOLD}Set up Firestore emulator? [y/N]${NC} ")" FIRESTORE_CHOICE
+    read -rp "  ${BOLD}Set up Firestore emulator? [y/N]${NC} " FIRESTORE_CHOICE
     if [[ "$FIRESTORE_CHOICE" =~ ^[Yy]$ ]]; then
       gcloud components install cloud-firestore-emulator --quiet
       SUMMARY+=("Firestore emulator installed")
