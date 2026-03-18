@@ -125,7 +125,9 @@ trap "rm -f '$TEMP_BREWFILE'" EXIT
 is_brew_installed() {
   local brew_line="$1"
   local pkg
-  pkg=$(echo "$brew_line" | sed -E 's/^(brew|cask) "([^"]+)"/\2/')
+  # Extract package name from between the quotes
+  pkg=${brew_line#*\"}
+  pkg=${pkg%\"*}
   if [[ "$brew_line" == cask* ]]; then
     brew ls --cask --versions "$pkg" &>/dev/null
   else
@@ -271,7 +273,7 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
 
   # tfenv
   if command -v tfenv &>/dev/null; then
-    if ! tfenv list 2>/dev/null | grep -q .; then
+    if [[ -z "$(tfenv list 2>/dev/null)" ]]; then
       info "Installing latest Terraform..."
       tfenv install latest
       tfenv use latest
