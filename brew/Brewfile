@@ -1,0 +1,10 @@
+# Core tooling (always installed)
+
+# CLI tools
+brew "fzf"
+brew "gh"
+
+# Applications
+cask "linear-linear"
+cask "postman"
+cask "raycast"

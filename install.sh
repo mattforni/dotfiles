@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXCLUDED=($(basename $0) README.md .git .gitignore)
+EXCLUDED=($(basename $0) README.md .git .gitignore brew)
 echo -n "Do you want to install dotfiles to '$HOME'? [Y/n] "
 read INSTALL
 if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
