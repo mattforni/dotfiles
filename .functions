@@ -302,7 +302,7 @@ sync-dots() {
   shift $((OPTIND-1))
 
   # Define the dotfiles repository path
-  DOTFILES_REPO="$HOME/Craft/Development/dotfiles"
+  DOTFILES_REPO="$HOME/Eudaimonia/Craft/Development/personal/dotfiles"
 
   # Check if we're in the dotfiles repo or can find it
   if [ ! -d "$DOTFILES_REPO" ]; then
@@ -322,9 +322,9 @@ sync-dots() {
     ".vimrc"
     ".zshrc"
     ".vscode/settings.json"
-    ".claude.json"
     ".claude/commands"
     ".claude/mcps"
+    ".claude/memory"
     ".claude/plugins"
     ".claude/skills"
     ".claude/CLAUDE.md"
