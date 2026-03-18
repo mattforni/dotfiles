@@ -125,11 +125,11 @@ trap "rm -f '$TEMP_BREWFILE'" EXIT
 is_brew_installed() {
   local brew_line="$1"
   local pkg
-  pkg=$(echo "$brew_line" | sed -E 's/^(brew|cask) "(.+)"/\2/')
+  pkg=$(echo "$brew_line" | sed -E 's/^(brew|cask) "([^"]+)"/\2/')
   if [[ "$brew_line" == cask* ]]; then
-    brew list --cask "$pkg" &>/dev/null
+    brew ls --cask --versions "$pkg" &>/dev/null
   else
-    brew list "$pkg" &>/dev/null
+    brew ls --versions "$pkg" &>/dev/null
   fi
 }
 
@@ -149,7 +149,7 @@ prompt_install() {
 
 # IDEs
 info "IDEs:"
-local ides=(
+ides=(
   'Cursor (app)|cask "cursor"'
   'Cursor CLI|brew "cursor-cli"'
   'VS Code|cask "visual-studio-code"'
@@ -184,7 +184,7 @@ fi
 # Browsers
 echo ""
 info "Browsers:"
-local browsers=(
+browsers=(
   'Chrome|cask "google-chrome"'
   'Firefox|cask "firefox"'
   'Brave|cask "brave-browser"'
