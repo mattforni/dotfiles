@@ -149,9 +149,15 @@ prompt_install() {
 
 # IDEs
 info "IDEs:"
-prompt_install "Cursor (app)" 'cask "cursor"' || true
-prompt_install "Cursor CLI" 'brew "cursor-cli"' || true
-prompt_install "VS Code" 'cask "visual-studio-code"' || true
+local ides=(
+  'Cursor (app)|cask "cursor"'
+  'Cursor CLI|brew "cursor-cli"'
+  'VS Code|cask "visual-studio-code"'
+)
+for item in "${ides[@]}"; do
+  IFS='|' read -r label brew_line <<< "$item"
+  prompt_install "$label" "$brew_line" || true
+done
 
 # CLI Agents
 INSTALL_CLAUDE=false
@@ -178,9 +184,15 @@ fi
 # Browsers
 echo ""
 info "Browsers:"
-prompt_install "Chrome" 'cask "google-chrome"' || true
-prompt_install "Firefox" 'cask "firefox"' || true
-prompt_install "Brave" 'cask "brave-browser"' || true
+local browsers=(
+  'Chrome|cask "google-chrome"'
+  'Firefox|cask "firefox"'
+  'Brave|cask "brave-browser"'
+)
+for item in "${browsers[@]}"; do
+  IFS='|' read -r label brew_line <<< "$item"
+  prompt_install "$label" "$brew_line" || true
+done
 
 # Install selected brew packages
 if [[ -s "$TEMP_BREWFILE" ]]; then
@@ -191,33 +203,21 @@ fi
 
 # Install selected CLI agents (npm/gh based, not brew)
 if [[ "$INSTALL_CLAUDE" == true ]]; then
-  if ! command -v claude &>/dev/null; then
-    info "Installing Claude Code..."
-    npm install -g @anthropic-ai/claude-code
-    SUMMARY+=("Claude Code installed")
-  else
-    info "Claude Code already installed"
-  fi
+  info "Installing Claude Code..."
+  npm install -g @anthropic-ai/claude-code
+  SUMMARY+=("Claude Code installed")
 fi
 
 if [[ "$INSTALL_COPILOT" == true ]]; then
-  if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
-    info "Installing GitHub Copilot CLI..."
-    gh extension install github/gh-copilot
-    SUMMARY+=("GitHub Copilot CLI installed")
-  else
-    info "GitHub Copilot CLI already installed"
-  fi
+  info "Installing GitHub Copilot CLI..."
+  gh extension install github/gh-copilot
+  SUMMARY+=("GitHub Copilot CLI installed")
 fi
 
 if [[ "$INSTALL_GEMINI" == true ]]; then
-  if ! command -v gemini &>/dev/null; then
-    info "Installing Gemini CLI..."
-    npm install -g @google/gemini-cli
-    SUMMARY+=("Gemini CLI installed")
-  else
-    info "Gemini CLI already installed"
-  fi
+  info "Installing Gemini CLI..."
+  npm install -g @google/gemini-cli
+  SUMMARY+=("Gemini CLI installed")
 fi
 
 ###############################################################################
