@@ -4,11 +4,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Colors
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-NC='\033[0m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+RED=$'\033[0;31m'
+BOLD=$'\033[1m'
+NC=$'\033[0m'
 
 info()  { printf "${GREEN}[+]${NC} %s\n" "$1"; }
 warn()  { printf "${YELLOW}[!]${NC} %s\n" "$1"; }
@@ -103,8 +103,6 @@ if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
     read -rp "  ${BOLD}Email for SSH key:${NC} " SSH_EMAIL
     if [[ -n "$SSH_EMAIL" ]]; then
       ssh-keygen -t ed25519 -C "$SSH_EMAIL"
-      eval "$(ssh-agent -s)"
-      ssh-add "$HOME/.ssh/id_ed25519"
       warn "Remember to add your public key to GitHub: https://github.com/settings/keys"
       echo ""
       cat "$HOME/.ssh/id_ed25519.pub"
@@ -124,8 +122,23 @@ header "Optional packages"
 TEMP_BREWFILE=$(mktemp)
 trap "rm -f '$TEMP_BREWFILE'" EXIT
 
+is_brew_installed() {
+  local brew_line="$1"
+  local pkg
+  pkg=$(echo "$brew_line" | sed -E 's/^(brew|cask) "(.+)"/\2/')
+  if [[ "$brew_line" == cask* ]]; then
+    brew list --cask "$pkg" &>/dev/null
+  else
+    brew list "$pkg" &>/dev/null
+  fi
+}
+
 prompt_install() {
   local label="$1" brew_line="$2"
+  if [[ -n "$brew_line" ]] && is_brew_installed "$brew_line"; then
+    info "  ${label} already installed"
+    return 1
+  fi
   read -rp "  ${BOLD}Install ${label}? [y/N]${NC} " choice
   if [[ "$choice" =~ ^[Yy]$ ]]; then
     [[ -n "$brew_line" ]] && echo "$brew_line" >> "$TEMP_BREWFILE"
@@ -146,9 +159,21 @@ INSTALL_COPILOT=false
 INSTALL_GEMINI=false
 echo ""
 info "CLI Agents:"
-prompt_install "Claude Code" "" && INSTALL_CLAUDE=true || true
-prompt_install "Copilot CLI" "" && INSTALL_COPILOT=true || true
-prompt_install "Gemini CLI" "" && INSTALL_GEMINI=true || true
+if command -v claude &>/dev/null; then
+  info "  Claude Code already installed"
+else
+  prompt_install "Claude Code" "" && INSTALL_CLAUDE=true || true
+fi
+if gh extension list 2>/dev/null | grep -q "gh-copilot"; then
+  info "  Copilot CLI already installed"
+else
+  prompt_install "Copilot CLI" "" && INSTALL_COPILOT=true || true
+fi
+if command -v gemini &>/dev/null; then
+  info "  Gemini CLI already installed"
+else
+  prompt_install "Gemini CLI" "" && INSTALL_GEMINI=true || true
+fi
 
 # Browsers
 echo ""
@@ -216,8 +241,7 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
   export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
   NVM_SH="$(brew --prefix)/opt/nvm/nvm.sh"
   if [[ -f "$NVM_SH" ]]; then
-    # shellcheck source=/dev/null
-    source "$NVM_SH"
+    source "$NVM_SH" # shellcheck disable=SC1090
     if ! nvm ls 24 &>/dev/null; then
       info "Installing Node 24 via nvm..."
       nvm install 24
@@ -247,13 +271,13 @@ if [[ "$ZERO_CHOICE" =~ ^[Yy]$ ]]; then
 
   # tfenv
   if command -v tfenv &>/dev/null; then
-    if ! tfenv list 2>/dev/null | grep -Fxq "1.13.3"; then
-      info "Installing Terraform 1.13.3..."
-      tfenv install 1.13.3
+    if ! tfenv list 2>/dev/null | grep -q .; then
+      info "Installing latest Terraform..."
+      tfenv install latest
+      tfenv use latest
     fi
-    tfenv use 1.13.3
     info "Terraform $(tfenv version-name) active"
-    SUMMARY+=("Terraform 1.13.3 configured")
+    SUMMARY+=("Terraform configured")
   fi
 
   # Storyblok CLI
