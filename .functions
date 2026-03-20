@@ -322,6 +322,7 @@ sync-dots() {
     ".vimrc"
     ".zshrc"
     ".vscode/settings.json"
+    ".vscode/extensions.txt"
     ".claude/commands"
     ".claude/mcps"
     ".claude/memory"
