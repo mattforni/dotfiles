@@ -12,6 +12,23 @@ if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
     done
     source $HOME/.bashrc
     echo "dotfiles installed!"
+
+    # Install IDE extensions from canonical list
+    EXTENSIONS_FILE="$DIR/.vscode/extensions.txt"
+    if [ -f "$EXTENSIONS_FILE" ]; then
+        for CLI in code cursor; do
+            if command -v $CLI &> /dev/null; then
+                echo "Installing extensions for $CLI..."
+                while IFS= read -r ext || [ -n "$ext" ]; do
+                    [ -z "$ext" ] && continue
+                    $CLI --install-extension "$ext" --force 2>/dev/null
+                done < "$EXTENSIONS_FILE"
+                echo "$CLI extensions installed!"
+            else
+                echo "$CLI not found, skipping extension install."
+            fi
+        done
+    fi
 else
     echo "Unable to install dotfiles."
 fi
