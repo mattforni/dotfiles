@@ -1,0 +1,5 @@
+https://github.com/anthropics/claude-code.git
+obra/superpowers-marketplace
+wshobson/agents
+mattforni/skillset
+anthropics/claude-plugins-official
