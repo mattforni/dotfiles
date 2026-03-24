@@ -15,9 +15,10 @@
 .claude/file-history
 .claude/history.jsonl
 .claude/debug/
-.claude/plugins/marketplaces/
-.claude/.credentials.json
+.claude/plugins/cache/
+.claude/plugins/install-counts-cache.json
 .claude/plugins/installed_plugins.json
 .claude/plugins/known_marketplaces.json
-.claude/plugins/cache/
+.claude/plugins/marketplaces/
+.claude/.credentials.json
 .claude.json

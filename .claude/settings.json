@@ -2,10 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(/bin/rm:*)",
+      "Bash(BASE_BRANCH=:*)",
       "Bash(RAILS_ENV=test bundle exec rails db:migrate:status)",
       "Bash(awk:*)",
+      "Bash(bash install.sh)",
       "Bash(brew:*)",
-      "Bash(BASE_BRANCH=:*)",
       "Bash(bun:*)",
       "Bash(bundle-audit:*)",
       "Bash(bundle:*)",
@@ -16,6 +17,7 @@
       "Bash(continue)",
       "Bash(convert:*)",
       "Bash(curl:*)",
+      "Bash(cursor --list-extensions)",
       "Bash(date:*)",
       "Bash(dig:*)",
       "Bash(do:*)",
@@ -42,9 +44,12 @@
       "Bash(npx:*)",
       "Bash(pbcopy)",
       "Bash(pkill:*)",
+      "Bash(pnpm:*)",
+      "Bash(python3:*)",
       "Bash(railway:*)",
       "Bash(rbenv:*)",
       "Bash(rf)",
+      "Bash(rm:*)",
       "Bash(rsvg-convert:*)",
       "Bash(rsync:*)",
       "Bash(ruby:*)",
@@ -70,6 +75,7 @@
       "Skill(hoist-permissions)",
       "Skill(linear-lifecycle)",
       "Skill(linear-lifecycle:linear-lifecycle)",
+      "Skill(sdlc:*)",
       "Skill(sdlc:review)",
       "WebFetch(domain:docs.claude.com)",
       "WebFetch(domain:docs.railway.com)",
@@ -83,6 +89,7 @@
       "WebFetch(domain:lucide.dev)",
       "WebFetch(domain:notes.granola.ai)",
       "WebFetch(domain:orcaenergygroup.com)",
+      "WebFetch(domain:posthog.com)",
       "WebFetch(domain:supabase.com)",
       "WebFetch(domain:tiptap.dev)",
       "WebFetch(domain:uploads.linear.app)",
@@ -115,6 +122,38 @@
     "episodic-memory@superpowers-marketplace": true,
     "linear-lifecycle@skillset": true,
     "sdlc@skillset": true
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "claude-code-workflows": {
+      "source": {
+        "source": "github",
+        "repo": "wshobson/agents"
+      }
+    },
+    "skillset": {
+      "source": {
+        "source": "github",
+        "repo": "mattforni/skillset"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "claude-code-plugins": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/anthropics/claude-code.git"
+      }
+    }
   },
   "outputStyle": "Concise",
   "alwaysThinkingEnabled": true
