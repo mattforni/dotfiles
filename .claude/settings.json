@@ -29,6 +29,7 @@
       "Bash(gh:*)",
       "Bash(git:*)",
       "Bash(grep:*)",
+      "Bash(gws:*)",
       "Bash(gunzip:*)",
       "Bash(head:*)",
       "Bash(heroku:*)",
@@ -71,7 +72,6 @@
       "Read(//Users/forni/**)",
       "Read(//dev/**)",
       "Skill(commit)",
-      "Skill(episodic-memory:remembering-conversations)",
       "Skill(hoist-permissions)",
       "Skill(linear-lifecycle)",
       "Skill(linear-lifecycle:linear-lifecycle)",
@@ -101,10 +101,10 @@
       "WebFetch(domain:www.projectangelheart.org)",
       "WebSearch",
       "mcp__claude_ai_Linear__*",
+      "mcp__claude_ai_Slack__*",
       "mcp__claude_ai_Todoist__*",
       "mcp__gmail__*",
-      "mcp__notion__*",
-      "mcp__plugin_episodic-memory_episodic-memory__*"
+      "mcp__notion__*"
     ],
     "deny": [],
     "ask": []
@@ -117,19 +117,11 @@
   "enabledPlugins": {
     "pr-review-toolkit@claude-code-plugins": true,
     "feature-dev@claude-code-plugins": true,
-    "superpowers@superpowers-marketplace": false,
-    "elements-of-style@superpowers-marketplace": true,
-    "episodic-memory@superpowers-marketplace": true,
     "linear-lifecycle@skillset": true,
-    "sdlc@skillset": true
+    "sdlc@skillset": true,
+    "skill-creator@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "superpowers-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "obra/superpowers-marketplace"
-      }
-    },
     "claude-code-workflows": {
       "source": {
         "source": "github",
@@ -152,6 +144,12 @@
       "source": {
         "source": "git",
         "url": "https://github.com/anthropics/claude-code.git"
+      }
+    },
+    "anthropic-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
       }
     }
   },
