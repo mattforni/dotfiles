@@ -6,11 +6,11 @@ read INSTALL
 if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     echo "Installing dotfiles from $DIR ..."
-    rsync -a --exclude='.git' "$DIR/" "$HOME/" \
-        --exclude='install.sh' \
-        --exclude='README.md' \
-        --exclude='.gitignore' \
-        --exclude='brew'
+    rsync_opts=('-a')
+    for item in "${EXCLUDED[@]}"; do
+        rsync_opts+=(--exclude="$item")
+    done
+    rsync "${rsync_opts[@]}" "$DIR/" "$HOME/"
     source $HOME/.bashrc
     echo "dotfiles installed!"
 
@@ -23,8 +23,9 @@ if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
                 declare -A exts_to_install
                 while IFS= read -r ext || [ -n "$ext" ]; do
                     [ -z "$ext" ] && continue
-                    exts_to_install["$(echo "$ext" | tr '[:upper:]' '[:lower:]')"]="$ext"
+                    exts_to_install["${ext,,}"]="$ext"
                 done < "$EXTENSIONS_FILE"
+                total_exts=${#exts_to_install[@]}
 
                 while IFS= read -r installed_ext; do
                     unset 'exts_to_install[$installed_ext]'
@@ -33,7 +34,7 @@ if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
                 MISSING=("${exts_to_install[@]}")
 
                 if [ ${#MISSING[@]} -eq 0 ]; then
-                    echo "$CLI extensions: all $(wc -l < "$EXTENSIONS_FILE" | tr -d ' ') already installed."
+                    echo "$CLI extensions: all $total_exts already installed."
                 else
                     for ext in "${MISSING[@]}"; do
                         $CLI --install-extension "$ext" --force 2>/dev/null
@@ -64,6 +65,9 @@ if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
 
         # Install enabled plugins (skip already installed)
         INSTALLED_PLUGINS=$(claude plugin list 2>/dev/null)
+        declare -A installed_plugin_set
+        while IFS= read -r p; do [ -n "$p" ] && installed_plugin_set["$p"]=1; done <<< "$INSTALLED_PLUGINS"
+
         python3 -c "
 import json
 with open('$SETTINGS_FILE') as f:
@@ -72,8 +76,8 @@ for k, v in d.get('enabledPlugins', {}).items():
     if v:
         print(k)
 " | while read -r plugin; do
-            PLUGIN_NAME=$(echo "$plugin" | cut -d'@' -f1)
-            if echo "$INSTALLED_PLUGINS" | grep -xq "$PLUGIN_NAME"; then
+            PLUGIN_NAME=${plugin%@*}
+            if [[ -v installed_plugin_set["$PLUGIN_NAME"] ]]; then
                 echo "  Already installed: $plugin"
             else
                 echo "  Installing plugin: $plugin"
@@ -88,4 +92,3 @@ for k, v in d.get('enabledPlugins', {}).items():
 else
     echo "Unable to install dotfiles."
 fi
-
