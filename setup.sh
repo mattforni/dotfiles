@@ -144,9 +144,11 @@ install_ide_extensions() {
       done < "$extensions_file"
       local total_exts=${#exts_to_install[@]}
 
-      while IFS= read -r installed_ext; do
-        unset 'exts_to_install[$installed_ext]'
-      done <<< "$installed"
+      if [[ "$FORCE" != true ]]; then
+        while IFS= read -r installed_ext; do
+          unset 'exts_to_install[$installed_ext]'
+        done <<< "$installed"
+      fi
 
       local missing=("${exts_to_install[@]}")
 
