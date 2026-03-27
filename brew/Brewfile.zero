@@ -1,9 +1,0 @@
-# Zero Home team tooling
-
-brew "nvm"
-brew "tfenv"
-brew "poetry"
-cask "docker-desktop"
-cask "gcloud-cli"
-cask "slack"
-cask "1password"
