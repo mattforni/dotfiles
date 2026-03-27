@@ -1,7 +1,5 @@
 # Taps
 tap "heroku/brew"
-tap "homebrew/bundle"
-tap "homebrew/services"
 tap "supabase/tap"
 
 # CLI essentials

@@ -36,6 +36,10 @@ setup_prerequisites() {
   if ! command -v brew &>/dev/null; then
     warn "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Ensure brew is in PATH for the rest of this script (Apple Silicon)
+    if [[ "$(uname -m)" == "arm64" ]] && [[ -f /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
     SUMMARY+=("Homebrew installed")
   fi
   info "Homebrew ready"
@@ -79,14 +83,14 @@ setup_node() {
 
   if command -v fnm &>/dev/null; then
     eval "$(fnm env)"
-    LTS_INSTALLED=$(fnm ls 2>/dev/null | grep -c "lts" || true)
+    LTS_INSTALLED=$(fnm ls | grep -c "lts" || true)
     if [[ "$LTS_INSTALLED" -eq 0 ]] || [[ "$FORCE" == true ]]; then
       info "Installing Node LTS via fnm..."
       fnm install --lts
       fnm default lts-latest
       SUMMARY+=("Node LTS installed via fnm")
     fi
-    info "Node $(node --version 2>/dev/null || echo 'pending shell restart') active"
+    info "Node $(node --version || echo 'pending shell restart') active"
   else
     warn "fnm not found, skipping Node setup"
   fi
@@ -136,7 +140,7 @@ install_ide_extensions() {
   for CLI in code cursor; do
     if command -v "$CLI" &>/dev/null; then
       local installed
-      installed=$("$CLI" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
+      installed=$("$CLI" --list-extensions | tr '[:upper:]' '[:lower:]')
       declare -A exts_to_install
       while IFS= read -r ext || [[ -n "$ext" ]]; do
         [[ -z "$ext" ]] && continue
@@ -144,9 +148,11 @@ install_ide_extensions() {
       done < "$extensions_file"
       local total_exts=${#exts_to_install[@]}
 
-      while IFS= read -r installed_ext; do
-        unset 'exts_to_install[$installed_ext]'
-      done <<< "$installed"
+      if [[ "$FORCE" != true ]]; then
+        while IFS= read -r installed_ext; do
+          unset "exts_to_install[$installed_ext]"
+        done <<< "$installed"
+      fi
 
       local missing=("${exts_to_install[@]}")
 
@@ -180,11 +186,11 @@ install_claude_plugins() {
 
   while IFS= read -r source || [[ -n "$source" ]]; do
     [[ -z "$source" ]] && continue
-    claude plugin marketplace add "$source" 2>/dev/null
+    claude plugin marketplace add "$source"
   done < "$sources_file"
 
   local installed_plugins
-  installed_plugins=$(claude plugin list 2>/dev/null)
+  installed_plugins=$(claude plugin list)
   declare -A installed_plugin_set
   while IFS= read -r p; do [[ -n "$p" ]] && installed_plugin_set["${p%@*}"]=1; done <<< "$installed_plugins"
 
@@ -201,7 +207,7 @@ for k, v in d.get('enabledPlugins', {}).items():
       info "  Already installed: $plugin"
     else
       info "  Installing: $plugin"
-      claude plugin install "$plugin" 2>/dev/null
+      claude plugin install "$plugin"
     fi
   done
   SUMMARY+=("Claude plugins configured")
@@ -278,6 +284,7 @@ print_summary() {
       info "$item"
     done
   fi
+  warn "You may need to restart your shell for all changes to take effect"
   echo ""
 }
 
