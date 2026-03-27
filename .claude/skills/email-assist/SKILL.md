@@ -1,7 +1,7 @@
 ---
 name: email-assist
-description: Triage Gmail inbox by labeling, starring, and archiving emails. Also consolidates legacy labels and creates filters. Use this skill whenever the user mentions email triage, inbox cleanup, email labels, email filters, or wants to process their inbox. Default subcommand is triage.
-argument-hint: "[triage | cleanup | filters]"
+description: Triage Gmail inbox by labeling, starring, and archiving emails. Also creates filters for recurring senders. Use this skill whenever the user mentions email triage, inbox cleanup, email labels, email filters, or wants to process their inbox. Default subcommand is triage.
+argument-hint: "[triage | filters]"
 allowed-tools:
   - mcp__gmail__search_emails
   - mcp__gmail__read_email
@@ -9,8 +9,6 @@ allowed-tools:
   - mcp__gmail__batch_modify_emails
   - mcp__gmail__list_email_labels
   - mcp__gmail__get_or_create_label
-  - mcp__gmail__create_label
-  - mcp__gmail__delete_label
   - mcp__gmail__create_filter
   - mcp__gmail__create_filter_from_template
   - mcp__gmail__list_filters
@@ -28,7 +26,7 @@ allowed-tools:
 
 # Email Assist
 
-Triage the Gmail inbox, clean up legacy labels, and create filters for recurring senders.
+Triage the Gmail inbox and create filters for recurring senders.
 
 ## Before Every Invocation
 
@@ -66,19 +64,6 @@ After processing:
 4. Identify senders appearing 3+ times, suggest creating filters
 5. **Urgent digest**: List all RED_STAR emails remaining in inbox with subject, sender, age, and what action is needed. This is the "respond to these" list.
 6. Print summary: counts by action, new learned rules, filter suggestions
-
-## Mode: cleanup
-
-Merge legacy labels into proper pillar sublabels. Follow [label-map.md](reference/label-map.md) for known merge targets.
-
-For each label:
-1. Search the label to show contents
-2. Propose merge target (specific sublabel, not parent)
-3. User confirms or overrides
-4. `mcp__gmail__batch_modify_emails` to add new label, remove old
-5. `mcp__gmail__delete_label` to remove old label
-
-Never delete a label without user confirmation. Present all proposed merges as a table first.
 
 ## Mode: filters
 
