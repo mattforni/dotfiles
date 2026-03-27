@@ -76,6 +76,10 @@ install_brew_packages() {
       SUMMARY+=("Brew packages installed")
     fi
   fi
+
+  # Refresh PATH so newly installed cask CLIs are found by subsequent phases
+  eval "$(brew shellenv)"
+  hash -r
 }
 
 setup_node() {
