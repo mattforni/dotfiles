@@ -108,9 +108,7 @@ NPM_GLOBALS=(
 )
 
 for pkg in "${NPM_GLOBALS[@]}"; do
-  bin_name=${pkg##*/}
-  bin_name=${bin_name%%@*}
-  if command -v "$bin_name" &>/dev/null && [[ "$FORCE" != true ]]; then
+  if npm list -g "$pkg" &>/dev/null && [[ "$FORCE" != true ]]; then
     info "$pkg already installed"
   else
     info "Installing $pkg..."
@@ -229,22 +227,20 @@ if command -v gh &>/dev/null; then
   fi
 fi
 
-# SSH key
-if [[ ! -f "$HOME/.ssh/id_ed25519" ]] || [[ "$FORCE" == true ]]; then
-  if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
-    read -rp "  ${BOLD}Generate ed25519 SSH key? [y/N]${NC} " choice
-    if [[ "$choice" =~ ^[Yy]$ ]]; then
-      read -rp "  ${BOLD}Email for SSH key:${NC} " email
-      if [[ -n "$email" ]]; then
-        ssh-keygen -t ed25519 -C "$email"
-        warn "Add your public key to GitHub: https://github.com/settings/keys"
-        cat "$HOME/.ssh/id_ed25519.pub"
-        SUMMARY+=("SSH key generated")
-      fi
+# SSH key (never regenerate, even with --force)
+if [[ -f "$HOME/.ssh/id_ed25519" ]]; then
+  info "SSH key exists"
+else
+  read -rp "  ${BOLD}Generate ed25519 SSH key? [y/N]${NC} " choice
+  if [[ "$choice" =~ ^[Yy]$ ]]; then
+    read -rp "  ${BOLD}Email for SSH key:${NC} " email
+    if [[ -n "$email" ]]; then
+      ssh-keygen -t ed25519 -C "$email"
+      warn "Add your public key to GitHub: https://github.com/settings/keys"
+      cat "$HOME/.ssh/id_ed25519.pub"
+      SUMMARY+=("SSH key generated")
     fi
   fi
-else
-  info "SSH key exists"
 fi
 
 # Google Cloud
