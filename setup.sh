@@ -27,170 +27,170 @@ header() { printf "\n${BOLD}=== %s ===${NC}\n\n" "$1"; }
 SUMMARY=()
 
 ###############################################################################
-# 1. Prerequisites
+# Phase functions
 ###############################################################################
-header "Prerequisites"
 
-# Homebrew
-if ! command -v brew &>/dev/null; then
-  warn "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  SUMMARY+=("Homebrew installed")
-fi
-info "Homebrew ready"
+setup_prerequisites() {
+  header "Prerequisites"
 
-# Rosetta 2 on Apple Silicon
-if [[ "$(uname -m)" == "arm64" ]]; then
-  if ! /usr/bin/pgrep -q oahd; then
-    warn "Installing Rosetta 2..."
-    softwareupdate --install-rosetta --agree-to-license
-    SUMMARY+=("Rosetta 2 installed")
+  if ! command -v brew &>/dev/null; then
+    warn "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    SUMMARY+=("Homebrew installed")
   fi
-  info "Rosetta 2 ready"
-fi
+  info "Homebrew ready"
 
-# Xcode CLI tools
-if ! xcode-select -p &>/dev/null; then
-  warn "Installing Xcode Command Line Tools..."
-  xcode-select --install
-  echo "Press Enter after Xcode CLI tools installation completes."
-  read -r
-fi
-info "Xcode CLI tools ready"
+  if [[ "$(uname -m)" == "arm64" ]]; then
+    if ! /usr/bin/pgrep -q oahd; then
+      warn "Installing Rosetta 2..."
+      softwareupdate --install-rosetta --agree-to-license
+      SUMMARY+=("Rosetta 2 installed")
+    fi
+    info "Rosetta 2 ready"
+  fi
 
-###############################################################################
-# 2. Brew bundle
-###############################################################################
-header "Brew packages"
+  if ! xcode-select -p &>/dev/null; then
+    warn "Installing Xcode Command Line Tools..."
+    xcode-select --install
+    echo "Press Enter after Xcode CLI tools installation completes."
+    read -r
+  fi
+  info "Xcode CLI tools ready"
+}
 
-if [[ "$FORCE" == true ]]; then
-  brew bundle --file="$DIR/brew/Brewfile"
-  SUMMARY+=("Brew packages installed (forced)")
-else
-  if brew bundle check --file="$DIR/brew/Brewfile" &>/dev/null; then
-    info "All brew packages already installed"
-  else
+install_brew_packages() {
+  header "Brew packages"
+
+  if [[ "$FORCE" == true ]]; then
     brew bundle --file="$DIR/brew/Brewfile"
-    SUMMARY+=("Brew packages installed")
-  fi
-fi
-
-###############################################################################
-# 3. Node setup via fnm
-###############################################################################
-header "Node setup"
-
-if command -v fnm &>/dev/null; then
-  eval "$(fnm env)"
-  LTS_INSTALLED=$(fnm ls 2>/dev/null | grep -c "lts" || true)
-  if [[ "$LTS_INSTALLED" -eq 0 ]] || [[ "$FORCE" == true ]]; then
-    info "Installing Node LTS via fnm..."
-    fnm install --lts
-    fnm default lts-latest
-    SUMMARY+=("Node LTS installed via fnm")
-  fi
-  info "Node $(node --version 2>/dev/null || echo 'pending shell restart') active"
-else
-  warn "fnm not found, skipping Node setup"
-fi
-
-###############################################################################
-# 4. Global npm packages
-###############################################################################
-header "npm globals"
-
-NPM_GLOBALS=(
-  "@anthropic-ai/claude-code"
-  "markdownlint-cli"
-  "typescript"
-  "vercel"
-  "yarn"
-)
-
-for pkg in "${NPM_GLOBALS[@]}"; do
-  if npm list -g "$pkg" &>/dev/null && [[ "$FORCE" != true ]]; then
-    info "$pkg already installed"
+    SUMMARY+=("Brew packages installed (forced)")
   else
-    info "Installing $pkg..."
-    npm install -g "$pkg"
-    SUMMARY+=("$pkg installed")
+    if brew bundle check --file="$DIR/brew/Brewfile" &>/dev/null; then
+      info "All brew packages already installed"
+    else
+      brew bundle --file="$DIR/brew/Brewfile"
+      SUMMARY+=("Brew packages installed")
+    fi
   fi
-done
+}
 
-###############################################################################
-# 5. Dotfiles
-###############################################################################
-header "Dotfiles"
+setup_node() {
+  header "Node setup"
 
-EXCLUDED=(setup.sh README.md .git .gitignore brew)
-rsync_opts=('-a')
-for item in "${EXCLUDED[@]}"; do
-  rsync_opts+=(--exclude="$item")
-done
-rsync "${rsync_opts[@]}" "$DIR/" "$HOME/"
-info "Dotfiles synced to \$HOME"
-SUMMARY+=("Dotfiles deployed")
+  if command -v fnm &>/dev/null; then
+    eval "$(fnm env)"
+    LTS_INSTALLED=$(fnm ls 2>/dev/null | grep -c "lts" || true)
+    if [[ "$LTS_INSTALLED" -eq 0 ]] || [[ "$FORCE" == true ]]; then
+      info "Installing Node LTS via fnm..."
+      fnm install --lts
+      fnm default lts-latest
+      SUMMARY+=("Node LTS installed via fnm")
+    fi
+    info "Node $(node --version 2>/dev/null || echo 'pending shell restart') active"
+  else
+    warn "fnm not found, skipping Node setup"
+  fi
+}
 
-###############################################################################
-# 6. IDE extensions
-###############################################################################
-header "IDE extensions"
+install_npm_globals() {
+  header "npm globals"
 
-EXTENSIONS_FILE="$DIR/.vscode/extensions.txt"
-if [[ -f "$EXTENSIONS_FILE" ]]; then
+  local globals=(
+    "@anthropic-ai/claude-code"
+    "markdownlint-cli"
+    "typescript"
+    "vercel"
+    "yarn"
+  )
+
+  for pkg in "${globals[@]}"; do
+    if npm list -g "$pkg" &>/dev/null && [[ "$FORCE" != true ]]; then
+      info "$pkg already installed"
+    else
+      info "Installing $pkg..."
+      npm install -g "$pkg"
+      SUMMARY+=("$pkg installed")
+    fi
+  done
+}
+
+deploy_dotfiles() {
+  header "Dotfiles"
+
+  local excluded=(setup.sh README.md .git .gitignore brew)
+  local rsync_opts=('-a')
+  for item in "${excluded[@]}"; do
+    rsync_opts+=(--exclude="$item")
+  done
+  rsync "${rsync_opts[@]}" "$DIR/" "$HOME/"
+  info "Dotfiles synced to \$HOME"
+  SUMMARY+=("Dotfiles deployed")
+}
+
+install_ide_extensions() {
+  header "IDE extensions"
+
+  local extensions_file="$DIR/.vscode/extensions.txt"
+  [[ -f "$extensions_file" ]] || return 0
+
   for CLI in code cursor; do
     if command -v "$CLI" &>/dev/null; then
-      INSTALLED=$("$CLI" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
+      local installed
+      installed=$("$CLI" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
       declare -A exts_to_install
       while IFS= read -r ext || [[ -n "$ext" ]]; do
         [[ -z "$ext" ]] && continue
         exts_to_install["${ext,,}"]="$ext"
-      done < "$EXTENSIONS_FILE"
-      total_exts=${#exts_to_install[@]}
+      done < "$extensions_file"
+      local total_exts=${#exts_to_install[@]}
 
       while IFS= read -r installed_ext; do
         unset 'exts_to_install[$installed_ext]'
-      done <<< "$INSTALLED"
+      done <<< "$installed"
 
-      MISSING=("${exts_to_install[@]}")
+      local missing=("${exts_to_install[@]}")
 
-      if [[ ${#MISSING[@]} -eq 0 ]]; then
+      if [[ ${#missing[@]} -eq 0 ]]; then
         info "$CLI: all $total_exts extensions installed"
       else
-        for ext in "${MISSING[@]}"; do
-          "$CLI" --install-extension "$ext" --force 2>/dev/null
+        for ext in "${missing[@]}"; do
+          "$CLI" --install-extension "$ext" --force
         done
-        info "$CLI: ${#MISSING[@]} extensions installed"
-        SUMMARY+=("$CLI: ${#MISSING[@]} extensions installed")
+        info "$CLI: ${#missing[@]} extensions installed"
+        SUMMARY+=("$CLI: ${#missing[@]} extensions installed")
       fi
     else
       warn "$CLI not found, skipping"
     fi
   done
-fi
+}
 
-###############################################################################
-# 7. Claude Code plugins
-###############################################################################
-header "Claude Code plugins"
+install_claude_plugins() {
+  header "Claude Code plugins"
 
-SOURCES_FILE="$HOME/.claude/plugins/marketplace-sources.txt"
-SETTINGS_FILE="$HOME/.claude/settings.json"
-if command -v claude &>/dev/null && [[ -f "$SETTINGS_FILE" ]] && [[ -f "$SOURCES_FILE" ]]; then
+  local sources_file="$HOME/.claude/plugins/marketplace-sources.txt"
+  local settings_file="$HOME/.claude/settings.json"
+
+  if ! command -v claude &>/dev/null || [[ ! -f "$settings_file" ]] || [[ ! -f "$sources_file" ]]; then
+    warn "Claude Code not found or missing config, skipping plugins"
+    return 0
+  fi
+
   [[ -f "$HOME/.claude/plugins/known_marketplaces.json" ]] || echo '{}' > "$HOME/.claude/plugins/known_marketplaces.json"
 
   while IFS= read -r source || [[ -n "$source" ]]; do
     [[ -z "$source" ]] && continue
     claude plugin marketplace add "$source" 2>/dev/null
-  done < "$SOURCES_FILE"
+  done < "$sources_file"
 
-  INSTALLED_PLUGINS=$(claude plugin list 2>/dev/null)
+  local installed_plugins
+  installed_plugins=$(claude plugin list 2>/dev/null)
   declare -A installed_plugin_set
-  while IFS= read -r p; do [[ -n "$p" ]] && installed_plugin_set["$p"]=1; done <<< "$INSTALLED_PLUGINS"
+  while IFS= read -r p; do [[ -n "$p" ]] && installed_plugin_set["$p"]=1; done <<< "$installed_plugins"
 
   python3 -c "
 import json
-with open('$SETTINGS_FILE') as f:
+with open('$settings_file') as f:
     d = json.load(f)
 for k, v in d.get('enabledPlugins', {}).items():
     if v:
@@ -205,91 +205,92 @@ for k, v in d.get('enabledPlugins', {}).items():
     fi
   done
   SUMMARY+=("Claude plugins configured")
-else
-  warn "Claude Code not found or missing config, skipping plugins"
-fi
+}
 
-###############################################################################
-# 8. Auth setup (interactive, skip if already authenticated)
-###############################################################################
-header "Authentication"
+setup_auth() {
+  header "Authentication"
 
-# GitHub CLI
-if command -v gh &>/dev/null; then
-  if ! gh auth status &>/dev/null 2>&1 || [[ "$FORCE" == true ]]; then
-    read -rp "  ${BOLD}Authenticate GitHub CLI? [y/N]${NC} " choice
-    if [[ "$choice" =~ ^[Yy]$ ]]; then
-      gh auth login
-      SUMMARY+=("GitHub CLI authenticated")
+  # GitHub CLI
+  if command -v gh &>/dev/null; then
+    if ! gh auth status &>/dev/null 2>&1 || [[ "$FORCE" == true ]]; then
+      read -rp "  ${BOLD}Authenticate GitHub CLI? [y/N]${NC} " choice
+      if [[ "$choice" =~ ^[Yy]$ ]]; then
+        gh auth login
+        SUMMARY+=("GitHub CLI authenticated")
+      fi
+    else
+      info "GitHub CLI already authenticated"
     fi
+  fi
+
+  # SSH key (never regenerate, even with --force)
+  if [[ -f "$HOME/.ssh/id_ed25519" ]]; then
+    info "SSH key exists"
   else
-    info "GitHub CLI already authenticated"
-  fi
-fi
-
-# SSH key (never regenerate, even with --force)
-if [[ -f "$HOME/.ssh/id_ed25519" ]]; then
-  info "SSH key exists"
-else
-  read -rp "  ${BOLD}Generate ed25519 SSH key? [y/N]${NC} " choice
-  if [[ "$choice" =~ ^[Yy]$ ]]; then
-    read -rp "  ${BOLD}Email for SSH key:${NC} " email
-    if [[ -n "$email" ]]; then
-      ssh-keygen -t ed25519 -C "$email"
-      warn "Add your public key to GitHub: https://github.com/settings/keys"
-      cat "$HOME/.ssh/id_ed25519.pub"
-      SUMMARY+=("SSH key generated")
-    fi
-  fi
-fi
-
-# Google Cloud
-if command -v gcloud &>/dev/null; then
-  if ! gcloud config get project &>/dev/null 2>&1 || [[ "$FORCE" == true ]]; then
-    read -rp "  ${BOLD}Initialize Google Cloud (gcloud init)? [y/N]${NC} " choice
+    read -rp "  ${BOLD}Generate ed25519 SSH key? [y/N]${NC} " choice
     if [[ "$choice" =~ ^[Yy]$ ]]; then
-      gcloud init
-      SUMMARY+=("Google Cloud initialized")
+      read -rp "  ${BOLD}Email for SSH key:${NC} " email
+      if [[ -n "$email" ]]; then
+        ssh-keygen -t ed25519 -C "$email"
+        warn "Add your public key to GitHub: https://github.com/settings/keys"
+        cat "$HOME/.ssh/id_ed25519.pub"
+        SUMMARY+=("SSH key generated")
+      fi
     fi
-  else
-    info "Google Cloud already configured"
   fi
-fi
 
-# Google Workspace CLI
-if command -v gws &>/dev/null; then
-  if [[ ! -d "$HOME/.config/gws" ]] || [[ "$FORCE" == true ]]; then
-    read -rp "  ${BOLD}Authenticate Google Workspace CLI (gws auth setup)? [y/N]${NC} " choice
-    if [[ "$choice" =~ ^[Yy]$ ]]; then
-      warn "Note: You may need to add yourself as a test user in the GCP OAuth consent screen"
-      warn "Go to: https://console.cloud.google.com/apis/credentials/consent > Audience > Add test user"
-      gws auth setup
-      SUMMARY+=("Google Workspace CLI authenticated")
+  # Google Cloud
+  if command -v gcloud &>/dev/null; then
+    if ! gcloud config get project &>/dev/null 2>&1 || [[ "$FORCE" == true ]]; then
+      read -rp "  ${BOLD}Initialize Google Cloud (gcloud init)? [y/N]${NC} " choice
+      if [[ "$choice" =~ ^[Yy]$ ]]; then
+        gcloud init
+        SUMMARY+=("Google Cloud initialized")
+      fi
+    else
+      info "Google Cloud already configured"
     fi
-  else
-    info "Google Workspace CLI already authenticated"
   fi
-fi
 
-# Optional: Google Chrome
-if ! brew ls --cask --versions "google-chrome" &>/dev/null; then
-  read -rp "  ${BOLD}Install Google Chrome? [y/N]${NC} " choice
-  if [[ "$choice" =~ ^[Yy]$ ]]; then
-    brew install --cask google-chrome
-    SUMMARY+=("Google Chrome installed")
+  # Google Workspace CLI
+  if command -v gws &>/dev/null; then
+    if [[ ! -d "$HOME/.config/gws" ]] || [[ "$FORCE" == true ]]; then
+      read -rp "  ${BOLD}Authenticate Google Workspace CLI (gws auth setup)? [y/N]${NC} " choice
+      if [[ "$choice" =~ ^[Yy]$ ]]; then
+        warn "Note: You may need to add yourself as a test user in the GCP OAuth consent screen"
+        warn "Go to: https://console.cloud.google.com/apis/credentials/consent > Audience > Add test user"
+        gws auth setup
+        SUMMARY+=("Google Workspace CLI authenticated")
+      fi
+    else
+      info "Google Workspace CLI already authenticated"
+    fi
   fi
-fi
+}
+
+print_summary() {
+  header "Setup complete"
+
+  if [[ ${#SUMMARY[@]} -eq 0 ]]; then
+    info "Everything was already up to date"
+  else
+    for item in "${SUMMARY[@]}"; do
+      info "$item"
+    done
+  fi
+  echo ""
+}
 
 ###############################################################################
-# 9. Summary
+# Main
 ###############################################################################
-header "Setup complete"
 
-if [[ ${#SUMMARY[@]} -eq 0 ]]; then
-  info "Everything was already up to date"
-else
-  for item in "${SUMMARY[@]}"; do
-    info "$item"
-  done
-fi
-echo ""
+setup_prerequisites
+install_brew_packages
+setup_node
+install_npm_globals
+deploy_dotfiles
+install_ide_extensions
+install_claude_plugins
+setup_auth
+print_summary
