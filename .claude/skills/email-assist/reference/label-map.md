@@ -46,6 +46,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🤝 Community/🤲 Giving` -- charity, volunteering, donations
 - `🤝 Community/⚓ Seattle` -- Seattle contacts and community
 - `🤝 Community/🌇 Los Angeles` -- LA contacts and community
+- `🤝 Community/🌉 San Francisco` -- SF contacts and community
 
 ### Craft (🛠️)
 - `🛠️ Craft` (parent)
@@ -96,7 +97,7 @@ These labels predate the pillar system. Use `cleanup` mode to merge them.
 | Burning Man | 🛠️ Craft/🌏 Adventure | 2017 event |
 | Los Angeles | 🤝 Community/🌇 Los Angeles | 2023 LA events (create new sublabel) |
 | Press | 🛠️ Craft/💼 Vocation | 2023 interviews |
-| San Francisco | 🤝 Community | SF events |
+| San Francisco | 🤝 Community/🌉 San Francisco | SF events (merge into same sublabel as 🌉 San Francisco) |
 | Documents | 📑 Admin | Library scans |
 | Phi Psi | 🤝 Community/🤗 Friends | Fraternity |
 | 🎮 GameFlo | 🛠️ Craft/🎨 Leisure | Gaming newsletters |
@@ -105,5 +106,5 @@ These labels predate the pillar system. Use `cleanup` mode to merge them.
 | 🪪 Insurance | 🍏 Constitution/🪪 Insurance | GEICO, auto insurance |
 | 🧾 Bills | 🍏 Constitution/💰 Financial | Utility statements |
 | 🚌 Transportation | 📑 Admin | Parking, transit |
-| 🌉 San Francisco | 🤝 Community | SF events |
+| 🌉 San Francisco | 🤝 Community/🌉 San Francisco | SF events (create new sublabel, distinct from plain "San Francisco") |
 | [Imap]/Trash | Delete label only | Truly empty, no emails to move. Delete the label itself with user confirmation. |

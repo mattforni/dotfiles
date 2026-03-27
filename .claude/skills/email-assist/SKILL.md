@@ -19,8 +19,10 @@ allowed-tools:
   - Write
   - AskUserQuestion
   - mcp__claude_ai_Google_Calendar__gcal_list_events
-  - mcp__gmail__send_email
   - mcp__gmail__draft_email
+  - mcp__gmail__download_attachment
+  - mcp__claude_ai_Linear__save_issue
+  - mcp__claude_ai_Linear__list_teams
   - WebFetch
 ---
 
@@ -53,7 +55,7 @@ For each email, classify using triage-rules.md. Key behaviors:
 
 **When in doubt, ask**: If there is any ambiguity about classification, or an email could take multiple labels, ask the user. Do not guess. Defaulting to asking is always correct.
 
-**Drafting replies**: Never send emails directly. Always create a draft, present it for review, and wait for explicit approval. Never reference people or sources the user does not know. Always read full email content (including attachments) before making assumptions about dates, expiration, or validity.
+**Drafting replies**: Never send emails directly. Always create a draft, present it for review, and wait for explicit approval to send. Never reference people or sources the user does not know. Always read full email content and download attachments when relevant (e.g. to check expiration dates, document details) before making assumptions.
 
 **Calendar awareness**: When someone proposes a date/time, check the calendar to see if it works. If it does, help draft an acceptance and offer to send an invite. If not, propose an alternative (prefer Fridays for in person meetings).
 

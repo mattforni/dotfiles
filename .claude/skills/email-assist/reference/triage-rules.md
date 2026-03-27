@@ -88,7 +88,7 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 
 **Known sender routing** (exact matches, highest priority):
 - `samwieds@gmail.com` -> `🤝 Community/🤗 Friends` (Sam Wiedemeier; adventure/outdoor content may also get `🛠️ Craft/🌏 Adventure`)
-- `mealplanner@richroll.com` -> `🍏 Constitution/🥕 Nutrition`, archive. Also create a Linear ticket in the Atelic workspace with a link to the email.
+- `mealplanner@richroll.com` -> `🍏 Constitution/🥕 Nutrition`, archive + Linear ticket in Atelic
 - `gifts@childhelp.org` -> `🤝 Community/🤲 Giving` (donation receipts, archive)
 - `do_not_reply@geico.com` -> `🍏 Constitution/🪪 Insurance` (NOT Healthcare; GEICO is auto insurance)
 - `kettlesarah@gmail.com` -> `🛠️ Craft/💻 TPF` (Sarah Kettles, TPF associate)
