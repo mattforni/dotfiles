@@ -3,24 +3,15 @@ name: email-assist
 description: Triage Gmail inbox by labeling, starring, and archiving emails. Also creates filters for recurring senders. Use this skill whenever the user mentions email triage, inbox cleanup, email labels, email filters, or wants to process their inbox. Default subcommand is triage.
 argument-hint: "[triage | filters]"
 allowed-tools:
-  - mcp__gmail__search_emails
-  - mcp__gmail__read_email
-  - mcp__gmail__modify_email
-  - mcp__gmail__batch_modify_emails
-  - mcp__gmail__list_email_labels
-  - mcp__gmail__get_or_create_label
-  - mcp__gmail__create_filter
-  - mcp__gmail__create_filter_from_template
-  - mcp__gmail__list_filters
+  - mcp__claude_ai_Gmail__*
+  - mcp__gmail__*
+  - mcp__claude_ai_Google_Calendar__*
+  - mcp__claude_ai_Linear__*
+  - mcp__claude_ai_Todoist__*
   - Read
   - Edit
   - Write
   - AskUserQuestion
-  - mcp__claude_ai_Google_Calendar__gcal_list_events
-  - mcp__gmail__draft_email
-  - mcp__gmail__download_attachment
-  - mcp__claude_ai_Linear__save_issue
-  - mcp__claude_ai_Linear__list_teams
   - WebFetch
 ---
 
@@ -32,15 +23,15 @@ Triage the Gmail inbox and create filters for recurring senders.
 
 1. Read [learned-rules.md](learned-rules.md) for prior corrections
 2. Read [triage-rules.md](reference/triage-rules.md) and [label-map.md](reference/label-map.md) for classification rules
-3. Call `mcp__gmail__list_email_labels` once to resolve label name -> ID mapping
+3. Call `gmail_list_labels` once to resolve label name -> ID mapping
 
 ## Mode: triage (default)
 
-Process inbox emails in batches of 50 via `mcp__gmail__search_emails` with query `in:inbox`.
+Process inbox emails via `gmail_search_messages` with query `in:inbox`.
 
 For each email, classify using triage-rules.md. Key behaviors:
 
-**Auto-process purchases**: Order confirmations, shipping notifications, receipts, delivery updates. Apply `📑 Admin/🛒 Purchases` label, remove `INBOX` and `UNREAD`. Use `mcp__gmail__batch_modify_emails` for efficiency. Only auto-process when classification confidence is high (exact sender match in triage-rules.md or unambiguous subject pattern). If uncertain, include in the confirmation batch.
+**Auto-process purchases**: Order confirmations, shipping notifications, receipts, delivery updates. Apply `📑 Admin/🛒 Purchases` label, remove `INBOX` and `UNREAD`. Use batch modify tools when available for efficiency. Only auto-process when classification confidence is high (exact sender match in triage-rules.md or unambiguous subject pattern). If uncertain, include in the confirmation batch.
 
 **Multi-label routing**: Emails can take multiple labels. An Anthropic receipt is both `📑 Admin/🛒 Purchases` and `🛠️ Craft/💻 Development`. Always route to the most specific sublabel, never a parent pillar alone.
 
@@ -57,13 +48,16 @@ For each email, classify using triage-rules.md. Key behaviors:
 
 **Calendar awareness**: When someone proposes a date/time, check the calendar to see if it works. If it does, help draft an acceptance and offer to send an invite. If not, propose an alternative (prefer Fridays for in person meetings).
 
+**External actions**: Some emails trigger actions outside Gmail (e.g. create a Todoist task, create a Linear ticket, check the calendar). Track these as an array of pending external actions. Do not archive an email until all its external actions have been completed. If an external tool is unavailable (e.g. auth failure), prompt the user to fix it before proceeding.
+
 After processing:
 1. Present family emails first with content overview and reply offer
 2. Present remaining emails grouped by proposed action for confirmation
-3. When user corrects a classification, append the rule to `learned-rules.md`
-4. Identify senders appearing 3+ times, suggest creating filters
-5. **Urgent digest**: List all RED_STAR emails remaining in inbox with subject, sender, age, and what action is needed. This is the "respond to these" list.
-6. Print summary: counts by action, new learned rules, filter suggestions
+3. Execute external actions (Todoist tasks, Linear tickets, calendar checks) for each email that needs them
+4. When user corrects a classification, append the rule to `learned-rules.md`
+5. Identify senders appearing 3+ times, suggest creating filters
+6. **Urgent digest**: List all RED_STAR emails remaining in inbox with subject, sender, age, and what action is needed. This is the "respond to these" list.
+7. Print summary: counts by action, external actions completed, new learned rules, filter suggestions
 
 ## Mode: filters
 
@@ -74,7 +68,7 @@ Note: existing filters in the Gmail web UI are not readable via the MCP (scope l
 1. Read `learned-rules.md` for any previously created filters (stored under `## Created Filters`)
 2. Analyze learned rules and recent triage to identify candidates
 3. Skip any sender that already has a filter recorded in learned-rules.md
-4. Propose filters via `mcp__gmail__create_filter_from_template` (fromSender template)
+4. Propose filters using available Gmail filter tools
 5. Default action: apply appropriate label, mark read, skip inbox
 6. User approves each filter before creation
 7. After creating a filter, record it in `learned-rules.md` under `## Created Filters` to prevent duplicates
