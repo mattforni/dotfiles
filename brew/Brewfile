@@ -1,10 +1,55 @@
-# Core tooling (always installed)
+# Taps
+tap "heroku/brew"
+tap "supabase/tap"
 
-# CLI tools
+# CLI essentials
+brew "coreutils"
 brew "fzf"
 brew "gh"
+brew "git-filter-repo"
+brew "jq"
+brew "poppler"
+brew "stow"
+brew "wget"
+brew "zsh"
+
+# Languages & build tools
+brew "automake"
+brew "cmake"
+brew "make"
+brew "maven"
+brew "python@3.12"
+brew "ruby-build"
+
+# Runtime & package managers
+brew "fnm"
+brew "pnpm"
+
+# Data & services
+brew "postgresql@15"
+brew "supabase"
+
+# Cloud & infra
+brew "googleworkspace-cli"
+brew "heroku"
+brew "railway"
 
 # Applications
+cask "brave-browser"
+cask "claude"
+cask "cursor"
+cask "darktable"
+cask "docker"
+cask "gcloud-cli"
+cask "google-chrome"
 cask "linear-linear"
 cask "postman"
+cask "protonvpn"
 cask "raycast"
+cask "slack"
+cask "spotify"
+cask "todoist"
+cask "visual-studio-code"
+cask "warp"
+cask "whatsapp"
+cask "zoom"
