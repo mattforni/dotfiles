@@ -19,6 +19,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🍏 Constitution/💰 Financial/📜 Trust` -- trust, estate planning
 - `🍏 Constitution/💪 Athlete` -- gym, fitness, running, climbing, training
 - `🍏 Constitution/🏥 Healthcare` -- medical, dental, vision, health insurance
+- `🍏 Constitution/🪪 Insurance` -- auto insurance, home insurance, renters insurance (NOT health insurance)
 - `🍏 Constitution/🥕 Nutrition` -- supplements, diet, meal planning
 - `🍏 Constitution/🧖 Personal Care` -- grooming, skincare
 - `🍏 Constitution/🍾 Sobriety` -- sobriety related
@@ -44,6 +45,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🤝 Community/🇮🇹 Italiano` -- Italian language learning
 - `🤝 Community/🤲 Giving` -- charity, volunteering, donations
 - `🤝 Community/⚓ Seattle` -- Seattle contacts and community
+- `🤝 Community/🌇 Los Angeles` -- LA contacts and community
 
 ### Craft (🛠️)
 - `🛠️ Craft` (parent)
@@ -84,7 +86,7 @@ These labels predate the pillar system. Use `cleanup` mode to merge them.
 | Design | 🛠️ Craft/💻 Development | 2014-2019 design work |
 | Tahoe | 🛠️ Craft/🌏 Adventure | 2020 trip planning |
 | Boxing | 🍏 Constitution/💪 Athlete | 2020 gym |
-| Kickstarter | 🛠️ Craft | Various projects |
+| Kickstarter | 📑 Admin/🛒 Purchases | Various projects |
 | Craigslist | 📑 Admin/🛒 Purchases | Marketplace transactions |
 | Amazon | 📑 Admin/🛒 Purchases | Prime, orders |
 | Paypal | 📑 Admin/🛒 Purchases | Payment receipts |
@@ -92,16 +94,16 @@ These labels predate the pillar system. Use `cleanup` mode to merge them.
 | The Great Migration | Review | 2021 relocation docs |
 | Conferences | 🛠️ Craft/💼 Vocation/🕸 Networking | 2019 conference |
 | Burning Man | 🛠️ Craft/🌏 Adventure | 2017 event |
-| Los Angeles | 🤝 Community | 2023 LA events |
+| Los Angeles | 🤝 Community/🌇 Los Angeles | 2023 LA events (create new sublabel) |
 | Press | 🛠️ Craft/💼 Vocation | 2023 interviews |
-| San Francisco | 🤝 Community | 2025 SF events |
+| San Francisco | 🤝 Community | SF events |
 | Documents | 📑 Admin | Library scans |
 | Phi Psi | 🤝 Community/🤗 Friends | Fraternity |
 | 🎮 GameFlo | 🛠️ Craft/🎨 Leisure | Gaming newsletters |
 | 🎒 Gear | 🛠️ Craft/🌲 Outdoorsman | Outdoor gear |
 | ⚖️ Legal | 📑 Admin | Legal correspondence |
-| 🪪 Insurance | 🍏 Constitution/🏥 Healthcare | GEICO, auto |
+| 🪪 Insurance | 🍏 Constitution/🪪 Insurance | GEICO, auto insurance |
 | 🧾 Bills | 🍏 Constitution/💰 Financial | Utility statements |
 | 🚌 Transportation | 📑 Admin | Parking, transit |
 | 🌉 San Francisco | 🤝 Community | SF events |
-| [Imap]/Trash | Delete | Truly empty |
+| [Imap]/Trash | Delete label only | Truly empty, no emails to move. Delete the label itself with user confirmation. |

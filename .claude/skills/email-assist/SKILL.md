@@ -40,7 +40,7 @@ Process inbox emails in batches of 50 via `mcp__gmail__search_emails` with query
 
 For each email, classify using triage-rules.md. Key behaviors:
 
-**Auto-process purchases**: Order confirmations, shipping notifications, receipts, delivery updates. Apply `📑 Admin/🛒 Purchases` label, remove `INBOX` and `UNREAD`. No confirmation needed. Use `mcp__gmail__batch_modify_emails` for efficiency.
+**Auto-process purchases**: Order confirmations, shipping notifications, receipts, delivery updates. Apply `📑 Admin/🛒 Purchases` label, remove `INBOX` and `UNREAD`. Use `mcp__gmail__batch_modify_emails` for efficiency. Only auto-process when classification confidence is high (exact sender match in triage-rules.md or unambiguous subject pattern). If uncertain, include in the confirmation batch.
 
 **Multi-label routing**: Emails can take multiple labels. An Anthropic receipt is both `📑 Admin/🛒 Purchases` and `🛠️ Craft/💻 Development`. Always route to the most specific sublabel, never a parent pillar alone.
 
@@ -84,7 +84,10 @@ Create Gmail server-side filters for high-frequency senders.
 
 Note: existing filters in the Gmail web UI are not readable via the MCP (scope limitation). The MCP can only create new filters.
 
-1. Analyze learned rules and recent triage to identify candidates
-2. Propose filters via `mcp__gmail__create_filter_from_template` (fromSender template)
-3. Default action: apply appropriate label, mark read, skip inbox
-4. User approves each filter before creation
+1. Read `learned-rules.md` for any previously created filters (stored under `## Created Filters`)
+2. Analyze learned rules and recent triage to identify candidates
+3. Skip any sender that already has a filter recorded in learned-rules.md
+4. Propose filters via `mcp__gmail__create_filter_from_template` (fromSender template)
+5. Default action: apply appropriate label, mark read, skip inbox
+6. User approves each filter before creation
+7. After creating a filter, record it in `learned-rules.md` under `## Created Filters` to prevent duplicates

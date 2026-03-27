@@ -88,13 +88,13 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 
 **Known sender routing** (exact matches, highest priority):
 - `samwieds@gmail.com` -> `🤝 Community/🤗 Friends` (Sam Wiedemeier; adventure/outdoor content may also get `🛠️ Craft/🌏 Adventure`)
-- `mealplanner@richroll.com` -> `🍏 Constitution/🥕 Nutrition`, archive (TODO: also create Linear ticket in Atelic workspace)
+- `mealplanner@richroll.com` -> `🍏 Constitution/🥕 Nutrition`, archive. Also create a Linear ticket in the Atelic workspace with a link to the email.
 - `gifts@childhelp.org` -> `🤝 Community/🤲 Giving` (donation receipts, archive)
-- `do_not_reply@geico.com` -> `🪪 Insurance` (NOT Healthcare; GEICO is auto insurance)
+- `do_not_reply@geico.com` -> `🍏 Constitution/🪪 Insurance` (NOT Healthcare; GEICO is auto insurance)
 - `kettlesarah@gmail.com` -> `🛠️ Craft/💻 TPF` (Sarah Kettles, TPF associate)
 
 **Constitution signals:**
-- Auto insurance (GEICO) -> `🪪 Insurance`
+- Auto insurance (GEICO) -> `🍏 Constitution/🪪 Insurance`
 - Health insurance, medical -> `🍏 Constitution/🏥 Healthcare`
 - Financial, banking, investment -> `🍏 Constitution/💰 Financial`
 - Tax documents -> `🍏 Constitution/💰 Financial/💸 Taxes`
