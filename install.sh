@@ -20,13 +20,17 @@ if [[ "$INSTALL" == "y" || "$INSTALL" == "Y" ]]; then
         for CLI in code cursor; do
             if command -v $CLI &> /dev/null; then
                 INSTALLED=$($CLI --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
-                MISSING=()
+                declare -A exts_to_install
                 while IFS= read -r ext || [ -n "$ext" ]; do
                     [ -z "$ext" ] && continue
-                    if ! echo "$INSTALLED" | grep -q "^$(echo "$ext" | tr '[:upper:]' '[:lower:]')$"; then
-                        MISSING+=("$ext")
-                    fi
+                    exts_to_install["$(echo "$ext" | tr '[:upper:]' '[:lower:]')"]="$ext"
                 done < "$EXTENSIONS_FILE"
+
+                while IFS= read -r installed_ext; do
+                    unset 'exts_to_install[$installed_ext]'
+                done <<< "$INSTALLED"
+
+                MISSING=("${exts_to_install[@]}")
 
                 if [ ${#MISSING[@]} -eq 0 ]; then
                     echo "$CLI extensions: all $(wc -l < "$EXTENSIONS_FILE" | tr -d ' ') already installed."
@@ -69,7 +73,7 @@ for k, v in d.get('enabledPlugins', {}).items():
         print(k)
 " | while read -r plugin; do
             PLUGIN_NAME=$(echo "$plugin" | cut -d'@' -f1)
-            if echo "$INSTALLED_PLUGINS" | grep -q "$PLUGIN_NAME"; then
+            if echo "$INSTALLED_PLUGINS" | grep -xq "$PLUGIN_NAME"; then
                 echo "  Already installed: $plugin"
             else
                 echo "  Installing plugin: $plugin"
