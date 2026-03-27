@@ -203,7 +203,7 @@ for k, v in d.get('enabledPlugins', {}).items():
         print(k)
 " | while read -r plugin; do
     PLUGIN_NAME=${plugin%@*}
-    if [[ -v installed_plugin_set["$PLUGIN_NAME"] ]] && [[ "$FORCE" != true ]]; then
+    if [[ -n "${installed_plugin_set[$PLUGIN_NAME]+x}" ]] && [[ "$FORCE" != true ]]; then
       info "  Already installed: $plugin"
     else
       info "  Installing: $plugin"
