@@ -151,6 +151,12 @@
         "source": "github",
         "repo": "anthropics/skills"
       }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
     }
   },
   "outputStyle": "Concise",
