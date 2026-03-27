@@ -186,7 +186,7 @@ install_claude_plugins() {
   local installed_plugins
   installed_plugins=$(claude plugin list 2>/dev/null)
   declare -A installed_plugin_set
-  while IFS= read -r p; do [[ -n "$p" ]] && installed_plugin_set["$p"]=1; done <<< "$installed_plugins"
+  while IFS= read -r p; do [[ -n "$p" ]] && installed_plugin_set["${p%@*}"]=1; done <<< "$installed_plugins"
 
   python3 -c "
 import json
