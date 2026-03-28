@@ -93,7 +93,7 @@ gws gmail users settings filters list --params '{"userId":"me"}' --format json
 
 # Create a filter
 gws gmail users settings filters create --params '{"userId":"me"}' \
-  --json '{"criteria":{"from":"sender@example.com"},"action":{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX"]}}'
+  --json '{"criteria":{"from":"sender@example.com"},"action":{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX","UNREAD"]}}'
 ```
 
 ### Attachments
