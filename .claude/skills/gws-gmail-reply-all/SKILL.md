@@ -58,7 +58,7 @@ gws gmail +reply-all --message-id 18f1a2b3c4d --body 'Draft reply' --draft
 - Use --bcc for recipients who should not be visible to others.
 - Use --remove to exclude recipients from the outgoing reply, including the sender or Reply-To target.
 - The command fails if no To recipient remains after exclusions and --to additions.
-- Use -a/--attach to add file attachments. Can be specified multiple times.
+- Use -a/--attach to add file attachments; it can be specified multiple times.
 - With --html, the quoted block uses Gmail's gmail_quote CSS classes and preserves HTML formatting. Use fragment tags (<p>, <b>, <a>, etc.) — no <html>/<body> wrapper needed.
 - With --html, inline images in the quoted message are preserved via cid: references.
 - Use --draft to save the reply as a draft instead of sending it immediately.

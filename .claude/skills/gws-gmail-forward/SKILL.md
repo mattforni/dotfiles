@@ -32,7 +32,7 @@ gws gmail +forward --message-id <ID> --to <EMAILS>
 | `--from` | — | — | Sender address (for send-as/alias; omit to use account default) |
 | `--body` | — | — | Optional note to include above the forwarded message (plain text, or HTML with --html) |
 | `--no-original-attachments` | — | — | Do not include file attachments from the original message (inline images in --html mode are preserved) |
-| `--attach` | — | — | Attach a file (can be specified multiple times) |
+| `-a/--attach` | — | — | Attach a file (can be specified multiple times) |
 | `--cc` | — | — | CC email address(es), comma-separated |
 | `--bcc` | — | — | BCC email address(es), comma-separated |
 | `--html` | — | — | Treat --body as HTML content (default is plain text) |

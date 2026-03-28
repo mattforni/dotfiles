@@ -28,7 +28,7 @@ gws gmail +triage
 | Flag | Required | Default | Description |
 |------|----------|---------|-------------|
 | `--max` | — | 20 | Maximum messages to show (default: 20) |
-| `--query` | — | — | Gmail search query (default: is:unread) |
+| `--query` | — | is:unread | Gmail search query |
 | `--labels` | — | — | Include label names in output |
 
 ## Examples

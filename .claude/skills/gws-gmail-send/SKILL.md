@@ -54,7 +54,7 @@ gws gmail +send --to alice@example.com --subject 'Hello' --body 'Hi!' --draft
 
 - Handles RFC 5322 formatting, MIME encoding, and base64 automatically.
 - Use --from to send from a configured send-as alias instead of your primary address.
-- Use -a/--attach to add file attachments. Can be specified multiple times. Total size limit: 25MB.
+- Use -a/--attach to add file attachments; it can be specified multiple times. Total size limit: 25MB.
 - With --html, use fragment tags (<p>, <b>, <a>, <br>, etc.) — no <html>/<body> wrapper needed.
 - Use --draft to save the message as a draft instead of sending it immediately.
 

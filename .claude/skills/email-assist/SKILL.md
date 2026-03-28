@@ -22,9 +22,11 @@ All Gmail operations use the `gws` CLI. Read [gws-shared](../gws-shared/SKILL.md
 1. Read [learned-rules.md](learned-rules.md) for prior corrections
 2. Read [triage-rules.md](reference/triage-rules.md) and [label-map.md](reference/label-map.md) for classification rules
 3. Load label name -> ID mapping:
+
    ```bash
    gws gmail users labels list --params '{"userId":"me"}' --format json
    ```
+
    Store the mapping for all subsequent modify/batchModify calls.
 
 ## gws Command Reference
@@ -110,7 +112,7 @@ gws gmail users messages attachments get \
 gws calendar +agenda
 
 # Create an event (see gws-calendar-insert skill for full flags)
-gws calendar +insert --title 'Meeting' --start '2026-03-28T10:00:00' --end '2026-03-28T11:00:00'
+gws calendar +insert --summary 'Meeting' --start '2026-03-28T10:00:00-07:00' --end '2026-03-28T11:00:00-07:00'
 ```
 
 ### Operational notes
