@@ -143,13 +143,16 @@ For each email, classify using triage-rules.md. Key behaviors:
 
 **Calendar awareness**: When someone proposes a date/time, check the calendar via `gws calendar +agenda` to see if it works. If it does, help draft an acceptance and offer to send an invite. If not, propose an alternative (prefer Fridays for in person meetings).
 
+**External actions**: Some emails trigger actions outside Gmail (e.g. create a Todoist task, create a Linear ticket, check the calendar). Track these as an array of pending external actions. Do not archive an email until all its external actions have been completed. If an external tool is unavailable (e.g. auth failure), prompt the user to fix it before proceeding.
+
 After processing:
 1. Present family emails first with content overview and reply offer
 2. Present remaining emails grouped by proposed action for confirmation
-3. When user corrects a classification, append the rule to `learned-rules.md`
-4. Identify senders appearing 3+ times, suggest creating filters
-5. **Urgent digest**: List all RED_STAR emails remaining in inbox with subject, sender, age, and what action is needed. This is the "respond to these" list.
-6. Print summary: counts by action, new learned rules, filter suggestions
+3. Execute external actions (Todoist tasks, Linear tickets, calendar checks) for each email that needs them
+4. When user corrects a classification, append the rule to `learned-rules.md`
+5. Identify senders appearing 3+ times, suggest creating filters
+6. **Urgent digest**: List all RED_STAR emails remaining in inbox with subject, sender, age, and what action is needed. This is the "respond to these" list.
+7. Print summary: counts by action, external actions completed, new learned rules, filter suggestions
 
 ## Mode: cleanup
 
