@@ -164,8 +164,9 @@ For each label:
 1. Search the label to show contents
 2. Propose merge target (specific sublabel, not parent)
 3. User confirms or overrides
-4. `gws gmail users messages batchModify` to add new label, remove old
-5. `gws gmail users labels delete` to remove old label
+4. Validate with `--dry-run` flag to catch errors before executing
+5. `gws gmail users messages batchModify` to add new label, remove old
+6. `gws gmail users labels delete` to remove old label
 
 Never delete a label without user confirmation. Present all proposed merges as a table first.
 
