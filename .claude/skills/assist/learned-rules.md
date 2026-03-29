@@ -12,6 +12,8 @@ Rules added from triage corrections. Read on every invocation. These override de
 
 ## Domain Rules
 
+Wildcard domain rules match any sender from that domain. Specific Sender Rules above take precedence over Domain Rules when both match.
+
 - `*@gusto.com` -> 🛠️ Craft/💼 Vocation; if about getting paid, also 🍏 Constitution/💰 Financial. Archive.
 - `*@getsentry.com` (Sentry) -> 🛠️ Craft/💻 Development. Weekly reports: mark read, archive. Individual issue alerts: GREEN_STAR, keep in inbox.
 - `*@email.claude.com` (Claude Team) -> 🛠️ Craft/💻 Development. Archive. Also add link to Notion AI Research page (3326231ededc809caebdd0c8dc22297d) under "# Claude Team Emails" heading. Link title = email subject.
