@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a personal dotfiles repository for managing shell configurations, aliases, functions, and development environment settings across different systems.
+Homebase is a personal development environment repository for managing shell configurations, aliases, functions, Claude Code skills/plugins, and development tooling across different systems.
 
 ## Installation
 
-Run `./setup.sh` to install dotfiles to the home directory. The script will:
+Run `./setup.sh` to install homebase to the home directory. The script will:
 
-- Copy all dotfiles from this repository to `$HOME`
+- Copy all configuration files from this repository to `$HOME`
 - Exclude repo tooling (setup.sh, README.md, .git, .github, .gitignore, .markdownlint.jsonc, .markdownlint-cli2.jsonc, brew)
 - Install brew packages, Node, npm globals, IDE extensions, and Claude plugins
 - Set up authentication (GitHub CLI, SSH, Google Cloud, gws)
@@ -72,6 +72,7 @@ Run `./setup.sh` to install dotfiles to the home directory. The script will:
 ├── .gitconfig       # Git aliases and settings
 ├── .vimrc           # Vim configuration
 ├── .vscode/         # VS Code settings
+├── .claude/         # Claude Code skills, commands, and settings
 ├── bin/             # Custom scripts
 │   └── checkout-branch.sh  # Git branch checkout by number
 └── setup.sh         # Installation and setup script
@@ -79,21 +80,20 @@ Run `./setup.sh` to install dotfiles to the home directory. The script will:
 
 ## Development Workflow
 
-1. Edit dotfiles in this repository
+1. Edit files in this repository
 2. Test changes locally
 3. Run `./setup.sh` to deploy to home directory
-4. Make changes to dotfiles in `$HOME` as needed
-5. Run `sync-dotfiles` (or `sync-dots`) to pull changes back from `$HOME` to repository
+4. Make changes in `$HOME` as needed
+5. Run `sync-dots` to pull changes back from `$HOME` to repository
 6. Use `git wip` for quick commits during development
 7. For Ruby projects: Rubocop integration is enabled in VS Code settings
 
-### Syncing Dotfiles
+### Syncing
 
-Use `sync-dotfiles` or the shorter alias `sync-dots` to pull changes from your home directory back to this repository:
+Use `sync-dots` to pull changes from your home directory back to this repository:
 
-- `sync-dotfiles` - Sync all tracked dotfiles from `$HOME` to repository
-- `sync-dotfiles -d` - Dry run to see what would be synced without making changes
-- `sync-dots` - Short alias for `sync-dotfiles`
+- `sync-dots` - Sync all tracked files from `$HOME` to repository
+- `sync-dots -d` - Dry run to see what would be synced without making changes
 
 The sync function handles both files and directories automatically and includes: .aliases, .bashrc, .functions, .gitconfig, .vimrc, .vscode/, .claude/, bin/, and more.
 
