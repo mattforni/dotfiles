@@ -1,0 +1,8 @@
+{
+  // MD013: Line length - disabled for skill files which have long CLI commands
+  "MD013": false,
+  // MD033: Inline HTML - disabled, some markdown files use HTML tags
+  "MD033": false,
+  // MD041: First line should be a top-level heading - disabled for files with YAML frontmatter
+  "MD041": false
+}

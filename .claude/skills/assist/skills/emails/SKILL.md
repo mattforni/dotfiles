@@ -62,6 +62,7 @@ gws gmail users drafts create --params '{"userId":"me"}' --json '{"message":{"th
 Get the authoritative inbox via `gws gmail users messages list` with `q=in:inbox`. For each message, fetch headers (From, Subject, Date) to classify. Cross-reference against triage-rules.md and learned-rules.md.
 
 Partition messages into four buckets:
+
 - **Family**: Matches known family senders from triage-rules.md
 - **Auto-process**: High-confidence purchases, offers, or notifications matching exact sender/subject patterns from triage-rules.md or learned-rules.md
 - **Previously triaged**: Already has user labels and/or stars from a prior session (but still in inbox because action is pending)
@@ -91,11 +92,13 @@ Family emails always come first. For each:
 ### Phase 4: Remaining Emails (one-by-one)
 
 Present each email individually via AskUserQuestion. For each email show:
+
 - Sender and subject
 - Proposed label(s), star, and action (archive, keep, etc.)
 - Brief rationale for the classification
 
 The user can:
+
 - **Approve** the proposed classification
 - **Modify** the labels, star, or action
 - **Skip** to come back later
@@ -119,6 +122,7 @@ After all new emails are processed, acknowledge emails that remain in the inbox 
 **Multi-label routing**: Emails can take multiple labels. An Anthropic receipt is both `📑 Admin/🛒 Purchases` and `🛠️ Craft/💻 Development`. Always route to the most specific sublabel, never a parent pillar alone.
 
 **Star assignment**: Apply colored stars via system label IDs. Never star emails that get archived.
+
 - `GREEN_STAR`: Needs action but NOT a response (download a document, review something)
 - `YELLOW_STAR`: Needs a response from me
 - `RED_STAR`: Urgent or overdue response needed
@@ -144,6 +148,7 @@ When the user requests unsubscribe during one-by-one presentation:
    ```bash
    gws gmail +send --to "<unsubscribe-address>" --subject "Unsubscribe" --body "Unsubscribe"
    ```
+
 3. If only a URL is found, present the URL to the user and note they need to visit it manually
 4. If no List-Unsubscribe header exists, inform the user that no automated unsubscribe is available
 5. After the unsubscribe action, label and archive the triggering email as normal
@@ -171,5 +176,6 @@ Create Gmail server-side filters for high-frequency senders.
    ```bash
    gws gmail users settings filters create --params '{"userId":"me"}' --json '{"criteria":{"from":"<sender>"},"action":{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX"]}}'
    ```
+
 6. Default action: apply appropriate label, mark read, skip inbox
 7. After creating a filter, record it in [learned-rules.md](../../learned-rules.md) under `## Created Filters` to prevent duplicates
