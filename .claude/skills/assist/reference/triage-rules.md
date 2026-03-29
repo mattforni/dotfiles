@@ -7,6 +7,7 @@ Classification rules for inbox email triage. Read learned-rules.md first; those 
 Auto-process (label, mark read, archive) when ANY of these match:
 
 **Sender patterns** (case insensitive):
+
 - `*@amazon.com`, `*@amazon.co.*`
 - `*@shopify.com`, `*@myshopify.com`
 - `*@paypal.com`, `*@paypal.co.*`
@@ -17,6 +18,7 @@ Auto-process (label, mark read, archive) when ANY of these match:
 - `*@ups.com`, `*@fedex.com`, `*@usps.com`, `*@dhl.com`
 
 **Subject patterns** (case insensitive, any of):
+
 - "order confirmation", "order shipped", "order delivered"
 - "shipping confirmation", "shipping notification", "tracking number"
 - "your receipt", "payment receipt", "invoice"
@@ -24,6 +26,7 @@ Auto-process (label, mark read, archive) when ANY of these match:
 - "your order has", "thank you for your order"
 
 **Known purchase senders** (from inbox research):
+
 - `noreply@olo.com` (Illegal Pete's orders)
 - `care@sijohome.com` (Sijo orders/shipping)
 - `info@info.quince.com` (Quince orders/shipping)
@@ -32,6 +35,7 @@ Auto-process (label, mark read, archive) when ANY of these match:
 - Any Shopify-powered store (check headers)
 
 **Multi-label purchases** (get Purchases + a second label):
+
 - `invoice+statements@mail.anthropic.com` -> also `🛠️ Craft/💻 Development` (Anthropic receipts)
 - `noreply@singenuity.com` -> also `🛠️ Craft/🌏 Adventure` (Cajun Encounters, tour bookings)
 - Tech tools/dev subscriptions -> also `🛠️ Craft/💻 Development`
@@ -41,10 +45,12 @@ Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 ## Star Rules
 
 **Core behavior:**
+
 - Never star emails that get archived. Stars mean action is needed.
 - Always mark emails as read when archiving. Remove both INBOX and UNREAD together.
 
 ### GREEN_STAR (needs action, but NOT a response)
+
 - Download a document, review something, FYI with a to-do
 - Tax documents needing download (W-2s, forms)
 - Financial statements and account summaries
@@ -53,6 +59,7 @@ Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 - Subscription renewal confirmations
 
 ### YELLOW_STAR (needs a response from me)
+
 - Direct emails from known contacts (not automated/noreply)
 - Emails with explicit questions requiring response
 - Meeting requests and calendar invitations needing RSVP
@@ -61,6 +68,7 @@ Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 - Deadlines mentioned in subject or body
 
 ### RED_STAR (urgent or overdue response needed)
+
 - Any email needing a response that is >7 days old, regardless of relationship (only if there is actually something to respond to; photo-only or empty-body emails do not count)
 - Emails from close friends or family (see Family Rules below)
 - Business emails with "urgent", "ASAP", "deadline", "action required"
@@ -72,10 +80,12 @@ Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 Family emails always get surfaced for response, regardless of content.
 
 **Known family senders:**
+
 - `mfornaciari2000@yahoo.com` Michael Fornaciari (dad): Likes to send articles and links. Read the full content, summarize the article/topic, offer to draft a warm, appreciative reply.
 - Any sender in `🤝 Community/👨‍👩‍👦‍👦 Family` label history
 
 **Handling:**
+
 1. Label `🤝 Community/👨‍👩‍👦‍👦 Family`
 2. Yellow or red star (red if >3 days old)
 3. Read full email content
@@ -87,6 +97,7 @@ Family emails always get surfaced for response, regardless of content.
 Use these to determine pillar sublabel assignment. Always prefer the most specific sublabel.
 
 **Known sender routing** (exact matches, highest priority):
+
 - `samwieds@gmail.com` -> `🤝 Community/🤗 Friends` (Sam Wiedemeier; adventure/outdoor content may also get `🛠️ Craft/🌏 Adventure`)
 - `mealplanner@richroll.com` -> `🍏 Constitution/🥕 Nutrition`, archive + Linear ticket in Atelic
 - `gifts@childhelp.org` -> `🤝 Community/🤲 Giving` (donation receipts, archive)
@@ -94,6 +105,7 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - `kettlesarah@gmail.com` -> `🛠️ Craft/💻 TPF` (Sarah Kettles, TPF associate)
 
 **Constitution signals:**
+
 - Auto insurance (GEICO) -> `🍏 Constitution/🪪 Insurance`
 - Health insurance, medical -> `🍏 Constitution/🏥 Healthcare`
 - Financial, banking, investment -> `🍏 Constitution/💰 Financial`
@@ -105,12 +117,14 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - Recovery, AA, meetings -> `🍏 Constitution/🍾 Sobriety` or `🍏 Constitution/🛌 Recovery`
 
 **Contemplation signals:**
+
 - Books, reading lists, Kindle -> `🧠 Contemplation/📖 Reading`
 - Streaming, TV, movies, music -> `🧠 Contemplation/🍿 Entertainment`
 - Therapy, counseling -> `🧠 Contemplation/🛋️ Therapy`
 - Courses, education, learning -> `🧠 Contemplation/👨‍🎓 Education`
 
 **Community signals:**
+
 - Jasmine -> `🤝 Community/😘 Jasmine`
 - Family members -> `🤝 Community/👨‍👩‍👦‍👦 Family`
 - Friends (personal social) -> `🤝 Community/🤗 Friends`
@@ -123,6 +137,7 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - Seattle contacts -> `🤝 Community/⚓ Seattle`
 
 **Craft signals:**
+
 - Job search, recruiting, career -> `🛠️ Craft/💼 Vocation`
 - Zero Homes -> `🛠️ Craft/💼 Vocation/0️⃣ Zero`
 - Gremlin -> `🛠️ Craft/💼 Vocation/😈 Gremlin`
@@ -140,5 +155,6 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - Outdoor gear, REI, backcountry -> `🛠️ Craft/🌲 Outdoorsman`
 
 **Admin signals:**
+
 - Government correspondence -> `📑 Admin/🏛️ Government`
 - Deals, coupons, offers -> `📑 Admin/🏷 Offers`

@@ -125,7 +125,7 @@ install_npm_globals() {
 deploy_dotfiles() {
   header "Dotfiles"
 
-  local excluded=(setup.sh README.md .git .gitignore brew)
+  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc brew)
   local rsync_opts=('-a')
   for item in "${excluded[@]}"; do
     rsync_opts+=(--exclude="$item")

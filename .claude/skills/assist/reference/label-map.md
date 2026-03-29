@@ -7,6 +7,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 ## Label Hierarchy
 
 ### Admin (📑)
+
 - `📑 Admin` (parent)
 - `📑 Admin/🛒 Purchases` -- order confirmations, receipts, shipping, delivery
 - `📑 Admin/🏷 Offers` -- deals, coupons, promotional offers
@@ -16,6 +17,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `📑 Admin/⚖️ Legal` -- legal correspondence
 
 ### Constitution (🍏)
+
 - `🍏 Constitution` (parent)
 - `🍏 Constitution/💰 Financial` -- banking, investments, financial planning
 - `🍏 Constitution/💰 Financial/💸 Taxes` -- tax documents, W2s, returns
@@ -28,6 +30,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🍏 Constitution/🛌 Recovery` -- twelve step, meetings, sponsorship
 
 ### Contemplation (🧠)
+
 - `🧠 Contemplation` (parent)
 - `🧠 Contemplation/📖 Reading` -- books, reading lists, Kindle, Audible
 - `🧠 Contemplation/🍿 Entertainment` -- streaming, TV, movies, music, podcasts
@@ -35,6 +38,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🧠 Contemplation/👨‍🎓 Education` -- courses, MOOCs, certifications, learning
 
 ### Community (🤝)
+
 - `🤝 Community` (parent)
 - `🤝 Community/😘 Jasmine` -- Jasmine
 - `🤝 Community/🤗 Friends` -- personal friends
@@ -53,6 +57,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🤝 Community/🏙️ Cities/🌉 San Francisco` -- SF contacts and community
 
 ### Craft (🛠️)
+
 - `🛠️ Craft` (parent)
 - `🛠️ Craft/💼 Vocation` -- job search, career
 - `🛠️ Craft/💼 Vocation/0️⃣ Zero` -- Zero Homes

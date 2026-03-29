@@ -28,6 +28,7 @@
 **Server name:** `notion`
 
 **Enable per project:** Add to project's `.claude/settings.local.json`:
+
 ```json
 {
   "enabledMcpjsonServers": ["notion"]
@@ -35,6 +36,7 @@
 ```
 
 **Disable per project:** Add to project's `.claude/settings.local.json`:
+
 ```json
 {
   "disabledMcpjsonServers": ["notion"]
@@ -42,11 +44,12 @@
 ```
 
 **Token:** Stored as `NOTION_TOKEN` env var in `~/.zshrc`. Config references it via `${NOTION_TOKEN}`.
-Manage integrations at https://www.notion.so/profile/integrations
+Manage integrations at <https://www.notion.so/profile/integrations>
 
 ## Linear Ticket Preferences
 
 When creating new Linear tickets:
+
 - Always set status to **Todo**
 - Always assign to **Forni** (me)
 

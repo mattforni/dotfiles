@@ -1,0 +1,9 @@
+{
+  "config": {
+    "extends": ".markdownlint.jsonc"
+  },
+  "ignores": [
+    ".vim/**",
+    ".claude/plugins/**"
+  ]
+}

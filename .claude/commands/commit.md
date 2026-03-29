@@ -36,6 +36,7 @@ This command automates the complete development workflow: detects and removes de
 ## Usage
 
 Simply type `/push` to execute the full workflow. The command will:
+
 - Analyze the git diff to detect removed references
 - Automatically find and delete dead code (unreferenced components, functions, variables, types, etc.)
 - Run appropriate quality checks on remaining code
@@ -46,12 +47,14 @@ Simply type `/push` to execute the full workflow. The command will:
 ## Dead Code Detection
 
 The command includes automatic dead code detection that:
+
 1. **Analyzes the git diff** - Examines what references (imports, function calls, etc.) have been removed
 2. **Identifies orphaned code** - Finds functions, components, types, or variables no longer referenced anywhere
 3. **Auto-deletes dead code** - Removes unreferenced code to keep the codebase clean
 4. **Reports cleanup actions** - Shows what was removed and why
 
 **Examples of dead code detected:**
+
 - Unused React components after refactoring
 - Helper functions no longer called after changes
 - TypeScript types/interfaces no longer used
@@ -60,6 +63,7 @@ The command includes automatic dead code detection that:
 - Styles for removed elements
 
 **Safe deletion strategy:**
+
 - Only deletes code that has ZERO references in the codebase
 - Preserves exported members that might be used externally
 - Checks both implementation and test files
@@ -68,6 +72,7 @@ The command includes automatic dead code detection that:
 ## Documentation Updates
 
 When significant patterns, decisions, or architectural changes are made:
+
 - Update `CLAUDE.md` with new guidelines
 - Add to relevant spec files if needed
 - Document new patterns or conventions
@@ -80,6 +85,7 @@ If any step fails (linting, tests, or other checks), the process stops and repor
 ## Base Branch Selection
 
 The command will intelligently select the appropriate base branch:
+
 - Use `main` for most repositories
 - Use `rebuild` if that's the primary development branch
 - Adapt based on project-specific branching strategy
