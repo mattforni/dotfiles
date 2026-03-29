@@ -8,16 +8,19 @@ This is a personal dotfiles repository for managing shell configurations, aliase
 
 ## Installation
 
-Run `./install.sh` to install dotfiles to the home directory. The script will:
+Run `./setup.sh` to install dotfiles to the home directory. The script will:
+
 - Copy all dotfiles from this repository to `$HOME`
-- Exclude specific files (install.sh, README.md, .git, .gitignore)
-- Source the new .bashrc configuration
+- Exclude repo tooling (setup.sh, README.md, .git, .github, .gitignore, .markdownlint.jsonc, .markdownlint-cli2.jsonc, brew)
+- Install brew packages, Node, npm globals, IDE extensions, and Claude plugins
+- Set up authentication (GitHub CLI, SSH, Google Cloud, gws)
 
 ## Key Shell Configurations
 
 ### Primary Configuration Files
+
 - `.bashrc` - Main bash configuration (sources aliases and functions)
-- `.zshrc` - Zsh configuration 
+- `.zshrc` - Zsh configuration
 - `.profile` - General shell profile
 - `.bash_profile` - Bash-specific profile
 - `.aliases` - Command aliases
@@ -25,6 +28,7 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 - `.gitconfig` - Git configuration with extensive aliases
 
 ### Development Environment
+
 - `.vimrc` - Vim editor configuration
 - `.screenrc` - GNU Screen configuration
 - `.vscode/settings.json` - VS Code settings (Ruby-focused with Rubocop integration)
@@ -32,6 +36,7 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 ## Common Commands and Aliases
 
 ### Git Shortcuts (from .gitconfig)
+
 - `git wip` - Quick work-in-progress commit for current branch
 - `git cob` - Uses `bin/checkout-branch.sh` to checkout branches by number
 - `git lg` - Pretty formatted git log with graph
@@ -39,6 +44,7 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 - `git cm` - Commit with message (`git commit -m`)
 
 ### Development Aliases (from .aliases)
+
 - `cb`, `cr`, `ct` - Cargo build, run, test
 - `rc`, `rs`, `rk` - Rails console, server, sidekiq
 - `ed-aliases`, `ed-functions` - Edit aliases and functions files
@@ -46,6 +52,7 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 - Screen management: `scr`, `sls`, `sra`, `skill`, `sw`
 
 ### Useful Functions (from .functions)
+
 - `findg [-p] <pattern> <grep_pattern>` - Find files by pattern and grep content
 - `grn <pattern>` - Grep recursively in current directory
 - `u [n]` - Go up n directories (default 1)
@@ -56,7 +63,7 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 
 ## Project Structure
 
-```
+```text
 .
 ├── .aliases          # Command aliases
 ├── .functions        # Shell functions
@@ -67,14 +74,14 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 ├── .vscode/         # VS Code settings
 ├── bin/             # Custom scripts
 │   └── checkout-branch.sh  # Git branch checkout by number
-└── install.sh       # Installation script
+└── setup.sh         # Installation and setup script
 ```
 
 ## Development Workflow
 
 1. Edit dotfiles in this repository
 2. Test changes locally
-3. Run `./install.sh` to deploy to home directory
+3. Run `./setup.sh` to deploy to home directory
 4. Make changes to dotfiles in `$HOME` as needed
 5. Run `sync-dotfiles` (or `sync-dots`) to pull changes back from `$HOME` to repository
 6. Use `git wip` for quick commits during development
@@ -83,6 +90,7 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 ### Syncing Dotfiles
 
 Use `sync-dotfiles` or the shorter alias `sync-dots` to pull changes from your home directory back to this repository:
+
 - `sync-dotfiles` - Sync all tracked dotfiles from `$HOME` to repository
 - `sync-dotfiles -d` - Dry run to see what would be synced without making changes
 - `sync-dots` - Short alias for `sync-dotfiles`

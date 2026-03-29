@@ -22,11 +22,13 @@ Once Claude Code is restarted, these tools will be available:
 ## Workflow Evolution
 
 ### Before Gmail MCP (Manual)
+
 1. Use bd-email skill to draft email content
 2. Copy/paste into Gmail manually
 3. Review and send from Gmail
 
 ### After Gmail MCP (Automated)
+
 1. Use bd-email skill to draft email content
 2. Use `draft_email` tool to create draft directly in Gmail
 3. Review and send from Gmail interface
@@ -35,7 +37,7 @@ Once Claude Code is restarted, these tools will be available:
 
 **After Claude Code restart:**
 
-```
+```text
 User: "Draft BD email to Benjamin Stein using colleague reconnect template"
 
 Claude:
@@ -51,7 +53,7 @@ Claude:
 
 After restart, verify Gmail MCP is working:
 
-```
+```text
 User: "List my Gmail labels"
 ```
 
@@ -76,16 +78,19 @@ If successful, you'll see your Gmail labels. If not, the MCP server may need tro
 **If Gmail tools aren't available after restart:**
 
 1. Check MCP server is configured:
+
    ```bash
    cat ~/Library/Application\ Support/Claude/claude_desktop_config.json
    ```
 
 2. Verify credentials exist:
+
    ```bash
    ls -la ~/.gmail-mcp/
    ```
 
 3. Re-authenticate if needed:
+
    ```bash
    npx @gongrzhe/server-gmail-autoauth-mcp auth
    ```

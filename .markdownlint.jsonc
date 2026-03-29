@@ -1,0 +1,12 @@
+{
+  // MD013: Line length - disabled for skill files which have long CLI commands
+  "MD013": false,
+  // MD033: Inline HTML - disabled, some markdown files use HTML tags
+  "MD033": false,
+  // MD036: Emphasis as heading - disabled, skills use bold text as section markers intentionally
+  "MD036": false,
+  // MD041: First line should be a top-level heading - disabled for files with YAML frontmatter
+  "MD041": false,
+  // MD060: Table column style - disabled, gws skills use compact table format
+  "MD060": false
+}
