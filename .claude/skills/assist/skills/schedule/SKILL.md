@@ -155,7 +155,7 @@ Slot a specific task or event into the week.
 4. Present options via AskUserQuestion
 5. Slot into the chosen time:
    - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration` and add the `⏰ Scheduled` label. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
-   - **If it is a non-task event** (meeting, transition, sauna session, social event, etc.): create a Google Calendar event following the Calendar Event Conventions above.
+   - **If it is a non-task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move
 
