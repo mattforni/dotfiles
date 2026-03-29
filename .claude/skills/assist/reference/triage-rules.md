@@ -92,7 +92,6 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - `gifts@childhelp.org` -> `🤝 Community/🤲 Giving` (donation receipts, archive)
 - `do_not_reply@geico.com` -> `🍏 Constitution/🪪 Insurance` (NOT Healthcare; GEICO is auto insurance)
 - `kettlesarah@gmail.com` -> `🛠️ Craft/💻 TPF` (Sarah Kettles, TPF associate)
-- `scheduling@acuityscheduling.com` (NAOSU SAUNA) -> `🍏 Constitution/🛌 Recovery` (contrast therapy)
 
 **Constitution signals:**
 - Auto insurance (GEICO) -> `🍏 Constitution/🪪 Insurance`
