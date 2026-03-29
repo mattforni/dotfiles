@@ -21,18 +21,22 @@ description: Craft Business Development emails for RYLLC fractional CTO consulta
 ## Email Flavors
 
 ### 1. Colleague Reconnect
+
 **Use for:** Former colleagues, VCs, advisors, warm contacts
 **Template:** templates/06-colleague-reconnect.md
 **Key elements:**
+
 - Personal reference to last interaction
 - Brief "barbell CTO" positioning
 - Ask for perspective/insights (low pressure)
 - Scheduling link
 
 ### 2. Job Posting Cold Outreach
+
 **Use for:** Found strong technical fit role, want to pitch fractional alternative
 **Template:** templates/07-job-posting-cold-outreach.md
 **Key elements:**
+
 - Reference job posting with hyperlink
 - Forward request to right person
 - Brief credentials showing technical fit
@@ -41,17 +45,21 @@ description: Craft Business Development emails for RYLLC fractional CTO consulta
 - "Rather than (or alongside) a full-time hire" framing
 
 ### 3. Rejection Follow-Up
+
 **Use for:** Received job rejection, want to turn into network connection
 **Template:** templates/05-rejection-follow-up.md
 **Key elements:**
+
 - Thank them for consideration
 - Express continued interest in company/mission
 - Pivot from role to relationship
 - Position fractional CTO services as alternative
 
 ### 4. Direct Introduction Request
+
 **Use for:** Asking warm contact to intro you to specific company
 **Key elements:**
+
 - Acknowledge their offer/suggestion
 - Brief positioning relevant to target company
 - Specific ways you could add value
@@ -59,6 +67,7 @@ description: Craft Business Development emails for RYLLC fractional CTO consulta
 - Offer to provide additional context
 
 ### 5. Custom BD Outreach
+
 **Use for:** Unique situations not covered by templates
 **Approach:** Follow core principles, adapt tone to relationship warmth
 
@@ -89,18 +98,21 @@ For energy/climate context:
 
 ## Standard Components
 
-**Scheduling link:** https://app.reclaim.ai/m/forni/chat
+**Scheduling link:** <https://app.reclaim.ai/m/forni/chat>
+
 - Preferred phrasing: "You can grab some time here [link] if you like."
 - Alternative: "You can find some time here: [link]"
 - Always embed in conversational text, not standalone
 
 **Signature:**
-```
+
+```text
 Matthew Fornaciari
 ```
 
 **Warm closing (for reconnect emails):**
 "Either way, cheers and hope things are going well."
+
 - Use when you want to give warmth without pressure
 - Shows genuine interest beyond just the business ask
 
@@ -123,12 +135,14 @@ Matthew Fornaciari
 ## Example Usage
 
 **Warm reconnect to former colleague:**
+
 - Use template 06
 - Add specific personal reference
 - Brief barbell CTO explanation
 - Low-pressure ask for perspective
 
 **Cold outreach to job posting:**
+
 - Use template 07
 - Hyperlink to job posting
 - Show technical fit understanding
@@ -136,6 +150,7 @@ Matthew Fornaciari
 - Include forward request
 
 **Introduction request to warm contact:**
+
 - Direct, conversational tone
 - Brief positioning relevant to target
 - Specific value-add examples
@@ -144,12 +159,15 @@ Matthew Fornaciari
 ## Resources
 
 All templates available in:
+
 - `/Users/forni/Craft/vocation/templates/`
 
 Contact database:
+
 - `/Users/forni/Craft/vocation/network/contacts.md`
 
 Project guidelines:
+
 - `/Users/forni/Craft/vocation/CLAUDE.md`
 
 ## Gmail Integration

@@ -35,15 +35,15 @@ gws gmail <resource> <method> [flags]
 
 ### users
 
-  - `getProfile` — Gets the current user's Gmail profile.
-  - `stop` — Stop receiving push notifications for the given user mailbox.
-  - `watch` — Set up or update a push notification watch on the given user mailbox.
-  - `drafts` — Operations on the 'drafts' resource
-  - `history` — Operations on the 'history' resource
-  - `labels` — Operations on the 'labels' resource
-  - `messages` — Operations on the 'messages' resource
-  - `settings` — Operations on the 'settings' resource
-  - `threads` — Operations on the 'threads' resource
+- `getProfile` — Gets the current user's Gmail profile.
+- `stop` — Stop receiving push notifications for the given user mailbox.
+- `watch` — Set up or update a push notification watch on the given user mailbox.
+- `drafts` — Operations on the 'drafts' resource
+- `history` — Operations on the 'history' resource
+- `labels` — Operations on the 'labels' resource
+- `messages` — Operations on the 'messages' resource
+- `settings` — Operations on the 'settings' resource
+- `threads` — Operations on the 'threads' resource
 
 ## Discovering Commands
 
@@ -58,4 +58,3 @@ gws schema gmail.<resource>.<method>
 ```
 
 Use `gws schema` output to build your `--params` and `--json` flags.
-

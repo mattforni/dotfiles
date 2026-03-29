@@ -20,6 +20,7 @@ description: Analyze job roles for fit, draft application question responses, fi
 ## Candidate Profile
 
 ### Background
+
 - **6 years as CTO and co-founder of Gremlin** (chaos engineering pioneer)
 - **Head of Engineering at QuitCarbon** (climate tech)
 - **Technical expertise:** Distributed systems, reliability/resilience, scaling infrastructure, technical debt resolution
@@ -27,6 +28,7 @@ description: Analyze job roles for fit, draft application question responses, fi
 - **Barbell CTO:** Deep technical work (architecture, code reviews, system design) + high-level strategy (roadmap, team structure, hiring)
 
 ### Role Preferences (Priority Order)
+
 1. **Staff/Principal Product Engineering (IC)** - Full-stack or backend product work at climate tech companies (FIRST CHOICE)
 2. **Staff/Principal SRE** - Reliability work (bread and butter, but not primary preference)
 3. **Fractional CTO / Staff Augmentation** - Consulting work (feels like management, less desirable than IC)
@@ -34,6 +36,7 @@ description: Analyze job roles for fit, draft application question responses, fi
 ### Key Fit Indicators
 
 **Strong Fit:**
+
 - Climate tech or sustainability mission
 - Staff+ IC engineering role (product or SRE)
 - Distributed systems, infrastructure scaling, reliability challenges
@@ -42,12 +45,14 @@ description: Analyze job roles for fit, draft application question responses, fi
 - Startup/scale-up stage (growth challenges)
 
 **Medium Fit:**
+
 - Adjacent to climate (energy, manufacturing efficiency, supply chain optimization)
 - Senior engineer role with clear path to Staff+
 - Hybrid remote (some travel acceptable)
 - Some technical leadership responsibilities
 
 **Weak Fit:**
+
 - Non-climate tech mission
 - Heavy management responsibilities
 - Early stage startup (pre-product-market fit)
@@ -59,12 +64,14 @@ description: Analyze job roles for fit, draft application question responses, fi
 Evaluate each role on these dimensions:
 
 ### Mission Alignment (0-10)
+
 - Direct climate impact: 10
 - Energy/sustainability adjacent: 7-8
 - Efficiency/optimization with indirect climate benefit: 5-6
 - No climate connection: 0-3
 
 ### Technical Fit (0-10)
+
 - Distributed systems/infrastructure/reliability: 9-10
 - Backend product engineering: 8-9
 - Full-stack product engineering: 7-8
@@ -72,18 +79,21 @@ Evaluate each role on these dimensions:
 - Non-technical: 0-2
 
 ### Role Level (0-10)
+
 - Staff+ IC: 10
 - Senior with leadership: 7-8
 - Senior IC only: 5-6
 - Mid-level: 0-3
 
 ### Work Style (0-10)
+
 - Fully remote: 10
 - Hybrid (1-2 days/week): 7-8
 - Hybrid (3+ days/week): 4-5
 - Full on-site: 0-2
 
 ### Overall Fit Calculation
+
 - **Strong fit:** Average score ≥ 8.0
 - **Medium fit:** Average score 6.0-7.9
 - **Weak fit:** Average score < 6.0
@@ -93,7 +103,9 @@ Evaluate each role on these dimensions:
 Common questions and approach:
 
 ### "Why do you want to work here?"
+
 **Structure:**
+
 1. **Mission resonance** (1-2 sentences) - Connect personal values to company mission
 2. **Technical excitement** (1-2 sentences) - Specific interest in their technical challenges
 3. **Experience alignment** (1-2 sentences) - How your background uniquely positions you to contribute
@@ -104,7 +116,9 @@ Common questions and approach:
 > "I'm deeply committed to working on climate solutions, and [Company]'s approach to [specific problem] resonates with me. At QuitCarbon, I saw firsthand how technical execution can accelerate decarbonization. I'm particularly excited about [specific technical challenge from job posting] because at Gremlin, we wrestled with similar distributed systems challenges around [relevant experience]. I believe my experience scaling [relevant system] could help [Company] achieve [specific goal from their mission]."
 
 ### "Tell us about an achievement you are proud of"
+
 **Structure:**
+
 1. **Context** (1 sentence) - What was the situation/challenge?
 2. **Action** (2-3 sentences) - What did you do? Focus on technical approach and leadership
 3. **Impact** (1-2 sentences) - What was the result? Technical and business impact
@@ -115,7 +129,9 @@ Common questions and approach:
 > "At Gremlin, we faced a critical challenge: how do you quantify the value of failures that didn't happen? I led the architecture of our reliability scoring system, designing a distributed event processing pipeline that correlated chaos experiments with production incidents. This required building consensus across engineering and product on what 'resilience' meant quantitatively. The system became core to our product value proposition and enabled customers to demonstrate ROI to their executives. I'm proud of both the technical architecture and the cross-functional collaboration required to ship it."
 
 ### "What are your salary expectations?"
+
 **Approach:**
+
 - For IC roles: Research market rate for Staff+ in that geo/industry
 - Climate tech typically pays 10-20% below big tech
 - Be flexible but know your floor
@@ -125,6 +141,7 @@ Common questions and approach:
 > "I'm targeting $[X]-$[Y] base salary, which I believe aligns with market rates for Staff+ engineers in climate tech. I'm flexible on the exact number depending on equity, benefits, and the overall compensation package. Most important to me is working on meaningful climate solutions with a strong technical team."
 
 ### Other common questions
+
 - **"What are you looking for in your next role?"** - IC technical work, climate mission, distributed systems challenges, remote flexibility
 - **"Describe a technical challenge you solved"** - Use Gremlin or QuitCarbon examples, focus on distributed systems/reliability/scaling
 - **"How do you approach technical leadership?"** - Barbell approach: deep technical work + strategic direction, not middle management
@@ -140,29 +157,33 @@ Common questions and approach:
 ### Structure
 
 **Paragraph 1: Opening and Mission Alignment (2-3 sentences)**
+
 - Express enthusiasm for the specific role and company
 - Connect to their mission or technical challenge
 - Show you understand what they do
 
 **Paragraph 2: Technical Fit and Relevant Experience (3-4 sentences)**
+
 - Highlight most relevant experience from Gremlin/QuitCarbon
 - Connect your expertise to their specific technical needs from job posting
 - Demonstrate understanding of their technical challenges
 - Use concrete examples without bragging about metrics
 
 **Paragraph 3: Why This Role/Why Now (2-3 sentences)**
+
 - Explain what you're looking for in your next role
 - Connect it to what makes this opportunity unique
 - Show alignment between your goals and their needs
 
 **Paragraph 4: Closing (1-2 sentences)**
+
 - Express eagerness to discuss further
 - Thank them for consideration
 - Keep it warm and professional
 
 ### Example Template
 
-```
+```text
 I'm writing to express my strong interest in the [Job Title] position at [Company]. [Specific aspect of their mission/technology] resonates deeply with my commitment to [relevant value/goal], and I'm excited about the opportunity to contribute to [specific company goal or technical challenge].
 
 I spent six years as CTO and co-founder of Gremlin, where I [relevant technical achievement tied to their needs]. Before that, I [relevant prior experience]. At QuitCarbon, I served as Head of Engineering and saw firsthand how [relevant insight about climate tech/their domain]. I'm particularly drawn to [specific technical challenge from posting] because [connection to your experience], and I believe my background in [relevant expertise] would enable me to [specific contribution to their goals].
@@ -200,26 +221,31 @@ Matthew Fornaciari
 ### Search Strategy
 
 **Priority 1: LinkedIn Search**
-```
+
+```text
 [Company Name] (Director of Engineering OR VP Engineering OR Head of Engineering OR CTO OR Engineering Manager)
 ```
 
 Filter by:
+
 - Current company match
 - Engineering/Product department
 - Seniority level
 
-**Priority 2: Job Posting Analysis**
+#### Priority 2: Job Posting Analysis
+
 - Look for "Reports to:" section
 - Check posting author/recruiter connections
 - Search company engineering blog for author names
 
-**Priority 3: Company Website/About Page**
+#### Priority 3: Company Website/About Page
+
 - Look for engineering leadership team
 - Check "Team" or "About" pages
 - LinkedIn cross-reference
 
-**Priority 4: GitHub/Technical Community**
+#### Priority 4: GitHub/Technical Community
+
 - Search company GitHub org for active contributors
 - Look for engineering managers in commit history
 - Cross-reference with LinkedIn
@@ -227,18 +253,22 @@ Filter by:
 ### Sizing Guidelines
 
 **Startup (< 50 people):**
+
 - Likely: CTO or co-founder
 - Sometimes: Head of Engineering
 
 **Scale-up (50-200 people):**
+
 - Likely: VP Engineering or Head of Engineering
 - Sometimes: Director of Engineering (if specific team)
 
 **Growth Stage (200-500 people):**
+
 - Likely: Director of Engineering
 - Sometimes: VP Engineering (if senior role)
 
 **Large Company (500+ people):**
+
 - Likely: Director or Senior Engineering Manager
 - Sometimes: VP (if very senior role)
 
@@ -247,6 +277,7 @@ Filter by:
 Use template: `/Users/forni/Craft/vocation/templates/07-job-posting-cold-outreach.md`
 
 ### Key Elements
+
 1. **Subject line:** Title Case, reference role
 2. **Reference job posting** with hyperlink to posting
 3. **Forward request** to right person (polite)
@@ -257,7 +288,8 @@ Use template: `/Users/forni/Craft/vocation/templates/07-job-posting-cold-outreac
 8. **Word count:** ~150-170 words
 
 ### Template Structure
-```
+
+```text
 Subject: [Role Title] at [Company]
 
 Hi [First Name],
@@ -283,7 +315,7 @@ After generating email:
 2. **Apply labels:** `Craft` and `RYLLC`
 3. **Verify:**
    - Subject line in Title Case
-   - Scheduling link: https://app.reclaim.ai/m/forni/chat
+   - Scheduling link: <https://app.reclaim.ai/m/forni/chat>
    - Signature: Matthew Fornaciari
    - No sentence fragments
    - ~150-170 word count
@@ -305,7 +337,7 @@ When skill is invoked with job posting URL:
 
 ## Output Format
 
-```
+```markdown
 # Job Application Analysis: [Company] - [Role]
 
 ## Fit Assessment
@@ -366,13 +398,17 @@ When skill is invoked with job posting URL:
 ## Resources
 
 **Email template:**
+
 - `/Users/forni/Craft/vocation/templates/07-job-posting-cold-outreach.md`
 
 **Project guidelines:**
+
 - `/Users/forni/Craft/vocation/CLAUDE.md`
 
 **Contact tracking:**
+
 - `/Users/forni/Craft/vocation/network/contacts.md`
 
 **Company profiles:**
+
 - `/Users/forni/Craft/vocation/companies/`

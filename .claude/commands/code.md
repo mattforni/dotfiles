@@ -11,6 +11,7 @@ IMPORTANT: This command requires the Opus model. If not already set, please run 
 I'm starting work on Linear issue $1. Let me set up the git repository and fetch the issue details.
 
 First, I need to:
+
 1. Set up the git branch properly
 2. Fetch the Linear issue details
 3. Create an implementation plan for your review
