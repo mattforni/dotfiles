@@ -23,6 +23,7 @@ Triage the Gmail inbox and create filters for recurring senders. All Gmail opera
 1. Read [learned-rules.md](../../learned-rules.md) for prior corrections (these override defaults)
 2. Read [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification rules
 3. Resolve label name -> ID mapping:
+
    ```bash
    gws gmail users labels list --params '{"userId":"me"}' --format json 2>&1 | grep -v "^Using"
    ```
@@ -124,7 +125,7 @@ After all new emails are processed, acknowledge emails that remain in the inbox 
 
 **When in doubt, ask**: If there is any ambiguity about classification, or an email could take multiple labels, ask the user via AskUserQuestion. Do not guess. Defaulting to asking is always correct.
 
-**Drafting replies**: Never send emails directly. Always create a draft, present it for review, and wait for explicit approval to send. Never reference people or sources the user does not know. Always read full email content before making assumptions.
+**Drafting replies**: Never send emails directly to **people**. Always create a draft, present it for review, and wait for explicit approval to send. Direct sends are acceptable when emailing an automation, robot, or mailing list (e.g., an unsubscribe mailto address). Never reference people or sources the user does not know. Always read full email content before making assumptions.
 
 **Calendar awareness**: When someone proposes a date/time, check the calendar to see if it works. If it does, help draft an acceptance and offer to send an invite. If not, propose an alternative (prefer Fridays for in person meetings).
 
@@ -133,10 +134,13 @@ After all new emails are processed, acknowledge emails that remain in the inbox 
 When the user requests unsubscribe during one-by-one presentation:
 
 1. Fetch the `List-Unsubscribe` header:
+
    ```bash
    gws gmail users messages get --params '{"userId":"me","id":"<ID>","format":"metadata","metadataHeaders":["List-Unsubscribe"]}' --format json
    ```
+
 2. If a `mailto:` address is found, send an unsubscribe email:
+
    ```bash
    gws gmail +send --to "<unsubscribe-address>" --subject "Unsubscribe" --body "Unsubscribe"
    ```
@@ -150,7 +154,7 @@ Some emails trigger actions outside Gmail. Track these as pending items per emai
 
 **Supported action types:**
 
-- **Notion**: Route email content or link to a Notion page per learned-rules.md patterns. Use `notion-fetch` to get the current page content, then `notion-update-page` to add the link. Example: Claude Team announcement emails get linked on the AI Research page.
+- **Notion**: Route email content or link to a Notion page per learned-rules.md patterns. Use `mcp__claude_ai_Notion__notion-fetch` to get the current page content, then `mcp__claude_ai_Notion__notion-update-page` to add the link. Example: Claude Team announcement emails get linked on the AI Research page.
 - **Todoist**: Create tasks for action items (e.g., meal planner emails -> task in relevant project)
 - **Calendar**: Check availability for proposed dates, help schedule meetings
 
@@ -163,6 +167,7 @@ Create Gmail server-side filters for high-frequency senders.
 3. Skip any sender that already has a filter recorded in learned-rules.md
 4. Propose filters to user via AskUserQuestion, one at a time
 5. Create approved filters:
+
    ```bash
    gws gmail users settings filters create --params '{"userId":"me"}' --json '{"criteria":{"from":"<sender>"},"action":{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX"]}}'
    ```
