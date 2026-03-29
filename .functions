@@ -286,7 +286,7 @@ u() {
 }
 
 # SYNC-DOTS
-# Function to sync dotfiles from home directory back to repository
+# Function to sync homebase files from home directory back to repository
 # -d (optional) dry run mode - shows what would be synced without making changes
 # This function handles both files and directories
 sync-dots() {
@@ -302,16 +302,16 @@ sync-dots() {
   shift $((OPTIND-1))
 
   # Define the dotfiles repository path
-  DOTFILES_REPO="$HOME/Eudaimonia/Craft/Development/personal/dotfiles"
+  HOMEBASE_REPO="$HOME/Craft/Development/homebase"
 
-  # Check if we're in the dotfiles repo or can find it
-  if [ ! -d "$DOTFILES_REPO" ]; then
-    echo "Dotfiles repository not found at $DOTFILES_REPO"
+  # Check if we're in the homebase repo or can find it
+  if [ ! -d "$HOMEBASE_REPO" ]; then
+    echo "Homebase repository not found at $HOMEBASE_REPO"
     return 1
   fi
 
-  # List of dotfiles to sync (both files and directories)
-  DOTFILES=(
+  # List of files to sync (both files and directories)
+  SYNC_FILES=(
     ".aliases"
     ".bashrc"
     ".bash_profile"
@@ -338,10 +338,10 @@ sync-dots() {
     echo
   fi
 
-  # Sync each dotfile/directory
-  for item in "${DOTFILES[@]}"; do
+  # Sync each file/directory
+  for item in "${SYNC_FILES[@]}"; do
     SOURCE="$HOME/$item"
-    DEST="$DOTFILES_REPO/$item"
+    DEST="$HOMEBASE_REPO/$item"
 
     if [ -e "$SOURCE" ]; then
       if [ $DRY_RUN -eq 1 ]; then
@@ -383,7 +383,7 @@ sync-dots() {
 
   if [ $DRY_RUN -eq 0 ]; then
     echo
-    echo "Sync complete! Review changes with 'cd $DOTFILES_REPO && git status'"
+    echo "Sync complete! Review changes with 'cd $HOMEBASE_REPO && git status'"
   fi
 }
 

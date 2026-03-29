@@ -122,8 +122,8 @@ install_npm_globals() {
   done
 }
 
-deploy_dotfiles() {
-  header "Dotfiles"
+deploy_homebase() {
+  header "Homebase"
 
   local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc brew)
   local rsync_opts=('-a')
@@ -131,8 +131,8 @@ deploy_dotfiles() {
     rsync_opts+=(--exclude="$item")
   done
   rsync "${rsync_opts[@]}" "$DIR/" "$HOME/"
-  info "Dotfiles synced to \$HOME"
-  SUMMARY+=("Dotfiles deployed")
+  info "Homebase synced to \$HOME"
+  SUMMARY+=("Homebase deployed")
 }
 
 install_ide_extensions() {
@@ -300,7 +300,7 @@ setup_prerequisites
 install_brew_packages
 setup_node
 install_npm_globals
-deploy_dotfiles
+deploy_homebase
 install_ide_extensions
 install_claude_plugins
 setup_auth

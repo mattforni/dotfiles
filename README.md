@@ -1,1 +1,3 @@
-This is repository is aimed at keeping me organized and productive.
+# Homebase
+
+Personal development environment: shell configs, Claude Code skills, dev tooling, and workstation setup.
