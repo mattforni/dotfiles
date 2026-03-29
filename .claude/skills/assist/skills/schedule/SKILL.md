@@ -118,13 +118,13 @@ Present suggestions via AskUserQuestion, one at a time or in small batches. The 
 
 Google Calendar is still used directly for non-task events: meetings, transitions, sauna sessions, social events, etc.
 
-**Recurring catchup/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
+**Recurring catch-up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
 
 1. Create a new one-off Todoist task with the specific date/time, duration, and `⏰ Scheduled` label
 2. Complete the recurring task so the next occurrence auto-generates on its cycle
 3. The one-off task is the reminder for this week; the recurrence handles the next one
 
-**Email outreach as slotting**: For some recurring catchups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs.
+**Email outreach as slotting**: For some recurring catch-ups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs. Always confirm with the user before executing the send command.
 
 **Deferred tasks land on Monday**: When deferring tasks to next week or further out, always schedule them for the Monday of the target week. Monday is the landing zone where tasks get triaged during the planning session.
 
@@ -153,7 +153,9 @@ Slot a specific task or event into the week.
 2. Fetch the week's calendar
 3. Identify available slots that fit the duration
 4. Present options via AskUserQuestion
-5. Create the calendar event in the chosen slot
+5. Slot into the chosen time:
+   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration` and add the `⏰ Scheduled` label. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
+   - **If it is a non-task event** (meeting, transition, sauna session, social event, etc.): create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move
 
@@ -204,7 +206,7 @@ Use the Todoist MCP tools to read and reschedule tasks. Key operations:
 - `update-tasks`: Modify task properties (but NOT dates). Use to set duration and labels.
 - `complete-tasks`: Complete recurring tasks to fire the next occurrence
 - `delete-object`: Delete notes/bookmarks that were never real tasks. Never complete these.
-- `add-tasks`: Create one-off tasks (e.g., a scheduled call from a recurring catchup)
+- `add-tasks`: Create one-off tasks (e.g., a scheduled call from a recurring catch-up)
 - `add-comments`: Add detail to tasks when combining or enriching them
 
 When slotting tasks, respect Todoist priorities:
@@ -215,4 +217,4 @@ When slotting tasks, respect Todoist priorities:
 
 ## Gmail Integration
 
-Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catchups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting.
+Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catch-ups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting. Confirm with the user before executing send commands.
