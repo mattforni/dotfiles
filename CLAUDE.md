@@ -8,11 +8,12 @@ This is a personal dotfiles repository for managing shell configurations, aliase
 
 ## Installation
 
-Run `./install.sh` to install dotfiles to the home directory. The script will:
+Run `./setup.sh` to install dotfiles to the home directory. The script will:
 
 - Copy all dotfiles from this repository to `$HOME`
-- Exclude specific files (install.sh, README.md, .git, .gitignore)
-- Source the new .bashrc configuration
+- Exclude repo tooling (setup.sh, README.md, .git, .github, .gitignore, .markdownlint.jsonc, .markdownlint-cli2.jsonc, brew)
+- Install brew packages, Node, npm globals, IDE extensions, and Claude plugins
+- Set up authentication (GitHub CLI, SSH, Google Cloud, gws)
 
 ## Key Shell Configurations
 
@@ -73,14 +74,14 @@ Run `./install.sh` to install dotfiles to the home directory. The script will:
 ├── .vscode/         # VS Code settings
 ├── bin/             # Custom scripts
 │   └── checkout-branch.sh  # Git branch checkout by number
-└── install.sh       # Installation script
+└── setup.sh         # Installation and setup script
 ```
 
 ## Development Workflow
 
 1. Edit dotfiles in this repository
 2. Test changes locally
-3. Run `./install.sh` to deploy to home directory
+3. Run `./setup.sh` to deploy to home directory
 4. Make changes to dotfiles in `$HOME` as needed
 5. Run `sync-dotfiles` (or `sync-dots`) to pull changes back from `$HOME` to repository
 6. Use `git wip` for quick commits during development
