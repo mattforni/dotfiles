@@ -52,7 +52,7 @@ The Monday morning planning session. This is the primary use case.
 ### Phase 1: Load and Rectify
 
 1. Fetch this week's calendar events (Monday through Sunday)
-2. Fetch Todoist tasks using the **Schedule filter** (ID: `2327901782`). Use `find-tasks` with `filterIdOrName`. The filter logic is: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue) & due before: next mon` — this grabs all overdue tasks plus non-recurring, non-scheduled tasks due before next Monday.
+2. Fetch Todoist tasks using the **Schedule filter** (ID: `2327901782`). Use `find-tasks` with `filterIdOrName`. The filter logic is: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue) & due before: next monday` — this grabs all overdue tasks plus non-recurring, non-scheduled tasks due before next Monday.
 3. Read the weekly template to know the recurring skeleton
 
 **Free vs Busy events**: Check the `transparency` field on each calendar event. Events with `transparency: "transparent"` are "free" (informational only, no action required). Filter them out of the working set. Do not treat free events as conflicts or as consuming time slots. Only `opaque` (busy) events block time.
@@ -200,7 +200,7 @@ Include the location when the event is at a specific place.
 
 Use the Todoist MCP tools to read and reschedule tasks. Key operations:
 
-- `find-tasks` with `filterIdOrName`: Pull tasks from the Schedule filter (ID: `2327901782`)
+- `find-tasks` with `filter`: Pull tasks using a raw Todoist filter string, or use `filterIdOrName` to reference the saved Schedule filter by ID (`2327901782`). Either parameter works.
 - `find-tasks-by-date`: Get tasks due in a date range
 - `reschedule-tasks`: Move task due dates (always use this instead of update-tasks for date changes, to preserve recurrence)
 - `update-tasks`: Modify task properties (but NOT dates). Use to set duration and labels.
