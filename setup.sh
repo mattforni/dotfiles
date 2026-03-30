@@ -6,8 +6,14 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Re-exec under Homebrew bash (4+) when available for associative array support.
 # On first run, system bash (3.2) handles everything up through brew install,
 # which installs modern bash. Subsequent runs pick it up immediately.
-BREW_BASH="/opt/homebrew/bin/bash"
-if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] && [[ -x "$BREW_BASH" ]]; then
+BREW_BASH=""
+for candidate in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+  if [[ -x "$candidate" ]]; then
+    BREW_BASH="$candidate"
+    break
+  fi
+done
+if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] && [[ -n "$BREW_BASH" ]]; then
   exec "$BREW_BASH" "$0" "$@"
 fi
 
@@ -125,9 +131,11 @@ install_brew_packages() {
   hash -r
 
   # Re-exec under modern bash if we just installed it
-  if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] && [[ -x "$BREW_BASH" ]]; then
+  if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] && [[ -n "$BREW_BASH" ]]; then
     warn "Modern bash now available, re-launching setup..."
-    exec "$BREW_BASH" "$0" $([ "$FORCE" == true ] && echo "--force")
+    local reexec_args=("$0")
+    [[ "$FORCE" == true ]] && reexec_args+=("--force")
+    exec "$BREW_BASH" "${reexec_args[@]}"
   fi
 }
 
@@ -147,8 +155,8 @@ setup_node() {
     info "Node $(node --version) active"
   else
     info "Installing Node LTS via fnm..."
-    fnm install --lts
-    fnm default lts-latest
+    fnm install --lts || return 1
+    fnm default lts-latest || return 1
     SUMMARY+=("Node LTS installed via fnm")
     info "Node $(node --version) active"
   fi
@@ -175,7 +183,7 @@ install_npm_globals() {
       info "$pkg already installed"
     else
       info "Installing $pkg..."
-      npm install -g "$pkg"
+      npm install -g "$pkg" || return 1
       SUMMARY+=("$pkg installed")
     fi
   done
@@ -184,12 +192,12 @@ install_npm_globals() {
 deploy_homebase() {
   header "Homebase"
 
-  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc brew)
+  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew)
   local rsync_opts=('-a')
   for item in "${excluded[@]}"; do
     rsync_opts+=(--exclude="$item")
   done
-  rsync "${rsync_opts[@]}" "$DIR/" "$HOME/"
+  rsync "${rsync_opts[@]}" "$DIR/" "$HOME/" || return 1
   info "Homebase synced to \$HOME"
   SUMMARY+=("Homebase deployed")
 }
@@ -318,7 +326,7 @@ setup_auth() {
     else
       read -rp "  ${BOLD}Authenticate GitHub CLI? [y/N]${NC} " choice
       if [[ "$choice" =~ ^[Yy]$ ]]; then
-        gh auth login
+        gh auth login || return 1
         SUMMARY+=("GitHub CLI authenticated")
       fi
     fi
@@ -342,12 +350,14 @@ setup_auth() {
 
   # Google Cloud
   if command -v gcloud &>/dev/null; then
-    if gcloud config get project &>/dev/null 2>&1 && [[ "$FORCE" != true ]]; then
+    local gcloud_project
+    gcloud_project="$(gcloud config get-value project 2>/dev/null || true)"
+    if [[ -n "$gcloud_project" ]] && [[ "$gcloud_project" != "(unset)" ]] && [[ "$FORCE" != true ]]; then
       info "Google Cloud already configured"
     else
       read -rp "  ${BOLD}Initialize Google Cloud (gcloud init)? [y/N]${NC} " choice
       if [[ "$choice" =~ ^[Yy]$ ]]; then
-        gcloud init
+        gcloud init || return 1
         SUMMARY+=("Google Cloud initialized")
       fi
     fi
@@ -362,7 +372,7 @@ setup_auth() {
       if [[ "$choice" =~ ^[Yy]$ ]]; then
         warn "Note: You may need to add yourself as a test user in the GCP OAuth consent screen"
         warn "Go to: https://console.cloud.google.com/apis/credentials/consent > Audience > Add test user"
-        gws auth setup
+        gws auth setup || return 1
         SUMMARY+=("Google Workspace CLI authenticated")
       fi
     fi
