@@ -239,8 +239,11 @@ install_ide_extensions() {
     else
       local installed_count=0
       for ext in "${missing[@]}"; do
-        if "$cli" --install-extension "$ext" --force &>/dev/null; then
+        local output
+        if output=$("$cli" --install-extension "$ext" --force 2>&1); then
           ((installed_count++))
+        else
+          warn "$cli: failed to install $ext"
         fi
       done
       info "$cli: $installed_count/${#missing[@]} extensions installed"
@@ -278,7 +281,12 @@ install_claude_plugins() {
   # Extract installed plugin names from formatted `claude plugin list` output.
   # Lines look like: "  ❯ feature-dev@claude-code-plugins"
   local installed_plugins
-  installed_plugins=$(claude plugin list 2>/dev/null | grep '❯' | sed 's/.*❯ //' | xargs || true)
+  local plugin_output
+  if ! plugin_output=$(claude plugin list 2>&1); then
+    warn "Failed to list Claude plugins: $plugin_output"
+    return 1
+  fi
+  installed_plugins=$(echo "$plugin_output" | grep '❯' | sed 's/.*❯ //' | xargs || true)
 
   declare -A installed_set=()
   for p in $installed_plugins; do
@@ -321,7 +329,7 @@ setup_auth() {
 
   # GitHub CLI
   if command -v gh &>/dev/null; then
-    if gh auth status &>/dev/null 2>&1 && [[ "$FORCE" != true ]]; then
+    if gh auth status &>/dev/null && [[ "$FORCE" != true ]]; then
       info "GitHub CLI already authenticated"
     else
       read -rp "  ${BOLD}Authenticate GitHub CLI? [y/N]${NC} " choice
