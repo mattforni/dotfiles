@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+tone_instructions: "Be direct and concise. Flag real issues, skip the fluff."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  sequence_diagrams: false
+  collapse_walkthrough: false
+  estimate_code_review_effort: true
+  related_prs: true
+  enable_prompt_for_ai_agents: true
+  suggested_labels: false
+  suggested_reviewers: false
+  poem: false
+  in_progress_fortune: false
+  review_details: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  tools:
+    shellcheck:
+      enabled: true
+
+knowledge_base:
+  learnings:
+    scope: "local"
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "CLAUDE.md"
+      - ".claude/CLAUDE.md"
