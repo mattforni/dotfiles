@@ -3,9 +3,6 @@ castwide.solargraph
 docker.docker
 eamodio.gitlens
 esbenp.prettier-vscode
-figma.figma-vscode-extension
-github.copilot
-github.copilot-chat
 github.vscode-github-actions
 hbenl.vscode-test-explorer
 hoovercj.ruby-linter
@@ -44,4 +41,3 @@ vscjava.vscode-maven
 vscode-icons-team.vscode-icons
 vscodevim.vim
 wilfison.haml-boostrap
-zhang-renyang.chat-gpt
