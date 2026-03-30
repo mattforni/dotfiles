@@ -130,12 +130,23 @@ install_brew_packages() {
   eval "$(brew shellenv)"
   hash -r
 
-  # Re-exec under modern bash if we just installed it
-  if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] && [[ -n "$BREW_BASH" ]]; then
-    warn "Modern bash now available, re-launching setup..."
-    local reexec_args=("$0")
-    [[ "$FORCE" == true ]] && reexec_args+=("--force")
-    exec "$BREW_BASH" "${reexec_args[@]}"
+  # Re-exec under modern bash if we just installed it. Re-detect the path
+  # because BREW_BASH may have been empty when the script started (bash wasn't
+  # installed yet) but brew bundle just installed it.
+  if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+    local new_brew_bash=""
+    for candidate in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+      if [[ -x "$candidate" ]]; then
+        new_brew_bash="$candidate"
+        break
+      fi
+    done
+    if [[ -n "$new_brew_bash" ]]; then
+      warn "Modern bash now available, re-launching setup..."
+      local reexec_args=("$0")
+      [[ "$FORCE" == true ]] && reexec_args+=("--force")
+      exec "$new_brew_bash" "${reexec_args[@]}"
+    fi
   fi
 }
 
@@ -282,7 +293,7 @@ install_claude_plugins() {
 
   declare -A installed_set=()
   for p in $installed_plugins; do
-    installed_set["$p"]=1
+    installed_set["${p%@*}"]=1
   done
 
   local plugins
