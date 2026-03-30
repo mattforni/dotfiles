@@ -19,4 +19,14 @@ Rules added from triage corrections. Read on every invocation. These override de
 - `*@billerpayments.com` (DHMP/Denver Health) -> 🍏 Constitution/🏥 Healthcare. Archive.
 - Anthem Blue Cross (`*@anthem.com`) -> 🍏 Constitution/🏥 Healthcare + 📑 Admin/🧾 Bills. Autopay, archive.
 
+## Todoist Rules
+
+- When triaging notes/bookmarks that get moved to their proper location (Notion, Eudaimonia, etc.), delete the Todoist task. Do not complete it. These were never real tasks.
+
+## Calendar Rules
+
+- Never move, reschedule, or delete existing calendar events without explicit permission. Always present the proposed change and wait for approval.
+- Events booked via Reclaim.ai scheduling links were scheduled by other people. Extra caution required.
+- Deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect. Warn about this.
+
 ## Created Filters
