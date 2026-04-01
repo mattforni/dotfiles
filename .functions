@@ -361,13 +361,13 @@ sync-dots() {
           mkdir -p "$(dirname "$DEST")"
           # Exclude sensitive files from .claude/plugins
           if [[ "$item" == ".claude/plugins" ]]; then
-            rsync -av --delete \
+            rsync -av \
               --exclude '.credentials.json' \
               --exclude 'installed_plugins.json' \
               --exclude 'cache/' \
               "$SOURCE/" "$DEST/"
           else
-            rsync -av --delete "$SOURCE/" "$DEST/"
+            rsync -av "$SOURCE/" "$DEST/"
           fi
         else
           # For files, use cp
