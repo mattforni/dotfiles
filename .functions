@@ -301,7 +301,7 @@ sync-dots() {
   done
   shift $((OPTIND-1))
 
-  # Define the dotfiles repository path
+  # Define the homebase repository path
   HOMEBASE_REPO="$HOME/Craft/Development/homebase"
 
   # Check if we're in the homebase repo or can find it
