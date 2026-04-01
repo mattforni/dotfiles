@@ -301,14 +301,21 @@ sync-dots() {
   done
   shift $((OPTIND-1))
 
-  # Define the homebase repository path
-  HOMEBASE_REPO="$HOME/Craft/Development/homebase"
+  # Find the homebase repository by locating its .git directory
+  local candidates=()
+  while IFS= read -r dir; do
+    candidates+=("$dir")
+  done < <(find "$HOME" -maxdepth 6 -type d -name "homebase" -exec test -d "{}/.git" \; -print 2>/dev/null)
 
-  # Check if we're in the homebase repo or can find it
-  if [ ! -d "$HOMEBASE_REPO" ]; then
-    echo "Homebase repository not found at $HOMEBASE_REPO"
+  if [ "${#candidates[@]}" -eq 0 ]; then
+    echo "Homebase repository not found under $HOME"
+    return 1
+  elif [ "${#candidates[@]}" -gt 1 ]; then
+    echo "Multiple homebase repositories found; refusing to guess:"
+    printf '  %s\n' "${candidates[@]}"
     return 1
   fi
+  HOMEBASE_REPO="${candidates[0]}"
 
   # List of files to sync (both files and directories)
   SYNC_FILES=(
@@ -362,13 +369,13 @@ sync-dots() {
           mkdir -p "$(dirname "$DEST")"
           # Exclude sensitive files from .claude/plugins
           if [[ "$item" == ".claude/plugins" ]]; then
-            rsync -av --delete \
+            rsync -av \
               --exclude '.credentials.json' \
               --exclude 'installed_plugins.json' \
               --exclude 'cache/' \
               "$SOURCE/" "$DEST/"
           else
-            rsync -av --delete "$SOURCE/" "$DEST/"
+            rsync -av "$SOURCE/" "$DEST/"
           fi
         else
           # For files, use cp
