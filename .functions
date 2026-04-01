@@ -301,12 +301,11 @@ sync-dots() {
   done
   shift $((OPTIND-1))
 
-  # Define the homebase repository path
-  HOMEBASE_REPO="$HOME/Craft/Development/homebase"
+  # Find the homebase repository by locating its .git directory
+  HOMEBASE_REPO=$(find "$HOME" -maxdepth 6 -type d -name "homebase" -exec test -d "{}/.git" \; -print -quit 2>/dev/null)
 
-  # Check if we're in the homebase repo or can find it
-  if [ ! -d "$HOMEBASE_REPO" ]; then
-    echo "Homebase repository not found at $HOMEBASE_REPO"
+  if [ -z "$HOMEBASE_REPO" ]; then
+    echo "Homebase repository not found under $HOME"
     return 1
   fi
 
