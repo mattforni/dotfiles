@@ -278,6 +278,13 @@ install_claude_plugins() {
     claude plugin marketplace add "$source"
   done < "$sources_file"
 
+  # Register local-skills marketplace from homebase
+  local local_skills_dir="$HOME/.claude/local-skills"
+  if [[ -d "$local_skills_dir/.claude-plugin" ]]; then
+    info "Registering local-skills marketplace..."
+    claude plugin marketplace add "$local_skills_dir"
+  fi
+
   # Extract installed plugin names from formatted `claude plugin list` output.
   # Lines look like: "  ❯ feature-dev@claude-code-plugins"
   local installed_plugins

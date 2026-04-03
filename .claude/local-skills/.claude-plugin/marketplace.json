@@ -1,0 +1,34 @@
+{
+  "name": "local-skills",
+  "owner": {
+    "name": "Matthew Fornaciari",
+    "url": "https://github.com/mattforni"
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Local skills managed via homebase dotfiles"
+  },
+  "plugins": [
+    {
+      "name": "assist",
+      "source": "./plugins/assist",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "Personal productivity skills: email triage, schedule planning, knowledge capture, BD outreach, and job applications.",
+      "author": {
+        "name": "Matthew Fornaciari",
+        "url": "https://github.com/mattforni"
+      },
+      "category": "productivity",
+      "keywords": ["assist", "email", "schedule", "learn", "bd", "job-apply", "productivity"],
+      "strict": false,
+      "skills": [
+        "./skills/emails/SKILL.md",
+        "./skills/schedule/SKILL.md",
+        "./skills/learn/SKILL.md",
+        "./skills/bd-email/SKILL.md",
+        "./skills/job-apply/SKILL.md"
+      ]
+    }
+  ]
+}
