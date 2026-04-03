@@ -1,50 +1,25 @@
 # Local Skills
 
-This directory contains Claude Code skills that are installed via the `local-skills` marketplace.
+This directory contains standalone Claude Code skills loaded directly from `~/.claude/skills/`.
 
-## Architecture
+Skills here use the flat `<name>/SKILL.md` discovery pattern. They do not require plugin installation.
 
-```
-homebase repo (.claude/skills/)     <- you are here, source of truth
-        |
-        v (symlink)
-~/.claude/plugins/marketplaces/local-skills/<namespace>
-        |
-        v (claude plugins install)
-~/.claude/plugins/cache/local-skills/<namespace>/1.0.0/
-        |
-        v (loaded at session start)
-Claude Code runtime
-```
+## Skills
 
-## Marketplace Config
+| Skill | Path | Purpose |
+|-------|------|---------|
+| gws-gmail | `gws-gmail/` | Gmail: send, read, and manage email |
+| gws-gmail-triage | `gws-gmail-triage/` | Gmail: unread inbox summary |
+| gws-gmail-send | `gws-gmail-send/` | Gmail: send an email |
+| gws-gmail-read | `gws-gmail-read/` | Gmail: read a message |
+| gws-gmail-reply | `gws-gmail-reply/` | Gmail: reply to a message |
+| gws-gmail-reply-all | `gws-gmail-reply-all/` | Gmail: reply all |
+| gws-gmail-forward | `gws-gmail-forward/` | Gmail: forward a message |
+| gws-calendar | `gws-calendar/` | Google Calendar: manage events |
+| gws-calendar-agenda | `gws-calendar-agenda/` | Google Calendar: upcoming events |
+| gws-calendar-insert | `gws-calendar-insert/` | Google Calendar: create an event |
+| gws-shared | `gws-shared/` | gws CLI: shared patterns |
 
-The marketplace metadata lives at `~/.claude/plugins/marketplaces/local-skills/.claude-plugin/marketplace.json`. Each namespace is a plugin entry with a `skills` array listing its SKILL.md files. New skills must be registered there to be discoverable.
+## Assist Namespace (Plugin)
 
-## Namespaces
-
-| Namespace | Path | Skills |
-|-----------|------|--------|
-| assist | `assist/` | emails, schedule |
-| bd-email | `bd-email/` | bd-email |
-| job-apply | `job-apply/` | job-apply |
-| gws-* | `gws-*/` | Gmail and Calendar CLI wrappers |
-
-## Creating a New Skill
-
-See `assist/README.md` for the step-by-step process. The short version:
-
-1. Write the SKILL.md in the appropriate namespace directory
-2. Register in marketplace.json
-3. `claude plugins install <namespace>@local-skills`
-4. New session picks it up
-
-## After Editing a Skill
-
-Changes to SKILL.md files here are not live until reinstalled:
-
-```bash
-claude plugins install <namespace>@local-skills
-```
-
-Then start a new Claude Code session.
+The `assist:*` skills (emails, schedule, learn, bd-email, job-apply) live in the `local-skills` marketplace at `.claude/local-skills/plugins/assist/`. They are installed via `claude plugin install assist@local-skills`. See that directory for details.

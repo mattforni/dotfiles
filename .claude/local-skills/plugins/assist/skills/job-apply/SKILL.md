@@ -1,5 +1,5 @@
 ---
-name: job-apply
+name: assist:job-apply
 description: Analyze job roles for fit, draft application question responses, find hiring managers, and create follow-up emails for RYLLC job applications. Focuses on climate tech IC product/SRE roles.
 ---
 

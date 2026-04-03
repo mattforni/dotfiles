@@ -78,6 +78,7 @@
       "Skill(commit)",
       "Skill(hoist-permissions)",
       "Skill(linear-lifecycle:*)",
+      "Skill(assist:*)",
       "Skill(sdlc:*)",
       "WebFetch(domain:docs.claude.com)",
       "WebFetch(domain:docs.coderabbit.ai)",
@@ -126,7 +127,8 @@
     "feature-dev@claude-code-plugins": true,
     "linear-lifecycle@skillset": true,
     "sdlc@skillset": true,
-    "skill-creator@claude-plugins-official": true
+    "skill-creator@claude-plugins-official": true,
+    "assist@local-skills": true
   },
   "extraKnownMarketplaces": {
     "claude-code-workflows": {
@@ -163,6 +165,12 @@
       "source": {
         "source": "github",
         "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "local-skills": {
+      "source": {
+        "source": "directory",
+        "path": "~/.claude/local-skills"
       }
     }
   },
