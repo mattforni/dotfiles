@@ -218,3 +218,11 @@ When slotting tasks, respect Todoist priorities:
 ## Gmail Integration
 
 Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catch-ups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting. Confirm with the user before executing send commands.
+
+## Learned Rules
+
+- Always schedule tasks for a minimum of 30 minutes. It looks better on the calendar and provides buffer. Even a quick phone call gets 30m.
+- Always include "Delete it" as a triage option. Not everything deserves to be relocated.
+- Add an appropriate emoji prefix to tasks that lack one. Shorten task names to fit well on a calendar.
+- When slotting a task, always set: date/time via reschedule-tasks, then duration + Scheduled label via update-tasks.
+- Todoist deadlineDate is Premium-only. Note deadlines in the task description instead.
