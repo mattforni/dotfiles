@@ -19,6 +19,16 @@
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
 
+## External App Integration
+
+Preferred methods for connecting Claude to outside apps, in order:
+
+1. **Native Claude Connectors** (first party integrations built into Claude)
+2. **Officially Supported CLIs** (especially those with skills/plugins)
+3. **MCPs** (Model Context Protocol servers)
+
+Choose the highest available option. Native connectors are smoother and require less configuration.
+
 ## MCP Servers
 
 ### Notion MCP (Official)
