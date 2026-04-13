@@ -5,16 +5,10 @@ Rules added from triage corrections. Read on every invocation. These override de
 ## Sender Rules
 
 - `scheduling@acuityscheduling.com` (NAOSU SAUNA) -> 🍏 Constitution/🧖 Personal Care (NOT Athlete)
-- `heather.frechette@gmail.com` (Heather Frechette, HNGC secretary) -> 🍏 Constitution/🍾 Sobriety. Auto-reply "Thank you for your service! 🙏", then label and archive. HNGC = High Noon Group Conscience (AA home group business meeting).
 
 ## Subject Rules
 
 ## Behavior Rules
-
-- **CRITICAL: Check the actual system time before writing time-of-day greetings.** Do not assume morning/afternoon/evening. Run `date` or check the clock. This has caused errors in sent emails that cannot be corrected.
-- When someone asks for availability to schedule a call/meeting, default to sharing the Reclaim scheduling link rather than proposing specific time slots. It's simpler and always up to date.
-- When the user has reviewed and approved email drafts, send them directly if asked. Do not insist on creating drafts first. The review already happened in conversation.
-- Stars mean action is needed from the user. Do not star informational emails. When in doubt whether an email needs action, read the full content first before assigning a star. A 1099 "available online" notice is informational (Coinbase handles it), not an action item.
 
 ## Domain Rules
 
@@ -28,11 +22,9 @@ Rules added from triage corrections. Read on every invocation. These override de
 ## Todoist Rules
 
 - When triaging notes/bookmarks that get moved to their proper location (Notion, Eudaimonia, etc.), delete the Todoist task. Do not complete it. These were never real tasks.
-- Task titles: emoji prefix + short linked title (e.g., "📧 [Follow Up with Jeff](link)"). Details go in a comment, not the description.
 
 ## Calendar Rules
 
-- **Daily Operations Standup** is informational only. Forni does not attend; it is a placeholder in case he ever wants to drop in. Do not treat it as a conflict or a busy block.
 - Never move, reschedule, or delete existing calendar events without explicit permission. Always present the proposed change and wait for approval.
 - Events booked via Reclaim.ai scheduling links were scheduled by other people. Extra caution required.
 - Deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect. Warn about this.

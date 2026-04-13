@@ -40,6 +40,7 @@ alias src-zsh="source ~/.zshrc"
 
 # Claude Aliases
 alias cc="claude"
+alias ccr="claude --continue"
 
 # Rails Aliases
 alias rc='type rails >/dev/null 2>&1 && LLM_ENABLED=false rails console'

@@ -27,6 +27,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🍏 Constitution/🥕 Nutrition` -- supplements, diet, meal planning
 - `🍏 Constitution/🧖 Personal Care` -- grooming, skincare
 - `🍏 Constitution/🍾 Sobriety` -- sobriety related
+- `🍏 Constitution/🛌 Recovery` -- twelve step, meetings, sponsorship
 
 ### Contemplation (🧠)
 
