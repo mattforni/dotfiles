@@ -60,7 +60,7 @@
     untracked = cyan
 [core]
     editor = vim
-    excludesfile = ~/.gitignore
+	  excludesfile = ~/.gitignore
 [push]
     default = current
 [credential]
@@ -69,10 +69,10 @@
 [pull]
     ff = only
 [credential "https://github.com"]
-    helper =
-    helper = !/opt/homebrew/bin/gh auth git-credential
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-    helper =
-    helper = !/opt/homebrew/bin/gh auth git-credential
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
 [sdlc]
-    review-command = /gemini review
+	review-command = /gemini review

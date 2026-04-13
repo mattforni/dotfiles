@@ -15,10 +15,6 @@
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
 
-## Code Review
-
-- During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
-
 ## External App Integration
 
 Preferred methods for connecting Claude to outside apps, in order:
@@ -28,6 +24,10 @@ Preferred methods for connecting Claude to outside apps, in order:
 3. **MCPs** (Model Context Protocol servers)
 
 Choose the highest available option. Native connectors are smoother and require less configuration.
+
+## Code Review
+
+- During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
 
 ## MCP Servers
 
@@ -75,6 +75,8 @@ When creating new Linear tickets:
 
 - Tasks that need scheduling go on the following Monday
 - Monday morning planning sessions are used to schedule these tasks
+- Task titles: emoji prefix + short title (e.g., "📧 [Follow Up with Jeff](https://mail.google.com/...)"). Link to source in the title text when available.
+- Details go in a comment on the task, not in the description field
 
 ## Code Project Conventions
 

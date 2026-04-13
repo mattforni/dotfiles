@@ -114,7 +114,7 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - Gym, fitness, running, climbing -> `🍏 Constitution/💪 Athlete`
 - Supplements, diet -> `🍏 Constitution/🥕 Nutrition`
 - Grooming, skincare -> `🍏 Constitution/🧖 Personal Care`
-- Recovery, AA, meetings -> `🍏 Constitution/🍾 Sobriety`
+- Recovery, AA, meetings -> `🍏 Constitution/🍾 Sobriety` or `🍏 Constitution/🛌 Recovery`
 
 **Contemplation signals:**
 
