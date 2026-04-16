@@ -25,6 +25,19 @@ Preferred methods for connecting Claude to outside apps, in order:
 
 Choose the highest available option. Native connectors are smoother and require less configuration.
 
+### Google Workspace links (Docs, Sheets, Slides, Drive)
+
+Always read Google Workspace links using the `gws` CLI, never WebFetch. WebFetch fails with HTTP 401 on authenticated Google URLs. Extract the file ID from the URL path (`.../d/<ID>/...`) and use the matching command:
+
+| Link host/path | Service | Read command |
+|---|---|---|
+| `docs.google.com/document` | Docs | `gws docs documents get --params '{"documentId": "<ID>"}'` |
+| `docs.google.com/spreadsheets` | Sheets | `gws sheets +read --spreadsheet <ID> --range Sheet1` |
+| `docs.google.com/presentation` | Slides | `gws slides presentations get --params '{"presentationId": "<ID>"}'` |
+| `drive.google.com/file` | Drive | `gws drive files get --params '{"fileId": "<ID>"}'` |
+
+For Google-native files hosted in Drive, use the matching Docs/Sheets/Slides command to read content. Use `gws drive files get` for file metadata or to export non-native files.
+
 ## Code Review
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
