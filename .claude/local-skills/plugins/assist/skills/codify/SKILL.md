@@ -1,6 +1,6 @@
 ---
-name: assist:learn
-description: Document knowledge from the current session into README.md and CLAUDE.md files using progressive disclosure. Use this skill whenever the user says "learn" followed by a topic, wants to capture something they just figured out, asks to document a pattern or convention, or says something like "we should write this down" or "future me needs to know this." Also trigger when the user discovers a gotcha, foot-gun, or non-obvious behavior worth preserving.
+name: assist:codify
+description: Codify knowledge from the current session into the appropriate location using progressive disclosure. Use this skill whenever the user says "codify" followed by a topic, wants to capture something they just figured out, asks to document a pattern or convention, or says something like "we should write this down" or "future me needs to know this." Also trigger when the user discovers a gotcha, foot-gun, or non-obvious behavior worth preserving. Works for both project directories (three-layer CLAUDE.md/README.md pattern) and skill directories (Learned Rules in SKILL.md). Named after the "plan, delegate, assess, codify" Level 4 compounding loop.
 argument-hint: "<topic> [in <directory>]"
 allowed-tools:
   - Bash
@@ -12,9 +12,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Learn Assist
+# Codify Assist
 
-Capture knowledge from the current conversation into documentation that serves two audiences: humans (README.md) and Claude Code (CLAUDE.md). The goal is progressive disclosure where each layer adds depth without duplicating the others.
+Codify knowledge from the current conversation into documentation that serves two audiences: humans (README.md) and Claude Code (CLAUDE.md). The goal is progressive disclosure where each layer adds depth without duplicating the others.
 
 ## Before Every Invocation
 
@@ -22,9 +22,17 @@ Capture knowledge from the current conversation into documentation that serves t
 2. Identify the **topic** from the user's input or the current conversation
 3. Identify the **target directory** where the knowledge belongs. If the user specifies a directory, use it. If not, infer from context (the directory most closely related to the topic). Ask if ambiguous.
 
-## The Three Layers
+## Determining the Target Type
 
-Knowledge is stored in three layers. Each layer has a distinct audience and level of detail. Never duplicate content across layers. Each layer references the next.
+Before writing anything, determine whether the target is a **project directory** or a **skill directory**. The approach differs significantly.
+
+**Skill directory** (any path under `.claude/` containing a `SKILL.md`): Knowledge goes into the SKILL.md file's `## Learned Rules` section. Do not create README.md files in skill directories. SKILL.md is the single source of truth for a skill. If a Learned Rules section does not exist, create one at the end of the file.
+
+**Project directory** (everything else, e.g., Eudaimonia): Use the three-layer pattern described below.
+
+## The Three Layers (Project Directories Only)
+
+Knowledge is stored in three layers. Each layer has a distinct audience and level of detail. Never duplicate content across layers. Each layer references the next. This pattern applies to project directories only, not skill directories.
 
 ### Layer 1: Root CLAUDE.md (Discovery)
 
@@ -110,20 +118,24 @@ If the conversation does not contain enough context, ask the user to fill gaps. 
 
 ### Step 2: Check existing documentation
 
-Read the target directory's README.md and CLAUDE.md if they exist. The goal is to update rather than overwrite. If files exist, integrate the new knowledge into the existing structure.
+**For skill directories:** Read the target SKILL.md. Look for an existing `## Learned Rules` section. If one exists, you will append to it. If not, you will create one at the end of the file.
 
-Also check the root CLAUDE.md for any existing pointer to this directory.
+**For project directories:** Read the target directory's README.md and CLAUDE.md if they exist. The goal is to update rather than overwrite. If files exist, integrate the new knowledge into the existing structure. Also check the root CLAUDE.md for any existing pointer to this directory.
 
-### Step 3: Draft the README.md
+### Step 3: Draft the changes
 
-Write a draft of the README.md content and **present it to the user for review**. Do not write it to a file yet. The user may want to adjust tone, add details, or restructure.
+**For skill directories:** Draft the new learned rules as bullet points and present them to the user. Show only what you are adding, not the full file. The user wants to see the delta.
 
-If a README.md already exists, present the proposed changes (additions or modifications) rather than the full file.
+**For project directories:** Write a draft of the README.md content and **present it to the user for review**. Do not write it to a file yet. If a README.md already exists, present the proposed changes (additions or modifications) rather than the full file.
 
 ### Step 4: Write the files
 
-After the user approves the README:
+After the user approves:
 
+**For skill directories:**
+1. **Add to or create the `## Learned Rules` section** in the target SKILL.md
+
+**For project directories:**
 1. **Write or update the README.md** in the target directory
 2. **Write or update the CLAUDE.md** in the target directory (extract conventions from the README, keep it concise, point back to README)
 3. **Update the root CLAUDE.md** with a discovery pointer if one does not already exist
