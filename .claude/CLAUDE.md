@@ -38,6 +38,14 @@ Always read Google Workspace links using the `gws` CLI, never WebFetch. WebFetch
 
 For Google-native files hosted in Drive, use the matching Docs/Sheets/Slides command to read content. Use `gws drive files get` for file metadata or to export non-native files.
 
+### Creating Google Docs from markdown
+
+Preferred path: write markdown locally, upload to Drive with conversion via `gws drive files create --upload <path> --upload-content-type text/markdown --json '{"name": "<title>", "mimeType": "application/vnd.google-apps.document"}'`. Update an existing Doc with `gws drive files update --params '{"fileId": "<ID>"}' --upload <path> --upload-content-type text/markdown`.
+
+Two gotchas:
+- `gws` requires upload paths to be inside the current working directory. Use cwd for temp files, not `/tmp`.
+- Drive markdown import creates paged, not Pageless, Docs. Forni prefers Pageless. Toggle manually or use `gws docs documents batchUpdate` to set `documentStyle.documentFormat.documentMode = "PAGELESS"`.
+
 ## Code Review
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
@@ -104,3 +112,7 @@ When creating new Linear tickets:
 - Research outputs should be one-pagers. Brevity is the soul of wit.
 - Capture the essential insights, not everything learned along the way.
 - If it can't fit on one page, it needs to be split into multiple focused topics.
+
+## Local File Conventions
+
+- **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering.
