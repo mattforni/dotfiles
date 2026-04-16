@@ -315,7 +315,9 @@ sync-dots() {
     printf '  %s\n' "${candidates[@]}"
     return 1
   fi
-  HOMEBASE_REPO="${candidates[0]}"
+  # Use head -1 to portably get the first element: zsh arrays are 1-indexed,
+  # bash arrays are 0-indexed, so ${candidates[0]} is empty in zsh.
+  HOMEBASE_REPO=$(printf '%s\n' "${candidates[@]}" | head -n 1)
 
   # List of files to sync (both files and directories)
   SYNC_FILES=(
@@ -335,6 +337,7 @@ sync-dots() {
     ".claude/memory"
     ".claude/plugins"
     ".claude/skills"
+    ".claude/local-skills"
     ".claude/CLAUDE.md"
     ".claude/settings.json"
     "bin"
