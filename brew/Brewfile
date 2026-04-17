@@ -37,6 +37,7 @@ brew "heroku"
 brew "railway"
 
 # Applications
+cask "bitwarden"
 cask "brave-browser"
 cask "claude"
 cask "cursor"
