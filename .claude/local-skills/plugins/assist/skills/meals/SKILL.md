@@ -124,7 +124,32 @@ Rules for the list:
 
 1. Write the full plan to `~/Eudaimonia/Constitution/Nutrition/plans/YYYY-WNN-meal-plan.md` (ISO week). Do not overwrite an existing plan for the same week without confirmation.
 2. Append the recipes used to `references/recipe-sources.md` under "Recipes Used" with week, site, and rating left blank (Forni fills the rating in later).
-3. Print the shopping list cleanly in chat so it's easy to copy to his phone.
+3. Push the primary shopping list (the store being shopped today) to Apple Reminders using the Groceries list. See the Apple Reminders Integration section below. Items for other stores (e.g., Costco next run) stay in the plan file only.
+4. Print the shopping list in chat as a preview and backup.
+
+## Apple Reminders Integration
+
+Forni's shopping list is pushed into the Apple Reminders "Groceries" list so it shows up natively on his phone during the shopping run. Reminders auto groups the list into store sections (Produce, Dairy, Pantry, etc.) when the list type is set to Grocery.
+
+Use AppleScript via `osascript` with a heredoc:
+
+```bash
+osascript <<'APPLESCRIPT'
+tell application "Reminders"
+    tell list "Groceries"
+        make new reminder with properties {name:"Asparagus, 1 bunch"}
+        make new reminder with properties {name:"Snap peas, 1 lb"}
+        # one line per item
+    end tell
+end tell
+APPLESCRIPT
+```
+
+Notes:
+- Keep item names concise but include quantity, e.g. `"Sweet potatoes, 4 large"`. Quantities help the checkout/counting moment.
+- Include brand hints in parens when the brand matters, e.g. `"Pearl couscous, Bob's Red Mill tri color"`.
+- Single quotes inside item names (e.g. "Bob's") are fine inside the heredoc.
+- The Groceries list accumulates items across weeks. Assume Forni will clean up completed items himself. If you see a lot of uncompleted items before pushing, ask before adding more (dupes are annoying).
 
 ## Meal Plan File Format
 
