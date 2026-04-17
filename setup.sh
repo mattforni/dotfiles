@@ -192,7 +192,10 @@ install_npm_globals() {
 deploy_homebase() {
   header "Homebase"
 
-  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew)
+  # local-skills is symlinked (see link_local_skills below) so skill edits in
+  # the repo go live without re running setup.sh. Exclude it from the rsync so
+  # we do not clobber the symlink with a copy.
+  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew .claude/local-skills)
   local rsync_opts=('-a' '--force')
   for item in "${excluded[@]}"; do
     rsync_opts+=(--exclude="$item")
@@ -200,6 +203,41 @@ deploy_homebase() {
   rsync "${rsync_opts[@]}" "$DIR/" "$HOME/" || return 1
   info "Homebase synced to \$HOME"
   SUMMARY+=("Homebase deployed")
+}
+
+link_local_skills() {
+  header "Local skills symlink"
+
+  local src="$DIR/.claude/local-skills"
+  local dst="$HOME/.claude/local-skills"
+
+  if [[ ! -d "$src" ]]; then
+    warn "Source $src does not exist, skipping symlink"
+    return 0
+  fi
+
+  if [[ -L "$dst" ]]; then
+    local current
+    current=$(readlink "$dst")
+    if [[ "$current" == "$src" ]]; then
+      info "local-skills symlink already points at $src"
+      return 0
+    fi
+    warn "Replacing local-skills symlink (was $current)"
+    rm "$dst"
+  elif [[ -e "$dst" ]]; then
+    warn "local-skills is a real directory at $dst; refusing to remove automatically"
+    warn "Move or delete it manually, then re run setup.sh"
+    return 1
+  fi
+
+  mkdir -p "$(dirname "$dst")"
+  if ! ln -s "$src" "$dst"; then
+    error "Failed to link $dst -> $src"
+    return 1
+  fi
+  info "Linked $dst -> $src"
+  SUMMARY+=("local-skills linked")
 }
 
 install_ide_extensions() {
@@ -431,6 +469,7 @@ run_phase install_brew_packages
 run_phase setup_node
 run_phase install_npm_globals
 run_phase deploy_homebase
+run_phase link_local_skills
 run_phase install_ide_extensions
 run_phase install_claude_plugins
 run_phase setup_auth
