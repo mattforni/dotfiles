@@ -185,11 +185,20 @@ When Forni mentions outside this skill that he bought or finished something (e.g
 
 ## Constraints and Defaults
 
+**Durable constraints** (unlikely to change without Forni flagging):
+
 - **IF window**: 7:30 to 18:30. No dinner scheduled after 18:30.
-- **Wednesday evening**: Wine Down. Keep dinner light or flexible.
-- **Thursday lunch**: Team lunch at Zero Homes, usually around 12:30. Do not plan Thursday lunch unless Forni says otherwise.
-- **Weekends**: Saturday is Adventure Day; lunch is often on the go. Sunday is rest and planning; dinner works from leftovers.
 - **Shake timing**: PLNT v2 + 1 cup Silk soy milk. Usually post workout or mid morning. Count toward daily macros.
+- **Weekends**: Saturday is Adventure Day; lunch is often on the go. Sunday is rest and planning; dinner works from leftovers.
+
+**Current weekly pattern** (things that *can* go stale as jobs and seasons change — **always verify against the calendar pulled in Phase 1**, and update the date stamp below when confirmed or corrected):
+
+- **Wednesday evening**: Wine Down. Keep dinner light or flexible. *(Confirmed 2026-04-17.)*
+- **Thursday lunch**: Team lunch at Zero Homes around 12:30. Do not plan Thursday lunch unless the calendar contradicts. *(Confirmed 2026-04-17.)*
+- **Tuesday evening**: DRC run club meets ~18:00 at Ratio Beerworks. Plan dinner before, optional protein snack after. *(Confirmed 2026-04-17.)*
+- **Wednesday midday**: PAH Kitchen Assistant volunteering ~13:00 to 15:00; lunch goes before leaving at 12:30. *(Confirmed 2026-04-17.)*
+
+The calendar is the source of truth. These patterns are hints for interpreting calendar events, not substitutes for them.
 
 ## Learned Rules
 

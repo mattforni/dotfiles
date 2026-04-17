@@ -231,7 +231,11 @@ link_local_skills() {
     return 1
   fi
 
-  ln -s "$src" "$dst"
+  mkdir -p "$(dirname "$dst")"
+  if ! ln -s "$src" "$dst"; then
+    error "Failed to link $dst -> $src"
+    return 1
+  fi
   info "Linked $dst -> $src"
   SUMMARY+=("local-skills linked")
 }
