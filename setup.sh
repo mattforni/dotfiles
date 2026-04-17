@@ -193,7 +193,7 @@ deploy_homebase() {
   header "Homebase"
 
   local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew)
-  local rsync_opts=('-a')
+  local rsync_opts=('-a' '--force')
   for item in "${excluded[@]}"; do
     rsync_opts+=(--exclude="$item")
   done
