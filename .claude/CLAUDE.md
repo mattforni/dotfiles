@@ -50,6 +50,22 @@ Two gotchas:
 - `gws` requires upload paths to be inside the current working directory. Use cwd for temp files, not `/tmp`.
 - Drive markdown import creates paged, not Pageless, Docs. Forni prefers Pageless. Toggle manually or use `gws docs documents batchUpdate` to set `documentStyle.documentFormat.documentMode = "PAGELESS"`.
 
+### Gmail (send, reply, forward, draft)
+
+Use `gws gmail` helpers over the Gmail MCP connector. `gws` preserves full email mechanics; MCP `create_draft` does not.
+
+| Action | Command |
+|---|---|
+| Draft a reply | `gws gmail +reply --message-id <ID> --html --body '<p>...</p>' --draft` |
+| Draft a reply-all | `gws gmail +reply-all --message-id <ID> --html --body '<p>...</p>' --draft` |
+| Draft a new message | `gws gmail +send --to <EMAIL> --subject '...' --html --body '<p>...</p>' --draft` |
+| Send existing draft | `gws gmail users drafts send --params '{"userId":"me"}' --json '{"id":"<draft-id>"}'` |
+
+Why `gws` over MCP:
+- `gws` sets In-Reply-To, References, and threadId, so replies are truly threaded. MCP `create_draft` does not accept threadId, so "Re:" subjects only group visually and are not real replies.
+- `gws` supports send-as aliases, attachments via `-a`, and HTML with preserved quoted history via gmail_quote CSS.
+- `--draft` gates sending. Omit the flag for direct send.
+
 ## Code Review
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
