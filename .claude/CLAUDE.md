@@ -59,6 +59,7 @@ Use `gws gmail` helpers over the Gmail MCP connector. `gws` preserves full email
 | Draft a reply | `gws gmail +reply --message-id <ID> --html --body '<p>...</p>' --draft` |
 | Draft a reply-all | `gws gmail +reply-all --message-id <ID> --html --body '<p>...</p>' --draft` |
 | Draft a new message | `gws gmail +send --to <EMAIL> --subject '...' --html --body '<p>...</p>' --draft` |
+| Draft a forward | `gws gmail +forward --message-id <ID> --to <EMAIL> --html --body '<p>...</p>' --draft` |
 | Send existing draft | `gws gmail users drafts send --params '{"userId":"me"}' --json '{"id":"<draft-id>"}'` |
 
 Why `gws` over MCP:
