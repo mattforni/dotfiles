@@ -23,17 +23,29 @@ Corrections and preferences specific to meal planning. Read on every invocation.
 
 - **All bulk dry goods come from Sprouts, not Costco.** Beans (black, kidney, adzuki), rice (white basmati, brown short grain), lentils (green, red), quinoa, and similar bulk items live in the Sprouts bulk bin section.
   - Why: Forni said on 2026-04-17 "I LOVE their bulk section."
-  - How to apply: when generating a shopping list, put dried beans, rice, lentils, quinoa, and related bulk staples under Sprouts. Costco is for jarred/packaged items (kimchi, hummus, olives, artichokes, pickled onions, yogurt, nuts, coffee).
+  - How to apply: when generating a shopping list, put dried beans, rice, lentils, quinoa, and related bulk staples under Sprouts. Costco is for jarred/packaged items (kimchi, hummus, olives, artichokes, pickled onions, yogurt, nuts, coffee, vanilla extract).
 
 - **The primary shopping list goes into Apple Reminders via AppleScript.** Push items to the "Groceries" list; Reminders auto groups by store section on his phone.
   - Why: Forni confirmed on 2026-04-17 that Reminders is where the list should live, not just inline chat or the plan file.
   - How to apply: See the "Apple Reminders Integration" section of SKILL.md for the osascript pattern. Only push items for the store being shopped that day; other stores stay in the plan file.
+
+- **Quantities in lbs, oz, or grams. No "1 bag", "1 carton", "1 bunch", "1 container", "1 loaf".** Packaging sizes vary by store and brand; actual weight or volume is what gets Forni the right amount.
+  - Why: Forni corrected this on 2026-04-17. Container units are ambiguous.
+  - How to apply: convert everything to the unit most natural for the ingredient. Produce by the lb or oz (e.g. asparagus 1 lb, mint 1 oz). Liquids in fl oz. Small specialty amounts in grams or oz. Bread as a loaf weight ("~1 lb loaf"). Bulk bin items by weight.
+
+- **Vanilla extract is a Costco staple.** Sprouts does not reliably carry it; Costco does.
+  - Why: Forni confirmed on 2026-04-17.
+  - How to apply: when vanilla is needed, put it in the Costco section of the shopping list, never Sprouts.
 
 ## Recipe Rules
 
 - **Forni is experimenting with blender based soups in 2026.** He bought an immersion blender on 2026-04-17 and wants to try pureed soups. Brothy chunky soups remain unappealing; lean toward silky pureed varieties that showcase the blender.
   - Why: Reversed the earlier "no soup" rule the same day he stated it, specifically because of the new blender.
   - How to apply: propose pureed soups when spring/fall seasonality supports it (asparagus, pea, leek, cauliflower, broccoli, butternut). Avoid chunky minestrones, chilis, and brothy bean soups unless explicitly requested.
+
+- **No bananas.** Forni does not eat them, anywhere.
+  - Why: Forni said so on 2026-04-17.
+  - How to apply: do not propose recipes that use bananas, and do not include bananas on any shopping list. For the quinoa breakfast alt (previously sweetened with banana), use dates, a small drizzle of agave, or seasonal berries instead.
 
 ## Macro Rules
 
