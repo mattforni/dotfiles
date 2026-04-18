@@ -29,7 +29,7 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: Forni confirmed on 2026-04-17 that Reminders is where the list should live, not just inline chat or the plan file.
   - How to apply: See the "Apple Reminders Integration" section of SKILL.md for the osascript pattern. Only push items for the store being shopped that day; other stores stay in the plan file.
 
-- **Quantities in lbs, oz, or grams. No "1 bag", "1 carton", "1 bunch", "1 container", "1 loaf".** Packaging sizes vary by store and brand; actual weight or volume is what gets Forni the right amount.
+- **Quantities in lb, oz, fl oz, or grams. No "1 bag", "1 carton", "1 bunch", "1 container", "1 loaf".** Packaging sizes vary by store and brand; actual weight or volume is what gets Forni the right amount.
   - Why: Forni corrected this on 2026-04-17. Container units are ambiguous.
   - How to apply: convert everything to the unit most natural for the ingredient. Produce by the lb or oz (e.g. asparagus 1 lb, mint 1 oz). Liquids in fl oz. Small specialty amounts in grams or oz. Bread as a loaf weight ("~1 lb loaf"). Bulk bin items by weight.
 
