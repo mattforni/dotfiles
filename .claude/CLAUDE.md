@@ -1,3 +1,9 @@
+## About This File
+
+This is "GC" (Global Claude): the user's private global instructions for every project. When Forni says "GC", he means this file.
+
+## Communication
+
 - Ask interactive questions one at a time when clarification is needed
 - Please ask any clarifying questions one at a time so I can be thoughtful in responding?
 - I do not want you to use hyphens ever
@@ -14,6 +20,11 @@
 
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
+
+### Git Worktrees
+
+- Claude Code's `EnterWorktree` tool auto prefixes new branches with `worktree-` (e.g., `worktree-body-comp`). Immediately rename the branch to the bare name (`git branch -m worktree-<name> <name>`) right after the worktree is created. Forni dislikes the prefix.
+- The statusline already surfaces the worktree with a `🪵 <name>` marker after `🌿 repo:branch`, so the branch name itself should stay clean.
 
 ## Skills
 
