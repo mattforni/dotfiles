@@ -83,8 +83,6 @@
       "Read(//Users/forni/**)",
       "Read(//Users/mattforni/**)",
       "Skill(assist:*)",
-      "Skill(commit)",
-      "Skill(hoist-permissions)",
       "Skill(linear-lifecycle:*)",
       "Skill(sdlc:*)",
       "WebFetch(domain:alpinemaids.com)",

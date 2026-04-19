@@ -30,6 +30,15 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
     # Branch name
     branch=$(git branch --show-current 2>/dev/null || echo "detached")
 
+    # Worktree detection: linked worktrees have a git-dir that differs from git-common-dir
+    git_dir=$(git rev-parse --git-dir 2>/dev/null)
+    common_dir=$(git rev-parse --git-common-dir 2>/dev/null)
+    if [ -n "$git_dir" ] && [ -n "$common_dir" ] && [ "$(cd "$git_dir" && pwd)" != "$(cd "$common_dir" && pwd)" ]; then
+        worktree_name=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
+    else
+        worktree_name=""
+    fi
+
     # Git status - check if working tree is clean
     if git diff-index --quiet HEAD -- 2>/dev/null; then
         status_symbol="${GREEN}✓${RESET}"
@@ -73,6 +82,11 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
         [ "$unstaged" != "0" ] && git_info="${git_info} ~${unstaged}"
         [ "$untracked" != "0" ] && git_info="${git_info} ?${untracked}"
         git_info="${git_info})${RESET}"
+    fi
+
+    # Append worktree indicator if in a linked worktree
+    if [ -n "$worktree_name" ]; then
+        git_info="${git_info} 🪵 ${BLUE}${BOLD}${worktree_name}${RESET}"
     fi
 else
     git_info="${RED}no git${RESET}"
