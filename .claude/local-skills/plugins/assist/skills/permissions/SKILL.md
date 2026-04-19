@@ -1,9 +1,12 @@
 ---
-allowed-tools: Read, Edit
-description: Hoist project permissions to user level settings
+name: assist:permissions
+description: Hoist project-level permissions into user-level settings, collapsing similar entries into wildcards. Use this skill whenever the user says "hoist permissions", asks to clean up their project permissions, wants to promote permissions to user level, or mentions that they're tired of re-approving the same tools across projects. Also trigger when the user says "move permissions up" or asks for help organizing `.claude/settings.local.json`.
+allowed-tools:
+  - Read
+  - Edit
 ---
 
-# /hoist-permissions
+# Permissions Assist
 
 Intelligently move permissions from project-level `.claude/settings.local.json` to user-level `~/.claude/settings.json`. Not every permission belongs at user level, and similar permissions should be collapsed into wildcards.
 
