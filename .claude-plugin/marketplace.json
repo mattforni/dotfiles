@@ -1,0 +1,60 @@
+{
+  "name": "skillset",
+  "owner": {
+    "name": "Matthew Fornaciari",
+    "email": "matt@fornaciari.com",
+    "url": "https://github.com/mattforni"
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "description": "A curated collection of Claude Code plugins for enhanced development workflows"
+  },
+  "plugins": [
+    {
+      "name": "linear-lifecycle",
+      "source": "./plugins/linear-lifecycle",
+      "version": "1.2.0",
+      "license": "MIT",
+      "description": "Manage Linear issues via the Linear CLI with zero-context overhead.",
+      "homepage": "https://github.com/mattforni/homebase",
+      "repository": "https://github.com/mattforni/homebase",
+      "author": {
+        "name": "Matthew Fornaciari",
+        "url": "https://github.com/mattforni"
+      },
+      "category": "development",
+      "keywords": ["linear", "issue-tracking", "cli", "workflow", "context-budget", "project-management"],
+      "strict": false,
+      "skills": [
+        "./skills/linear-lifecycle/SKILL.md"
+      ],
+      "commands": [
+        "./commands/linear-setup.md"
+      ]
+    },
+    {
+      "name": "sdlc",
+      "source": "./plugins/sdlc",
+      "version": "2.0.0",
+      "license": "MIT",
+      "description": "Software development lifecycle skills for planning, designing, implementing, reviewing, and completing work.",
+      "homepage": "https://github.com/mattforni/homebase",
+      "repository": "https://github.com/mattforni/homebase",
+      "author": {
+        "name": "Matthew Fornaciari",
+        "url": "https://github.com/mattforni"
+      },
+      "category": "development",
+      "keywords": ["sdlc", "workflow", "git", "pr", "review", "development", "lifecycle"],
+      "strict": false,
+      "skills": [
+        "./skills/plan/SKILL.md",
+        "./skills/design/SKILL.md",
+        "./skills/checkpoint/SKILL.md",
+        "./skills/review/SKILL.md",
+        "./skills/iterate/SKILL.md",
+        "./skills/complete/SKILL.md"
+      ]
+    }
+  ]
+}

@@ -160,7 +160,7 @@
     "skillset": {
       "source": {
         "source": "github",
-        "repo": "mattforni/skillset"
+        "repo": "mattforni/homebase"
       }
     },
     "claude-plugins-official": {

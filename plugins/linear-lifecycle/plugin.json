@@ -1,0 +1,12 @@
+{
+  "name": "linear-lifecycle",
+  "description": "Manage Linear issues via the Linear CLI with zero-context overhead.",
+  "version": "1.2.0",
+  "author": {
+    "name": "Matthew Fornaciari",
+    "url": "https://github.com/mattforni"
+  },
+  "repository": "https://github.com/mattforni/homebase",
+  "license": "MIT",
+  "keywords": ["linear", "issue-tracking", "cli", "workflow", "context-budget", "project-management"]
+}
