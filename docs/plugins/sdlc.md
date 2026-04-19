@@ -1,0 +1,195 @@
+# sdlc
+
+Software development lifecycle skills for planning, designing, implementing, reviewing, and completing work.
+
+## Overview
+
+This plugin provides a complete workflow for managing the software development lifecycle with Claude Code. Each skill maps to a phase of development, creating a consistent and repeatable process.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| `/sdlc:plan` | Plan | Refine requirements on a Linear ticket through Socratic dialogue |
+| `/sdlc:design` | Design | Start work on an issue with branch setup and implementation design |
+| `/sdlc:checkpoint` | Implement | Save work in progress (commit + push, no PR) |
+| `/sdlc:review` | Review | Create PR and request code review |
+| `/sdlc:iterate` | Review | Address PR feedback, request re-review |
+| `/sdlc:complete` | Complete | Reset environment for next task |
+
+## Workflow
+
+The typical flow is:
+
+```text
+/sdlc:plan <issue-id>     # Refine requirements, build out ticket
+    ↓
+/sdlc:design <issue-id>   # Create branch, explore codebase, design approach
+    ↓
+[implement features]      # Write code
+    ↓
+/sdlc:checkpoint          # Save progress (optional, repeatable)
+    ↓
+/sdlc:review              # Create PR, request review
+    ↓
+/sdlc:iterate             # Address feedback (repeatable)
+    ↓
+/sdlc:complete            # Cleanup, ready for next task
+```
+
+## Installation
+
+```bash
+# Add the marketplace
+claude plugin marketplace add mattforni/homebase
+
+# Install the plugin
+claude plugin install sdlc@skillset
+```
+
+> **Migrating from `mattforni/skillset`?** The `skillset` marketplace moved to `mattforni/homebase`. Remove the old source first: `claude plugin marketplace remove skillset`, then follow the steps above.
+
+## Requirements
+
+- **Git** for version control
+- **GitHub CLI** (`gh`) for PR operations
+- **Linear CLI** (`linear`) for Linear integration (optional, used by plan/design/complete). Install via `brew install schpet/tap/linear`.
+
+## Skill Details
+
+### /sdlc:plan
+
+Refines requirements on a Linear ticket through Socratic dialogue:
+
+1. Fetches issue details from Linear
+2. Reads the current title and description
+3. Asks probing questions one at a time to surface requirements, context, and options
+4. Iteratively updates the Linear ticket body to build out the plan template (Overview, Requirements, Options, Recommendation, Open Questions)
+5. Continues until open questions are resolved and the ticket is ready for design
+
+The plan lives on the Linear ticket. No local files are created.
+
+**Usage:** `/sdlc:plan ATE-123`
+
+### /sdlc:design
+
+Starts work on an issue:
+
+1. Fetches issue details from Linear (if available)
+2. Prompts user to handle uncommitted changes (stash, commit, or abort)
+3. Sets up work environment based on branching strat:
+   - **worktree**: creates a new worktree directory with a feature branch (default)
+   - **branch**: checks out a new feature branch in the current directory
+4. Enters plan mode for implementation design
+5. Posts a design summary comment on the Linear ticket after approval
+6. Updates Linear status to "In Progress" after approval
+
+**Usage:** `/sdlc:design ATE-123` or `/sdlc:design feature-name`
+
+### /sdlc:checkpoint
+
+Saves work in progress without creating a PR:
+
+1. Verifies on feature branch
+2. Stages all changes
+3. Generates commit message (or uses provided message)
+4. Pushes to remote
+
+**Usage:** `/sdlc:checkpoint` or `/sdlc:checkpoint "WIP: auth refactor"`
+
+### /sdlc:review
+
+Creates a PR and requests review:
+
+1. Detects and removes dead code
+2. Creates commit with proper attribution
+3. Pushes and creates PR
+4. Requests code review (configurable command, defaults to `/gemini review`)
+
+**Usage:** `/sdlc:review`
+
+### /sdlc:iterate
+
+Addresses PR review feedback:
+
+1. Fetches all review comments
+2. Addresses each issue
+3. Commits and pushes
+4. Requests re-review (configurable command)
+
+**Usage:** `/sdlc:iterate` or `/sdlc:iterate 123`
+
+### /sdlc:complete
+
+Finishes work and resets environment:
+
+1. Verifies PR is merged
+2. Updates Linear issue to "Done"
+3. Cleans up based on how work was set up:
+   - **worktree**: removes the worktree directory and deletes the branch
+   - **branch**: checks out main, pulls latest, and deletes the branch
+4. Prunes remote tracking branches
+
+**Usage:** `/sdlc:complete`
+
+## Configuration
+
+All skills use `disable-model-invocation: true`, meaning they are only triggered by explicit user invocation (not automatically by Claude).
+
+### Branching Strat
+
+Controls how `/sdlc:design` sets up your working environment and how `/sdlc:complete` cleans up.
+
+| Strat | Behavior |
+|-------|----------|
+| `worktree` (default) | Creates an isolated worktree directory per task. Multiple tasks run in parallel without stashing or switching. |
+| `branch` | Traditional checkout. Switches the current directory to a new branch. One task at a time. |
+
+**Git config (recommended):**
+
+```bash
+# Set branching strat (default: worktree)
+git config sdlc.branch-strat worktree
+
+# Set worktree directory (default: .worktrees)
+git config sdlc.worktree-dir .worktrees
+```
+
+**Environment variables:**
+
+```bash
+export SDLC_BRANCH_STRAT="worktree"
+export SDLC_WORKTREE_DIR=".worktrees"
+```
+
+When using worktree mode, the plugin automatically adds the worktree directory to `.gitignore` on first use.
+
+### Review Command
+
+The review and iterate skills use a configurable review command. Configure via:
+
+**Git config (recommended):**
+
+```bash
+git config sdlc.review-command "/gemini review"
+```
+
+**Environment variable:**
+
+```bash
+export SDLC_REVIEW_COMMAND="/gemini review"
+```
+
+**Default:** `/gemini review`
+
+### Linear Integration
+
+The plan, design, and complete skills optionally integrate with Linear via the Linear CLI. If the CLI is installed and the issue ID looks like a Linear issue (e.g., `ATE-123`), the skills will:
+
+- Fetch issue details for context
+- Update issue status ("In Progress", "Done")
+- Post design summary comments
+
+Install via `brew install schpet/tap/linear` and authenticate with `linear auth login`.
+
+Without the Linear CLI, the design skill works with any branch name. The plan skill requires it.
