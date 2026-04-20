@@ -135,7 +135,8 @@
       "mcp__notion__*"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "auto"
   },
   "statusLine": {
     "type": "command",
@@ -190,10 +191,11 @@
     "local-skills": {
       "source": {
         "source": "directory",
-        "path": "~/.claude/local-skills"
+        "path": "/Users/forni/.claude/local-skills"
       }
     }
   },
   "outputStyle": "Concise",
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
