@@ -226,3 +226,6 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - Add an appropriate emoji prefix to tasks that lack one. Shorten task names to fit well on a calendar.
 - When slotting a task, always set: date/time via reschedule-tasks, then duration + Scheduled label via update-tasks.
 - Todoist deadlineDate is Premium-only. Note deadlines in the task description instead.
+- When creating or rewriting any calendar event that involves a location shift (training, therapy, PAH, sauna, meetings at a different venue, social events, etc.), always create flanking ↔️ Transition events on the sides that involve movement. An event without its matching transitions is incomplete. Transitions are travel time plus mental context shift, not just driving.
+- When deleting a recurring event, also delete the paired transition recurring series. Stranded transitions clutter the calendar and quietly break the mental model.
+- Transition event convention: summary "↔️ Transition", colorId "10" (Basil), 30m, description names the destination only (e.g., "→ Movement", "→ Office", "→ Home"). No transition needed when adjacent events share a location.
