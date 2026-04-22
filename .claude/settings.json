@@ -146,22 +146,16 @@
   "enabledPlugins": {
     "pr-review-toolkit@claude-code-plugins": true,
     "feature-dev@claude-code-plugins": true,
-    "linear-lifecycle@skillset": true,
-    "sdlc@skillset": true,
     "skill-creator@claude-plugins-official": true,
-    "assist@local-skills": true
+    "assist@local-skills": true,
+    "linear-lifecycle@skillset": true,
+    "sdlc@skillset": true
   },
   "extraKnownMarketplaces": {
     "claude-code-workflows": {
       "source": {
         "source": "github",
         "repo": "wshobson/agents"
-      }
-    },
-    "skillset": {
-      "source": {
-        "source": "github",
-        "repo": "mattforni/homebase"
       }
     },
     "claude-plugins-official": {
@@ -192,6 +186,12 @@
       "source": {
         "source": "directory",
         "path": "/Users/forni/.claude/local-skills"
+      }
+    },
+    "skillset": {
+      "source": {
+        "source": "github",
+        "repo": "mattforni/homebase"
       }
     }
   },
