@@ -1,5 +1,6 @@
 # Taps
 tap "heroku/brew"
+tap "schpet/tap"
 tap "supabase/tap"
 
 # CLI essentials
@@ -9,6 +10,7 @@ brew "fzf"
 brew "gh"
 brew "git-filter-repo"
 brew "jq"
+brew "linear"
 brew "poppler"
 brew "mas"
 brew "stow"
