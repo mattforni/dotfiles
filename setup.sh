@@ -95,9 +95,12 @@ setup_prerequisites() {
 install_brew_packages() {
   header "Brew packages"
 
-  # Casks that require sudo for installation. Skip them in non-interactive
-  # sessions (e.g. Claude Code) so they don't cause repeated failures.
-  local sudo_casks="whatsapp zoom"
+  # Casks that require sudo in non-interactive sessions, either because the
+  # installer prompts (whatsapp, zoom) or because brew needs to adopt an
+  # existing /Applications copy (chmod -R a+rX requires sudo). Skip in
+  # non-interactive sessions (e.g. Claude Code); run setup.sh in a terminal
+  # to pick them up.
+  local sudo_casks="whatsapp zoom docker-desktop google-chrome protonvpn raycast slack todoist-app"
   local skip_env=""
   if [[ "$INTERACTIVE" != true ]]; then
     skip_env="$sudo_casks"
