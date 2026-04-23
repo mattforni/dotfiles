@@ -185,7 +185,7 @@
     "local-skills": {
       "source": {
         "source": "directory",
-        "path": "/Users/forni/.claude/local-skills"
+        "path": "/Users/mattforni/.claude/local-skills"
       }
     },
     "skillset": {

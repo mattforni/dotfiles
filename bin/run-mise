@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Wrapper invoked by launchd (com.mattforni.mise) to run /assist:mise
+# headlessly each weekday morning. Fires a macOS notification on any
+# failure (process error, skill not found, or skill not reporting
+# "Mise complete") so Forni sees it in Notification Center.
+#
+# Auth: prefer the macOS Keychain entry (service "claude-code-oauth").
+# Falls back to a gitignored ~/.claude/.oauth-token file for environments
+# where Keychain access is not available. Claude will fall through to its
+# own auth resolution if neither is set.
+#
+# Permissions: instead of --dangerously-skip-permissions, the invocation
+# pre allows only the tools mise actually needs. If mise grows new
+# dependencies, the dry run will surface the missing permissions via
+# claude's JSON error output and the notification will fire.
+set -uo pipefail
+
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+
+LOG="$HOME/.claude/debug/mise.log"
+TOKEN_FILE="$HOME/.claude/.oauth-token"
+HOMEBASE="$HOME/Eudaimonia/Craft/Development/personal/homebase"
+KEYCHAIN_SERVICE="claude-code-oauth"
+
+# Tools mise needs. Keep tight. If a new tool is required, add it here
+# and document why.
+ALLOWED_TOOLS=(
+  "Bash(git:*)"
+  "Bash(./setup.sh:*)"
+  "Bash(date:*)"
+  "Read"
+  "Skill"
+  "SlashCommand"
+)
+
+mkdir -p "$(dirname "$LOG")"
+
+notify_failure() {
+  local msg="$1"
+  osascript -e "display notification \"$msg\" with title \"Mise\" subtitle \"failed at $(date '+%H:%M')\"" 2>/dev/null || true
+}
+
+load_oauth_token() {
+  # Keychain first. -w prints just the password value on stdout.
+  local token
+  token=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null) || token=""
+  if [[ -n "$token" ]]; then
+    export CLAUDE_CODE_OAUTH_TOKEN="$token"
+    return 0
+  fi
+  # File fallback.
+  if [[ -r "$TOKEN_FILE" ]]; then
+    export CLAUDE_CODE_OAUTH_TOKEN="$(cat "$TOKEN_FILE")"
+    return 0
+  fi
+  # Neither available: claude will try its own resolution, which likely
+  # fails in launchd context. The failure path is fine; it'll notify.
+  return 1
+}
+
+{
+  echo ""
+  echo "=== $(date -Iseconds) run-mise start ==="
+
+  if ! cd "$HOMEBASE"; then
+    echo "FATAL: homebase dir missing at $HOMEBASE"
+    notify_failure "homebase dir missing"
+    exit 1
+  fi
+
+  if ! command -v claude &>/dev/null; then
+    echo "FATAL: claude CLI not on PATH ($PATH)"
+    notify_failure "claude CLI missing"
+    exit 1
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    echo "FATAL: jq not on PATH ($PATH). Success detection depends on jq."
+    notify_failure "jq missing"
+    exit 1
+  fi
+
+  if load_oauth_token; then
+    echo "auth: token loaded"
+  else
+    echo "auth: no token found in keychain or file; relying on claude default"
+  fi
+
+  # Run claude with explicit tool allowlist. No --dangerously-skip-permissions.
+  # Capture stdout only so $result stays pure JSON. stderr from claude (auth
+  # warnings, progress lines) falls through to the surrounding log block via
+  # its own redirect so it stays visible without corrupting jq parsing.
+  result=$(claude -p "/assist:mise" \
+    --allowedTools "${ALLOWED_TOOLS[@]}" \
+    --output-format json)
+  rc=$?
+
+  echo "$result"
+  echo "=== $(date -Iseconds) run-mise end (exit $rc) ==="
+
+  if [[ $rc -ne 0 ]]; then
+    notify_failure "claude exit $rc. Tail $LOG."
+    exit "$rc"
+  fi
+
+  # Positive confirmation: success subtype, no error, "Mise complete" in result.
+  if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("Mise complete"))' > /dev/null 2>&1; then
+    notify_failure "skill did not complete. Tail $LOG."
+    exit 1
+  fi
+
+  echo "=== $(date -Iseconds) run-mise success confirmed ==="
+} >> "$LOG" 2>&1

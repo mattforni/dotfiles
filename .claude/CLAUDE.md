@@ -16,10 +16,23 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 - When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
 - Do not overstate or exaggerate the quality of results. If something looks like it works but has not been thoroughly validated, say so. Let the user judge quality.
 
+## Bash Commands
+
+- **Never use `cd` in Bash tool calls.** Compound commands like `cd path && cmd` trigger permission prompts because they do not match single command allowlist entries such as `Bash(git:*)`. Use path aware flags instead:
+  - `git -C <path> <subcommand>` instead of `cd <path> && git <subcommand>`
+  - `gh --repo <owner>/<repo> <subcommand>` instead of `cd <path> && gh <subcommand>`
+  - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
+  - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
+- Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
+
 ## Workflow Conventions
 
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
+
+### Plan to Codify Bridge
+
+After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
 
 ### Git Worktrees
 
@@ -29,6 +42,10 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 ## Skills
 
 Every skill that makes decisions on behalf of the user should include a `learned-rules.md` file. For the full authoring conventions (SKILL.md vs learned-rules.md split, when to graduate rules, etc.), see `~/.claude/references/skills.md`.
+
+### Levels shorthand
+
+`L{N}` is shorthand for "Level N" of Bassi Eledath's 8 levels of agentic engineering (tracked in `/Users/mattforni/Eudaimonia/LEVELS.md`). E.g., L7 = Level 7 (background agents), L8 = Level 8 (agent teams). Use the shorthand freely in sharpen sessions and related discussion.
 
 ## External App Integration
 

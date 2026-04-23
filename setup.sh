@@ -30,6 +30,18 @@ done
 INTERACTIVE=true
 [[ ! -t 0 ]] && INTERACTIVE=false
 
+# Paths (relative to both $DIR and $HOME) that are symlinked instead of rsynced.
+# deploy_homebase excludes them from rsync so the symlinks survive; sync-dots
+# omits them because edits in $HOME already land in the repo.
+LINKED_CONFIGS=(
+  .claude/local-skills
+  .claude/CLAUDE.md
+  .claude/commands
+  .claude/references
+  .claude/statusline.sh
+  bin
+)
+
 # Colors & helpers
 GREEN=$'\033[0;32m'
 YELLOW=$'\033[1;33m'
@@ -195,10 +207,13 @@ install_npm_globals() {
 deploy_homebase() {
   header "Homebase"
 
-  # local-skills is symlinked (see link_local_skills below) so skill edits in
-  # the repo go live without re running setup.sh. Exclude it from the rsync so
-  # we do not clobber the symlink with a copy.
-  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew .claude/local-skills)
+  # Paths in LINKED_CONFIGS are symlinked (see link_tracked_configs below) so
+  # edits in $HOME go live without re running setup.sh. Exclude them from rsync
+  # so we do not clobber the symlinks with copies.
+  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew launchagents)
+  for item in "${LINKED_CONFIGS[@]}"; do
+    excluded+=("$item")
+  done
   local rsync_opts=('-a' '--force')
   for item in "${excluded[@]}"; do
     rsync_opts+=(--exclude="$item")
@@ -208,39 +223,129 @@ deploy_homebase() {
   SUMMARY+=("Homebase deployed")
 }
 
-link_local_skills() {
-  header "Local skills symlink"
+link_tracked_configs() {
+  header "Tracked config symlinks"
 
-  local src="$DIR/.claude/local-skills"
-  local dst="$HOME/.claude/local-skills"
+  local failed=0
+  local linked=0
+  for item in "${LINKED_CONFIGS[@]}"; do
+    local src="$DIR/$item"
+    local dst="$HOME/$item"
 
-  if [[ ! -d "$src" ]]; then
-    warn "Source $src does not exist, skipping symlink"
+    if [[ ! -e "$src" ]]; then
+      warn "Source $src does not exist, skipping"
+      continue
+    fi
+
+    if [[ -L "$dst" ]]; then
+      local current
+      current=$(readlink "$dst")
+      if [[ "$current" == "$src" ]]; then
+        info "$item symlink already points at $src"
+        continue
+      fi
+      warn "Replacing $item symlink (was $current)"
+      rm "$dst"
+    elif [[ -e "$dst" ]]; then
+      warn "$item is a real file/directory at $dst; refusing to remove automatically"
+      warn "Move or delete it manually, then re run setup.sh"
+      failed=1
+      continue
+    fi
+
+    mkdir -p "$(dirname "$dst")"
+    if ! ln -s "$src" "$dst"; then
+      error "Failed to link $dst -> $src"
+      failed=1
+      continue
+    fi
+    info "Linked $dst -> $src"
+    linked=$((linked + 1))
+  done
+
+  if [[ $failed -ne 0 ]]; then
+    return 1
+  fi
+  if [[ $linked -gt 0 ]]; then
+    SUMMARY+=("$linked tracked configs linked")
+  fi
+}
+
+install_launchagents() {
+  header "Launch agents"
+
+  # Plists in launchagents/ are templates: {{HOME}} is substituted with the
+  # current user's $HOME at install time. The rendered plist lives at
+  # $HOME/Library/LaunchAgents/ as a real file (not a symlink) so launchd
+  # sees absolute, user specific paths. Re running setup.sh re renders and
+  # re bootstraps.
+  local src_dir="$DIR/launchagents"
+  local dst_dir="$HOME/Library/LaunchAgents"
+  local domain
+  domain="gui/$(id -u)"
+
+  if [[ ! -d "$src_dir" ]]; then
+    info "No launchagents/ directory in repo, skipping"
     return 0
   fi
 
-  if [[ -L "$dst" ]]; then
-    local current
-    current=$(readlink "$dst")
-    if [[ "$current" == "$src" ]]; then
-      info "local-skills symlink already points at $src"
-      return 0
-    fi
-    warn "Replacing local-skills symlink (was $current)"
-    rm "$dst"
-  elif [[ -e "$dst" ]]; then
-    warn "local-skills is a real directory at $dst; refusing to remove automatically"
-    warn "Move or delete it manually, then re run setup.sh"
-    return 1
-  fi
+  mkdir -p "$dst_dir"
 
-  mkdir -p "$(dirname "$dst")"
-  if ! ln -s "$src" "$dst"; then
-    error "Failed to link $dst -> $src"
+  local count=0
+  local failed=0
+  for src in "$src_dir"/*.plist; do
+    [[ -f "$src" ]] || continue
+    local base
+    base=$(basename "$src")
+    local label="${base%.plist}"
+    local dst="$dst_dir/$base"
+
+    # Render the template with $HOME substituted. sed uses | delimiter to
+    # avoid escaping / in the path.
+    local rendered
+    rendered=$(sed "s|{{HOME}}|$HOME|g" "$src")
+
+    # Track whether the installed plist actually changed. Avoids tearing down
+    # and re bootstrapping an unchanged agent on every setup.sh run, which
+    # would kill an in flight job if one were running.
+    local changed=1
+    if [[ -f "$dst" ]] && [[ ! -L "$dst" ]] && [[ "$(cat "$dst")" == "$rendered" ]]; then
+      info "$label plist already rendered"
+      changed=0
+    elif [[ -L "$dst" ]]; then
+      warn "Removing stale symlink at $dst"
+      rm "$dst"
+      printf '%s\n' "$rendered" > "$dst"
+      info "Rendered $dst"
+    else
+      printf '%s\n' "$rendered" > "$dst"
+      info "Rendered $dst"
+    fi
+
+    # Reload only when the plist changed or the agent is not currently loaded.
+    local loaded=0
+    launchctl print "$domain/$label" &>/dev/null && loaded=1
+
+    if [[ $changed -eq 1 ]] || [[ $loaded -eq 0 ]]; then
+      [[ $loaded -eq 1 ]] && launchctl bootout "$domain/$label" &>/dev/null || true
+      if launchctl bootstrap "$domain" "$dst"; then
+        info "Launch agent $label active"
+        count=$((count + 1))
+      else
+        error "Failed to bootstrap $label"
+        failed=1
+      fi
+    else
+      info "Launch agent $label already loaded"
+    fi
+  done
+
+  if [[ $failed -ne 0 ]]; then
     return 1
   fi
-  info "Linked $dst -> $src"
-  SUMMARY+=("local-skills linked")
+  if [[ $count -gt 0 ]]; then
+    SUMMARY+=("$count launch agent(s) installed")
+  fi
 }
 
 install_ide_extensions() {
@@ -490,7 +595,8 @@ run_phase install_brew_packages
 run_phase setup_node
 run_phase install_npm_globals
 run_phase deploy_homebase
-run_phase link_local_skills
+run_phase link_tracked_configs
+run_phase install_launchagents
 run_phase install_ide_extensions
 run_phase install_claude_plugins
 run_phase configure_repo
