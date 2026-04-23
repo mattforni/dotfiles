@@ -16,6 +16,15 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 - When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
 - Do not overstate or exaggerate the quality of results. If something looks like it works but has not been thoroughly validated, say so. Let the user judge quality.
 
+## Bash Commands
+
+- **Never use `cd` in Bash tool calls.** Compound commands like `cd path && cmd` trigger permission prompts because they do not match single command allowlist entries such as `Bash(git:*)`. Use path aware flags instead:
+  - `git -C <path> <subcommand>` instead of `cd <path> && git <subcommand>`
+  - `gh --repo <owner>/<repo> <subcommand>` instead of `cd <path> && gh <subcommand>`
+  - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
+  - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
+- Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
+
 ## Workflow Conventions
 
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
