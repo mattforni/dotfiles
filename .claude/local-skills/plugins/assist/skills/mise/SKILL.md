@@ -2,7 +2,10 @@
 name: assist:mise
 description: Morning prep sync for Forni's workstation. Pulls latest in ~/Eudaimonia and ~/Eudaimonia/Craft/Development/personal/homebase, then runs homebase's setup.sh to deploy dotfiles and refresh brew, npm globals, IDE extensions, and Claude plugins. Use this skill whenever Forni says "mise", "mise en place", "prep the station", "morning sync", "get the station ready", or otherwise wants his dev environment neat and tidy before the day's work. Also trigger for "/assist:mise". Named after mise en place: everything in its place before service.
 allowed-tools:
-  - Bash
+  - Bash(git *)
+  - Bash(test *)
+  - Bash(date *)
+  - Bash(./setup.sh)
   - Read
   - Skill
 ---
@@ -15,7 +18,7 @@ Two repos, one setup script. The skill exists because Forni was running the same
 
 ## Before Every Invocation
 
-1. Read this skill's local `learned-rules.md` if present. It overrides anything below.
+1. Read this skill's local `learned-rules.md`. It overrides anything below.
 2. Read the plugin-wide `../../learned-rules.md` for any cross-skill corrections that also apply.
 
 ## Repos
@@ -31,15 +34,15 @@ Both are git repos. Homebase contains the authoritative `setup.sh` that deploys 
 
 ### Step 0: Preflight
 
-Refuse to run inside a git worktree. A worktree signals in-progress work on an isolated branch; mise's branch logic would either fight that context or silently do the wrong thing.
+Refuse to run if either target repo is a linked worktree. A worktree signals in-progress work on an isolated branch; mise's branch logic would either fight that context or silently do the wrong thing. The check must be scoped to each target repo — the session's cwd can be anywhere, so a bare `git rev-parse` might miss a worktree on a repo mise is about to touch.
 
-Detect via:
+For each `$REPO` (Eudy and Homebase), detect via:
 
 ```bash
-test "$(git rev-parse --git-dir 2>/dev/null)" = "$(git rev-parse --git-common-dir 2>/dev/null)"
+test "$(git -C "$REPO" rev-parse --git-dir 2>/dev/null)" = "$(git -C "$REPO" rev-parse --git-common-dir 2>/dev/null)"
 ```
 
-If the two paths differ, the current session is in a worktree. Abort with a short note telling Forni to `ExitWorktree` first.
+If the two paths differ for either repo, that repo is a linked worktree. Abort with a short note telling Forni which repo is in a worktree and to `ExitWorktree` first.
 
 ### Step 1: Sync Eudy
 
@@ -77,19 +80,21 @@ Given a repo path `$REPO`:
 1. Check for dirty tree: `git -C "$REPO" status --porcelain`. Remember whether it was dirty.
 2. If dirty, stash with a tagged message: `git -C "$REPO" stash push -u -m "mise auto-stash $(date -Iseconds)"`.
 3. `git -C "$REPO" pull --ff-only origin main`.
-4. If we stashed, `git -C "$REPO" stash pop`. If the pop reports conflicts, leave the conflict state and surface the details in the summary — do not attempt to resolve.
+4. If we stashed, `git -C "$REPO" stash pop`. If the pop reports conflicts, leave the conflict state, abort mise immediately, and surface the details in the summary — do not attempt to resolve, do not proceed to the next repo, and do not run `setup.sh`. A conflicted pop means the working tree has unresolved markers; deploying that state via `setup.sh` would land broken config into `$HOME`.
 
 ### If on a non-main branch
 
-The user is mid-feature on this repo. The goal is to preserve their work, bring main current, and merge main forward so the branch keeps pace.
+The user is mid-feature on this repo. The goal is to preserve any in-flight work, bring main current, and merge main forward so the branch keeps pace.
 
-1. Delegate to `/sdlc:checkpoint` via the Skill tool. That skill handles "save WIP with commit and push, no PR" — exactly what's needed here. It already knows the conventions for both repos.
-2. After checkpoint returns, fetch and merge main:
+1. Check for dirty tree: `git -C "$REPO" status --porcelain`.
+2. **If dirty**, delegate to `/sdlc:checkpoint` via the Skill tool. That skill handles "save WIP with commit and push, no PR" — exactly what's needed here. `/sdlc:checkpoint` operates on its caller's cwd, so cd into `$REPO` first (or otherwise scope the invocation to the right repo) — do not let it run against the wrong directory.
+3. **If clean**, skip the checkpoint call entirely. `/sdlc:checkpoint` refuses on a clean tree, and invoking it would either error or become a wasted interaction. A clean feature branch (e.g., one with an open PR that's awaiting review) should flow straight to the merge step.
+4. Fetch and merge main into the current branch:
    ```bash
    git -C "$REPO" fetch origin main
    git -C "$REPO" merge origin/main
    ```
-3. If the merge surfaces conflicts, leave the branch in the conflicted state and abort mise. Forni resolves the merge; he can rerun mise after.
+5. If the merge surfaces conflicts, leave the branch in the conflicted state and abort mise. Forni resolves the merge; he can rerun mise after.
 
 ## Why each edge case matters
 
