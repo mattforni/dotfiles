@@ -281,7 +281,8 @@ install_launchagents() {
   # re bootstraps.
   local src_dir="$DIR/launchagents"
   local dst_dir="$HOME/Library/LaunchAgents"
-  local domain="gui/$(id -u)"
+  local domain
+  domain="gui/$(id -u)"
 
   if [[ ! -d "$src_dir" ]]; then
     info "No launchagents/ directory in repo, skipping"
@@ -304,10 +305,13 @@ install_launchagents() {
     local rendered
     rendered=$(sed "s|{{HOME}}|$HOME|g" "$src")
 
-    # If the existing dst content is identical, skip the write to keep
-    # mtimes stable and avoid spurious reloads.
+    # Track whether the installed plist actually changed. Avoids tearing down
+    # and re bootstrapping an unchanged agent on every setup.sh run, which
+    # would kill an in flight job if one were running.
+    local changed=1
     if [[ -f "$dst" ]] && [[ ! -L "$dst" ]] && [[ "$(cat "$dst")" == "$rendered" ]]; then
       info "$label plist already rendered"
+      changed=0
     elif [[ -L "$dst" ]]; then
       warn "Removing stale symlink at $dst"
       rm "$dst"
@@ -318,16 +322,21 @@ install_launchagents() {
       info "Rendered $dst"
     fi
 
-    # Reload into launchd. bootout is tolerant; bootstrap reads the plist.
-    if launchctl print "$domain/$label" &>/dev/null; then
-      launchctl bootout "$domain/$label" &>/dev/null || true
-    fi
-    if launchctl bootstrap "$domain" "$dst"; then
-      info "Launch agent $label active"
-      count=$((count + 1))
+    # Reload only when the plist changed or the agent is not currently loaded.
+    local loaded=0
+    launchctl print "$domain/$label" &>/dev/null && loaded=1
+
+    if [[ $changed -eq 1 ]] || [[ $loaded -eq 0 ]]; then
+      [[ $loaded -eq 1 ]] && launchctl bootout "$domain/$label" &>/dev/null || true
+      if launchctl bootstrap "$domain" "$dst"; then
+        info "Launch agent $label active"
+        count=$((count + 1))
+      else
+        error "Failed to bootstrap $label"
+        failed=1
+      fi
     else
-      error "Failed to bootstrap $label"
-      failed=1
+      info "Launch agent $label already loaded"
     fi
   done
 

@@ -1,10 +1,6 @@
 ---
 allowed-tools:
-  Bash(git add:*),
-  Bash(git pull:*),
-  Bash(git push:*),
-  Bash(git status:*),
-  Bash(git stash:*)
+  Bash(git:*)
 description: Creates a checkpoint for the current work in progress
 ---
 

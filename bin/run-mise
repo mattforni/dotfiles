@@ -74,6 +74,12 @@ load_oauth_token() {
     exit 1
   fi
 
+  if ! command -v jq &>/dev/null; then
+    echo "FATAL: jq not on PATH ($PATH). Success detection depends on jq."
+    notify_failure "jq missing"
+    exit 1
+  fi
+
   if load_oauth_token; then
     echo "auth: token loaded"
   else
@@ -81,9 +87,12 @@ load_oauth_token() {
   fi
 
   # Run claude with explicit tool allowlist. No --dangerously-skip-permissions.
+  # Capture stdout only so $result stays pure JSON. stderr from claude (auth
+  # warnings, progress lines) falls through to the surrounding log block via
+  # its own redirect so it stays visible without corrupting jq parsing.
   result=$(claude -p "/assist:mise" \
     --allowedTools "${ALLOWED_TOOLS[@]}" \
-    --output-format json 2>&1)
+    --output-format json)
   rc=$?
 
   echo "$result"
