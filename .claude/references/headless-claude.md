@@ -1,0 +1,143 @@
+# Headless Claude on macOS
+
+Build recurring `claude -p` automations that run on launchd, survive sleep, auth
+from Keychain, and fail visibly. Based on the 2026-04-23 implementation of
+L7 mise; see Eudy's `LEVELS.md` and homebase's `bin/run-mise` +
+`launchagents/com.mattforni.mise.plist` for a live example.
+
+## When to use this pattern
+
+Recurring tasks on a predictable schedule that do not need human judgment each
+run: morning syncs, weekly triage, nightly build checks.
+
+## When NOT to use it
+
+- **CronCreate / /loop / /schedule**: session only. Fires only while a Claude
+  REPL is live and idle; auto expires after 7 days. Useful for in session
+  reminders, not daily routines. See sharpen skill's `learned-rules.md`.
+- **pmset schedule wake**: forces the laptop awake at a specific time. Burns
+  battery and disrupts sleep. Usually overkill for morning prep.
+
+## The three pieces
+
+1. **LaunchAgent plist** at `~/Library/LaunchAgents/com.<user>.<label>.plist`
+2. **Wrapper script** at `~/bin/run-<something>` (bash, handles auth and invocation)
+3. **OAuth token in Keychain** (or gitignored file as fallback)
+
+### LaunchAgent
+
+`StartCalendarInterval` fires at the scheduled time. If the Mac is asleep at
+fire time, launchd catches up on next wake (one catch up per missed window).
+`RunAtLoad: false` so `launchctl bootstrap` does not fire the job immediately.
+
+Plists do not expand `$HOME` or `~`. Template with placeholders and substitute
+at install time:
+
+    <string>{{HOME}}/bin/run-something</string>
+
+Install flow (in your setup script):
+
+- `sed "s|{{HOME}}|$HOME|g" template.plist > ~/Library/LaunchAgents/<label>.plist`
+- `launchctl bootout gui/<uid>/<label>` if already loaded
+- `launchctl bootstrap gui/<uid> <rendered-plist>`
+- Skip the bootout+bootstrap cycle if the rendered content is unchanged AND
+  the agent is already loaded, else every setup run kills an in flight job.
+
+### Wrapper script
+
+Sets PATH (launchd's env is empty), loads auth, invokes claude, parses JSON,
+fires a macOS notification on failure. Skeleton:
+
+    #!/usr/bin/env bash
+    set -uo pipefail
+    export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+
+    LOG="$HOME/.claude/debug/<name>.log"
+    mkdir -p "$(dirname "$LOG")"
+
+    notify_failure() {
+      osascript -e "display notification \"$1\" with title \"<Name>\"" 2>/dev/null || true
+    }
+
+    {
+      # Auth: Keychain first, file fallback.
+      token=$(security find-generic-password -s "<service-name>" -w 2>/dev/null) || token=""
+      [[ -n "$token" ]] && export CLAUDE_CODE_OAUTH_TOKEN="$token"
+
+      result=$(claude -p "/<plugin>:<skill>" \
+        --allowedTools "Bash(git:*)" "Read" "Skill" \
+        --output-format json)
+      rc=$?
+      echo "$result"
+
+      [[ $rc -ne 0 ]] && notify_failure "exit $rc" && exit "$rc"
+
+      # Positive confirmation: require the skill's expected success string.
+      if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("<expected>"))' >/dev/null 2>&1; then
+        notify_failure "skill did not complete"
+        exit 1
+      fi
+    } >> "$LOG" 2>&1
+
+### Auth via Keychain
+
+One time setup (interactive): `claude setup-token` opens a browser for OAuth
+and prints a long lived token. Store it:
+
+    security add-generic-password -a "$USER" -s "<service-name>" -w "<token>" -T /usr/bin/security -U
+
+Flags:
+
+- `-T /usr/bin/security` restricts ACL to the `security` CLI. Prefer over
+  `-A` (any app) per the 2026-04-23 Gemini review on Eudy PR #19.
+- `-U` updates in place so the item is not briefly deleted.
+
+Retrieve in wrapper via `security find-generic-password -s <name> -w`.
+
+Keep a gitignored `~/.claude/.oauth-token` as a fallback for environments
+without Keychain (CI, containers). Wrapper should try Keychain first.
+
+## Permissions: --allowedTools over --dangerously-skip-permissions
+
+Pre allow only the tools the skill actually needs. `claude --help` documents
+the example `"Bash(git *) Edit"` so `Bash(pattern)` syntax is supported.
+
+Known valid tool names: `Read`, `Edit`, `Write`, `Bash`, `Skill`. `SlashCommand`
+is unverified (as of 2026-04-23) but harmless to include while uncertain.
+
+Verify the allowlist covers everything by checking `permission_denials` in the
+JSON output; an empty array means the list was sufficient.
+
+Note: even with `--dangerously-skip-permissions`, writes to `.claude/`, `.git/`,
+`.vscode/`, `.idea/`, `.husky/` still prompt. For a true no prompt run in those
+paths, use `--allowedTools` with explicit patterns instead.
+
+## Success detection
+
+Exit code alone is not enough. `claude -p "/unknown:skill"` returns 0 with
+"Unknown skill" as text output. Require positive confirmation via JSON:
+
+    jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("<expected>"))'
+
+Where `<expected>` is the distinctive success string the skill emits.
+
+## Gotchas
+
+- **Two claude binaries**: `~/.local/bin/claude` (user install, has plugins)
+  vs `/opt/homebrew/bin/claude` (brew, lacks plugin context). Put
+  `$HOME/.local/bin` first in PATH or skills resolve to "Unknown skill".
+- **Do not merge stderr into stdout** when capturing JSON. `claude -p ...
+  --output-format json 2>&1` corrupts the JSON with any stderr byte, and `jq`
+  silently fails via `// empty`. Redirect stderr to the surrounding log block.
+- **Keychain must be unlocked**. Works on wake for the logged in user on a
+  personal machine. Locked keychain (e.g., separate lockdown policy) breaks
+  the flow.
+- **`id -u` via subshell in bash `local`**: `local var="$(id -u)"` masks the
+  return value (ShellCheck SC2155). Split declare and assign.
+
+## Reference
+
+- `claude --help` for current flag list
+- `launchd.plist(5)` and `security(1)` man pages
+- L7 mise source: `homebase/bin/run-mise`, `homebase/launchagents/*.plist`,
+  `homebase/setup.sh`'s `install_launchagents` phase

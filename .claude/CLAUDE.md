@@ -43,6 +43,8 @@ After a plan is accepted (ExitPlanMode), before starting implementation, take on
 
 Every skill that makes decisions on behalf of the user should include a `learned-rules.md` file. For the full authoring conventions (SKILL.md vs learned-rules.md split, when to graduate rules, etc.), see `~/.claude/references/skills.md`.
 
+Building recurring headless Claude automations (launchd, Keychain auth, `--allowedTools`, JSON success detection) is covered in `~/.claude/references/headless-claude.md`.
+
 ### Levels shorthand
 
 `L{N}` is shorthand for "Level N" of Bassi Eledath's 8 levels of agentic engineering (tracked in `/Users/mattforni/Eudaimonia/LEVELS.md`). E.g., L7 = Level 7 (background agents), L8 = Level 8 (agent teams). Use the shorthand freely in sharpen sessions and related discussion.
