@@ -321,9 +321,9 @@ sync-dots() {
 
   # List of files to sync (both files and directories).
   # Entries in setup.sh's LINKED_CONFIGS array (.claude/local-skills,
-  # .claude/CLAUDE.md, .claude/commands, .claude/references, .claude/statusline.sh)
-  # are intentionally omitted here: they live as symlinks in $HOME, so edits
-  # already land in the repo without syncing.
+  # .claude/CLAUDE.md, .claude/commands, .claude/references, .claude/statusline.sh,
+  # bin) are intentionally omitted here: they live as symlinks in $HOME, so
+  # edits already land in the repo without syncing.
   SYNC_FILES=(
     ".aliases"
     ".bashrc"
@@ -339,7 +339,6 @@ sync-dots() {
     ".claude/plugins"
     ".claude/skills"
     ".claude/settings.json"
-    "bin"
   )
 
   if [ $DRY_RUN -eq 1 ]; then

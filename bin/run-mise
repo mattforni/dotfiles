@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Wrapper invoked by launchd (com.mattforni.mise) to run /assist:mise
+# headlessly each weekday morning. On failure, fires a macOS notification
+# so Forni sees it in Notification Center.
+set -uo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+
+LOG="$HOME/.claude/debug/mise.log"
+HOMEBASE="$HOME/Eudaimonia/Craft/Development/personal/homebase"
+
+mkdir -p "$(dirname "$LOG")"
+
+# Fire a macOS notification. osascript is built in (no brew dependency).
+# Title is the notifier, subtitle is the status, message is the pointer
+# at the log. Background noop if osascript is unavailable for any reason.
+notify_failure() {
+  local code="$1"
+  local msg="mise exit $code. Tail $LOG for details."
+  osascript -e "display notification \"$msg\" with title \"Mise\" subtitle \"failed at $(date '+%H:%M')\"" 2>/dev/null || true
+}
+
+{
+  echo ""
+  echo "=== $(date -Iseconds) run-mise start ==="
+
+  if ! cd "$HOMEBASE"; then
+    echo "FATAL: homebase dir missing at $HOMEBASE"
+    notify_failure 1
+    exit 1
+  fi
+
+  if ! command -v claude &>/dev/null; then
+    echo "FATAL: claude CLI not on PATH ($PATH)"
+    notify_failure 1
+    exit 1
+  fi
+
+  claude -p "/assist:mise" --dangerously-skip-permissions
+  rc=$?
+
+  echo "=== $(date -Iseconds) run-mise end (exit $rc) ==="
+
+  if [[ $rc -ne 0 ]]; then
+    notify_failure "$rc"
+  fi
+
+  exit $rc
+} >> "$LOG" 2>&1

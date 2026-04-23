@@ -39,6 +39,7 @@ LINKED_CONFIGS=(
   .claude/commands
   .claude/references
   .claude/statusline.sh
+  bin
 )
 
 # Colors & helpers
@@ -209,7 +210,7 @@ deploy_homebase() {
   # Paths in LINKED_CONFIGS are symlinked (see link_tracked_configs below) so
   # edits in $HOME go live without re running setup.sh. Exclude them from rsync
   # so we do not clobber the symlinks with copies.
-  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew)
+  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew launchagents)
   for item in "${LINKED_CONFIGS[@]}"; do
     excluded+=("$item")
   done
@@ -267,6 +268,70 @@ link_tracked_configs() {
   fi
   if [[ $linked -gt 0 ]]; then
     SUMMARY+=("$linked tracked configs linked")
+  fi
+}
+
+install_launchagents() {
+  header "Launch agents"
+
+  local src_dir="$DIR/launchagents"
+  local dst_dir="$HOME/Library/LaunchAgents"
+  local domain="gui/$(id -u)"
+
+  if [[ ! -d "$src_dir" ]]; then
+    info "No launchagents/ directory in repo, skipping"
+    return 0
+  fi
+
+  mkdir -p "$dst_dir"
+
+  local count=0
+  local failed=0
+  for src in "$src_dir"/*.plist; do
+    [[ -f "$src" ]] || continue
+    local base
+    base=$(basename "$src")
+    local label="${base%.plist}"
+    local dst="$dst_dir/$base"
+
+    if [[ -L "$dst" ]]; then
+      local current
+      current=$(readlink "$dst")
+      if [[ "$current" == "$src" ]]; then
+        info "$label plist already linked"
+      else
+        warn "Replacing $label plist symlink (was $current)"
+        rm "$dst"
+        ln -s "$src" "$dst"
+      fi
+    elif [[ -e "$dst" ]]; then
+      warn "$label plist is a real file at $dst; refusing to replace automatically"
+      warn "Move or delete it manually, then re run setup.sh"
+      failed=1
+      continue
+    else
+      ln -s "$src" "$dst"
+      info "Linked $dst -> $src"
+    fi
+
+    # Reload into launchd. bootout is tolerant; bootstrap reads the plist.
+    if launchctl print "$domain/$label" &>/dev/null; then
+      launchctl bootout "$domain/$label" &>/dev/null || true
+    fi
+    if launchctl bootstrap "$domain" "$dst"; then
+      info "Launch agent $label active"
+      count=$((count + 1))
+    else
+      error "Failed to bootstrap $label"
+      failed=1
+    fi
+  done
+
+  if [[ $failed -ne 0 ]]; then
+    return 1
+  fi
+  if [[ $count -gt 0 ]]; then
+    SUMMARY+=("$count launch agent(s) installed")
   fi
 }
 
@@ -518,6 +583,7 @@ run_phase setup_node
 run_phase install_npm_globals
 run_phase deploy_homebase
 run_phase link_tracked_configs
+run_phase install_launchagents
 run_phase install_ide_extensions
 run_phase install_claude_plugins
 run_phase configure_repo
