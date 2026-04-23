@@ -21,6 +21,10 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
 
+### Plan to Codify Bridge
+
+After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
+
 ### Git Worktrees
 
 - Claude Code's `EnterWorktree` tool auto prefixes new branches with `worktree-` (e.g., `worktree-body-comp`). Immediately rename the branch to the bare name (`git branch -m worktree-<name> <name>`) right after the worktree is created. Forni dislikes the prefix.
@@ -29,6 +33,10 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 ## Skills
 
 Every skill that makes decisions on behalf of the user should include a `learned-rules.md` file. For the full authoring conventions (SKILL.md vs learned-rules.md split, when to graduate rules, etc.), see `~/.claude/references/skills.md`.
+
+### Levels shorthand
+
+`L{N}` is shorthand for "Level N" of Bassi Eledath's 8 levels of agentic engineering (tracked in `/Users/mattforni/Eudaimonia/LEVELS.md`). E.g., L7 = Level 7 (background agents), L8 = Level 8 (agent teams). Use the shorthand freely in sharpen sessions and related discussion.
 
 ## External App Integration
 

@@ -319,7 +319,11 @@ sync-dots() {
   # bash arrays are 0-indexed, so ${candidates[0]} is empty in zsh.
   HOMEBASE_REPO=$(printf '%s\n' "${candidates[@]}" | head -n 1)
 
-  # List of files to sync (both files and directories)
+  # List of files to sync (both files and directories).
+  # Entries in setup.sh's LINKED_CONFIGS array (.claude/local-skills,
+  # .claude/CLAUDE.md, .claude/commands, .claude/references, .claude/statusline.sh)
+  # are intentionally omitted here: they live as symlinks in $HOME, so edits
+  # already land in the repo without syncing.
   SYNC_FILES=(
     ".aliases"
     ".bashrc"
@@ -332,13 +336,8 @@ sync-dots() {
     ".zshrc"
     ".vscode/settings.json"
     ".vscode/extensions.txt"
-    ".claude/commands"
-    ".claude/mcps"
-    ".claude/memory"
     ".claude/plugins"
     ".claude/skills"
-    ".claude/local-skills"
-    ".claude/CLAUDE.md"
     ".claude/settings.json"
     "bin"
   )
