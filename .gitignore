@@ -22,4 +22,5 @@
 .claude/plugins/known_marketplaces.json
 .claude/plugins/marketplaces/
 .claude/.credentials.json
+.claude/.oauth-token
 .claude.json

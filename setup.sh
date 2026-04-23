@@ -274,6 +274,11 @@ link_tracked_configs() {
 install_launchagents() {
   header "Launch agents"
 
+  # Plists in launchagents/ are templates: {{HOME}} is substituted with the
+  # current user's $HOME at install time. The rendered plist lives at
+  # $HOME/Library/LaunchAgents/ as a real file (not a symlink) so launchd
+  # sees absolute, user specific paths. Re running setup.sh re renders and
+  # re bootstraps.
   local src_dir="$DIR/launchagents"
   local dst_dir="$HOME/Library/LaunchAgents"
   local domain="gui/$(id -u)"
@@ -294,24 +299,23 @@ install_launchagents() {
     local label="${base%.plist}"
     local dst="$dst_dir/$base"
 
-    if [[ -L "$dst" ]]; then
-      local current
-      current=$(readlink "$dst")
-      if [[ "$current" == "$src" ]]; then
-        info "$label plist already linked"
-      else
-        warn "Replacing $label plist symlink (was $current)"
-        rm "$dst"
-        ln -s "$src" "$dst"
-      fi
-    elif [[ -e "$dst" ]]; then
-      warn "$label plist is a real file at $dst; refusing to replace automatically"
-      warn "Move or delete it manually, then re run setup.sh"
-      failed=1
-      continue
+    # Render the template with $HOME substituted. sed uses | delimiter to
+    # avoid escaping / in the path.
+    local rendered
+    rendered=$(sed "s|{{HOME}}|$HOME|g" "$src")
+
+    # If the existing dst content is identical, skip the write to keep
+    # mtimes stable and avoid spurious reloads.
+    if [[ -f "$dst" ]] && [[ ! -L "$dst" ]] && [[ "$(cat "$dst")" == "$rendered" ]]; then
+      info "$label plist already rendered"
+    elif [[ -L "$dst" ]]; then
+      warn "Removing stale symlink at $dst"
+      rm "$dst"
+      printf '%s\n' "$rendered" > "$dst"
+      info "Rendered $dst"
     else
-      ln -s "$src" "$dst"
-      info "Linked $dst -> $src"
+      printf '%s\n' "$rendered" > "$dst"
+      info "Rendered $dst"
     fi
 
     # Reload into launchd. bootout is tolerant; bootstrap reads the plist.

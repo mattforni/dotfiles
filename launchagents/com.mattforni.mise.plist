@@ -7,7 +7,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/mattforni/bin/run-mise</string>
+    <string>{{HOME}}/bin/run-mise</string>
   </array>
 
   <key>StartCalendarInterval</key>
@@ -45,15 +45,13 @@
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
-    <key>HOME</key>
-    <string>/Users/mattforni</string>
+    <string>{{HOME}}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
 
   <key>StandardOutPath</key>
-  <string>/Users/mattforni/.claude/debug/mise-launchd.log</string>
+  <string>{{HOME}}/.claude/debug/mise-launchd.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/mattforni/.claude/debug/mise-launchd.log</string>
+  <string>{{HOME}}/.claude/debug/mise-launchd.log</string>
 </dict>
 </plist>

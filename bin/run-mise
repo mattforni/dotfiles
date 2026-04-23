@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 # Wrapper invoked by launchd (com.mattforni.mise) to run /assist:mise
-# headlessly each weekday morning. On failure, fires a macOS notification
-# so Forni sees it in Notification Center.
+# headlessly each weekday morning. Fires a macOS notification on any
+# failure (process error, skill not found, or skill not reporting
+# "Mise complete") so Forni sees it in Notification Center.
 set -uo pipefail
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 LOG="$HOME/.claude/debug/mise.log"
+TOKEN_FILE="$HOME/.claude/.oauth-token"
 HOMEBASE="$HOME/Eudaimonia/Craft/Development/personal/homebase"
 
 mkdir -p "$(dirname "$LOG")"
 
 # Fire a macOS notification. osascript is built in (no brew dependency).
-# Title is the notifier, subtitle is the status, message is the pointer
-# at the log. Background noop if osascript is unavailable for any reason.
 notify_failure() {
-  local code="$1"
-  local msg="mise exit $code. Tail $LOG for details."
+  local msg="$1"
   osascript -e "display notification \"$msg\" with title \"Mise\" subtitle \"failed at $(date '+%H:%M')\"" 2>/dev/null || true
 }
 
@@ -26,24 +25,43 @@ notify_failure() {
 
   if ! cd "$HOMEBASE"; then
     echo "FATAL: homebase dir missing at $HOMEBASE"
-    notify_failure 1
+    notify_failure "homebase dir missing"
     exit 1
   fi
 
   if ! command -v claude &>/dev/null; then
     echo "FATAL: claude CLI not on PATH ($PATH)"
-    notify_failure 1
+    notify_failure "claude CLI missing"
     exit 1
   fi
 
-  claude -p "/assist:mise" --dangerously-skip-permissions
+  # Source the long lived OAuth token for headless auth. Generated once via
+  # `claude setup-token` and stored mode 600. If missing, claude will try
+  # keychain (works only when keychain is unlocked).
+  if [[ -r "$TOKEN_FILE" ]]; then
+    CLAUDE_CODE_OAUTH_TOKEN=$(cat "$TOKEN_FILE")
+    export CLAUDE_CODE_OAUTH_TOKEN
+  fi
+
+  # Capture stdout so we can inspect the skill's result text. stderr goes
+  # alongside in the log for visibility.
+  result=$(claude -p "/assist:mise" --dangerously-skip-permissions --output-format json 2>&1)
   rc=$?
 
+  echo "$result"
   echo "=== $(date -Iseconds) run-mise end (exit $rc) ==="
 
   if [[ $rc -ne 0 ]]; then
-    notify_failure "$rc"
+    notify_failure "claude exit $rc. Tail $LOG."
+    exit "$rc"
   fi
 
-  exit $rc
+  # Positive confirmation required: mise should report "Mise complete".
+  # Anything less (Unknown skill, auth error, partial output) is a failure.
+  if ! echo "$result" | jq -r '.result // empty' 2>/dev/null | grep -q "Mise complete"; then
+    notify_failure "skill did not complete. Tail $LOG."
+    exit 1
+  fi
+
+  echo "=== $(date -Iseconds) run-mise success confirmed ==="
 } >> "$LOG" 2>&1
