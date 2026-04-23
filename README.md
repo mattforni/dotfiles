@@ -23,6 +23,14 @@ claude plugin install linear-lifecycle@skillset
 
 > Migrating from `mattforni/skillset`? That repo is deprecated. Run `claude plugin marketplace remove skillset` then re add from `mattforni/homebase`.
 
+#### Per clone config
+
+`sdlc:review` and `sdlc:iterate` read the re review trigger from `git config sdlc.review-command`. The plugin default is `/gemini review`, but this repo uses CodeRabbit. `setup.sh` sets the local config automatically, or you can run it by hand:
+
+```bash
+git config sdlc.review-command "@coderabbitai review"
+```
+
 ### local-skills (private)
 
 Personal productivity skills. Lives under [.claude/local-skills](.claude/local-skills/) and is added as a local `directory` source only. Not installable via GitHub.

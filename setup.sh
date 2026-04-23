@@ -367,6 +367,24 @@ for k, v in d.get('enabledPlugins', {}).items():
   SUMMARY+=("Claude plugins configured")
 }
 
+configure_repo() {
+  header "Repo config"
+
+  # sdlc:review and sdlc:iterate read the re review trigger from
+  # `git config sdlc.review-command`. The plugin default is "/gemini review"
+  # but this repo uses CodeRabbit, so pin it locally.
+  local desired="@coderabbitai review"
+  local current
+  current="$(git -C "$DIR" config --get sdlc.review-command 2>/dev/null || true)"
+  if [[ "$current" == "$desired" ]]; then
+    info "sdlc.review-command already set to '$desired'"
+  else
+    git -C "$DIR" config sdlc.review-command "$desired" || return 1
+    info "sdlc.review-command set to '$desired'"
+    SUMMARY+=("git config: sdlc.review-command set")
+  fi
+}
+
 setup_auth() {
   header "Authentication"
 
@@ -475,5 +493,6 @@ run_phase deploy_homebase
 run_phase link_local_skills
 run_phase install_ide_extensions
 run_phase install_claude_plugins
+run_phase configure_repo
 run_phase setup_auth
 print_summary
