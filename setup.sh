@@ -34,6 +34,8 @@ INTERACTIVE=true
 # deploy_homebase excludes them from rsync so the symlinks survive; sync-dots
 # omits them because edits in $HOME already land in the repo.
 LINKED_CONFIGS=(
+  .aliases
+  .functions
   .claude/local-skills
   .claude/CLAUDE.md
   .claude/commands
