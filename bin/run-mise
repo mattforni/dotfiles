@@ -42,7 +42,9 @@ notify_failure() {
 
 notify_success() {
   local msg="$1"
-  # Escape double quotes so the message passes cleanly through osascript.
+  # Escape backslashes first, then double quotes, so the message passes
+  # cleanly through osascript's AppleScript string literal.
+  msg="${msg//\\/\\\\}"
   msg="${msg//\"/\\\"}"
   osascript -e "display notification \"$msg\" with title \"Mise\" subtitle \"complete at $(date '+%H:%M')\"" 2>/dev/null || true
 }
