@@ -179,6 +179,7 @@ When creating or modifying events, follow these patterns from the existing calen
 - **Community events**: Use colorId "6" (Tangerine) for run clubs, volunteering, social
 - **Contemplation events**: Use colorId "4" (Flamingo) for recovery meetings
 - **Craft events**: Use colorId "6" (Tangerine) for writing, personal projects
+- **Heads Down (deep work)**: Use "🙈 Heads Down" with colorId "8" (Graphite). Protected focus blocks. Recurring template lives Tue/Wed 7:00–10:30; can also be created as one-offs when a particular day needs a protected window. No transitions needed (block stays at current location).
 
 Include the location when the event is at a specific place.
 
@@ -229,3 +230,5 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - When creating or rewriting any calendar event that involves a location shift (training, therapy, PAH, sauna, meetings at a different venue, social events, etc.), always create flanking ↔️ Transition events on the sides that involve movement. An event without its matching transitions is incomplete. Transitions are travel time plus mental context shift, not just driving.
 - When deleting a recurring event, also delete the paired transition recurring series. Stranded transitions clutter the calendar and quietly break the mental model.
 - Transition event convention: summary "↔️ Transition", colorId "10" (Basil), 30m, description names the destination only (e.g., "→ Movement", "→ Office", "→ Home"). No transition needed when adjacent events share a location.
+- When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `/Users/forni/Eudaimonia/koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
+- EnterWorktree at the start of plan mode if any Eudaimonia repo edits are anticipated (schedule.md changes, koan creation, file moves). Don't wait until mid session — relocating uncommitted edits to a worktree later requires stash/pop and is avoidable. Use a date stamped name like `schedule-YYYY-MM-DD` and rename the branch to drop the `worktree-` prefix per global GC instructions.
