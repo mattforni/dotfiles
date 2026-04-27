@@ -8,7 +8,6 @@ allowed-tools:
   - Bash(*get-base-branch.sh*)
   - Bash(*get-linear-issue-id.sh*)
   - ExitWorktree
-  - AskUserQuestion
 ---
 
 # Complete Work
@@ -91,18 +90,10 @@ The session is the one that created the worktree AND the worktree branch has no 
 
 #### Outcome 2: Refused with "commits on the worktree branch"
 
-ExitWorktree's safety check uses DAG ancestry, which always fails after a squash merge (the squash commit on `main` has a different SHA than the worktree branch's commits, even though the content is identical). It also fails for genuinely unmerged work. Use PR_STATE from Step 1 to disambiguate, but always confirm content parity before any destructive action:
+ExitWorktree's safety check uses DAG ancestry, which always fails after a squash merge (the squash commit on `main` has a different SHA than the worktree branch's commits, even though the content is identical). It also fails for genuinely unmerged work. Use PR_STATE from Step 1 to disambiguate:
 
-- **If PR_STATE is `MERGED`**: the squash on `origin/BASE_BRANCH` should contain the worktree's content, but a user could also have added new commits in the worktree after the merge. Verify content parity before discarding:
-
-  ```bash
-  git diff origin/"BASE_BRANCH"..HEAD --quiet
-  ```
-
-  - **Exit code 0** (no diff): the worktree HEAD's content matches `origin/BASE_BRANCH`, so the local commits are genuinely redundant after the squash. Re-invoke `ExitWorktree` with `action: "remove"` and `discard_changes: true`. Skip to Step 4.
-  - **Exit code non zero**: there is post merge work in the worktree that is not on `origin/BASE_BRANCH`. Fall through to the AskUserQuestion path below — treat this case the same as `OPEN` / `NONE`.
-
-- **If PR_STATE is `OPEN`, `NONE`, or `MERGED` with content divergence**: the local commits may represent unpushed work. Do NOT auto-discard. Show the user the unmerged commits:
+- **If PR_STATE is `MERGED`**: the work is on `origin/BASE_BRANCH` as the squash, so the local commits are redundant. Re-invoke `ExitWorktree` with `action: "remove"` and `discard_changes: true`. Then skip to Step 4.
+- **If PR_STATE is `OPEN` or `NONE`**: the local commits may represent unpushed work. Do NOT auto-discard. Show the user the unmerged commits:
 
   ```bash
   git log origin/"BASE_BRANCH"..HEAD --oneline
@@ -156,11 +147,23 @@ git pull origin "BASE_BRANCH"
 git branch -d "CURRENT_BRANCH"
 ```
 
-The `-d` flag (lowercase) only deletes if the branch is fully merged, which is a safety net against accidental deletion of unmerged work.
+The `-d` flag (lowercase) only deletes if the branch is fully merged via DAG ancestry — a safety net against accidental deletion of unmerged work. However, `-d` fails for squash-merged branches because the squash commit on `BASE_BRANCH` has a different SHA than the branch tip. If `-d` fails with "not fully merged", verify the branch content matches `BASE_BRANCH`:
+
+```bash
+git diff "BASE_BRANCH".."CURRENT_BRANCH" --quiet
+```
+
+Exit code 0 means there is no diff (the case after a squash merge). Force delete:
+
+```bash
+git branch -D "CURRENT_BRANCH"
+```
+
+If the diff is non-empty, do NOT force delete. Warn the user that the branch has content not on `BASE_BRANCH` and stop here.
 
 ## Step 4: Prune Stale Branches
 
-From the main worktree, clean up remote tracking branches that no longer exist:
+
 
 ```bash
 git fetch --prune
