@@ -9,7 +9,7 @@ if [ -z "$INPUT" ]; then
   exit 1
 fi
 
-BRANCH_NAME=$(echo "$INPUT" | tr -s '[:space:]' '-' | tr -cd '[:alnum:]-./_')
+BRANCH_NAME=$(printf '%s' "$INPUT" | tr -s '[:space:]' '-' | tr -cd '[:alnum:]-./_')
 if [ -z "$BRANCH_NAME" ]; then
   echo "Error: Could not create a valid branch name from '$INPUT'." >&2
   exit 1
