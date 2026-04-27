@@ -24,6 +24,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
   - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
   - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
 - Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
+- **Use the Monitor tool for long waits, not Bash sleep.** For CI checks, deploy polling, and any "wait until state X" flow, use Monitor with an `until <check>; do sleep N; done` loop. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes instead of at poll interval granularity.
 
 ## Workflow Conventions
 
@@ -39,11 +40,24 @@ After a plan is accepted (ExitPlanMode), before starting implementation, take on
 - Claude Code's `EnterWorktree` tool auto prefixes new branches with `worktree-` (e.g., `worktree-body-comp`). Immediately rename the branch to the bare name (`git branch -m worktree-<name> <name>`) right after the worktree is created. Forni dislikes the prefix.
 - The statusline already surfaces the worktree with a `🪵 <name>` marker after `🌿 repo:branch`, so the branch name itself should stay clean.
 
+### Git and PR Gotchas
+
+- **Never rename a PR's head branch via the GitHub API.** `POST /repos/.../branches/<name>/rename` renames the branch but detaches the PR. GitHub auto closes the PR because its `headRefName` still points at the old, now missing branch. If a branch rename is needed, do it in the GitHub UI (which properly updates attached PRs), or close the current PR and open a new one from the renamed branch.
+- **Stacked PR rebase after the base merges.** When PR A is stacked on PR B and B squash merges to main, A's history no longer traces to main. Recovery:
+  1. `git rebase --onto main <last-commit-of-old-base> <stacked-branch>` to replay only A's own commits on main
+  2. `gh pr edit <N> --base main` to update the PR's base ref
+  3. `git push --force-with-lease` to update the remote
+- **`git branch -d` works on squash merged branches** if the remote tracking ref shows merged. No need to `-D` (force) when the upstream was auto deleted by GitHub after the merge.
+
 ## Skills
 
 Every skill that makes decisions on behalf of the user should include a `learned-rules.md` file. For the full authoring conventions (SKILL.md vs learned-rules.md split, when to graduate rules, etc.), see `~/.claude/references/skills.md`.
 
 Building recurring headless Claude automations (launchd, Keychain auth, `--allowedTools`, JSON success detection) is covered in `~/.claude/references/headless-claude.md`.
+
+### Manual First, Then Codify
+
+When building a workflow skill, do the work by hand once with real data before writing the skill. Skills written without a real first run are thin: the gotchas, shortcut candidates, and calibration numbers (capacity multipliers, typical bucket sizes, priority distributions) only surface under actual use. The pattern is: run the workflow manually, capture learnings inline as they come up, then write the skill as the last step. The `linear-groom` skill gained ~10 Learned Rules and a recalibrated capacity multiplier only after one real C3 grooming pass.
 
 ### Levels shorthand
 
