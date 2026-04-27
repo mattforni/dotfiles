@@ -104,9 +104,11 @@ git fetch origin "BASE_BRANCH"
 
 ### If BRANCH_STRAT is "worktree"
 
-Use Claude Code's native worktree tool. The fetch in the previous step already updated `origin/BASE_BRANCH`; we'll anchor the new branch to it after entering.
+Use Claude Code's native worktree tool. Track whether BRANCH_NAME is a brand new branch (default) or a pre existing branch the user chose to reuse via "Use existing branch" earlier in this step. Store this as BRANCH_IS_NEW (`true` or `false`). The branches diverge below.
 
-Call `EnterWorktree` with `name` set to BRANCH_NAME. Claude creates `.claude/worktrees/BRANCH_NAME`, opens a new branch (auto prefixed with `worktree-`), and switches the session into the worktree.
+Call `EnterWorktree` with `name` set to BRANCH_NAME. Claude creates `.claude/worktrees/BRANCH_NAME`, opens a fresh branch named `worktree-BRANCH_NAME` from current HEAD, and switches the session into the worktree.
+
+#### Case 1: BRANCH_IS_NEW is `true`
 
 Drop the `worktree-` prefix so the branch matches the issue identifier:
 
@@ -119,6 +121,22 @@ Anchor the new branch to the latest base ref. This matches the prior `git worktr
 ```bash
 git reset --hard origin/"BASE_BRANCH"
 ```
+
+#### Case 2: BRANCH_IS_NEW is `false` (reusing an existing branch)
+
+Do NOT rename and do NOT hard reset. The rename target already exists on disk, so `git branch -m` would fail; the hard reset would obliterate the user's prior commits on BRANCH_NAME. Instead, switch the worktree to the existing branch and discard the throwaway one Claude just created:
+
+```bash
+git switch "BRANCH_NAME"
+```
+
+```bash
+git branch -d "worktree-BRANCH_NAME"
+```
+
+The existing branch's commits and tracking information are preserved.
+
+#### Both cases
 
 Report to the user: "Worktree created at .claude/worktrees/BRANCH_NAME"
 

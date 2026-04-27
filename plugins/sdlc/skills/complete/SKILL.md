@@ -100,7 +100,11 @@ git -C "MAIN_WORKTREE" worktree remove "WORKTREE_PATH"
 
 If this fails because the worktree has uncommitted changes, inform the user and advise manual cleanup. Do not pass `--force` or `discard_changes: true` automatically, as that risks losing work.
 
-After manual removal, tell the user the session cwd is now stale and they should `cd` to MAIN_WORKTREE before running another command.
+After successful manual removal, the session's cwd is now a deleted directory. **Stop the skill flow here.** Do not continue to Step 4, since every subsequent git command would run against a stale cwd and fail. Tell the user:
+
+> Worktree removed. Your session cwd is now a deleted directory. Run `cd MAIN_WORKTREE` and re run `/sdlc:complete` from the main worktree to finish pruning stale branches.
+
+The user's second invocation will land in Case C, which handles the remaining cleanup correctly.
 
 ### Case B: Linked worktree outside `.claude/worktrees/`
 
