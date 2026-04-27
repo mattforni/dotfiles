@@ -39,6 +39,8 @@ After a plan is accepted (ExitPlanMode), before starting implementation, take on
 
 - Claude Code's `EnterWorktree` tool auto prefixes new branches with `worktree-` (e.g., `worktree-body-comp`). Immediately rename the branch to the bare name (`git branch -m worktree-<name> <name>`) right after the worktree is created. Forni dislikes the prefix.
 - The statusline already surfaces the worktree with a `🪵 <name>` marker after `🌿 repo:branch`, so the branch name itself should stay clean.
+- **EnterWorktree's session record sticks to `worktree-<name>` even after you rename.** `ExitWorktree(remove)` cleans up the worktree directory but the renamed local branch lingers. After the PR merges it shows `[gone]`; clean up via the squash-merge `-d` → content parity → `-D` flow from the Git and PR Gotchas section.
+- **`ExitWorktree(remove)` ancestry check trips on squash merges, same trap as `git branch -d`.** It refuses with "commits on the worktree branch" because the worktree's commits are not ancestors of the squash. Verify content parity with `git diff origin/<base-branch>..HEAD --quiet`; on exit 0 the squash on origin contains the work, safe to re-invoke with `discard_changes: true`. Never auto-discard purely on `PR_STATE = MERGED` — a user can add post-merge commits to the worktree, so the diff check is the real safety guarantee.
 
 ### Git and PR Gotchas
 
