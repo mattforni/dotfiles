@@ -117,7 +117,7 @@ Replace the bullet list content and REVIEW_CMD with actual values.
 
 ## Output
 
-```
+```text
 PR #<number> updated
 Addressed <N> review comments
 Re-review requested via: <REVIEW_CMD>

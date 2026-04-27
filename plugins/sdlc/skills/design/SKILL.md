@@ -8,13 +8,12 @@ allowed-tools:
   - Bash(*get-base-branch.sh*)
   - Bash(*get-branch-strat.sh*)
   - Bash(*get-linear-issue-id.sh*)
-  - Bash(*get-worktree-dir.sh*)
   - Bash(*sanitize-branch-name.sh*)
   - Bash(grep *)
   - Bash(echo *)
-  - Bash(mkdir *)
   - Read
   - TodoWrite
+  - EnterWorktree
   - ExitPlanMode
   - AskUserQuestion
 ---
@@ -105,45 +104,23 @@ git fetch origin "BASE_BRANCH"
 
 ### If BRANCH_STRAT is "worktree"
 
-Get the worktree directory:
+Use Claude Code's native worktree tool. The fetch in the previous step already updated `origin/BASE_BRANCH`; we'll anchor the new branch to it after entering.
+
+Call `EnterWorktree` with `name` set to BRANCH_NAME. Claude creates `.claude/worktrees/BRANCH_NAME`, opens a new branch (auto prefixed with `worktree-`), and switches the session into the worktree.
+
+Drop the `worktree-` prefix so the branch matches the issue identifier:
 
 ```bash
-../../scripts/get-worktree-dir.sh
+git branch -m "worktree-BRANCH_NAME" "BRANCH_NAME"
 ```
 
-Store the output as WORKTREE_DIR.
-
-Ensure the worktree directory is in `.gitignore`:
+Anchor the new branch to the latest base ref. This matches the prior `git worktree add ... origin/BASE_BRANCH` semantics regardless of where the main worktree's HEAD was:
 
 ```bash
-test -f .gitignore && grep -qxF "WORKTREE_DIR/" .gitignore
+git reset --hard origin/"BASE_BRANCH"
 ```
 
-If the command exits non-zero (file missing or pattern not found), append it:
-
-```bash
-echo "WORKTREE_DIR/" >> .gitignore
-```
-
-Ensure the parent directory exists:
-
-```bash
-mkdir -p "WORKTREE_DIR"
-```
-
-Create the worktree with a new branch based on the latest remote:
-
-```bash
-git worktree add "WORKTREE_DIR/BRANCH_NAME" -b "BRANCH_NAME" origin/"BASE_BRANCH"
-```
-
-Report to the user: "Worktree created at WORKTREE_DIR/BRANCH_NAME"
-
-Create a marker file so `sdlc:complete` knows this worktree is SDLC-managed:
-
-```bash
-echo "" > "WORKTREE_DIR/BRANCH_NAME/.sdlc-worktree"
-```
+Report to the user: "Worktree created at .claude/worktrees/BRANCH_NAME"
 
 ### If BRANCH_STRAT is "branch"
 

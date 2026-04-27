@@ -98,7 +98,7 @@ Use AskUserQuestion to confirm:
 
 When the user confirms readiness:
 
-```
+```text
 Planning complete for ISSUE_ID.
 Ticket updated with overview, requirements, options, and recommendation.
 

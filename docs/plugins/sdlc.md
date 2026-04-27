@@ -78,7 +78,7 @@ Starts work on an issue:
 1. Fetches issue details from Linear (if available)
 2. Prompts user to handle uncommitted changes (stash, commit, or abort)
 3. Sets up work environment based on branching strat:
-   - **worktree**: creates a new worktree directory with a feature branch (default)
+   - **worktree**: uses Claude Code's native worktree tool to create an isolated worktree under `.claude/worktrees/<branch-name>/` with a feature branch (default)
    - **branch**: checks out a new feature branch in the current directory
 4. Enters plan mode for implementation design
 5. Posts a design summary comment on the Linear ticket after approval
@@ -126,7 +126,7 @@ Finishes work and resets environment:
 1. Verifies PR is merged
 2. Updates Linear issue to "Done"
 3. Cleans up based on how work was set up:
-   - **worktree**: removes the worktree directory and deletes the branch
+   - **worktree**: tears down the Claude Code worktree (in session: via `ExitWorktree`; cross session: falls back to `git worktree remove`)
    - **branch**: checks out main, pulls latest, and deletes the branch
 4. Prunes remote tracking branches
 
@@ -142,7 +142,7 @@ Controls how `/sdlc:design` sets up your working environment and how `/sdlc:comp
 
 | Strat | Behavior |
 |-------|----------|
-| `worktree` (default) | Creates an isolated worktree directory per task. Multiple tasks run in parallel without stashing or switching. |
+| `worktree` (default) | Uses Claude Code's native worktree tool to create an isolated worktree under `.claude/worktrees/<branch-name>/` per task. Multiple tasks run in parallel without stashing or switching. |
 | `branch` | Traditional checkout. Switches the current directory to a new branch. One task at a time. |
 
 **Git config (recommended):**
@@ -150,19 +150,15 @@ Controls how `/sdlc:design` sets up your working environment and how `/sdlc:comp
 ```bash
 # Set branching strat (default: worktree)
 git config sdlc.branch-strat worktree
-
-# Set worktree directory (default: .worktrees)
-git config sdlc.worktree-dir .worktrees
 ```
 
-**Environment variables:**
+**Environment variable:**
 
 ```bash
 export SDLC_BRANCH_STRAT="worktree"
-export SDLC_WORKTREE_DIR=".worktrees"
 ```
 
-When using worktree mode, the plugin automatically adds the worktree directory to `.gitignore` on first use.
+Worktree mode places worktrees under `.claude/worktrees/`, which is managed by Claude Code. No `.gitignore` changes are required.
 
 ### Review Command
 
