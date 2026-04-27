@@ -8,6 +8,7 @@ allowed-tools:
   - Bash(*get-base-branch.sh*)
   - Bash(*get-linear-issue-id.sh*)
   - ExitWorktree
+  - AskUserQuestion
 ---
 
 # Complete Work
@@ -80,11 +81,40 @@ Store as WORKTREE_PATH. If WORKTREE_PATH contains `/.claude/worktrees/`, follow 
 
 ### Case A: Claude managed worktree
 
-The worktree lives under `.claude/worktrees/`, so it was created by `sdlc:design` via Claude Code's native worktree tools. Try the native tear down first:
+The worktree lives under `.claude/worktrees/`, so it was created by `sdlc:design` via Claude Code's native worktree tools. Try the native tear down first.
 
-Call `ExitWorktree` with `action: "remove"`. When the current session is the one that created the worktree, this removes the directory, deletes the branch, and restores the original cwd in one step. You are done with cleanup; skip to Step 4.
+Call `ExitWorktree` with `action: "remove"`. Three outcomes are possible.
 
-If `ExitWorktree` reports that no worktree session is active (common when `sdlc:design` ran in a previous session), fall back to manual removal. Get the main worktree path:
+#### Outcome 1: Success
+
+The session is the one that created the worktree AND the worktree branch has no commits beyond the original branch. ExitWorktree removes the directory, deletes the branch, and restores the original cwd in one step. Skip to Step 4.
+
+#### Outcome 2: Refused with "commits on the worktree branch"
+
+ExitWorktree's safety check uses DAG ancestry, which always fails after a squash merge (the squash commit on `main` has a different SHA than the worktree branch's commits, even though the content is identical). It also fails for genuinely unmerged work. Use PR_STATE from Step 1 to disambiguate, but always confirm content parity before any destructive action:
+
+- **If PR_STATE is `MERGED`**: the squash on `origin/BASE_BRANCH` should contain the worktree's content, but a user could also have added new commits in the worktree after the merge. Verify content parity before discarding:
+
+  ```bash
+  git diff origin/"BASE_BRANCH"..HEAD --quiet
+  ```
+
+  - **Exit code 0** (no diff): the worktree HEAD's content matches `origin/BASE_BRANCH`, so the local commits are genuinely redundant after the squash. Re-invoke `ExitWorktree` with `action: "remove"` and `discard_changes: true`. Skip to Step 4.
+  - **Exit code non zero**: there is post merge work in the worktree that is not on `origin/BASE_BRANCH`. Fall through to the AskUserQuestion path below — treat this case the same as `OPEN` / `NONE`.
+
+- **If PR_STATE is `OPEN`, `NONE`, or `MERGED` with content divergence**: the local commits may represent unpushed work. Do NOT auto-discard. Show the user the unmerged commits:
+
+  ```bash
+  git log origin/"BASE_BRANCH"..HEAD --oneline
+  ```
+
+  Then use AskUserQuestion to ask whether to:
+  - **Discard and remove** — re-invoke `ExitWorktree` with `discard_changes: true`. Then skip to Step 4.
+  - **Keep the worktree** — re-invoke `ExitWorktree` with `action: "keep"`. Skill stops here; user resolves manually.
+
+#### Outcome 3: Refused with "no worktree session"
+
+Common when `sdlc:design` ran in a previous session, so the current session has no record of having created this worktree. Fall back to manual removal. Get the main worktree path:
 
 ```bash
 git worktree list --porcelain
@@ -98,7 +128,7 @@ Remove the worktree:
 git -C "MAIN_WORKTREE" worktree remove "WORKTREE_PATH"
 ```
 
-If this fails because the worktree has uncommitted changes, inform the user and advise manual cleanup. Do not pass `--force` or `discard_changes: true` automatically, as that risks losing work.
+If this fails because the worktree has uncommitted changes, inform the user and advise manual cleanup. Do not pass `--force` automatically, as that risks losing work.
 
 After successful manual removal, the session's cwd is now a deleted directory. **Stop the skill flow here.** Do not continue to Step 4, since every subsequent git command would run against a stale cwd and fail. Tell the user:
 
@@ -142,11 +172,25 @@ List branches to identify those whose remote was deleted after merge:
 git branch -vv
 ```
 
-For each branch showing `[gone]` in the output, delete it:
+For each branch showing `[gone]` in the output, attempt deletion. The `-d` flag uses DAG ancestry, which fails on squash merged branches because the squash commit on `BASE_BRANCH` has a different SHA than the branch tip. Try `-d` first; on failure, verify the branch content is identical to `BASE_BRANCH` and force delete:
 
 ```bash
 git branch -d <branch-name-here>
 ```
+
+If that fails with "not fully merged", verify the branch content matches `BASE_BRANCH`:
+
+```bash
+git diff "BASE_BRANCH".."<branch-name-here>" --quiet
+```
+
+Exit code 0 means there is no diff (the branch tip's content is identical to `BASE_BRANCH`, which is the case after a squash merge). Force delete:
+
+```bash
+git branch -D <branch-name-here>
+```
+
+If the diff is non-empty, do NOT force delete. Warn the user that the branch has content not on `BASE_BRANCH` and skip it.
 
 ## Step 5: Confirm Reset
 
