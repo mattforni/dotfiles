@@ -47,7 +47,9 @@ After a plan is accepted (ExitPlanMode), before starting implementation, take on
   1. `git rebase --onto main <last-commit-of-old-base> <stacked-branch>` to replay only A's own commits on main
   2. `gh pr edit <N> --base main` to update the PR's base ref
   3. `git push --force-with-lease` to update the remote
-- **`git branch -d` works on squash merged branches** if the remote tracking ref shows merged. No need to `-D` (force) when the upstream was auto deleted by GitHub after the merge.
+- **`git branch -d` does NOT work on squash-merged branches.** `-d` only checks DAG ancestry — squash merges create a new commit on main with a different SHA, so the branch tip is never an ancestor. The "upstream gone" indicator doesn't change this. After confirming the PR is merged and `git diff main...<branch>` is empty, use `git branch -D <branch>` to clean up.
+
+- **Repo-level branch auto-deletion is off by default on GitHub.** The `delete_branch_on_merge` setting (Settings → General → Pull Requests → "Automatically delete head branches") controls whether merged head refs auto-delete. Check it with `gh api repos/<owner>/<repo> --jq '.delete_branch_on_merge'`; flip it on with `gh api -X PATCH repos/<owner>/<repo> -f delete_branch_on_merge=true`. Without it on, merged branches linger on the remote and `-d` cleanup becomes more annoying because of the rule above.
 
 ## Skills
 
