@@ -72,23 +72,3 @@ Determine the configured branching strategy (used by `plan` to decide how to set
 ```
 
 Store the output as BRANCH_STRAT (`worktree` or `branch`).
-
-## Linked Worktree Detection
-
-Check if the current directory is a linked worktree (used by `complete` to decide cleanup strategy). Compare the git dir with the common dir. They differ in a linked worktree and match in the main working tree:
-
-```bash
-git rev-parse --git-dir
-```
-
-```bash
-git rev-parse --git-common-dir
-```
-
-If the two outputs are different, the current directory is a linked worktree. The main worktree can be found via:
-
-```bash
-git worktree list --porcelain
-```
-
-The first line has the format `worktree /path/to/main`. Extract the path to get the main worktree location.

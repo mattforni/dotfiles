@@ -45,7 +45,7 @@ Follow [Commit and Push](../../reference/common-patterns.md#commit-and-push).
 
 ## Output
 
-```
+```text
 Checkpoint saved to <branch-name>
 Commit: <short-hash> <message>
 ```

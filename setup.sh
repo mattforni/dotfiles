@@ -189,7 +189,6 @@ install_npm_globals() {
 
   local globals=(
     "@anthropic-ai/claude-code"
-    "markdownlint-cli"
     "typescript"
     "vercel"
     "yarn"

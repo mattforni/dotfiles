@@ -6,8 +6,8 @@ allowed-tools:
   - Bash(gh *)
   - Bash(linear *)
   - Bash(*get-base-branch.sh*)
-  - Bash(test *)
   - Bash(*get-linear-issue-id.sh*)
+  - ExitWorktree
 ---
 
 # Complete Work
@@ -60,23 +60,31 @@ If the Linear CLI is not available or the command fails, continue silently.
 
 ## Step 3: Detect Environment and Cleanup
 
-Follow [Linked Worktree Detection](../../reference/common-patterns.md#linked-worktree-detection) to determine if the current directory is a linked worktree. Then follow the matching case below.
-
-### Case A: Linked worktree with SDLC marker
-
-Applies when worktree detection indicates a linked worktree AND the marker file exists:
+Determine whether the current directory is a linked worktree by comparing the git dir with the common dir. They differ in a linked worktree and match in the main working tree:
 
 ```bash
-test -f .sdlc-worktree
+git rev-parse --git-dir
 ```
 
-Get the current worktree path:
+```bash
+git rev-parse --git-common-dir
+```
+
+If the two outputs match, follow Case C. Otherwise, get the worktree path:
 
 ```bash
 git rev-parse --show-toplevel
 ```
 
-Store as WORKTREE_PATH. Get the main worktree path:
+Store as WORKTREE_PATH. If WORKTREE_PATH contains `/.claude/worktrees/`, follow Case A. Otherwise, follow Case B.
+
+### Case A: Claude managed worktree
+
+The worktree lives under `.claude/worktrees/`, so it was created by `sdlc:design` via Claude Code's native worktree tools. Try the native tear down first:
+
+Call `ExitWorktree` with `action: "remove"`. When the current session is the one that created the worktree, this removes the directory, deletes the branch, and restores the original cwd in one step. You are done with cleanup; skip to Step 4.
+
+If `ExitWorktree` reports that no worktree session is active (common when `sdlc:design` ran in a previous session), fall back to manual removal. Get the main worktree path:
 
 ```bash
 git worktree list --porcelain
@@ -90,9 +98,15 @@ Remove the worktree:
 git -C "MAIN_WORKTREE" worktree remove "WORKTREE_PATH"
 ```
 
-If this fails because the worktree has uncommitted changes, inform the user and advise manual cleanup. Do not force-remove, as that risks losing work.
+If this fails because the worktree has uncommitted changes, inform the user and advise manual cleanup. Do not pass `--force` or `discard_changes: true` automatically, as that risks losing work.
 
-### Case B: Linked worktree without SDLC marker
+After successful manual removal, the session's cwd is now a deleted directory. **Stop the skill flow here.** Do not continue to Step 4, since every subsequent git command would run against a stale cwd and fail. Tell the user:
+
+> Worktree removed. Your session cwd is now a deleted directory. Run `cd MAIN_WORKTREE` and re run `/sdlc:complete` from the main worktree to finish pruning stale branches.
+
+The user's second invocation will land in Case C, which handles the remaining cleanup correctly.
+
+### Case B: Linked worktree outside `.claude/worktrees/`
 
 This worktree was not created by `sdlc:design`. Warn the user and advise manual cleanup. Do not attempt any removal.
 
@@ -150,7 +164,7 @@ git status --short
 
 ## Output
 
-```
+```text
 Environment reset complete
 Branch: main
 Status: (clean)
