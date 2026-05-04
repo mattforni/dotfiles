@@ -20,7 +20,7 @@
         "url": "https://github.com/mattforni"
       },
       "category": "productivity",
-      "keywords": ["assist", "email", "schedule", "learn", "bd", "job-apply", "productivity"],
+      "keywords": ["assist", "email", "schedule", "learn", "bd", "job-apply", "present", "productivity"],
       "strict": false,
       "skills": [
         "./skills/emails/SKILL.md",
@@ -31,6 +31,7 @@
         "./skills/meals/SKILL.md",
         "./skills/mise/SKILL.md",
         "./skills/permissions/SKILL.md",
+        "./skills/present/SKILL.md",
         "./skills/sharpen/SKILL.md"
       ]
     }
