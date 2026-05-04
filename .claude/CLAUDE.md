@@ -94,9 +94,10 @@ For Google-native files hosted in Drive, use the matching Docs/Sheets/Slides com
 
 Preferred path: write markdown locally, upload to Drive with conversion via `gws drive files create --upload <path> --upload-content-type text/markdown --json '{"name": "<title>", "mimeType": "application/vnd.google-apps.document"}'`. Update an existing Doc with `gws drive files update --params '{"fileId": "<ID>"}' --upload <path> --upload-content-type text/markdown`.
 
-Two gotchas:
+Three gotchas:
 - `gws` requires upload paths to be inside the current working directory. Use cwd for temp files, not `/tmp`.
 - Drive markdown import creates paged, not Pageless, Docs. Forni prefers Pageless. Toggle manually or use `gws docs documents batchUpdate` to set `documentStyle.documentFormat.documentMode = "PAGELESS"`.
+- `gws drive files delete` writes a `download.html` file in the current working directory as a side effect of the API response handling. Clean up the artifact after delete operations or it accumulates.
 
 ### Gmail (send, reply, forward, draft)
 
