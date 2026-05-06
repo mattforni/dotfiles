@@ -11,6 +11,10 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 - Ask clarifying questions one at a time and present options to select from with an option to provide additional context
 - Only run tests in the foreground and do not leave tests running. There have been several instances where my computer has ground to a stop due to a bunch of long running, unfettered test processes that I have to go manually kill
 
+## Writing Style
+
+- **Title Case for all document headers.** Capitalize as if a book title; lowercase short prepositions (of, in, to, for, by) and articles (a, an, the) unless they start the heading. Applies to every heading level in Google Docs, markdown files, slide decks, Linear issue titles, and any structured written output.
+
 ## General Behavior
 
 - When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
@@ -156,11 +160,27 @@ When creating new Linear tickets:
 
 ## Email Preferences
 
-- Subject lines should use title case (capitalize as if a book title)
+- Subject lines should use Title Case (see Writing Style)
 - Never explicitly sign emails (Gmail handles signatures automatically)
 - End emails with "Cheers and chat soon!"
 - Reply to existing email threads instead of creating new ones when following up
 - When including scheduling link, format as: "Here's [my scheduling link](https://app.reclaim.ai/m/forni/chat) if that's easier."
+
+## Slack Announcements
+
+For meeting recaps, ecosystem updates, and similar share out posts to a channel, use this structure:
+
+1. 📣 + bold title naming what's being shared
+2. One line lede sentence framing what's covered
+3. Sectional body. Each topical section uses a thematic emoji + bold section name with colon, followed by 1-2 sentences of narrative context to set the stage, then bulleted specifics. Pick thematic emojis matching section content rather than reusing ✅ for every section.
+4. 🤔 *Open:* section for unresolved threads (narrative + bullets, same shape as topical sections)
+5. 📚 *Other Resources:* footer with standardized links:
+   - 📄 More info in `<doc name>` (the name itself is the link; no "Working doc:" prefix)
+   - 🎟️ Linear ticket reference
+   - 🎙️ Granola recording link (voice). Use 🎥 only for actual video recordings.
+6. 🖼️ *Photos in Thread* 🧵 closing line when photos will be added in thread
+
+Use ZWSP (U+200B) on its own line between sections to force whitespace (per the existing Slack formatting rule).
 
 ## Todoist Preferences
 
