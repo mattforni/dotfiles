@@ -182,6 +182,40 @@ For meeting recaps, ecosystem updates, and similar share out posts to a channel,
 
 Use ZWSP (U+200B) on its own line between sections to force whitespace (per the existing Slack formatting rule).
 
+## Calendar Preferences
+
+When creating Google Calendar events, follow these conventions.
+
+**Color coding by pillar:**
+
+- **Constitution** events → Sage (colorId 2). Runs, lifts, yoga, body care, recovery.
+- **Community** events → Tangerine (colorId 6). Family, friends, social gatherings.
+- **Transition and travel** blocks → Basil (colorId 10). See the distinction below.
+
+**Transition vs travel** (both Basil, different purposes):
+
+- **↔️ Transition** — *holding space* between contexts. The mental shift buffer between activities, not necessarily vehicle time. Title is literally `↔️ Transition`; destination goes in the description (e.g., `→ Office`, `→ Home`). 30 minutes by default. Use when the gap is about context shift more than physical movement.
+- **🚙 Travel** — *explicit* drive or transit. Vehicle / flight / transit time. Title is `🚙 <LOCATION>` with the destination in the title. Use when the block is concretely about getting somewhere.
+
+They are complementary, not interchangeable. A short walk between adjacent rooms is a transition; a 30 minute drive to a trailhead is travel.
+
+**Flanking on location shifts:**
+
+Any event that involves a change of location (training session, therapy, PAH, sauna, meetings off site, social plans at a venue, etc.) needs flanking transition or travel events on the sides that involve movement. An event without its matching flanks is incomplete. No flank needed when adjacent events share a location.
+
+When deleting a recurring event, also delete the paired transition or travel recurring series. Stranded flanks clutter the calendar and quietly break the mental model.
+
+**Title formats:**
+
+- Long runs: `🏃 <MILES> mi Long Run` (e.g., `🏃 7.5 mi Long Run`)
+- Travel: `🚙 <LOCATION>` (e.g., `🚙 Mt Falcon East Trailhead`)
+- Transition: `↔️ Transition` with destination in description
+
+**Time alignment:**
+
+- Travel events use 30 minute increments aligned to 30 minute blocks (e.g., 06:30 to 07:00, not 06:15 to 07:00).
+- Transitions default to 30 minutes (size, not alignment).
+
 ## Todoist Preferences
 
 - Tasks that need scheduling go on the following Monday

@@ -171,17 +171,49 @@ When moving recurring events for just one week, modify only that occurrence, not
 
 ## Calendar Event Conventions
 
-When creating or modifying events, follow these patterns from the existing calendar:
+Color coding, transition / travel, and title formats live in GC `Calendar Preferences`. The conventions below are skill specific additions.
 
-- **Emoji prefix**: All personal events use an emoji prefix (e.g., "🏋️ Strength", "↔️ Transition", "✍️ Writing")
-- **Transitions**: Use "↔️ Transition" with colorId "10" (Basil)
-- **Constitution events**: Use colorId "2" (Sage) for training, yoga, sauna
-- **Community events**: Use colorId "6" (Tangerine) for run clubs, volunteering, social
+- **Emoji prefix**: All personal events use an emoji prefix (e.g., "🏋️ Strength", "✍️ Writing")
 - **Contemplation events**: Use colorId "4" (Flamingo) for recovery meetings
 - **Craft events**: Use colorId "6" (Tangerine) for writing, personal projects
 - **Heads Down (deep work)**: Use "🙈 Heads Down" with colorId "8" (Graphite). Protected focus blocks. Recurring template lives Tue/Wed 7:00–10:30; can also be created as one-offs when a particular day needs a protected window. No transitions needed (block stays at current location).
 
 Include the location when the event is at a specific place.
+
+## Training Plan Scheduling
+
+Schedule the week's training events from the active block plan in `/Users/forni/Eudaimonia/Constitution/Fitness/2026-training-plan.md`. Conventions live in `Constitution/Fitness/CLAUDE.md`. Title formats and color coding follow GC `Calendar Preferences`.
+
+### Detect existing placeholders first
+
+Before creating any training events, fetch the week's calendar and check for already existing recurring or one off events. Do not overwrite or duplicate. Only create what is missing for this specific week.
+
+| Cadence | Items | Action |
+|---------|-------|--------|
+| Recurring (assumed already on calendar) | Mon yoga 12:15, Tue lift 11:00, Tue DRC eve, Thu SPRC morning, Thu lift 11:00, Wed climb / PAH / sauna | Skip if present |
+| One off (variable, per week) | Fri long run + paired drive blocks | Create fresh each week |
+
+### Friday long run workflow
+
+1. Look up the current week row in `2026-training-plan.md` for **Long mi**, **Vert ft**, and **Fri shape** (route candidate or terrain).
+2. Pick a specific route matching those numbers. Use `WebSearch` on alltrails.com to find the trail page when needed.
+3. Confirm the route with the user via `AskUserQuestion` before creating events.
+4. Default start time is **07:00**. Front Range trailheads are ~30 min from Denver; altitude weeks (9, 10) are longer drives.
+5. Long run duration: budget ~15 to 16 min/mi for moderate trail pace with vert (e.g., 8 mi @ 1,500 ft is ~2 hr).
+6. Create three Fri events per GC Calendar Preferences:
+   - `🚙 <Trailhead Name>` — Basil (colorId 10) — drive out. Location = trailhead address. 30 min block aligned to 30 min increments (e.g., 06:30 to 07:00).
+   - `🏃 <MILES> mi Long Run` — Sage (colorId 2) — location = AllTrails URL.
+   - `🚙 Home` — Basil (colorId 10) — drive back. Same 30 min alignment.
+
+### Mon flex
+
+Optional easy ~4 mi run on Mon. Energy dependent. Do not auto schedule.
+
+### Special weeks
+
+- **Cutback weeks (4, 8)**: Fri long is shorter and on lighter terrain. Same workflow, smaller numbers.
+- **Altitude weeks (9, 10)**: Front Range altitude (week 9) or Aspen recon (week 10). Week 10 includes a Thu drive out + overnight; surface logistics to the user before creating events.
+- **Race week (13)**: Fri 7/31 is the FPL race itself. Coordinate the race day plan as a separate workflow, not a training long run.
 
 ## Key Locations
 
@@ -227,8 +259,6 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - Add an appropriate emoji prefix to tasks that lack one. Shorten task names to fit well on a calendar.
 - When slotting a task, always set: date/time via reschedule-tasks, then duration + Scheduled label via update-tasks.
 - Todoist deadlineDate is Premium-only. Note deadlines in the task description instead.
-- When creating or rewriting any calendar event that involves a location shift (training, therapy, PAH, sauna, meetings at a different venue, social events, etc.), always create flanking ↔️ Transition events on the sides that involve movement. An event without its matching transitions is incomplete. Transitions are travel time plus mental context shift, not just driving.
-- When deleting a recurring event, also delete the paired transition recurring series. Stranded transitions clutter the calendar and quietly break the mental model.
-- Transition event convention: summary "↔️ Transition", colorId "10" (Basil), 30m, description names the destination only (e.g., "→ Movement", "→ Office", "→ Home"). No transition needed when adjacent events share a location.
+- Transition and travel conventions are in GC `Calendar Preferences`. Both Basil. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title).
 - When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `/Users/forni/Eudaimonia/koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
 - EnterWorktree at the start of plan mode if any Eudaimonia repo edits are anticipated (schedule.md changes, koan creation, file moves). Don't wait until mid session — relocating uncommitted edits to a worktree later requires stash/pop and is avoidable. Use a date stamped name like `schedule-YYYY-MM-DD` and rename the branch to drop the `worktree-` prefix per global GC instructions.
