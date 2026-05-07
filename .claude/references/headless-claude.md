@@ -135,9 +135,56 @@ Where `<expected>` is the distinctive success string the skill emits.
 - **`id -u` via subshell in bash `local`**: `local var="$(id -u)"` masks the
   return value (ShellCheck SC2155). Split declare and assign.
 
+## Email reporting via Resend
+
+macOS notifications are best effort: silenced by Focus, get truncated, and
+have no click through to a record. Treat them as a redundant fallback, not
+the source of truth. The source of truth is an email per run.
+
+Shared library: `bin/lib/email-report.sh`. Routine-agnostic. Wrappers source
+it and set `ROUTINE` and `LOG` before calling `email_report`.
+
+    ROUTINE="Mise"
+    LOG="$HOME/.claude/debug/mise.log"
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "$SCRIPT_DIR/lib/email-report.sh"
+
+Reads:
+
+- API key from macOS Keychain (service `resend-api-key`, sending-only scope).
+- Recipient from `~/.config/headless-report/recipient` (one line, gitignored,
+  shared across all routines).
+- Sender hardcoded to `Claude <claude@atelic.me>` (override via
+  `EMAIL_REPORT_SENDER` env var if a routine needs a distinct identity).
+
+Output:
+
+- Subject is always `[<Routine>] YYYY-MM-DD` regardless of status. Status
+  and any failure reason live in the body so the inbox stays calm and date
+  sortable; filter to a Gmail label by routine prefix.
+- Body: status heading, optional reason note, `<pre>` block with the
+  skill's `.result` text (HTML escaped), metadata table (duration, cost,
+  turns, exit code, session id).
+- On any failure (missing key, missing recipient, curl error, Resend HTTP
+  non-2xx): sets `email_error` and returns non-zero. Wrapper falls back to
+  osascript notification carrying the email error.
+
+Tool entry: `Eudy/Admin/tools/resend.md` for vendor context, alternatives
+considered, and pricing. JSON payload assembled via `jq -n --arg ...` to
+dodge bash escaping pitfalls; HTML escaping via `sed`.
+
+Wrapper sourcing trick: `BASH_SOURCE != $0` short circuits the main block
+in each wrapper, so `source ~/bin/run-<routine>` exposes the lib helpers
+for ad hoc testing without firing the routine.
+
+Adding a new headless routine: copy `bin/run-mise`, swap `ROUTINE`,
+`LOG`, the slash command, the `--allowedTools` set, and the success
+predicate. Email path is reused unchanged.
+
 ## Reference
 
 - `claude --help` for current flag list
 - `launchd.plist(5)` and `security(1)` man pages
 - L7 mise source: `homebase/bin/run-mise`, `homebase/launchagents/*.plist`,
   `homebase/setup.sh`'s `install_launchagents` phase
+- Resend API: https://resend.com/docs/api-reference/emails/send-email

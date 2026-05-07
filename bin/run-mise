@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 # Wrapper invoked by launchd (com.mattforni.mise) to run /assist:mise
-# headlessly each weekday morning. Fires a macOS notification on any
-# failure (process error, skill not found, or skill not reporting
-# "Mise complete") so Forni sees it in Notification Center.
+# headlessly each weekday morning. Sends a Resend email after every run
+# (success or failure) so reports survive silenced macOS notifications.
+# Falls back to osascript only when the email path itself fails.
+#
+# Email reporting lives in bin/lib/email-report.sh and is shared across all
+# headless routines. See homebase/.claude/references/headless-claude.md for
+# the playbook and Eudy's Admin/tools/resend.md for the tool entry.
 #
 # Auth: prefer the macOS Keychain entry (service "claude-code-oauth").
 # Falls back to a gitignored ~/.claude/.oauth-token file for environments
-# where Keychain access is not available. Claude will fall through to its
-# own auth resolution if neither is set.
+# where Keychain access is not available.
 #
 # Permissions: instead of --dangerously-skip-permissions, the invocation
 # pre allows only the tools mise actually needs. If mise grows new
 # dependencies, the dry run will surface the missing permissions via
-# claude's JSON error output and the notification will fire.
+# claude's JSON error output and the email will surface it.
 set -uo pipefail
 
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
+ROUTINE="Mise"
 LOG="$HOME/.claude/debug/mise.log"
 TOKEN_FILE="$HOME/.claude/.oauth-token"
 HOMEBASE="$HOME/Eudaimonia/Craft/Development/personal/homebase"
@@ -35,59 +39,90 @@ ALLOWED_TOOLS=(
 
 mkdir -p "$(dirname "$LOG")"
 
+# Source shared email helpers. Resolve relative to this script's actual
+# location so it works whether running from the repo or from ~/bin/.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EMAIL_LIB="$SCRIPT_DIR/lib/email-report.sh"
+if [[ ! -r "$EMAIL_LIB" ]]; then
+  echo "FATAL: email lib missing at $EMAIL_LIB" >&2
+  osascript -e "display notification \"email lib missing\" with title \"$ROUTINE\"" >&2 || true
+  exit 1
+fi
+# shellcheck source=lib/email-report.sh
+source "$EMAIL_LIB"
+
 notify_failure() {
   local msg="$1"
-  osascript -e "display notification \"$msg\" with title \"Mise\" subtitle \"failed at $(date '+%H:%M')\"" 2>/dev/null || true
-}
-
-notify_success() {
-  local msg="$1"
-  # Escape backslashes first, then double quotes, so the message passes
-  # cleanly through osascript's AppleScript string literal.
   msg="${msg//\\/\\\\}"
   msg="${msg//\"/\\\"}"
-  osascript -e "display notification \"$msg\" with title \"Mise\" subtitle \"complete at $(date '+%H:%M')\"" 2>/dev/null || true
+  osascript -e "display notification \"$msg\" with title \"$ROUTINE\" subtitle \"failed at $(date '+%H:%M')\"" 2>>"$LOG" || true
+}
+
+# fatal_report logs a preflight failure (one that happens before claude runs,
+# so there is no JSON to summarize), sends a failure email, and notifies via
+# osascript only when the email path itself fails. Caller is responsible for
+# `exit 1` afterward.
+fatal_report() {
+  local reason="$1"
+  echo "FATAL: $reason"
+  local summary="<div style=\"background:#ffebee;border-left:4px solid #c62828;padding:10px 14px;border-radius:4px;margin:0 0 12px 0;\"><strong style=\"color:#b71c1c;\">$reason</strong></div>"
+  if email_report "failure" "$summary" "" ""; then
+    echo "email: report sent ($reason)"
+  else
+    echo "email: failed — $email_error"
+    notify_failure "$reason; email also failed: $email_error"
+  fi
+}
+
+# runtime_failure_report sends a post-claude failure email using the already
+# computed summary/full text/metadata blocks, and notifies via osascript only
+# when the email path itself fails. Caller is responsible for the exit code.
+runtime_failure_report() {
+  local reason="$1"
+  if email_report "failure" "$summary_block" "$result_text" "$meta_block"; then
+    echo "email: report sent ($reason)"
+  else
+    echo "email: report failed — $email_error"
+    notify_failure "$ROUTINE $reason; email also failed: $email_error"
+  fi
 }
 
 load_oauth_token() {
-  # Keychain first. -w prints just the password value on stdout.
   local token
-  token=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null) || token=""
+  token=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>>"$LOG") || token=""
   if [[ -n "$token" ]]; then
     export CLAUDE_CODE_OAUTH_TOKEN="$token"
     return 0
   fi
-  # File fallback.
   if [[ -r "$TOKEN_FILE" ]]; then
     export CLAUDE_CODE_OAUTH_TOKEN="$(cat "$TOKEN_FILE")"
     return 0
   fi
-  # Neither available: claude will try its own resolution, which likely
-  # fails in launchd context. The failure path is fine; it'll notify.
   return 1
 }
+
+# Allow sourcing this script to expose helpers (email_report, build_meta_block,
+# html_escape) without firing the full mise routine. Useful for verifying
+# Resend wiring in isolation.
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+  return 0 2>/dev/null || true
+fi
 
 {
   echo ""
   echo "=== $(date -Iseconds) run-mise start ==="
 
   if ! cd "$HOMEBASE"; then
-    echo "FATAL: homebase dir missing at $HOMEBASE"
-    notify_failure "homebase dir missing"
+    fatal_report "homebase dir missing at $HOMEBASE"
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "FATAL: claude CLI not on PATH ($PATH)"
-    notify_failure "claude CLI missing"
-    exit 1
-  fi
-
-  if ! command -v jq &>/dev/null; then
-    echo "FATAL: jq not on PATH ($PATH). Success detection depends on jq."
-    notify_failure "jq missing"
-    exit 1
-  fi
+  for tool in claude jq curl security; do
+    if ! command -v "$tool" &>/dev/null; then
+      fatal_report "$tool not on PATH ($PATH)"
+      exit 1
+    fi
+  done
 
   if load_oauth_token; then
     echo "auth: token loaded"
@@ -95,10 +130,6 @@ load_oauth_token() {
     echo "auth: no token found in keychain or file; relying on claude default"
   fi
 
-  # Run claude with explicit tool allowlist. No --dangerously-skip-permissions.
-  # Capture stdout only so $result stays pure JSON. stderr from claude (auth
-  # warnings, progress lines) falls through to the surrounding log block via
-  # its own redirect so it stays visible without corrupting jq parsing.
   result=$(claude -p "/assist:mise" \
     --allowedTools "${ALLOWED_TOOLS[@]}" \
     --output-format json)
@@ -107,20 +138,27 @@ load_oauth_token() {
   echo "$result"
   echo "=== $(date -Iseconds) run-mise end (exit $rc) ==="
 
+  meta_block=$(build_meta_block "$result" "$rc")
+  summary_block=$(build_summary_block "$result" "$rc" "Mise complete")
+  result_text=$(echo "$result" | jq -r '.result // ""' 2>>"$LOG")
+  [[ -z "$result_text" ]] && result_text="$result"
+
   if [[ $rc -ne 0 ]]; then
-    notify_failure "claude exit $rc. Tail $LOG."
+    runtime_failure_report "claude exit $rc"
     exit "$rc"
   fi
 
-  # Positive confirmation: success subtype, no error, "Mise complete" in result.
-  if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("Mise complete"))' > /dev/null 2>&1; then
-    notify_failure "skill did not complete. Tail $LOG."
+  if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("Mise complete"))' >>"$LOG" 2>&1; then
+    runtime_failure_report "skill did not complete"
     exit 1
   fi
 
-  # First non-empty line of the skill's result, e.g., "Mise complete ✓".
-  summary=$(echo "$result" | jq -r '.result // ""' | awk 'NF {print; exit}')
-  notify_success "${summary:-Mise complete}"
+  if email_report "success" "$summary_block" "$result_text" "$meta_block"; then
+    echo "email: success report sent"
+  else
+    echo "email: success report failed — $email_error"
+    notify_failure "$ROUTINE complete but email report failed: $email_error"
+  fi
 
   echo "=== $(date -Iseconds) run-mise success confirmed ==="
 } >> "$LOG" 2>&1
