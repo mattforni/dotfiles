@@ -159,8 +159,9 @@ Reads:
 
 Output:
 
-- Subject `[<Routine> ✅] YYYY-MM-DD HH:MM` on success or `[<Routine> ❌]
-  YYYY-MM-DD HH:MM — <reason>` on failure. Filterable to a Gmail label.
+- Subject is always `[<Routine>] YYYY-MM-DD` regardless of status. Status
+  and any failure reason live in the body so the inbox stays calm and date
+  sortable; filter to a Gmail label by routine prefix.
 - Body: status heading, optional reason note, `<pre>` block with the
   skill's `.result` text (HTML escaped), metadata table (duration, cost,
   turns, exit code, session id).

@@ -45,7 +45,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EMAIL_LIB="$SCRIPT_DIR/lib/email-report.sh"
 if [[ ! -r "$EMAIL_LIB" ]]; then
   echo "FATAL: email lib missing at $EMAIL_LIB" >&2
-  osascript -e "display notification \"email lib missing\" with title \"$ROUTINE\"" 2>/dev/null || true
+  osascript -e "display notification \"email lib missing\" with title \"$ROUTINE\"" >&2 || true
   exit 1
 fi
 # shellcheck source=lib/email-report.sh
@@ -55,12 +55,41 @@ notify_failure() {
   local msg="$1"
   msg="${msg//\\/\\\\}"
   msg="${msg//\"/\\\"}"
-  osascript -e "display notification \"$msg\" with title \"$ROUTINE\" subtitle \"failed at $(date '+%H:%M')\"" 2>/dev/null || true
+  osascript -e "display notification \"$msg\" with title \"$ROUTINE\" subtitle \"failed at $(date '+%H:%M')\"" 2>>"$LOG" || true
+}
+
+# fatal_report logs a preflight failure (one that happens before claude runs,
+# so there is no JSON to summarize), sends a failure email, and notifies via
+# osascript only when the email path itself fails. Caller is responsible for
+# `exit 1` afterward.
+fatal_report() {
+  local reason="$1"
+  echo "FATAL: $reason"
+  local summary="<div style=\"background:#ffebee;border-left:4px solid #c62828;padding:10px 14px;border-radius:4px;margin:0 0 12px 0;\"><strong style=\"color:#b71c1c;\">$reason</strong></div>"
+  if email_report "failure" "$summary" "" ""; then
+    echo "email: report sent ($reason)"
+  else
+    echo "email: failed — $email_error"
+    notify_failure "$reason; email also failed: $email_error"
+  fi
+}
+
+# runtime_failure_report sends a post-claude failure email using the already
+# computed summary/full text/metadata blocks, and notifies via osascript only
+# when the email path itself fails. Caller is responsible for the exit code.
+runtime_failure_report() {
+  local reason="$1"
+  if email_report "failure" "$summary_block" "$result_text" "$meta_block"; then
+    echo "email: report sent ($reason)"
+  else
+    echo "email: report failed — $email_error"
+    notify_failure "$ROUTINE $reason; email also failed: $email_error"
+  fi
 }
 
 load_oauth_token() {
   local token
-  token=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null) || token=""
+  token=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>>"$LOG") || token=""
   if [[ -n "$token" ]]; then
     export CLAUDE_CODE_OAUTH_TOKEN="$token"
     return 0
@@ -84,31 +113,13 @@ fi
   echo "=== $(date -Iseconds) run-mise start ==="
 
   if ! cd "$HOMEBASE"; then
-    reason="homebase dir missing at $HOMEBASE"
-    echo "FATAL: $reason"
-    summary="<div style=\"background:#ffebee;border-left:4px solid #c62828;padding:10px 14px;border-radius:4px;margin:0 0 12px 0;\"><strong style=\"color:#b71c1c;\">$reason</strong></div>"
-    if email_report "failure" "$summary" "" ""; then
-      echo "email: report sent"
-    else
-      echo "email: failed — $email_error"
-      notify_failure "$reason; email also failed: $email_error"
-    fi
-    notify_failure "$reason"
+    fatal_report "homebase dir missing at $HOMEBASE"
     exit 1
   fi
 
   for tool in claude jq curl security; do
     if ! command -v "$tool" &>/dev/null; then
-      reason="$tool not on PATH ($PATH)"
-      echo "FATAL: $reason"
-      summary="<div style=\"background:#ffebee;border-left:4px solid #c62828;padding:10px 14px;border-radius:4px;margin:0 0 12px 0;\"><strong style=\"color:#b71c1c;\">$reason</strong></div>"
-      if email_report "failure" "$summary" "" ""; then
-        echo "email: report sent"
-      else
-        echo "email: failed — $email_error"
-        notify_failure "$reason; email also failed: $email_error"
-      fi
-      notify_failure "$reason"
+      fatal_report "$tool not on PATH ($PATH)"
       exit 1
     fi
   done
@@ -129,30 +140,16 @@ fi
 
   meta_block=$(build_meta_block "$result" "$rc")
   summary_block=$(build_summary_block "$result" "$rc" "Mise complete")
-  result_text=$(echo "$result" | jq -r '.result // ""' 2>/dev/null)
+  result_text=$(echo "$result" | jq -r '.result // ""' 2>>"$LOG")
   [[ -z "$result_text" ]] && result_text="$result"
 
   if [[ $rc -ne 0 ]]; then
-    reason="claude exit $rc"
-    if email_report "failure" "$summary_block" "$result_text" "$meta_block"; then
-      echo "email: report sent ($reason)"
-    else
-      echo "email: report failed — $email_error"
-      notify_failure "$ROUTINE $reason; email also failed: $email_error"
-    fi
-    notify_failure "$reason. See email."
+    runtime_failure_report "claude exit $rc"
     exit "$rc"
   fi
 
-  if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("Mise complete"))' > /dev/null 2>&1; then
-    reason="skill did not complete"
-    if email_report "failure" "$summary_block" "$result_text" "$meta_block"; then
-      echo "email: report sent ($reason)"
-    else
-      echo "email: report failed — $email_error"
-      notify_failure "$ROUTINE $reason; email also failed: $email_error"
-    fi
-    notify_failure "$reason. See email."
+  if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("Mise complete"))' >>"$LOG" 2>&1; then
+    runtime_failure_report "skill did not complete"
     exit 1
   fi
 

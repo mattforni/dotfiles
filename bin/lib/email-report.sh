@@ -20,7 +20,6 @@
 # later without changing the contract):
 #
 #     <h2>{emoji} {ROUTINE} — {timestamp}</h2>
-#     {note_html if subject_note}
 #     {summary_html}                              ← TL;DR, callouts, the
 #                                                   immediately scannable bit
 #     <details><summary>Full output</summary>
@@ -42,6 +41,10 @@ EMAIL_REPORT_RECIPIENT_FILE="${EMAIL_REPORT_RECIPIENT_FILE:-$HOME/.config/headle
 EMAIL_REPORT_SENDER="${EMAIL_REPORT_SENDER:-Claude <claude@atelic.me>}"
 EMAIL_REPORT_API_URL="${EMAIL_REPORT_API_URL:-https://api.resend.com/emails}"
 
+# Usage: html_escape (reads from stdin, writes escaped HTML to stdout)
+# Escapes &, <, > so untrusted text can be safely embedded in HTML body or
+# attribute contexts. Does not handle quotes or single quotes; use only for
+# element-content insertion, not for unquoted attribute values.
 html_escape() {
   sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
 }
@@ -74,7 +77,7 @@ email_report() {
   fi
 
   local api_key
-  api_key=$(security find-generic-password -s "$EMAIL_REPORT_RESEND_KEY_SERVICE" -w 2>/dev/null)
+  api_key=$(security find-generic-password -s "$EMAIL_REPORT_RESEND_KEY_SERVICE" -w 2>>"${LOG:-/dev/stderr}")
   if [[ -z "$api_key" ]]; then
     email_error="Resend API key missing in Keychain (service $EMAIL_REPORT_RESEND_KEY_SERVICE)"
     return 2
@@ -84,10 +87,17 @@ email_report() {
     email_error="Recipient file missing or unreadable: $EMAIL_REPORT_RECIPIENT_FILE"
     return 3
   fi
+  # Take the first non-empty, non-comment line. tr strips any trailing CR/LF or
+  # accidental whitespace. This fails loud if the file ever grows comments or
+  # multiple addresses, rather than silently sending to a Frankenstein recipient.
   local recipient
-  recipient=$(tr -d '[:space:]' < "$EMAIL_REPORT_RECIPIENT_FILE")
+  recipient=$(awk 'NF && !/^[[:space:]]*#/ {print; exit}' "$EMAIL_REPORT_RECIPIENT_FILE" | tr -d '[:space:]')
   if [[ -z "$recipient" ]]; then
-    email_error="Recipient file empty: $EMAIL_REPORT_RECIPIENT_FILE"
+    email_error="Recipient file empty or only comments: $EMAIL_REPORT_RECIPIENT_FILE"
+    return 4
+  fi
+  if [[ "$recipient" != *@*.* ]]; then
+    email_error="Recipient does not look like an email address: $recipient"
     return 4
   fi
 
@@ -100,6 +110,9 @@ email_report() {
 
   local subject="[$ROUTINE] $date_only"
 
+  local routine_html
+  routine_html=$(printf '%s' "$ROUTINE" | html_escape)
+
   local full_html=""
   if [[ -n "$full_text" ]]; then
     local escaped
@@ -109,7 +122,7 @@ email_report() {
 
   local html
   html="<!DOCTYPE html><html><body style=\"font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px;color:#1d1d1f;line-height:1.5;\">
-<h2 style=\"margin:0 0 8px 0;font-size:18px;\">$emoji $ROUTINE — $timestamp</h2>
+<h2 style=\"margin:0 0 8px 0;font-size:18px;\">$emoji $routine_html — $timestamp</h2>
 $summary_html
 $full_html
 $meta_block_html
@@ -147,7 +160,7 @@ $meta_block_html
 
   if [[ ! "$resp_code" =~ ^2 ]]; then
     local resp_text
-    resp_text=$(head -c 500 "$resp_body" 2>/dev/null)
+    resp_text=$(head -c 500 "$resp_body" 2>>"${LOG:-/dev/stderr}")
     email_error="Resend API HTTP $resp_code: $resp_text"
     rm -f "$resp_body"
     return 8
@@ -175,13 +188,13 @@ build_summary_block() {
   local expected_pattern="$3"
 
   local subtype is_error err_field result_text
-  subtype=$(printf '%s' "$result_json" | jq -r '.subtype // empty' 2>/dev/null)
-  is_error=$(printf '%s' "$result_json" | jq -r '.is_error // false' 2>/dev/null)
-  err_field=$(printf '%s' "$result_json" | jq -r '.error // empty' 2>/dev/null)
-  result_text=$(printf '%s' "$result_json" | jq -r '.result // empty' 2>/dev/null)
+  subtype=$(printf '%s' "$result_json" | jq -r '.subtype // empty' 2>>"${LOG:-/dev/stderr}")
+  is_error=$(printf '%s' "$result_json" | jq -r '.is_error // false' 2>>"${LOG:-/dev/stderr}")
+  err_field=$(printf '%s' "$result_json" | jq -r '.error // empty' 2>>"${LOG:-/dev/stderr}")
+  result_text=$(printf '%s' "$result_json" | jq -r '.result // empty' 2>>"${LOG:-/dev/stderr}")
 
   local denials_count=0
-  denials_count=$(printf '%s' "$result_json" | jq -r '.permission_denials // [] | length' 2>/dev/null)
+  denials_count=$(printf '%s' "$result_json" | jq -r '.permission_denials // [] | length' 2>>"${LOG:-/dev/stderr}")
   [[ -z "$denials_count" ]] && denials_count=0
 
   local is_success=false
@@ -232,7 +245,7 @@ build_summary_block() {
 
     if [[ "$denials_count" -gt 0 ]]; then
       local denials_list
-      denials_list=$(printf '%s' "$result_json" | jq -r '.permission_denials[] | "\(.tool_name // "?"): \(.tool_input // .reason // "?" | tostring)"' 2>/dev/null)
+      denials_list=$(printf '%s' "$result_json" | jq -r '.permission_denials[] | "\(.tool_name // "?"): \(.tool_input // .reason // "?" | tostring)"' 2>>"${LOG:-/dev/stderr}")
       local denials_html
       denials_html=$(printf '%s' "$denials_list" | html_escape)
       out+="<p style=\"margin:0 0 4px 0;font-size:12px;color:#666;\"><strong>Permission denials ($denials_count)</strong></p>"
@@ -250,10 +263,10 @@ build_meta_block() {
   local result_json="$1"
   local rc="$2"
   local duration_ms cost turns session
-  duration_ms=$(printf '%s' "$result_json" | jq -r '.duration_ms // empty' 2>/dev/null)
-  cost=$(printf '%s' "$result_json" | jq -r '.total_cost_usd // empty' 2>/dev/null)
-  turns=$(printf '%s' "$result_json" | jq -r '.num_turns // empty' 2>/dev/null)
-  session=$(printf '%s' "$result_json" | jq -r '.session_id // empty' 2>/dev/null)
+  duration_ms=$(printf '%s' "$result_json" | jq -r '.duration_ms // empty' 2>>"${LOG:-/dev/stderr}")
+  cost=$(printf '%s' "$result_json" | jq -r '.total_cost_usd // empty' 2>>"${LOG:-/dev/stderr}")
+  turns=$(printf '%s' "$result_json" | jq -r '.num_turns // empty' 2>>"${LOG:-/dev/stderr}")
+  session=$(printf '%s' "$result_json" | jq -r '.session_id // empty' 2>>"${LOG:-/dev/stderr}")
   local duration_s=""
   if [[ -n "$duration_ms" ]]; then
     duration_s=$(awk -v ms="$duration_ms" 'BEGIN { printf "%.1fs", ms/1000 }')
