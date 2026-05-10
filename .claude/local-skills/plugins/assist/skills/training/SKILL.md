@@ -1,10 +1,11 @@
 ---
 name: assist:training
-description: Training plan scheduling and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, or asks to schedule a training session. Also trigger for "/assist:training", "schedule my long run", "what does training look like this week", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:schedule` during Monday planning.
-argument-hint: "[week | long-run | move]"
+description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:schedule` during Monday planning.
+argument-hint: "[week | long-run | move | retro]"
 allowed-tools:
   - Bash
   - mcp__claude_ai_Google_Calendar__*
+  - mcp__strava__*
   - WebSearch
   - WebFetch
   - Read
@@ -114,6 +115,90 @@ Move or swap a training event with constraint validation.
 When moving recurring events for just one week, modify only that occurrence, not the entire series. When the user wants a permanent change, update the series and flag that `schedule.md` and the training plan may need updating.
 
 **Never modify existing events without explicit permission.** Always present the proposed move and wait for approval. Reclaim auto reschedule effects can ripple through nearby flexible events; warn when they're at risk.
+
+## Mode: retro
+
+Look back on a completed (or in progress) training week. Compare planned vs actual coverage, mileage, vert, and qualitative shape. Save the result to `Constitution/Fitness/retros/YYYY-WNN.md` so adherence can be tracked across the block.
+
+### Phase 1: Determine the Target Week
+
+- Default: the most recently completed ISO week (`date -v-mon -v-7d +"%G-W%V"` style logic, or simply the prior Monday-to-Sunday window).
+- If today is Sunday, the user usually means the current week (Monday through today). Confirm by asking briefly when ambiguous.
+- File name uses the ISO week identifier (e.g., `2026-W19.md`).
+
+### Phase 2: Gather Data
+
+Pull from three sources in parallel:
+
+1. **Training plan**: read the row in `2026-training-plan.md` for the target week. Note **Long mi**, **Vert ft**, **Fri shape**, **Weight** target, **Nutrition focus**.
+2. **Google Calendar**: list opaque events for the week. Filter to training relevant (Sage colorId 2, training emojis, or session keywords like SPRC, DRC, lift, climb, sauna, contrast, long run).
+3. **Strava**: pull all activities for the week via `mcp__strava__get-all-activities` with `startDate` and `endDate`. Then call `mcp__strava__get-activity-details` on each run to get **distance** and **elevation gain in meters** (convert to ft: meters * 3.28084).
+
+### Phase 3: Build the Coverage Table
+
+For every planned session in the week, record actual status. Sources:
+
+- Yoga, lifts, climb (if any): calendar event present = scheduled. Lifts at Movement RiNo do **not** show in Strava — confirm with the user when a lift's status is unclear, do not assume missed.
+- Runs (DRC, SPRC, long run, Mon flex): match Strava activities by date and approximate distance.
+- Recovery (sauna, contrast): calendar event present is the signal.
+
+Mark each session as `✅` (hit), `❌` (missed), `↪️` (shifted), `❓` (open / status unknown), or `n/a` (not applicable this week).
+
+### Phase 4: Compute the Numbers
+
+| Metric | Sources |
+|---|---|
+| Total miles | Sum of Strava run distances (km * 0.621371) |
+| Long run miles | The longest run / trail run of the week |
+| Vert ft | Sum of Strava elevation gain across runs (m * 3.28084) |
+| Weight | Sunday morning weigh-in if available; otherwise note as `pending` |
+
+Compare each against the plan row. Express delta as percentage and direction.
+
+**Vert is co-equal with mileage.** The plan tracks both; the retro evaluates against both. Hitting mileage and missing vert (e.g., long run on flat terrain instead of trail) is a partial hit, not a hit.
+
+### Phase 5: Write the Retro File
+
+Write to `Constitution/Fitness/retros/YYYY-WNN.md` using this skeleton:
+
+```markdown
+# Wk N Retro: ISO YYYY-WNN (Mon Date to Sun Date)
+
+*Block: <block name>. Phase: <phase>. Wk N of <total>.*
+
+## Coverage
+
+| Session | Plan | Actual |
+|---|---|---|
+...
+
+## Numbers
+
+| Metric | Plan | Actual | Delta |
+|---|---|---|---|
+| Total miles | ... | ... | ... |
+| Long run miles | ... | ... | ... |
+| Vert ft | ... | ... | ... |
+| Weight | ... | ... | ... |
+
+## The Read
+
+<2 to 4 short paragraphs on what hit, what slipped, what's open. Be specific and direct. Avoid effusive praise or hedging.>
+
+## Carry Forward
+
+<Bullets for next week: structural fixes, defended slots, calibration adjustments.>
+
+## Open Items
+
+<Things unresolved at retro time, e.g. lift status pending Strava upload or user confirmation.>
+```
+
+Before writing, present the draft inline and ask the user one question via `AskUserQuestion`: anything to add or correct? Save after they confirm or redirect.
+
+### Phase 6: Surface Trends
+
+After saving, briefly check the prior 1 to 2 retros in `Constitution/Fitness/retros/` (if they exist). Surface any pattern: repeated misses, drifting metrics, growing or shrinking adherence. Keep this short — one or two sentences. Do not invent patterns when there is not enough data.
 
 ## Key Locations
 
