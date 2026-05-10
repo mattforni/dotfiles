@@ -3,6 +3,7 @@ name: assist:schedule
 description: Weekly schedule planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions their schedule, weekly planning, Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:training`; this skill calls into it during Monday planning.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
+  - Skill
   - Bash
   - mcp__claude_ai_Google_Calendar__*
   - mcp__claude_ai_Todoist__*
@@ -165,7 +166,12 @@ Move or swap an existing event.
 
 1. User describes what to move (e.g., "Move my Wednesday sauna to Thursday")
 2. Fetch the relevant events
-3. Check constraints (transitions, conflicts). When the target event is training (Sage color, training emoji, or session type like sauna / contrast / lift / run / climb), defer to `assist:training` move mode for full constraint validation, including cold plunge sequencing and Thursday SPRC protection.
+3. Check constraints (transitions, conflicts). Defer to `assist:training` move mode when any of these apply:
+   - the target event is training (Sage color, training emoji, or session type like sauna / contrast / lift / run / climb)
+   - the proposed destination lands in Thursday morning (SPRC window is protected regardless of what is being moved)
+   - the move could affect training adjacent sequencing (e.g., a sauna or contrast block landing on a strength day, an event displacing a recurring training session)
+
+   Include cold plunge sequencing and Thursday SPRC protection in that validation pass.
 4. Present the proposed change with any downstream impacts
 5. Execute after confirmation
 
