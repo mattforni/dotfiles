@@ -123,7 +123,8 @@ Look back on a completed (or in progress) training week. Compare planned vs actu
 ### Phase 1: Determine the Target Week
 
 - Default: the most recently completed ISO week (`date -v-mon -v-7d +"%G-W%V"` style logic, or simply the prior Monday-to-Sunday window).
-- If today is Sunday, the user usually means the current week (Monday through today). Confirm by asking briefly when ambiguous.
+- The natural cadence is Monday morning, when Sunday's weigh-in has been logged and the just-closed Mon-Sun week is the unambiguous target.
+- If invoked outside Monday, default to the most recently completed week. Confirm with the user when intent is ambiguous (e.g., mid-week ad hoc retros).
 - The subsection heading uses the ISO week identifier (e.g., `### Wk 1: ISO 2026-W19 (May 4 to May 10)`).
 
 ### Phase 2: Gather Data
