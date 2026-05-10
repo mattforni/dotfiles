@@ -63,7 +63,7 @@ Fetch the week's calendar events (Monday through Sunday) and check for already e
 
 | Cadence | Items | Action |
 |---------|-------|--------|
-| Recurring (assumed already on calendar) | Mon yoga 12:15, Tue lift 11:00, Tue DRC eve, Thu SPRC morning, Thu lift 11:00, Wed climb / PAH / sauna | Skip if present |
+| Recurring (assumed already on calendar) | Mon yoga 12:15, Tue lift 11:00, Tue DRC eve, Thu SPRC morning, Thu lift 11:00, Wed PAH / sauna | Skip if present |
 | One off (variable, per week) | Fri long run + paired drive blocks | Create fresh each week |
 
 If a recurring placeholder is missing, surface it to the user rather than silently creating it. The user may have skipped the session this week intentionally.
