@@ -80,16 +80,22 @@ Hierarchy. Fall through if the prior is absent:
 8. **Apply** via the CLI (or MCP) after approval.
 9. **Audit** every kept ticket for project + label attribution.
 
-### Backlog Mode (Draft)
+### Backlog Mode
 
-1. **Scope** the backlog. Capture total open issue count, distribution by status, priority, label, and last updated date.
-2. **Identify** clear stale candidates: items with no priority AND no recent activity (heuristic: 9+ months untouched) AND no assignee AND no project.
-3. **Cluster** the rest of the backlog by label or theme. The largest labels usually carry the most signal.
-4. **Walk** clusters one at a time. For each issue: keep at current priority, set priority, defer with `Later` (or equivalent label), or cancel. Use AskUserQuestion per ticket in the gray zone; reserve batch tables for structurally uniform clusters (e.g., the obvious stale sweep).
-5. **Archive Done items** as a final pass. Linear's archive moves them out of active views without losing the record.
-6. **Capture learnings** as rules in [learned-rules.md](learned-rules.md) for the next groom.
+Calibrated against the Atelic 2026-05-10 run (118 backlog items, solo, no roadmap doc).
 
-The above is a sketch. Calibrate against the Atelic 2026-05 run and replace this section with the specifics.
+1. **Scope** the backlog. Total count, distribution by status, priority, label, last-updated date. Use the CLI `linear issue query --state backlog --json --limit 250` piped to a file; on large teams the output may exceed inline token limits.
+2. **Identify the team's deferral label** (e.g., `👋 Later`). Detection heuristic: a single non-priority label appearing on 30 percent or more of older Backlog items. This label is sacred; items carrying it are working as designed. See [conventions.md](reference/conventions.md).
+3. **Surface stale sweep candidates** that do NOT carry the deferral label, have no priority, and have not been updated in 9+ months. These are the truly orphaned items.
+4. **Cluster the rest by topic** (Pantry, Meal Planning, Recipes, Strava, Auth, etc.) using title-keyword grep. Topic clustering surfaces real signal in solo backlogs where labels are mostly the deferral label.
+5. **Ask the meta-question first.** Before walking each cluster, ask: what is the policy on the deferral label? "Universal walk-past" is the most common answer and shrinks the decision space dramatically (Atelic: 118 items down to 46).
+6. **Verify shipped work against the actual code** for any cluster of implementation tickets that look stale (e.g., the feature is described as working in CLAUDE.md but tickets remain Backlog). Decide: mark Done, or demote to Low for follow-up.
+7. **Cluster batch decisions** via AskUserQuestion (up to four batched questions per round). Each option includes a label and one-sentence rationale. Common cluster outcomes: keep parked, demote to Low, cancel cluster, pull subset into next cycle.
+8. **Walk the gray zone individually** with per-ticket AskUserQuestion. Reserve batch tables for structurally uniform clusters; the gray zone is where the skill earns its keep.
+9. **Apply via CLI** (preferred) or MCP. Hard deletes require the CLI: `linear issue delete <ID> --confirm`. Loop singles, never `--bulk`.
+10. **Verify** the new priority distribution via `linear issue query --state backlog | jq '.nodes | group_by(.priorityLabel)'`. The High items should now read as actual shipping work.
+
+The Done archive is a separate pass. Linear's archive is UI-only as of CLI v2.0.0; multi-select Status=Done in the UI and bulk archive.
 
 ## Hard Rules
 
@@ -141,11 +147,11 @@ The MCP `list_issues` response can exceed token limits on large teams. Pipe to a
 
 ## Conventions
 
-See [reference/conventions.md](reference/conventions.md) for classification heuristics, capacity math, and priority normalization. (Stub for cycle mode lifted from `zero:linear-groom`; backlog mode rules to be filled after the first real run.)
+See [reference/conventions.md](reference/conventions.md) for classification heuristics, capacity math, and priority normalization. Backlog mode rules calibrated against the Atelic 2026-05-10 run.
 
 ## Walkthroughs
 
-See [reference/examples.md](reference/examples.md) for step by step flows: cycle grooming (mid cycle, end of cycle, start of cycle) and backlog grooming. (Cycle examples lifted; backlog example to be written after the Atelic 2026-05 run.)
+See [reference/examples.md](reference/examples.md) for step-by-step flows: backlog walkthrough (the most common case for solo/small-team projects without active cycles), and the three cycle-mode walkthroughs (mid-cycle, end-of-cycle, start-of-cycle).
 
 ## Learned Rules
 
