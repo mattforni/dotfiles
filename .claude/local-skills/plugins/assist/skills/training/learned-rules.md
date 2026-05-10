@@ -18,9 +18,19 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
 ## Recurring Placeholders
 
-- **Do not silently create missing recurring events**: If a Mon yoga / Tue lift / Thu SPRC / Wed climb is missing this week, surface it to the user. They may have skipped intentionally.
+- **Do not silently create missing recurring events**: If a Mon yoga / Tue lift / Thu SPRC is missing this week, surface it to the user. They may have skipped intentionally.
 
 ## Constraint Hygiene
 
 - **Cold plunge after strength**: 4 to 6 hour gap is non-negotiable. Sauna (heat only) is fine after strength; the gap rule applies to cold immersion only.
 - **Thursday morning is protected**: SPRC at 06:00 displaces all morning practices on Thursday. No prayer, meditation, or journaling slotted into Thu AM.
+
+## Long Run Day
+
+- **Long runs are Friday, not Saturday.** WFH Fri is the slot that makes the long run in the mountains possible; Saturday is open / adventure. A Fri-to-Sat slip should be a deliberate one-time choice, never a default. Flag it explicitly when retros show the long landing on a non-Friday.
+
+## Retro Evaluation
+
+- **Vert is co-equal with mileage.** The training plan tracks both Long mi and Vert ft per week. A retro that only evaluates mileage misses half the point. Always pull elevation gain from Strava activity details and total against the plan's Vert ft target.
+- **Lifts at Movement RiNo do not show in Strava.** When a lift is missing from Strava, the status is **open**, not missed. Confirm with the user before logging it as a miss in the retro. Same applies to climbing at Movement.
+- **Strava run elevation in meters; convert to feet.** `meters * 3.28084`. Worth doing per activity then summing, since the plan's vert target is in feet.
