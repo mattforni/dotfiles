@@ -35,6 +35,7 @@ alias docker-stop='docker stop $(docker ps -a -q)'
 alias ed-vsc-settings='vim ~/.vscode/settings.json'
 
 # Navigation Aliases
+alias atelic="cd ~/Eudaimonia/Craft/atelic"
 alias homebase="cd ~/Eudaimonia/Craft/Development/personal/homebase"
 alias eudy="cd ~/Eudaimonia"
 
