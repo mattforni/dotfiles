@@ -56,11 +56,25 @@ Run the same sync routine against `/Users/forni/Eudaimonia/Craft/Development/per
 
 Same conflict handling: stop on conflict, do not proceed to setup.sh.
 
-### Step 3: Run setup.sh
+### Step 3: Sync the skillset marketplace clone
+
+setup.sh installs Claude plugins from cached marketplace clones at `~/.claude/plugins/marketplaces/`, not from the homebase working tree directly. The `skillset` marketplace is a separate git clone of `mattforni/homebase` that backs the `sdlc` and `linear-lifecycle` plugins. If it lags behind homebase main, setup.sh installs stale plugin contents and recently merged skills do not appear after Claude Code restarts.
+
+Pull it after homebase syncs, before setup.sh:
+
+```bash
+git -C /Users/forni/.claude/plugins/marketplaces/skillset pull --ff-only origin main
+```
+
+The marketplace clone should never carry local commits — it is a read-only mirror. If `pull --ff-only` refuses (clone has drifted) or surfaces a conflict, abort mise and surface the details; do not proceed to setup.sh. A drifted marketplace clone deserves investigation before deploying.
+
+Other marketplaces under `~/.claude/plugins/marketplaces/` (superpowers-marketplace, claude-code-workflows, anthropic-agent-skills, claude-code-plugins) are external mirrors and are not pulled by mise. They update through their own mechanisms.
+
+### Step 4: Run setup.sh
 
 From the homebase path, run `./setup.sh` in the foreground so Forni sees output. If it exits non-zero, capture the tail of stderr and stop; do not retry. setup.sh is idempotent, so the right fix for a transient failure is usually to resolve the root cause and re-run mise, not to auto-retry.
 
-### Step 4: Summary
+### Step 5: Summary
 
 One compact report, per repo:
 
@@ -102,6 +116,7 @@ The user is mid-feature on this repo. The goal is to preserve any in-flight work
 - **Stash-pop over force-reset:** Dirty working tree on main is almost always half-finished editing, not intentional divergence. Stash preserves it; pop restores it. Conflict on pop is rare but recoverable.
 - **Checkpoint + merge-main over rebase:** On a feature branch, mise keeps the branch alive and in sync rather than rewriting history. Forni's preference is to preserve WIP commits (even ugly ones) and merge main forward. Rebasing would rewrite what was already pushed by checkpoint.
 - **Stop on conflict:** Running setup.sh on a repo in a conflicted state would deploy half-merged config into `$HOME`. Better to stop.
+- **Pull the skillset marketplace clone:** It is the cache that backs `sdlc` and `linear-lifecycle` plugin installs. Skipping its pull means setup.sh installs the prior version of those plugins even when homebase main has newer ones. The first time this matters, Forni notices a freshly merged skill missing after restart; the rule prevents that.
 - **Don't retry setup.sh:** Failures tend to be environmental (sudo, network, brew API). A blind retry masks the cause.
 
 ## Output Shape
@@ -111,6 +126,7 @@ Mise complete ✓
 
 Eudy (main): pulled, already up to date
 Homebase (main): pulled 2 commits, stash popped clean
+Skillset marketplace: pulled 2 commits
 setup.sh: ✓ (brew cache warm, no changes)
 ```
 
