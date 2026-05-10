@@ -118,13 +118,13 @@ When moving recurring events for just one week, modify only that occurrence, not
 
 ## Mode: retro
 
-Look back on a completed (or in progress) training week. Compare planned vs actual coverage, mileage, vert, and qualitative shape. Save the result to `Constitution/Fitness/retros/YYYY-WNN.md` so adherence can be tracked across the block.
+Look back on a completed (or in progress) training week. Compare planned vs actual coverage, mileage, vert, and qualitative shape. Append the result as a new `### Wk N` subsection under the **Weekly Retrospectives** section of `2026-training-plan.md`, in chronological order, so adherence is tracked alongside the plan itself.
 
 ### Phase 1: Determine the Target Week
 
 - Default: the most recently completed ISO week (`date -v-mon -v-7d +"%G-W%V"` style logic, or simply the prior Monday-to-Sunday window).
 - If today is Sunday, the user usually means the current week (Monday through today). Confirm by asking briefly when ambiguous.
-- File name uses the ISO week identifier (e.g., `2026-W19.md`).
+- The subsection heading uses the ISO week identifier (e.g., `### Wk 1: ISO 2026-W19 (May 4 to May 10)`).
 
 ### Phase 2: Gather Data
 
@@ -157,22 +157,22 @@ Compare each against the plan row. Express delta as percentage and direction.
 
 **Vert is co-equal with mileage.** The plan tracks both; the retro evaluates against both. Hitting mileage and missing vert (e.g., long run on flat terrain instead of trail) is a partial hit, not a hit.
 
-### Phase 5: Write the Retro File
+### Phase 5: Write the Retro Subsection
 
-Write to `Constitution/Fitness/retros/YYYY-WNN.md` using this skeleton:
+Append a new subsection at the bottom of the **Weekly Retrospectives** section in `2026-training-plan.md`. Use this skeleton (note the heading levels: `###` for the week, `####` for the inner sections so the table of contents stays clean):
 
 ```markdown
-# Wk N Retro: ISO YYYY-WNN (Mon Date to Sun Date)
+### Wk N: ISO YYYY-WNN (Mon Date to Sun Date)
 
-*Block: <block name>. Phase: <phase>. Wk N of <total>.*
+*Phase: <phase>.*
 
-## Coverage
+#### Coverage
 
 | Session | Plan | Actual |
 |---|---|---|
 ...
 
-## Numbers
+#### Numbers
 
 | Metric | Plan | Actual | Delta |
 |---|---|---|---|
@@ -181,24 +181,24 @@ Write to `Constitution/Fitness/retros/YYYY-WNN.md` using this skeleton:
 | Vert ft | ... | ... | ... |
 | Weight | ... | ... | ... |
 
-## The Read
+#### The Read
 
 <2 to 4 short paragraphs on what hit, what slipped, what's open. Be specific and direct. Avoid effusive praise or hedging.>
 
-## Carry Forward
+#### Carry Forward
 
 <Bullets for next week: structural fixes, defended slots, calibration adjustments.>
 
-## Open Items
+#### Open Items
 
 <Things unresolved at retro time, e.g. lift status pending Strava upload or user confirmation.>
 ```
 
-Before writing, present the draft inline and ask the user one question via `AskUserQuestion`: anything to add or correct? Save after they confirm or redirect.
+Before writing, present the draft inline and ask the user one question via `AskUserQuestion`: anything to add or correct? Save after they confirm or redirect. Use `Edit` to insert the new subsection at the end of the Weekly Retrospectives section, immediately before the `## References` heading.
 
 ### Phase 6: Surface Trends
 
-After saving, briefly check the prior 1 to 2 retros in `Constitution/Fitness/retros/` (if they exist). Surface any pattern: repeated misses, drifting metrics, growing or shrinking adherence. Keep this short — one or two sentences. Do not invent patterns when there is not enough data.
+After saving, briefly scan the prior 1 to 2 retro subsections already in the plan file (if they exist). Surface any pattern: repeated misses, drifting metrics, growing or shrinking adherence. Keep this short — one or two sentences. Do not invent patterns when there is not enough data.
 
 ## Key Locations
 
