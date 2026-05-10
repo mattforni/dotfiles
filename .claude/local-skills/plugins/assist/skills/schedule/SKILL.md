@@ -1,8 +1,9 @@
 ---
 name: assist:schedule
-description: Weekly schedule planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions their schedule, weekly planning, Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about training schedule, sauna timing, or whether they're covering their V2MOM measures.
+description: Weekly schedule planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions their schedule, weekly planning, Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:training`; this skill calls into it during Monday planning.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
+  - Skill
   - Bash
   - mcp__claude_ai_Google_Calendar__*
   - mcp__claude_ai_Todoist__*
@@ -33,17 +34,15 @@ When there is a conflict between the template and the calendar, the calendar is 
 
 These constraints exist for real physiological and practical reasons. They are not suggestions.
 
-**Cold plunge timing**: No cold water immersion within 4-6 hours after strength training. Cold exposure blunts the inflammatory response needed for muscle adaptation. Sauna (heat only) is fine after strength. When moving sauna/contrast sessions, check whether strength training happened earlier that day.
-
 **Transitions**: Every movement between locations gets a 30-minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back-to-back without a transition unless they are at the same location.
 
 **Fasting window**: Last meal at 18:30, first meal at 07:30 (13:11 intermittent fasting). Do not schedule dinner events after 18:30 without flagging the fasting impact.
 
-**Work hours**: 8:00-16:00 is the target. Mon/Tue/Thu in office at Zero Homes, Wed/Fri from home. Lunch breaks on Mon (yoga 12:15) and Tue (climbing 12:00) are already spoken for.
+**Work hours**: 8:00-16:00 is the target. Mon/Tue/Thu in office at Zero Homes, Wed/Fri from home. Lunch breaks on Mon (yoga 12:15) and Tue (lift 11:00) are already spoken for.
 
 **Lights out**: 21:30. Events that push past 21:00 should be flagged.
 
-**Thursday mornings**: No prayer/meditation/journaling on Thursdays. That time is reserved for getting to SPRC at 6:00 AM, which rotates locations.
+**Training adjacent constraints**: Cold plunge sequencing (4 to 6 hour gap after strength), sauna timing post strength, and Thursday SPRC morning protection live in the `assist:training` skill. Defer to that skill when validating moves of training, sauna, contrast, or Thursday morning events.
 
 ## Mode: plan (default)
 
@@ -61,7 +60,7 @@ The Monday morning planning session. This is the primary use case.
 
 - Overlapping busy events (two events claiming the same time)
 - One-off events that displace recurring template activities (e.g., a party during sauna time)
-- Constraint violations (cold plunge timing, missing transitions, fasting window breaches)
+- Constraint violations (missing transitions, fasting window breaches, training adjacent issues per `assist:training`)
 
 Present all conflicts to the user, one at a time or in small batches. For each conflict, propose a resolution:
 
@@ -72,6 +71,10 @@ Present all conflicts to the user, one at a time or in small batches. For each c
 **Never modify existing events without explicit permission.** Always present the conflict and proposed resolution, then wait for approval before taking any action. This is especially critical for events with other attendees or events booked via Reclaim.ai scheduling links (those were scheduled by other people). Be aware that deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect.
 
 Execute only the agreed changes before moving on. The calendar should be clean and conflict-free before the overview.
+
+### Phase 1.5: Training Scheduling
+
+Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
 
 ### Phase 2: Week Overview
 
@@ -163,7 +166,12 @@ Move or swap an existing event.
 
 1. User describes what to move (e.g., "Move my Wednesday sauna to Thursday")
 2. Fetch the relevant events
-3. Check constraints (cold plunge timing, transitions, conflicts)
+3. Check constraints (transitions, conflicts). Defer to `assist:training` move mode when any of these apply:
+   - the target event is training (Sage color, training emoji, or session type like sauna / contrast / lift / run / climb)
+   - the proposed destination lands in Thursday morning (SPRC window is protected regardless of what is being moved)
+   - the move could affect training adjacent sequencing (e.g., a sauna or contrast block landing on a strength day, an event displacing a recurring training session)
+
+   Include cold plunge sequencing and Thursday SPRC protection in that validation pass.
 4. Present the proposed change with any downstream impacts
 5. Execute after confirmation
 
@@ -182,38 +190,7 @@ Include the location when the event is at a specific place.
 
 ## Training Plan Scheduling
 
-Schedule the week's training events from the active block plan in `/Users/forni/Eudaimonia/Constitution/Fitness/2026-training-plan.md`. Conventions live in `Constitution/Fitness/CLAUDE.md`. Title formats and color coding follow GC `Calendar Preferences`.
-
-### Detect existing placeholders first
-
-Before creating any training events, fetch the week's calendar and check for already existing recurring or one off events. Do not overwrite or duplicate. Only create what is missing for this specific week.
-
-| Cadence | Items | Action |
-|---------|-------|--------|
-| Recurring (assumed already on calendar) | Mon yoga 12:15, Tue lift 11:00, Tue DRC eve, Thu SPRC morning, Thu lift 11:00, Wed climb / PAH / sauna | Skip if present |
-| One off (variable, per week) | Fri long run + paired drive blocks | Create fresh each week |
-
-### Friday long run workflow
-
-1. Look up the current week row in `2026-training-plan.md` for **Long mi**, **Vert ft**, and **Fri shape** (route candidate or terrain).
-2. Pick a specific route matching those numbers. Use `WebSearch` on alltrails.com to find the trail page when needed.
-3. Confirm the route with the user via `AskUserQuestion` before creating events.
-4. Default start time is **07:00**. Front Range trailheads are ~30 min from Denver; altitude weeks (9, 10) are longer drives.
-5. Long run duration: budget ~15 to 16 min/mi for moderate trail pace with vert (e.g., 8 mi @ 1,500 ft is ~2 hr).
-6. Create three Fri events per GC Calendar Preferences:
-   - `🚙 <Trailhead Name>` — Basil (colorId 10) — drive out. Location = trailhead address. 30 min block aligned to 30 min increments (e.g., 06:30 to 07:00).
-   - `🏃 <MILES> mi Long Run` — Sage (colorId 2) — location = AllTrails URL.
-   - `🚙 Home` — Basil (colorId 10) — drive back. Same 30 min alignment.
-
-### Mon flex
-
-Optional easy ~4 mi run on Mon. Energy dependent. Do not auto schedule.
-
-### Special weeks
-
-- **Cutback weeks (4, 8)**: Fri long is shorter and on lighter terrain. Same workflow, smaller numbers.
-- **Altitude weeks (9, 10)**: Front Range altitude (week 9) or Aspen recon (week 10). Week 10 includes a Thu drive out + overnight; surface logistics to the user before creating events.
-- **Race week (13)**: Fri 7/31 is the FPL race itself. Coordinate the race day plan as a separate workflow, not a training long run.
+Training event creation lives in the `assist:training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Phase 1.5 above invokes it during Monday planning.
 
 ## Key Locations
 
