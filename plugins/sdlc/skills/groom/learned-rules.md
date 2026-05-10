@@ -1,0 +1,53 @@
+# SDLC Groom: Learned Rules
+
+Session specific gotchas and calibration captured from real grooming runs. These override the generic guidance in SKILL.md and reference/ when they conflict.
+
+Read this file before each groom. Add to it after.
+
+## Format
+
+Each rule states the rule, the reason, and how to apply it. Keep them tight; the value is in the specifics.
+
+## Rules
+
+### CLI is the default tool, not MCP. Auth per workspace before grooming.
+
+When a user has both Linear MCP and Linear CLI available, default to the CLI for grooming actions. The MCP gets used only for read-only inspection when the CLI is not auth'd to the target workspace. Reasons: MCP cannot hard-delete, MCP fuzzy-maps state names imprecisely (the "Canceled" gotcha below), and the user may have explicitly requested CLI.
+
+**Why:** Atelic groom 2026-05-10. Forni said "Let's default to using the CLI instead of the MCP" mid-session after observing MCP's `state: "Canceled"` mapping to "Duplicate" status (Linear has both as canceled-type). The CLI-first default avoids that surprise.
+
+**How to apply:** Before starting a groom, check `linear auth list` and confirm the target workspace is configured. If not, prompt the user to run `linear auth login` and pick the workspace. Once auth'd, prefer CLI commands (`linear issue update`, `linear issue delete --confirm`) over MCP `save_issue`.
+
+### MCP `save_issue` with `state: "Canceled"` may map to "Duplicate" status.
+
+The Linear MCP fuzzy-matches state names. Passing `state: "Canceled"` can land the issue in the "Duplicate" status (also a canceled-type, but semantically different — implies superseded by another issue). If you want literal "Canceled" via MCP, pass the explicit state ID for Canceled (visible from `list_issue_statuses`), not the name string.
+
+**Why:** Surfaced on the first Atelic groom run when ATE-349 came back with `status: "Duplicate"` after a `state: "Canceled"` update.
+
+**How to apply:** When canceling via MCP, either (a) accept the Duplicate-vs-Canceled imprecision since both hide the issue from active views, (b) pass the explicit Canceled state UUID, or (c) use the CLI: `linear issue update ATE-NNN --state Canceled`.
+
+### A team's deferral label is sacred. Do not include it in the stale sweep.
+
+The naive backlog stale-sweep heuristic (no priority + no recent activity + no assignee + no project) misfires on any team that uses a label like `👋 Later` to mean "intentionally deferred, save the intent." Items carrying that label are working as designed; bulk canceling them erases real intent.
+
+**Why:** Surfaced on the first Atelic groom run (2026-05-10). Of 37 candidates that matched the naive stale heuristic, 32 carried `👋 Later`. Mass canceling would have lost 32 deliberately-parked aspirations.
+
+**How to apply:** Detect the team's deferral convention before sweeping. Look at label distribution on Backlog issues; if a single non-priority label is on a large fraction of older items, treat it as the deferral signal and exclude it from the sweep. Stale candidates are then `(no priority + stale + no project + does not carry the deferral label)`. For Atelic, the label is `👋 Later`. For other teams, find the equivalent.
+
+
+
+### Lifted from `zero:linear-groom`
+
+The following rules came from real Growth team groom runs and are likely to apply to most cycle grooming work. Validate during cycle mode runs; promote into the rules above if they hold.
+
+- **Pillar first matching trumps keyword matching.** A project's description lists its pillars. An issue that maps to a pillar belongs with that project in whichever cycle that project is in focus, regardless of surface level keyword matches to other cycles' bullets.
+- **In Progress beats alignment.** When a ticket is In Progress or In Review, leave it in its current cycle even if the plan does not call for it. Disrupting flowing work is worse than temporary misalignment.
+- **Default to next cycle and defer, not multi cycle projection.** When unsure whether work belongs in C5 vs C6, push to the next cycle and plan to re groom at its start.
+- **Bulk delete is broken.** `linear issue delete --bulk <ids> --confirm` still prompts interactively in CLI v2.0.0. Loop single deletes. Bulk also pulls in child issues automatically.
+- **`--state Backlog` clears the cycle field automatically.** Don't chain a separate cycle reset; the state change is sufficient.
+- **Walk the gray zone individually with AskUserQuestion.** Forni's preferred UX: per ticket question with three to four labeled options (Keep / Move / Backlog / Cancel + recommended). Reserve batch tables for auto keep and structurally uniform clusters.
+- **Course correction cascade.** When a directional decision lands mid groom (e.g., "kill X wholesale"), revisit earlier decisions in the same session that depended on the now stale assumption.
+- **Bulk cross project moves trip the safety gate.** A loop of more than ~10 project reassignments via Bash gets denied as mass modification. Surface the explicit target list via AskUserQuestion before re attempting.
+- **Effort matters in classification.** A title that sounds campaign shaped might be a 30 minute audit. Ask about effort when the cycle plan match is fuzzy. A low effort high value ticket can stay even if it does not perfectly match.
+- **Capacity multiplier starts at 0.9.** First C3 run predicted 10 Keep but reality was 16; multiplier was too conservative at 0.6. Recalibrate per team.
+- **Project deletion needs `--force`.** `linear project delete <id>` errors with "Interactive confirmation required." Issue delete uses `--confirm` instead. Different flag names for similar gates.
