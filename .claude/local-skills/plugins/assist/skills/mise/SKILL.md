@@ -56,19 +56,43 @@ Run the same sync routine against `/Users/forni/Eudaimonia/Craft/Development/per
 
 Same conflict handling: stop on conflict, do not proceed to setup.sh.
 
-### Step 3: Sync the skillset marketplace clone
+### Step 3: Sync All Marketplace Clones
 
-setup.sh installs Claude plugins from cached marketplace clones at `~/.claude/plugins/marketplaces/`, not from the homebase working tree directly. The `skillset` marketplace is a separate git clone of `mattforni/homebase` that backs the `sdlc` and `linear-lifecycle` plugins. If it lags behind homebase main, setup.sh installs stale plugin contents and recently merged skills do not appear after Claude Code restarts.
+setup.sh installs Claude plugins from cached marketplace clones at `~/.claude/plugins/marketplaces/`, not from source repos directly. If any clone lags behind its remote, setup.sh installs stale plugin contents and recently merged skills do not appear after Claude Code restarts. Claude Code does not auto refresh these clones; mise owns keeping them current.
 
-Pull it after homebase syncs, before setup.sh:
+For each subdirectory of `~/.claude/plugins/marketplaces/`, check whether it is a git repo and pull it. Skip directories that are not git repos (e.g., `claude-plugins-official` is a flat manifest, not a clone).
+
+Detect git repo status:
 
 ```bash
-git -C /Users/forni/.claude/plugins/marketplaces/skillset pull --ff-only origin main
+git -C "$MARKETPLACE" rev-parse --git-dir
 ```
 
-The marketplace clone should never carry local commits — it is a read-only mirror. If `pull --ff-only` refuses (clone has drifted) or surfaces a conflict, abort mise and surface the details; do not proceed to setup.sh. A drifted marketplace clone deserves investigation before deploying.
+Discover the default branch per repo. Most use `main` but some (older external mirrors) use `master`:
 
-Other marketplaces under `~/.claude/plugins/marketplaces/` (superpowers-marketplace, claude-code-workflows, anthropic-agent-skills, claude-code-plugins) are external mirrors and are not pulled by mise. They update through their own mechanisms.
+```bash
+git -C "$MARKETPLACE" symbolic-ref --short refs/remotes/origin/HEAD
+```
+
+The output is `origin/<branch>`. Strip the `origin/` prefix to get `$DEFAULT_BRANCH`. If `origin/HEAD` is not set, fall back to `main`.
+
+Try fast forward first:
+
+```bash
+git -C "$MARKETPLACE" pull --ff-only origin "$DEFAULT_BRANCH"
+```
+
+These clones are read only mirrors. They should never carry local commits or untracked work. If `pull --ff-only` refuses (clone has drifted, history rewritten on remote, no merge base, or local commits exist), auto recover:
+
+```bash
+git -C "$MARKETPLACE" fetch origin "$DEFAULT_BRANCH"
+git -C "$MARKETPLACE" reset --hard "origin/$DEFAULT_BRANCH"
+git -C "$MARKETPLACE" clean -fd
+```
+
+Log the recovery loudly in the mise summary (call out which marketplace and that a reset happened) so Forni notices when a clone needed rescuing rather than a clean ff. Auto recovery is safe because these clones are caches — anything unique to them is by definition either ephemeral state or accidental drift, never real user work.
+
+If recovery itself fails (network, auth, missing remote), record the failure for that marketplace and continue to the next one. One broken marketplace should not block setup.sh from refreshing the others. Surface the per marketplace failures in the summary; setup.sh may still install stale content for the affected clones but the rest will install current.
 
 ### Step 4: Run setup.sh
 
@@ -76,14 +100,13 @@ From the homebase path, run `./setup.sh` in the foreground so Forni sees output.
 
 ### Step 5: Summary
 
-One compact report, per repo:
+One compact report:
 
-- branch name at start
-- stash applied? (and whether the pop was clean)
-- merge from `origin/main` applied? (for non-main case)
+- per repo (Eudy, Homebase): branch name at start, stash applied? (and whether the pop was clean), merge from `origin/main` applied? (for non-main case)
+- marketplaces: aggregate counts plus one line per clone that needed a reset (called out by name with the reason)
 - setup.sh outcome
 
-Keep it short. A handful of lines. If everything was already up to date and setup.sh short-circuited, say so in one line.
+Keep it short. A handful of lines. If everything was already up to date and setup.sh short-circuited, say so in one line. Per marketplace status only shows up when something noteworthy happened (reset, failure) — clean pulls roll into the aggregate.
 
 ## Sync Routine
 
@@ -116,7 +139,8 @@ The user is mid-feature on this repo. The goal is to preserve any in-flight work
 - **Stash-pop over force-reset:** Dirty working tree on main is almost always half-finished editing, not intentional divergence. Stash preserves it; pop restores it. Conflict on pop is rare but recoverable.
 - **Checkpoint + merge-main over rebase:** On a feature branch, mise keeps the branch alive and in sync rather than rewriting history. Forni's preference is to preserve WIP commits (even ugly ones) and merge main forward. Rebasing would rewrite what was already pushed by checkpoint.
 - **Stop on conflict:** Running setup.sh on a repo in a conflicted state would deploy half-merged config into `$HOME`. Better to stop.
-- **Pull the skillset marketplace clone:** It is the cache that backs `sdlc` and `linear-lifecycle` plugin installs. Skipping its pull means setup.sh installs the prior version of those plugins even when homebase main has newer ones. The first time this matters, Forni notices a freshly merged skill missing after restart; the rule prevents that.
+- **Pull every marketplace clone:** Every clone under `~/.claude/plugins/marketplaces/` is the cache that backs its plugin installs. Skipping pulls means setup.sh installs prior versions of those plugins even when their source repos have newer ones. The first time this matters, Forni notices a freshly merged skill missing after restart; the rule prevents that. This includes external mirrors (superpowers, anthropic skills, etc.) — Claude Code does not auto refresh them.
+- **Auto reset on drift instead of abort:** Marketplace clones are caches, not user work. When a clone has diverged from its remote (local merge artifact from a prior install, history rewrite upstream, etc.), the right move is `reset --hard origin/<default>` and log it. Aborting mise leaves the clone permanently stale and forces manual cleanup. The 2026-05-12 incident — `~/.claude/plugins/marketplaces/skillset` stuck 235 commits behind on a local merge SHA, sdlc:design running the v2.0.0 instructions with no `EnterWorktree` call — is exactly what this guards against. Log the reset loudly so Forni sees it happened.
 - **Don't retry setup.sh:** Failures tend to be environmental (sudo, network, brew API). A blind retry masks the cause.
 
 ## Output Shape
@@ -126,8 +150,15 @@ Mise complete ✓
 
 Eudy (main): pulled, already up to date
 Homebase (main): pulled 2 commits, stash popped clean
-Skillset marketplace: pulled 2 commits
+Marketplaces (6 total): 4 pulled, 1 reset (skillset — drift), 1 already current
 setup.sh: ✓ (brew cache warm, no changes)
+```
+
+When a marketplace needed a reset, name it and the reason on its own line so the recovery is unmissable:
+
+```
+Marketplaces (6 total): 4 pulled, 1 already current
+  ⚠ skillset: drifted (235 commits behind, local merge artifact), reset to origin/main
 ```
 
 Or on partial completion:
