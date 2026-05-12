@@ -74,7 +74,7 @@ Discover the default branch per repo. Most use `main` but some (older external m
 git -C "$MARKETPLACE" symbolic-ref --short refs/remotes/origin/HEAD
 ```
 
-The output is `origin/<branch>`. Strip the `origin/` prefix to get `$DEFAULT_BRANCH`. If `origin/HEAD` is not set, fall back to `main`.
+The output is `origin/<branch>`. Strip the `origin/` prefix to get `$DEFAULT_BRANCH`. If `origin/HEAD` is not set, probe the remote refs in order: try `refs/remotes/origin/main` first, then `refs/remotes/origin/master`. Use the first one that exists. If neither exists, record failure for that marketplace and continue to the next — defaulting blindly to `main` would silently leave a `master` based clone stale.
 
 Try fast forward first:
 
@@ -157,7 +157,7 @@ setup.sh: ✓ (brew cache warm, no changes)
 When a marketplace needed a reset, name it and the reason on its own line so the recovery is unmissable:
 
 ```
-Marketplaces (6 total): 4 pulled, 1 already current
+Marketplaces (6 total): 4 pulled, 1 already current, 1 reset
   ⚠ skillset: drifted (235 commits behind, local merge artifact), reset to origin/main
 ```
 
