@@ -120,6 +120,16 @@ Why `gws` over MCP:
 - `gws` supports send-as aliases, attachments via `-a`, and HTML with preserved quoted history via gmail_quote CSS.
 - `--draft` gates sending. Omit the flag for direct send.
 
+**Reply targeting:** Always target the **last message in the thread**, never a mid-thread one. Replying to a mid-thread message can drop participants who were dropped between that point and the current thread state, and lands the draft in the wrong position when Forni opens Gmail. Look up the last message with:
+
+```bash
+gws gmail users threads get --params '{"userId":"me","id":"<thread-id>","format":"metadata"}'
+```
+
+Sort by Date header, take the latest, pass its ID to `--message-id`. If any participants were dropped along the way, explicitly re-add them with `--cc`. This holds even when the last message is one of Forni's own that did not get a reply: the new email body carries the topic, the reply target only controls where the draft lands.
+
+**Self-replies on dangling threads.** When the last message in the thread is one of Forni's own, `+reply` will set the new `To` to its sender (Forni), which is wrong. Use `+reply-all --remove mattforni@gmail.com --to <actual recipient>` instead so the draft addresses the real counterparty, not Forni himself. Verify with `gws gmail users messages get --params '{"userId":"me","id":"<draft-msg-id>","format":"metadata"}'` before reporting the draft saved — confirm the `To` header is the intended recipient.
+
 ## Code Review
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
@@ -220,6 +230,7 @@ When deleting a recurring event, also delete the paired transition or travel rec
 
 - Tasks that need scheduling go on the following Monday
 - Monday morning planning sessions are used to schedule these tasks
+- **All follow-ups land on a Monday, no exceptions.** Even when the natural "first day back" or "first business day" is a Tuesday or Wednesday (returning from a trip, day after a holiday), the follow-up still lands on the next Monday that follows the wait condition. Mondays are the planning slot; that is where follow-ups belong.
 - Task titles: emoji prefix + short title (e.g., "📧 [Follow Up with Jeff](https://mail.google.com/...)"). Link to source in the title text when available.
 - Details go in a comment on the task, not in the description field
 
