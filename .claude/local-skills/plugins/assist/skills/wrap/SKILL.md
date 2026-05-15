@@ -27,7 +27,7 @@ The skill exists because Forni was running the same end-of-session sweep manuall
 
 ### Step 1: Build the Repo List
 
-The repos to scan are exactly the repos touched in this session. Do not maintain a fixed allowlist. Walk the conversation and any tool history for absolute paths used in Read, Edit, Write, or Bash calls. Resolve each path back to its containing git repo (`git -C <path> rev-parse --show-toplevel`). Deduplicate.
+The repos to scan are the repos touched in this session, no more and no less. Do not maintain a fixed allowlist. Walk the conversation and any tool history for absolute paths used in Read, Edit, Write, or Bash calls. Resolve each path back to its containing git repo (`git -C <path> rev-parse --show-toplevel`). Deduplicate.
 
 If the inference produces nothing (rare), fall back to the current working directory's repo only.
 
@@ -38,8 +38,21 @@ For each repo in the list:
 ```bash
 git -C "$REPO" status --porcelain
 git -C "$REPO" rev-parse --abbrev-ref HEAD
-git -C "$REPO" log @{u}..HEAD --oneline 2>&1
-gh --repo "$OWNER/$REPO" pr list --author @me --state open --json number,title,headRefName,reviewDecision 2>&1
+
+# Unpushed commits, only when an upstream is configured. A new local
+# branch has no @{u}; running the log against it would error.
+if git -C "$REPO" rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+  git -C "$REPO" log @{u}..HEAD --oneline
+else
+  echo "NO_UPSTREAM"
+fi
+
+# Open PRs, only when the repo has a GitHub remote. Derive the
+# owner/name slug from gh itself rather than threading $OWNER through.
+REPO_SLUG=$(gh -R "$REPO" repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || true)
+if [ -n "$REPO_SLUG" ]; then
+  gh --repo "$REPO_SLUG" pr list --author @me --state open --json number,title,headRefName,reviewDecision
+fi
 ```
 
 Categorize per repo:
@@ -100,7 +113,7 @@ For each loose end Forni triaged to "today" or "Monday", create a Todoist task:
 Task title conventions from global memory:
 
 - Emoji prefix indicating task type (📧 email, 📞 call, 📝 form/doc, 🏠 home buying, 💼 vocation, etc.)
-- Short title with a link to the source in markdown format where available
+- Short title with a link to the source in Markdown format where available
 - No parenthetical clarification
 - Details go in a comment on the task, not in the description field
 
