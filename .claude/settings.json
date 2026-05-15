@@ -197,5 +197,17 @@
   },
   "outputStyle": "Concise",
   "alwaysThinkingEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/wrap-reminder.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
