@@ -21,12 +21,12 @@ Help Forni manage his weekly schedule: review the week, slot Todoist tasks into 
 ## Before Every Invocation
 
 1. Read [learned-rules.md](../../learned-rules.md) for any schedule-specific corrections
-2. Read the weekly template: `/Users/forni/Eudaimonia/schedule.md`
+2. Read the weekly template: `~/Eudaimonia/schedule.md`
 3. Determine the current week (Monday through Sunday) based on today's date
 
 ## Source of Truth
 
-The weekly template lives at `/Users/forni/Eudaimonia/schedule.md`. It defines the recurring skeleton: work hours, training sessions, transitions, recovery, and community commitments. The Google Calendar holds the live reality, including one-off events and Reclaim work blocks.
+The weekly template lives at `~/Eudaimonia/schedule.md`. It defines the recurring skeleton: work hours, training sessions, transitions, recovery, and community commitments. The Google Calendar holds the live reality, including one-off events and Reclaim work blocks.
 
 When there is a conflict between the template and the calendar, the calendar is the current truth. The template describes what a "normal" week should look like.
 
@@ -237,5 +237,5 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - When slotting a task, always set: date/time via reschedule-tasks, then duration + Scheduled label via update-tasks.
 - Todoist deadlineDate is Premium-only. Note deadlines in the task description instead.
 - Transition and travel conventions are in GC `Calendar Preferences`. Both Basil. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title).
-- When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `/Users/forni/Eudaimonia/koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
+- When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `~/Eudaimonia/koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
 - EnterWorktree at the start of plan mode if any Eudaimonia repo edits are anticipated (schedule.md changes, koan creation, file moves). Don't wait until mid session — relocating uncommitted edits to a worktree later requires stash/pop and is avoidable. Use a date stamped name like `schedule-YYYY-MM-DD` and rename the branch to drop the `worktree-` prefix per global GC instructions.

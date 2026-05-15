@@ -25,8 +25,8 @@ Two repos, one setup script. The skill exists because Forni was running the same
 
 | Shorthand | Absolute path |
 |---|---|
-| Eudy | `/Users/forni/Eudaimonia` |
-| Homebase | `/Users/forni/Eudaimonia/Craft/Development/personal/homebase` |
+| Eudy | `$HOME/Eudaimonia` |
+| Homebase | `$HOME/Eudaimonia/Craft/Development/personal/homebase` |
 
 Both are git repos. Homebase contains the authoritative `setup.sh` that deploys configs and refreshes tooling.
 
@@ -46,13 +46,13 @@ If the two paths differ for either repo, that repo is a linked worktree. Abort w
 
 ### Step 1: Sync Eudy
 
-Run the sync routine below against `/Users/forni/Eudaimonia`. See [Sync Routine](#sync-routine).
+Run the sync routine below against `$HOME/Eudaimonia`. See [Sync Routine](#sync-routine).
 
 If sync produces a merge conflict, stop mise. Do not continue to homebase or setup.sh. Report the conflict so Forni can resolve it.
 
 ### Step 2: Sync Homebase
 
-Run the same sync routine against `/Users/forni/Eudaimonia/Craft/Development/personal/homebase`.
+Run the same sync routine against `$HOME/Eudaimonia/Craft/Development/personal/homebase`.
 
 Same conflict handling: stop on conflict, do not proceed to setup.sh.
 

@@ -80,8 +80,7 @@
       "Bash(while:*)",
       "Bash(xargs:*)",
       "Bash(~/.zshrc)",
-      "Read(//Users/forni/**)",
-      "Read(//Users/mattforni/**)",
+      "Read(//$HOME/**)",
       "Skill(assist:*)",
       "Skill(linear-lifecycle:*)",
       "Skill(sdlc:*)",
@@ -185,7 +184,7 @@
     "local-skills": {
       "source": {
         "source": "directory",
-        "path": "/Users/mattforni/.claude/local-skills"
+        "path": "$HOME/.claude/local-skills"
       }
     },
     "skillset": {

@@ -2,11 +2,11 @@
 
 ## macOS Screenshot filenames contain narrow no-break spaces
 
-`/Users/mattforni/Screenshots/Screenshot YYYY-MM-DD at H.MM.SS PM.png` looks like it has regular spaces, but the byte between the seconds and `AM`/`PM` is U+202F (NARROW NO-BREAK SPACE), not U+0020.
+`~/Screenshots/Screenshot YYYY-MM-DD at H.MM.SS PM.png` looks like it has regular spaces, but the byte between the seconds and `AM`/`PM` is U+202F (NARROW NO-BREAK SPACE), not U+0020.
 
 **Why:** A literal `cp "Screenshot 2026-04-30 at 2.02.02 PM.png"` will fail with "No such file or directory" even though the file appears in `ls`. Burned ~2 minutes during the 2026-04-30 demo build trying to copy a dashboard screenshot.
 
-**How to apply:** Reference these files via glob, not literal path. `cp /Users/mattforni/Screenshots/*"2.02.02"*"PM.png" <dest>` works because the glob matches the actual byte sequence.
+**How to apply:** Reference these files via glob, not literal path. `cp ~/Screenshots/*"2.02.02"*"PM.png" <dest>` works because the glob matches the actual byte sequence.
 
 ## Forni cuts hard during planning — trust the cuts
 

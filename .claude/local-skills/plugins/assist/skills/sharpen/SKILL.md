@@ -20,7 +20,7 @@ Move our collaboration one rung at a time toward Level 7 (background agents) and
 ## Before Every Invocation
 
 1. Read [learned-rules.md](../../learned-rules.md) for any prior corrections about how Forni wants sharpen to run.
-2. Read [LEVELS.md](../../../../../../Eudaimonia/LEVELS.md) (absolute path: `/Users/mattforni/Eudaimonia/LEVELS.md`) to anchor on current state and recent log entries.
+2. Read [LEVELS.md](../../../../../../Eudaimonia/LEVELS.md) (absolute path: `~/Eudaimonia/LEVELS.md`) to anchor on current state and recent log entries.
 3. Check this skill's directory for a local `learned-rules.md` and read it if present.
 
 ## Principles
@@ -37,9 +37,9 @@ Move our collaboration one rung at a time toward Level 7 (background agents) and
 
 Pull recent activity to ground the session. Run these in parallel when possible.
 
-- **Recent git activity in Eudaimonia**: `git -C /Users/mattforni/Eudaimonia log --since="7 days ago" --oneline`
-- **Recent auto memory entries**: Read `/Users/mattforni/.claude/projects/-Users-mattforni-Eudaimonia/memory/MEMORY.md` and skim the most recently added feedback_*.md files
-- **Recent plan files**: `ls -lt /Users/mattforni/.claude/plans/ | head -10` and read titles
+- **Recent git activity in Eudaimonia**: `git -C ~/Eudaimonia log --since="7 days ago" --oneline`
+- **Recent auto memory entries**: Read `~/.claude/projects/-Users-mattforni-Eudaimonia/memory/MEMORY.md` and skim the most recently added feedback_*.md files
+- **Recent plan files**: `ls -lt ~/.claude/plans/ | head -10` and read titles
 - **Optional focus area**: If the user gave a focus in arguments (e.g., "zero code review"), narrow the scan to commits, memories, and plans relating to that area
 
 ### Step 2: Find patterns
@@ -76,7 +76,7 @@ Small enough to finish in session. If the chosen move is larger than session siz
 
 ### Step 6: Log
 
-Append a new entry to `/Users/mattforni/Eudaimonia/LEVELS.md` under `## Log` with:
+Append a new entry to `~/Eudaimonia/LEVELS.md` under `## Log` with:
 
 ```markdown
 ### YYYY-MM-DD — [one line title]
@@ -94,7 +94,7 @@ If the session altered the Current State table (a dimension's level genuinely ch
 
 If the session surfaced a rule, preference, or insight worth preserving:
 
-- **Cross-skill correction** → append to `/Users/mattforni/.claude/local-skills/plugins/assist/learned-rules.md`
+- **Cross-skill correction** → append to `~/.claude/local-skills/plugins/assist/learned-rules.md`
 - **Sharpen-specific rule** → append to this skill's `learned-rules.md` (create if missing)
 - **Broader Eudaimonia convention** → invoke `assist:codify` for the full three-layer write up
 
