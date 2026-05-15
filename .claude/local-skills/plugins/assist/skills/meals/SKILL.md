@@ -28,19 +28,40 @@ The shopping list is the primary artifact. The meal plan exists mostly to produc
 1. Read [learned-rules.md](learned-rules.md) in this directory
 2. Read the canonical nutrition context:
    - `~/Eudaimonia/Constitution/Nutrition/README.md` — daily macro targets, meal budgets, supplement stack
-   - `~/Eudaimonia/Constitution/Nutrition/staples.md` — brand preferences, Yuka scores, store groupings
-   - `~/Eudaimonia/Constitution/Nutrition/pantry.md` — current on hand inventory
+   - **Pantry inventory and staples now live in the Atelic api db** (migrated from `pantry.md` and `staples.md` on 2026-05-15 in ATE-141). Query via `rails runner` (see Pantry Query section below). The Atelic MCP server (ATE-360) will replace these one liners once it lands.
 3. Read the most recent plan file in `~/Eudaimonia/Constitution/Nutrition/plans/` (sort by filename) for format reference and to see what we just ate
 4. Read [references/recipe-sources.md](references/recipe-sources.md) for the preferred recipe sites and what's worked in the past
 5. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
 
+## Pantry Query
+
+Pantry and staples live in the Atelic api db. Query with `rails runner` from inside `~/Eudaimonia/Craft/atelic/api/` so model scopes (`user.pantry_items`, `user.staples`) are available. The `rvm` prefix is needed because the api uses Ruby 3.4.7 while the default shell may be on 3.3.3.
+
+```bash
+# Reading: full pantry, staples only, restock signal
+~/.rvm/bin/rvm 3.4.7 do bundle exec rails runner '
+  u = User.first
+  puts "pantry: #{u.pantry_items.count}, staples: #{u.staples.count}, restock: #{u.staples.where(in_stock: false).count}"
+  u.pantry_items.includes(:consumable).each { |pi| puts "[#{pi.in_stock ? \"✓\" : \"✗\"}#{pi.staple ? \"★\" : \" \"}] #{pi.name}#{pi.brand ? \" (#{pi.brand})\" : \"\"}#{pi.store ? \" @ #{pi.store}\" : \"\"}#{pi.notes ? \" — #{pi.notes}\" : \"\"}" }
+'
+
+# Writing: mark something bought or used up
+~/.rvm/bin/rvm 3.4.7 do bundle exec rails runner '
+  pi = User.first.pantry_items.joins(:consumable).where(consumables: { name: "peppermint extract" }).first
+  pi.update!(in_stock: true, notes: nil)
+'
+```
+
+PantryItem delegates `name`, `brand`, `variant`, `organic`, `nutri_score`, `yuka_score`, `gtin14` to its consumable, so the read printout above pulls all of that without explicit joins.
+
+The Atelic MCP server (ATE-360) will replace these one liners with typed tools (`atelic_query_pantry`, `atelic_query_staples`, etc.) once it lands.
+
 ## Source of Truth
 
-| File | Purpose |
-|------|---------|
+| Source | Purpose |
+|--------|---------|
 | `Constitution/Nutrition/README.md` | Daily macros and meal slot budgets |
-| `Constitution/Nutrition/staples.md` | What brand to buy for recurring items |
-| `Constitution/Nutrition/pantry.md` | What is already on hand |
+| Atelic api db (`PantryItem`, `Consumable`) | What is already on hand + brand preferences + Yuka scores. See Pantry Query above |
 | `Constitution/Nutrition/plans/*` | Prior weekly plans (format reference) |
 | `references/recipe-sources.md` | Approved recipe sites and historical ratings |
 | `learned-rules.md` | Corrections learned through use |
@@ -73,10 +94,10 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 
 ### Phase 2: Inventory Check
 
-1. Read `pantry.md` fully
-2. Scan `staples.md` and build a short list of items that likely need a restock. Favor items that get used heavily week to week (tofu, soy milk, kimchi, hummus, greens, lentils, rice, oats) and items the user has mentioned running low.
-3. Ask Forni in one batch (use AskUserQuestion) for what's on hand. Group the questions by pantry section (produce, refrigerated, dry goods, condiments) to keep it scannable. Keep it targeted; do not ask about every staple.
-4. Update `pantry.md` with his answers before generating the plan. This is worth the small extra write; the pantry gets more accurate over time.
+1. Pull the full pantry via the read `rails runner` shown in Pantry Query above
+2. The restock signal (staple + out of stock) and any items with "low" in `notes` are the first candidates to ask about. Favor items that get used heavily week to week (tofu, soy milk, kimchi, hummus, greens, lentils, rice, oats)
+3. Ask Forni in one batch (use AskUserQuestion) for what's on hand. Group the questions by category (produce, refrigerated, dry goods, condiments) to keep it scannable. Keep it targeted; do not ask about every staple
+4. Update the api db with his answers before generating the plan, using the write `rails runner` snippet in Pantry Query. The pantry gets more accurate over time, which matters more here than the small overhead of the write
 
 ### Phase 3: Draft the Plan
 
@@ -109,14 +130,14 @@ The shopping list is the primary artifact. Group by section and store.
 ### Costco (if due for a run)
 ...
 
-### Already Stocked (from pantry.md)
+### Already Stocked (from pantry query)
 ...
 ```
 
 Rules for the list:
-- Only include items not already in `pantry.md`
-- Flag staples from `staples.md` that are likely low (ask "are we low on tofu?" style) and include them if Forni confirms
-- Use the brand from `staples.md` where one is specified
+- Only include items not already in stock per the pantry query (pantry items with `in_stock: true`)
+- Flag staples that are likely low (staples with `in_stock: false` or with "low" in `notes`) and include them if Forni confirms
+- Use the brand stored on the underlying Consumable where one is specified
 - Separate produce by grocery section for efficient store flow (leafy greens, alliums, roots, fruits, etc.)
 - Put anything that is specific to a single recipe in a `recipe specific` subsection so it's easy to skip if Forni decides to cut that meal
 
@@ -181,7 +202,7 @@ Feel free to suggest new sites similar in vibe (plant based, seasonal, approacha
 
 ## Pantry Update Pattern
 
-When Forni mentions outside this skill that he bought or finished something (e.g., "grabbed two blocks of tofu at Sprouts"), update `pantry.md` directly. This keeps the inventory accurate without needing a formal mode. When running the plan, always re read pantry.md fresh rather than trusting cached state.
+When Forni mentions outside this skill that he bought or finished something (e.g., "grabbed two blocks of tofu at Sprouts"), update the Atelic api db directly using the write `rails runner` snippet in Pantry Query. This keeps the inventory accurate without needing a formal mode. When running the plan, always re query fresh rather than trusting cached state.
 
 ## Constraints and Defaults
 
