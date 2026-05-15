@@ -32,7 +32,8 @@
         "./skills/mise/SKILL.md",
         "./skills/permissions/SKILL.md",
         "./skills/present/SKILL.md",
-        "./skills/sharpen/SKILL.md"
+        "./skills/sharpen/SKILL.md",
+        "./skills/wrap/SKILL.md"
       ]
     }
   ]
