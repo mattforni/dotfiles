@@ -274,7 +274,7 @@ Filter by:
 
 ## Follow-Up Email Generation
 
-Use template: `/Users/forni/Craft/vocation/templates/07-job-posting-cold-outreach.md`
+Use template: `~/Craft/vocation/templates/07-job-posting-cold-outreach.md`
 
 ### Key Elements
 
@@ -399,16 +399,16 @@ When skill is invoked with job posting URL:
 
 **Email template:**
 
-- `/Users/forni/Craft/vocation/templates/07-job-posting-cold-outreach.md`
+- `~/Craft/vocation/templates/07-job-posting-cold-outreach.md`
 
 **Project guidelines:**
 
-- `/Users/forni/Craft/vocation/CLAUDE.md`
+- `~/Craft/vocation/CLAUDE.md`
 
 **Contact tracking:**
 
-- `/Users/forni/Craft/vocation/network/contacts.md`
+- `~/Craft/vocation/network/contacts.md`
 
 **Company profiles:**
 
-- `/Users/forni/Craft/vocation/companies/`
+- `~/Craft/vocation/companies/`

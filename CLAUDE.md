@@ -78,6 +78,12 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 └── setup.sh         # Installation and setup script
 ```
 
+## Path Conventions
+
+**Never hard-code a username in tracked config or documentation.** Homebase deploys to multiple machines, and absolute paths like `/Users/mattforni/...` or `/Users/forni/...` break on every machine that does not match. Use `$HOME` (preferred for shell scripts and JSON config) or `~` (preferred for markdown documentation and shell aliases) so the same content works everywhere.
+
+Applies to: `.claude/settings.json` permissions and marketplace paths, skill SKILL.md files, shell rc files, any markdown that references a path. If a tool reads the value literally and does not expand `$HOME` or `~`, surface that as a setup.sh templating gap rather than working around it with a hard-coded username.
+
 ## Development Workflow
 
 1. Edit files in this repository

@@ -160,15 +160,15 @@ Matthew Fornaciari
 
 All templates available in:
 
-- `/Users/forni/Craft/vocation/templates/`
+- `~/Craft/vocation/templates/`
 
 Contact database:
 
-- `/Users/forni/Craft/vocation/network/contacts.md`
+- `~/Craft/vocation/network/contacts.md`
 
 Project guidelines:
 
-- `/Users/forni/Craft/vocation/CLAUDE.md`
+- `~/Craft/vocation/CLAUDE.md`
 
 ## Gmail Integration
 

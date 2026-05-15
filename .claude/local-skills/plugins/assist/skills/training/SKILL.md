@@ -22,9 +22,9 @@ Help Forni schedule the week's training events from the active block plan, valid
 
 1. Read [learned-rules.md](learned-rules.md) in this directory
 2. Read the canonical training context:
-   - `/Users/forni/Eudaimonia/Constitution/Fitness/2026-training-plan.md` — current block plan with weekly Long mi, Vert ft, Fri shape
-   - `/Users/forni/Eudaimonia/Constitution/Fitness/CLAUDE.md` — training conventions
-   - `/Users/forni/Eudaimonia/schedule.md` — recurring weekly anchors (yoga, lifts, climbs, SPRC, sauna)
+   - `~/Eudaimonia/Constitution/Fitness/2026-training-plan.md` — current block plan with weekly Long mi, Vert ft, Fri shape
+   - `~/Eudaimonia/Constitution/Fitness/CLAUDE.md` — training conventions
+   - `~/Eudaimonia/schedule.md` — recurring weekly anchors (yoga, lifts, climbs, SPRC, sauna)
 3. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
 
 ## Source of Truth
