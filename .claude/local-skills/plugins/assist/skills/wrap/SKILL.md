@@ -10,6 +10,8 @@ allowed-tools:
   - Skill
   - mcp__claude_ai_Todoist__add-tasks
   - mcp__claude_ai_Todoist__find-projects
+  - mcp__claude_ai_Todoist__find-tasks-by-date
+  - mcp__claude_ai_Todoist__reschedule-tasks
 ---
 
 # Wrap
@@ -82,7 +84,27 @@ Categorize each in three tiers:
 - 🟡 **Sliding.** Soft target, no external party blocked. Forni's own commitment to himself.
 - ✅ **Awaiting counterparty.** Tracked, no action.
 
-### Step 4: Triage Each Loose End
+### Step 4: Dedupe Against Todoist
+
+Before triaging anything, query Todoist for tasks that already cover the candidate loose ends. Surfacing items that are already scheduled is noise and forces Forni to triage the same thing twice.
+
+```text
+mcp__claude_ai_Todoist__find-tasks-by-date(
+  startDate: "today",
+  daysCount: 4,          # covers today through next Monday on a weekday wrap
+  overdueOption: "include-overdue",
+  limit: 50,
+)
+```
+
+Match each candidate against scheduled tasks by content keyword (lender name, attorney name, deadline phrase, task type). For each match:
+
+- **On track (due today or in the future):** drop from the triage list entirely; the task is already covered
+- **Overdue:** surface separately under a 🔴 **Overdue, already in Todoist** tier so Forni can reschedule rather than treat them as new
+
+Only the unmatched ⚠️ and 🟡 items proceed to Step 5 triage.
+
+### Step 5: Triage Each Loose End
 
 For each ⚠️ and 🟡 item, ask Forni via AskUserQuestion with these options:
 
@@ -93,7 +115,7 @@ For each ⚠️ and 🟡 item, ask Forni via AskUserQuestion with these options:
 
 One question per item. Bulk decisions hide bad triage. Stick to ⚠️ and 🟡; ✅ items are tracking-only and don't need triage.
 
-### Step 5: Codify Check
+### Step 6: Codify Check
 
 Walk the session for codifiable durables:
 
@@ -103,12 +125,14 @@ Walk the session for codifiable durables:
 
 If candidates exist, ask Forni whether to invoke `/assist:codify` via the Skill tool for each candidate. If nothing is codifiable, say so explicitly and skip. Most sessions skip. Forcing codify creates documentation bloat.
 
-### Step 6: Todoist Logging
+### Step 7: Todoist Logging
 
 For each loose end Forni triaged to "today" or "Monday", create a Todoist task:
 
 - **Today:** `dueString: "today"`, `duration: "30m"`
 - **Monday:** `dueString: "next Monday"`, `duration: "30m"`
+
+For each 🔴 overdue item Forni triaged to reschedule, use `mcp__claude_ai_Todoist__reschedule-tasks` rather than creating a new task. Preserves recurring patterns and existing context.
 
 Task title conventions from global memory:
 
@@ -119,7 +143,7 @@ Task title conventions from global memory:
 
 Use the project and section that best matches the loose-end's domain. Infer from context. Home buying tasks go under the home buying project; vocation tasks under 🛠️ Craft / 💼 Vocation; etc. Ask if the right project is genuinely ambiguous; otherwise infer and proceed.
 
-### Step 7: Session Summary
+### Step 8: Session Summary
 
 One paragraph. Three beats:
 
@@ -129,7 +153,7 @@ One paragraph. Three beats:
 
 This is the breadcrumb for re-entry. Future Forni picks the thread back up from this paragraph.
 
-### Step 8: Exit Readiness
+### Step 9: Exit Readiness
 
 End with one line: "Ready to /exit when you are."
 
@@ -140,6 +164,7 @@ Do not invoke /exit automatically. Forni controls the exit. The skill prepares t
 - **Session-touched repos, not a fixed allowlist.** Forni works across Eudaimonia, homebase, skillset, zero repos, and ad-hoc clones. A fixed list either misses repos or scans noise. Inferring from session activity matches the actual blast radius.
 - **Git scan first.** Highest-signal check. After `/sdlc:complete` this is usually fast and clean.
 - **Three-tier categorization over flat list.** ⚠️/🟡/✅ separates "act now" from "track" from "ignore". A flat list of "follow-ups" is noise.
+- **Dedupe against Todoist before triage.** Forni already runs Todoist as the system of record for follow-ups. Surfacing tasks that are already scheduled there is noise and forces him to triage the same thing twice. The Step 4 query is the cheapest check available and removes the noisiest failure mode.
 - **Triage one item at a time.** Bulk decisions hide bad triage. AskUserQuestion forces real choice per item.
 - **Codify is opt-in, never mandatory.** Most sessions have no new durable rules. Prompt only when candidates exist; skip cleanly otherwise.
 - **Todoist offload.** Anything not handled in-session goes to Todoist. Working memory should not carry loose ends across sessions. The Monday default channels non-urgent items into the existing Monday planning ritual.
