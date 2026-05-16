@@ -33,6 +33,7 @@ Appended automatically when a plan introduces a new recipe. Forni fills in the r
 |------|--------|------|--------|-------|
 | 2026-W17 | Creamy Spring Pea & Mint Soup | — (Claude drafted, no site source) | | Immersion blender showcase. Thu dinner |
 | 2026-W17 | Sweet Nut & Fruit Protein Bars | Forni's Paprika (ChatGPT originated) | | Bonus batch item, 16 bars, post workout snack |
+| 2026-W21 | Coconut Red Lentil Dal over Basmati | — (Claude drafted, no site source) | | Mon dinner centerpiece, batch carries to Thu pre Odell |
 
 ## Favorites
 

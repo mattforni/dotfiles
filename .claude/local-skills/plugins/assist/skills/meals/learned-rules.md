@@ -33,11 +33,23 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: Forni corrected this on 2026-04-17. Container units are ambiguous.
   - How to apply: convert everything to the unit most natural for the ingredient. Produce by the lb or oz (e.g. asparagus 1 lb, mint 1 oz). Liquids in fl oz. Small specialty amounts in grams or oz. Bread as a loaf weight ("~1 lb loaf"). Bulk bin items by weight.
 
+- **Shopping list groups by store section, not produce subtype.** No "leafy & herbs", "alliums & roots", "fruits & veg" sub buckets. One flat "Produce" section.
+  - Why: Forni said "having alliums and roots and leafy and herbs and fruits and veg, it's fine. Just produce is fine" on 2026-05-15.
+  - How to apply: shopping list sections are Produce, Refrigerated, Bulk Bins, Center Aisles / Spices, Frozen, Snacks. No further subdivision within a section.
+
 - **Vanilla extract is a Costco staple.** Sprouts does not reliably carry it; Costco does.
   - Why: Forni confirmed on 2026-04-17.
   - How to apply: when vanilla is needed, put it in the Costco section of the shopping list, never Sprouts.
 
 ## Recipe Rules
+
+- **No alcohol in any recipe, ever.** No cooking wine, no beer batters, no bourbon glazes, no mirin (which contains alcohol), no rum extract. Even "the alcohol cooks off" is a no.
+  - Why: Forni is in twelve step recovery. Cooking with alcohol is adjacent enough that it's not wanted. Confirmed on 2026-05-15 when bourguignon (red wine) and risotto (white wine) were both rejected.
+  - How to apply: when a classic recipe calls for wine, substitute vegetable broth + a splash of vinegar (red wine vinegar for red, white wine vinegar or rice vinegar for white) and a touch of tomato paste or miso for umami. For deglazing, broth or balsamic works. Skip any dish where alcohol is structurally essential (bourguignon, risotto, beer can chicken, etc.) and propose something different.
+
+- **"Fun food" does not mean high variety.** Going back to basics with one or two fun centerpieces is what lands. Five new specialty cuisines in one week is too much shopping, too much context switching, and reads as scattered.
+  - Why: Forni rejected the W21 draft on 2026-05-15 with "way too much variety." He had asked for fun food but the response (bourguignon + risotto + bibimbap + pad thai + soba) was over indexed.
+  - How to apply: pick one or two centerpiece dinners per week. The rest is batch prep variations (bowls, stir fry, leftovers). Specialty ingredient purchases should support the centerpiece, not five different cuisines.
 
 - **Forni is experimenting with blender based soups in 2026.** He bought an immersion blender on 2026-04-17 and wants to try pureed soups. Brothy chunky soups remain unappealing; lean toward silky pureed varieties that showcase the blender.
   - Why: Reversed the earlier "no soup" rule the same day he stated it, specifically because of the new blender.
@@ -50,6 +62,20 @@ Corrections and preferences specific to meal planning. Read on every invocation.
 ## Macro Rules
 
 (none yet)
+
+## Plan Format Rules
+
+- **Use a single combined daily table for lunch + dinner, not two separate tables.** Same Day column, Lunch column, Dinner column. Easier to scan.
+  - Why: Forni called the split "weird and hard to read" on 2026-05-15.
+  - How to apply: in the "Daily Meals" section, render one table with Day / Lunch / Dinner columns. Keep breakfast as a separate paragraph above since it's mostly constant.
+
+- **Weights and amounts apply to BATCH PREP too, not just the shopping list.** No "3 sweet potatoes", "1 bag spinach", "1 bunch asparagus" in the prep section either. Use lb, oz, fl oz, grams.
+  - Why: Forni corrected this on 2026-05-15 — "I don't know how much that is" applies to the prep section just like the list.
+  - How to apply: every quantity, everywhere in the plan, in weight or volume units. Pantry references can stay loose since they're identity not quantity.
+
+- **Sweet potatoes scale down.** ~1 lb (about 2 medium) per week is plenty if they're a side / oat bowl topping, not a centerpiece. 3+ lb lasts way too long.
+  - Why: Forni said 3 large last week (W17) lasted too long on 2026-05-15.
+  - How to apply: default to 1 lb / 2 medium unless the menu has sweet potatoes as a main two or more nights.
 
 ## Pantry Rules
 
