@@ -62,8 +62,8 @@ Categorize per repo:
 - **Clean.** Working tree clean, in sync with origin, no open PRs needing Forni. Nothing to do.
 - **Uncommitted changes.** Surface and ask: commit (via `/sdlc:checkpoint`), stash, or discard.
 - **Unpushed commits.** Push, or leave intentionally with a note.
-- **Open PR awaiting Forni.** Surface review comments. Suggest `/sdlc:iterate`.
-- **Open PR awaiting reviewer.** Just flag for visibility.
+- **Open PR awaiting Forni.** Blocks exit (see Step 9). Surface review comments and chain to `/sdlc:iterate`.
+- **Open PR awaiting reviewer.** Blocks exit (see Step 9). Watch for review to land, then chain to `/sdlc:iterate` or `/sdlc:complete` as appropriate.
 - **Merged PR with the branch still local.** Chain to `/sdlc:complete` via the Skill tool.
 
 When the session already ran `/sdlc:complete`, this step is usually fast and returns clean for the main repo.
@@ -155,7 +155,15 @@ This is the breadcrumb for re-entry. Future Forni picks the thread back up from 
 
 ### Step 9: Exit Readiness
 
-End with one line: "Ready to /exit when you are."
+The session is exit-ready only when every condition below holds:
+
+- No uncommitted changes remain in any session-touched repo
+- No unpushed commits remain, or any that do are intentional with a note
+- **No PR Forni authored this session is still open.** An open PR is not exit-ready state. Watch the PR through review (CodeRabbit, Gemini, human reviewers), chain to `/sdlc:iterate` when feedback lands, and to `/sdlc:complete` once merged.
+
+When all conditions are met, end with one line: "Ready to /exit when you are."
+
+When a PR is still open, end instead with the current state of the PR and the next action you are taking on it (waiting for review, addressing feedback, merging, etc.). Do not declare exit readiness.
 
 Do not invoke /exit automatically. Forni controls the exit. The skill prepares the ground; Forni walks off it.
 
@@ -169,6 +177,7 @@ Do not invoke /exit automatically. Forni controls the exit. The skill prepares t
 - **Codify is opt-in, never mandatory.** Most sessions have no new durable rules. Prompt only when candidates exist; skip cleanly otherwise.
 - **Todoist offload.** Anything not handled in-session goes to Todoist. Working memory should not carry loose ends across sessions. The Monday default channels non-urgent items into the existing Monday planning ritual.
 - **Don't auto-exit.** Wrap prepares the exit; Forni triggers it. Auto-exit would risk closing a session that still needs attention.
+- **Open PRs block exit.** A PR sitting open after exit risks losing context for review-comment handling, drifts further from main, and breaks the rhythm of finishing what you start. Wrap is responsible for shepherding the PR through review and merge, not just opening it.
 
 ## Output Shape
 
@@ -203,6 +212,7 @@ Ready to /exit when you are.
 - Do not skip the summary even when there is "nothing to summarize." It is the re-entry breadcrumb.
 - Do not force codify. If the session did not produce a durable rule, say so and move on.
 - Do not maintain a fixed allowlist of repos. Repos to scan = repos touched in this session.
+- Do not declare exit readiness while a PR Forni authored this session is still open. Watch it through review and merge before saying "Ready to /exit when you are."
 
 ## Learned Rules
 
