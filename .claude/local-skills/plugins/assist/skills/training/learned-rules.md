@@ -31,6 +31,30 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
 ## Retro Evaluation
 
+- **Retro precedes scheduling.** The Mon morning training pass starts with the previous week's retro. Never schedule the current week without knowing what happened last week — drift compounds. The week mode (Phase 1) enforces this; standalone scheduling without a prior retro is the wrong shape.
+
+  **Why:** Wk 2 was scheduled forward without a retro on Wk 1's slip; by Wk 3 planning the gap was a full week behind. Codified 2026-05-18 (Wk 3 planning session).
+
+  **How to apply:** Always run retro before scheduling, even when the user invokes the skill mid week or for an ad hoc pass.
+
+- **Strava is the source of truth for completion, not the calendar.** Calendar events represent scheduled intent, not evidence anything happened. For Strava tracked sessions (runs), the activity is the proof. For non Strava sessions (yoga, lifts, sauna, contrast), ask the user directly via `AskUserQuestion`. Do not pull calendar data into retro coverage tables.
+
+  **Why:** Calendar inference produces false positives on adherence. An event sitting on the calendar tells you it was planned, not that it happened. Codified 2026-05-18.
+
+  **How to apply:** Strava query first for runs; user question for non Strava sessions; calendar stays out of retro source data entirely.
+
+- **Use retro findings to adjust the current week.** When the previous week shows significant under coverage, propose stepping down the current week's targets rather than pressing forward on the original plan. Annotate adjustments inline in the plan table (e.g., `20 (adjusted from 22)`) so both the original and adjusted targets stay visible for trend reading.
+
+  **Why:** Pressing forward on a plan that already slipped multiplies the gap. Adjusting in response to reality keeps adherence honest. Codified 2026-05-18.
+
+  **How to apply:** Phase 7 of retro mode does this explicitly. If the retro shows missed long run, mileage 30%+ under, or back to back misses, surface adjustment options before continuing to schedule.
+
+- **Interrogate significant deltas, don't just record them.** When retro numbers diverge sharply from plan, the read is incomplete without knowing the cause. Ask the user via `AskUserQuestion` about category (injury / schedule / motivation / conditions), then prompt for detail in chat. The cause drives the adjustment more than the numbers do. When the cause is medical, ask for any provider notes or AI consults the user wants captured in the retro.
+
+  **Why:** Wk 2 (ISO 2026-W20) came in -51% on mileage and -89% on vert. Numbers alone read as "fell off." Actual cause was a left heel injury (suspected plantar fasciitis). Without interrogating, the adjustment would have been wrong — push harder Wk 3 rather than step back and prioritize healing. Codified 2026-05-18.
+
+  **How to apply:** Phase 5 of retro mode. Always run it when the gap is 30%+ on any tracked metric or when a marquee session (long run, Thu SPRC) is fully missed.
+
 - **Vert is co-equal with mileage.** The training plan tracks both Long mi and Vert ft per week. A retro that only evaluates mileage misses half the point. Always pull elevation gain from Strava activity details and total against the plan's Vert ft target.
 - **Lifts at Movement RiNo do not show in Strava.** When a lift is missing from Strava, the status is **open**, not missed. Confirm with the user before logging it as a miss in the retro. Same applies to climbing at Movement.
 - **Strava run elevation in meters; convert to feet.** `meters * 3.28084`. Worth doing per activity then summing, since the plan's vert target is in feet.

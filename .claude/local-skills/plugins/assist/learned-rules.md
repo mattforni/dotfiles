@@ -43,4 +43,20 @@ Rules added from triage corrections. Read on every invocation. These override de
 - Events booked via Reclaim.ai scheduling links were scheduled by other people. Extra caution required.
 - Deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect. Warn about this.
 
+## Slotting Rules
+
+- **Personal admin tasks slot to morning windows, not afternoon.** Afternoons fill with Zero work and meetings; admin only reliably lands in the morning. Default to slotting Todoist personal tasks (admin, errands, paperwork, follow ups, calls) before the workday starts. Use afternoon slots only when the task explicitly requires business hours (e.g., calling an office that opens at 09:00) or when no morning slot exists.
+
+  **Why:** Codified 2026-05-18 (Wk 3 planning session). Initial slot for 📝 Clio Intake and 🏥 Establish Primary Care landed at 15:00–16:00. Forni redirected: "I just don't tend to have time later in the day with work. It just doesn't really work that way." Afternoon slots in practice get displaced by work even when calendar shows them open.
+
+  **How to apply:** When triaging Schedule filter tasks, default to morning slots. Strong morning windows: Mon 7:00–10:00 (deep AM at office), Tue/Wed 7:00–10:30 (Heads Down container), Thu 7:30–8:00 (post SPRC pre meetings), Fri 7:00–11:30 (large WFH block). Use afternoon only as a fallback.
+
+## Codification Rules
+
+- **No half step phase numbering.** When inserting a new phase into an existing skill or document, renumber subsequent phases rather than creating `Phase 4.5` or `Phase 3.5`. Half steps look like patches; integer sequences look like deliberate structure.
+
+  **Why:** Surfaced 2026-05-18 when adding an interrogation phase to `assist:training` retro mode. Initial draft used `Phase 4.5` for the new step. Forni redirected: "let's not codify things in general as half steps. So phase four and a half or phase three and a half, let's just go with moving the other phases backwards."
+
+  **How to apply:** New phase goes at its integer position. Every phase after it shifts up by one. Update body cross references (e.g., "continue to Phase 5") and any references in learned-rules.md or other skills that point at numbered phases. Worth a final grep for `Phase [0-9]\.[0-9]` to catch stragglers.
+
 ## Created Filters
