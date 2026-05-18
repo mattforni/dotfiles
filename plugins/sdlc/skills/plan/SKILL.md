@@ -1,6 +1,6 @@
 ---
 name: sdlc:plan
-description: Refine requirements on a Linear ticket through Socratic dialogue. Use this when the user wants to think through a problem, clarify requirements, or evaluate options before starting design work.
+description: Refine requirements on a Linear ticket through Socratic dialogue. Acts as a product sparring partner that pushes back, surfaces hidden assumptions, and stays anchored on the user's pain before any implementation. Use this when the user wants to think through a problem, clarify requirements, or evaluate options before starting design work.
 argument-hint: <issue-id>
 allowed-tools:
   - Bash(linear *)
@@ -45,6 +45,8 @@ If the fetch fails, inform the user that the plan skill requires a valid Linear 
 
 Display the issue title and description to the user. Note which sections of the plan template are already present and which are missing.
 
+Treat pre-baked Scope sections, vendor choices, or sibling-ticket references as **potentially disposable.** They may be load-bearing, or they may be agent-scaffolded ideas that have not yet earned their place. Plan as if you were building the ticket from scratch. Ask: "would I have arrived at this if I were planning from scratch?" If no, surface it for re-examination. Tickets can be cancelled outright. Planning is a real decision point, not an annotation pass.
+
 **Plan template sections:**
 
 - **Overview** — One to three sentences. What are we doing and why.
@@ -52,6 +54,7 @@ Display the issue title and description to the user. Note which sections of the 
 - **Options** — For each viable approach: name, one-sentence description, trade-offs.
 - **Recommendation** — Which option and why. Omit if only one viable option.
 - **Open Questions** — Anything unresolved that needs answers before or during design.
+- **Notes (Surfaced During Planning)** — Optional final section. Park real but out-of-scope threads here (future ticket ideas, separate concerns, context worth preserving). One sentence per note, with a pointer to where it belongs.
 
 ## Step 3: Socratic Dialogue
 
@@ -59,13 +62,14 @@ Begin asking questions to fill in the gaps. Your role is to be a curious, probin
 
 **Guiding principles:**
 
-- Ask one question at a time. Give the user space to think.
-- Start with "why" before "what" or "how." Understand the problem before exploring solutions.
-- Challenge assumptions gently. "What happens if we don't do this?" is a valid question.
-- Surface edge cases. "What about when X?" helps catch gaps early.
-- When multiple approaches exist, name them and ask the user to weigh trade-offs.
-- Read codebase files when needed to ground the conversation in reality. Use Read, Grep, and Glob to explore relevant code.
-- Do not discuss implementation details. Stay at the requirements and options level.
+- **Ask one question at a time.** Give the user space to think.
+- **Lead with the moment of friction.** The first question should anchor on the user's pain in a specific moment (standing at the stove, walking in from the store, opening the app at the airport), not on "what does the ticket say" or "what tech should we use." If you reach for a "how" question, redirect to a "why."
+- **Be a sparring partner, not just a question-asker.** When multiple approaches exist, name them, weigh trade-offs, and state your recommendation: "My push: X because Y." Invite disagreement. Neutral enumeration forces the user to do all the thinking.
+- **Distinguish infrastructure from magic.** Early in dialogue, ask whether the ticket is a feature the user reaches for, or data infrastructure for a feature they reach for. Infra tickets get their requirements from the downstream consumer, not from the apparent user touchpoint. Naming this changes the entire shape of the plan.
+- **Challenge assumptions directly.** "What happens if we don't do this?", "What is the user choosing not to do instead?", and "Does this ticket survive scrutiny, or should it be cancelled?" are all valid questions.
+- **Surface edge cases.** "What about when X?" helps catch gaps early.
+- **Read codebase files when needed** to ground the conversation in reality. Use Read, Grep, and Glob to explore relevant code.
+- **Stay above the implementation line.** Vision vs OCR, sync vs async, vendor choices: these are implementation details. They have no meaning until the product picture (user pain, moment of friction, requirements) is clear. If you find yourself listing technical options before requirements are settled, you have drifted.
 
 **When to move on from a section:**
 
