@@ -13,7 +13,7 @@
     {
       "name": "linear-lifecycle",
       "source": "./plugins/linear-lifecycle",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "license": "MIT",
       "description": "Manage Linear issues via the Linear CLI with zero-context overhead.",
       "homepage": "https://github.com/mattforni/homebase",
@@ -24,10 +24,6 @@
       },
       "category": "development",
       "keywords": ["linear", "issue-tracking", "cli", "workflow", "context-budget", "project-management"],
-      "strict": false,
-      "skills": [
-        "./skills/linear-lifecycle/SKILL.md"
-      ],
       "commands": [
         "./commands/linear-setup.md"
       ]
@@ -35,7 +31,7 @@
     {
       "name": "sdlc",
       "source": "./plugins/sdlc",
-      "version": "2.2.0",
+      "version": "2.2.2",
       "license": "MIT",
       "description": "Software development lifecycle skills for planning, designing, implementing, reviewing, and completing work.",
       "homepage": "https://github.com/mattforni/homebase",
@@ -45,17 +41,7 @@
         "url": "https://github.com/mattforni"
       },
       "category": "development",
-      "keywords": ["sdlc", "workflow", "git", "pr", "review", "development", "lifecycle"],
-      "strict": false,
-      "skills": [
-        "./skills/plan/SKILL.md",
-        "./skills/design/SKILL.md",
-        "./skills/checkpoint/SKILL.md",
-        "./skills/review/SKILL.md",
-        "./skills/iterate/SKILL.md",
-        "./skills/complete/SKILL.md",
-        "./skills/land/SKILL.md"
-      ]
+      "keywords": ["sdlc", "workflow", "git", "pr", "review", "development", "lifecycle"]
     }
   ]
 }

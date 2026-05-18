@@ -6,6 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Homebase is a personal development environment repository for managing shell configurations, aliases, functions, Claude Code skills/plugins, and development tooling across different systems.
 
+## Plugin Versioning
+
+**Every change to anything inside `plugins/<plugin>/...` requires a version bump in two places before the change merges.** Skill prose, scripts, configs, hooks, command definitions, the plugin.json itself, anything inside a plugin directory. Without a version bump, the marketplace cannot tell "you have the old skill" from "you have the new skill," and updates silently fail to propagate.
+
+Bump both, and keep them in sync:
+
+- `plugins/<plugin>/plugin.json`: `version` field
+- `.claude-plugin/marketplace.json`: `version` field for the matching plugin entry (must equal the plugin.json value)
+
+Use semver:
+
+- **Patch** (`2.2.1` to `2.2.2`): behavioral tweaks, bug fixes, prose updates, hardening, rule additions inside a skill body.
+- **Minor** (`2.2.1` to `2.3.0`): new skill, new command, new hook, new public surface area.
+- **Major** (`2.2.1` to `3.0.0`): breaking change to a skill's contract, argument shape, or removed surface.
+
+Top-level repo files (`CLAUDE.md`, `README.md`, `.gitconfig`, `.aliases`, etc.) do **not** trigger a plugin version bump because they live outside any plugin directory.
+
 ## Installation
 
 Run `./setup.sh` to install homebase to the home directory. The script will:
