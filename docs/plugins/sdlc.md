@@ -16,6 +16,7 @@ This plugin provides a complete workflow for managing the software development l
 | `/sdlc:review` | Review | Create PR and request code review |
 | `/sdlc:iterate` | Review | Address PR feedback, request re-review |
 | `/sdlc:complete` | Complete | Reset environment for next task |
+| `/sdlc:land` | Land | Drive the back half autonomously: open PR, iterate with bot reviewer, merge, clean up |
 
 ## Workflow
 
@@ -30,12 +31,10 @@ The typical flow is:
     ↓
 /sdlc:checkpoint          # Save progress (optional, repeatable)
     ↓
-/sdlc:review              # Create PR, request review
-    ↓
-/sdlc:iterate             # Address feedback (repeatable)
-    ↓
-/sdlc:complete            # Cleanup, ready for next task
+/sdlc:land                # Open PR, iterate with bot, merge, clean up
 ```
+
+`sdlc:land` is the default next step after implementation. It wraps `sdlc:review` → poll → (`sdlc:iterate`)* → merge → `sdlc:complete` and bails to the user on anything ambiguous (human review, hard CI failure, merge conflict, time budget exceeded). Drop down to the individual back-half skills (`/sdlc:review`, `/sdlc:iterate`, `/sdlc:complete`) only when you want manual control over a specific step.
 
 ## Installation
 
@@ -131,6 +130,24 @@ Finishes work and resets environment:
 4. Prunes remote tracking branches
 
 **Usage:** `/sdlc:complete`
+
+### /sdlc:land
+
+Drives the back half of SDLC autonomously, from "ready for review" through "merged and cleaned up":
+
+1. **Identifies PR or opens one** (calls `/sdlc:review` if no PR exists for the current branch)
+2. **Detects the bot reviewer** by walking the PR's reviews list (Gemini Code Assist or CodeRabbit)
+3. **Polls** for state changes via Monitor: bot re-review on HEAD, CI failure, human review, or timeout
+4. **Decides** per event:
+   - Bot caught up with no actionable feedback → merges
+   - Bot has actionable feedback → invokes `/sdlc:iterate`, loops back to polling
+   - CI failure self-introduced → fixes in place and pushes
+   - CI failure not self-introduced, human review, merge conflict, or timeout → bails to the user with state summary
+5. **Merges** (squash, with branch delete) and invokes `/sdlc:complete` for cleanup
+
+The agent (not GitHub) judges when feedback is addressed. `mergeStateStatus: CLEAN` only reflects branch protection and required checks, not bot opinion. Bot suggestions are not implemented blindly — when the agent disagrees, it replies on the thread with reasoning and merges through.
+
+**Usage:** `/sdlc:land` or `/sdlc:land 248`
 
 ## Configuration
 
