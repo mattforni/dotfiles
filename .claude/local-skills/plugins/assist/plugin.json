@@ -1,11 +1,11 @@
 {
   "name": "assist",
-  "description": "Personal productivity skills: email triage, schedule planning, knowledge capture, BD outreach, job applications, and meal planning.",
-  "version": "1.0.0",
+  "description": "Personal productivity skills: email triage, weekly planning, knowledge capture, BD outreach, job applications, and meal planning.",
+  "version": "2.0.0",
   "author": {
     "name": "Matthew Fornaciari",
     "url": "https://github.com/mattforni"
   },
   "license": "MIT",
-  "keywords": ["assist", "email", "schedule", "codify", "sharpen", "bd", "job-apply", "meals", "productivity"]
+  "keywords": ["assist", "email", "planning", "codify", "sharpen", "bd", "job-apply", "meals", "productivity"]
 }

@@ -1,6 +1,6 @@
 ---
 name: assist:training
-description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:schedule` during Monday planning.
+description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:planning` during Monday planning.
 argument-hint: "[week | long-run | move | retro]"
 allowed-tools:
   - Bash
@@ -16,7 +16,7 @@ allowed-tools:
 
 # Training Assist
 
-Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:schedule` during Monday planning before triage and slotting.
+Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:planning` during Monday planning before triage and slotting.
 
 ## Before Every Invocation
 
@@ -29,9 +29,11 @@ Help Forni schedule the week's training events from the active block plan, valid
 
 ## Source of Truth
 
-The training plan lives at `Constitution/Fitness/2026-training-plan.md`. The weekly skeleton (recurring anchors) lives at `schedule.md`. Google Calendar holds the live reality, including one off events (Friday long run + paired drives, race weekends, altitude trips).
+The training plan lives at `Constitution/Fitness/2026-training-plan.md`. The weekly skeleton (recurring anchors) lives at `schedule.md`. Google Calendar holds the live scheduled reality, including one off events (Friday long run + paired drives, race weekends, altitude trips).
 
-When there is a conflict between the plan and the calendar, the calendar is the current truth. The plan describes what a "normal" training week should look like.
+**For scheduling decisions** (what's on the calendar this week, what conflicts with what): the calendar is truth.
+
+**For retrospective decisions** (what actually happened last week): Strava is truth for runs; the user is truth for everything else. Calendar events are not evidence of completion — they reflect scheduled intent, nothing more.
 
 ## Training Constraints
 
@@ -41,7 +43,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 **Thursday mornings**: No prayer, meditation, or journaling on Thursdays. That time is reserved for getting to SPRC at 6:00 AM, which rotates locations.
 
-**Fasting window adjacency**: Last meal at 18:30, first meal at 07:30. Long runs starting at 07:00 begin in the fasted state, ending close to or just after the first meal window. Plan fueling around this. Do not propose long runs that push deep into the fasted window without flagging.
+**Fasting window adjacency**: Last meal at 19:30, first meal at 07:30. Long runs starting at 07:00 begin in the fasted state, ending close to or just after the first meal window. Plan fueling around this.
 
 ## Calendar Event Conventions
 
@@ -56,9 +58,23 @@ Color coding, transition / travel, and title formats live in GC `Calendar Prefer
 
 ## Mode: week (default)
 
-Schedule the week's training events from the active block plan. This is the mode `/assist:schedule` calls during Monday planning.
+The Monday morning training pass. Runs as part of `/assist:planning` plan mode (Phase 2), or standalone for ad hoc training planning.
 
-### Phase 1: Detect Existing Placeholders
+The pass has two stages: **retrospective** on the just-closed week, then **scheduling** the current week. Retro first is non-negotiable — scheduling without knowing what happened last week causes drift to compound.
+
+### Phase 1: Retrospective on the Previous Week
+
+Run the full retro workflow on the just-closed ISO week (see Mode: retro below). The retro produces:
+
+- A new `### Wk N` subsection appended to the training plan
+- An adherence read on what hit, what slipped
+- A plan adjustment check: do the current week's targets still hold, or do they step down?
+
+When the retro reveals drift (long run missed, weekly mileage 30%+ under plan, two consecutive weeks of misses, or weight off trajectory), pause before scheduling. Propose adjustments to the current week's targets and get user confirmation before continuing to Phase 2.
+
+If a `### Wk N` subsection already exists in the plan for the just-closed week, skip Phase 1 and continue to Phase 2.
+
+### Phase 2: Detect Existing Placeholders
 
 Fetch the week's calendar events (Monday through Sunday) and check for already existing recurring or one off events. Do not overwrite or duplicate. Only create what is missing for this specific week.
 
@@ -69,11 +85,11 @@ Fetch the week's calendar events (Monday through Sunday) and check for already e
 
 If a recurring placeholder is missing, surface it to the user rather than silently creating it. The user may have skipped the session this week intentionally.
 
-### Phase 2: Friday Long Run
+### Phase 3: Friday Long Run
 
 Run the Friday long run workflow (see Mode: long-run below). This is the primary one off creation each week.
 
-### Phase 3: Special Week Handling
+### Phase 4: Special Week Handling
 
 Check the current week number against the training plan and apply special week logic:
 
@@ -81,7 +97,7 @@ Check the current week number against the training plan and apply special week l
 - **Altitude weeks (9, 10)**: Front Range altitude (week 9) or Aspen recon (week 10). Week 10 includes a Thu drive out + overnight; surface logistics to the user before creating events.
 - **Race week (13)**: Fri 7/31 is the FPL race itself. Coordinate the race day plan as a separate workflow, not a training long run.
 
-### Phase 4: Mon Flex
+### Phase 5: Mon Flex
 
 Optional easy ~4 mi run on Mon. Energy dependent. Do not auto schedule. Surface as an option, do not create without explicit user confirmation.
 
@@ -129,19 +145,19 @@ Look back on a completed (or in progress) training week. Compare planned vs actu
 
 ### Phase 2: Gather Data
 
-Pull from three sources in parallel:
+Pull from two sources in parallel:
 
 1. **Training plan**: read the row in `2026-training-plan.md` for the target week. Note **Long mi**, **Vert ft**, **Fri shape**, **Weight** target, **Nutrition focus**.
-2. **Google Calendar**: list opaque events for the week. Filter to training relevant (Sage colorId 2, training emojis, or session keywords like SPRC, DRC, lift, climb, sauna, contrast, long run).
-3. **Strava**: pull all activities for the week via `mcp__strava__get-all-activities` with `startDate` and `endDate`. Then call `mcp__strava__get-activity-details` on each run to get **distance** and **elevation gain in meters** (convert to ft: meters * 3.28084).
+2. **Strava**: pull all activities for the week via `mcp__strava__get-all-activities` with `startDate` and `endDate`. Then call `mcp__strava__get-activity-details` on each run to get **distance** and **elevation gain in meters** (convert to ft: meters * 3.28084).
+
+**Strava is the source of truth for what happened.** Do not pull calendar data for retro purposes. The calendar shows scheduled intent, not completion. A calendar event existing is not evidence the session happened.
 
 ### Phase 3: Build the Coverage Table
 
-For every planned session in the week, record actual status. Sources:
+For every planned session in the week, record actual status:
 
-- Yoga, lifts, climb (if any): calendar event present = scheduled. Lifts at Movement RiNo do **not** show in Strava — confirm with the user when a lift's status is unclear, do not assume missed.
-- Runs (DRC, SPRC, long run, Mon flex): match Strava activities by date and approximate distance.
-- Recovery (sauna, contrast): calendar event present is the signal.
+- **Runs (DRC, SPRC, long run, Mon flex)**: match Strava activities by date and approximate distance. No matching Strava activity = miss.
+- **Yoga, lifts, climbing, sauna, contrast therapy**: not captured in Strava. Ask the user explicitly via `AskUserQuestion` whether each happened. Batch the questions when there are several. Do not infer completion from calendar events existing.
 
 Mark each session as `✅` (hit), `❌` (missed), `↪️` (shifted), `❓` (open / status unknown), or `n/a` (not applicable this week).
 
@@ -158,7 +174,22 @@ Compare each against the plan row. Express delta as percentage and direction.
 
 **Vert is co-equal with mileage.** The plan tracks both; the retro evaluates against both. Hitting mileage and missing vert (e.g., long run on flat terrain instead of trail) is a partial hit, not a hit.
 
-### Phase 5: Write the Retro Subsection
+### Phase 5: Interrogate Significant Deltas
+
+When the numbers show significant divergence from plan — mileage 30%+ under, long run missed entirely, two consecutive weeks of misses, or weight off trajectory — interrogate the cause before writing the retro. Numbers alone are not the read; they are the symptom. The cause shapes the adjustment.
+
+Categories worth surfacing via `AskUserQuestion`:
+
+- **Injury or body**: pain, soreness, illness, recovery debt
+- **Schedule / life**: travel, work compression, family obligations, social
+- **Motivation / state**: low energy, emotional load, post hard week dip
+- **Conditions**: weather, gear, route or logistics
+
+Ask one focused question for category, then leave room for the user to fill in detail in chat. When the cause is medical (injury, illness), explicitly prompt for any provider notes, AI consults, or external feedback the user wants captured verbatim or summarized. Capture that context in the retro's "The Read" — it shapes adjustment more than the numbers do.
+
+Skip this phase only when the retro lands at or above plan with no meaningful gap.
+
+### Phase 6: Write the Retro Subsection
 
 Append a new subsection at the bottom of the **Weekly Retrospectives** section in `2026-training-plan.md`. Use this skeleton (note the heading levels: `###` for the week, `####` for the inner sections so the table of contents stays clean):
 
@@ -197,7 +228,21 @@ Append a new subsection at the bottom of the **Weekly Retrospectives** section i
 
 Before writing, present the draft inline and ask the user one question via `AskUserQuestion`: anything to add or correct? Save after they confirm or redirect. Use `Edit` to insert the new subsection at the end of the Weekly Retrospectives section, immediately before the `## References` heading.
 
-### Phase 6: Surface Trends
+### Phase 7: Plan Adjustment Check
+
+Compare the just-written retro to the **current** week's plan row. When the retro shows under-coverage — long run missed, weekly mileage 30%+ under, two weeks in a row of misses, or weight off trajectory — the current week's targets likely need to step down rather than press forward.
+
+Propose adjustment options to the user via `AskUserQuestion`. Typical levers:
+
+- **Long run target**: hold the plan number, drop to last week's actual, or drop further to rebuild rhythm
+- **Vert target**: same logic, often paired with the mileage call
+- **Phase shift**: if drift is severe, treat the current week as a recovery / rebuild rather than continuing the build progression
+
+After the user decides, update the row in `2026-training-plan.md` to reflect the adjusted targets. Annotate inline so both numbers stay visible — e.g., `20 (adjusted from 22)`. The original plan and the adjustment trace together.
+
+Skip this phase only when the retro shows the week landed at or above plan.
+
+### Phase 8: Surface Trends
 
 After saving, briefly scan the prior 1 to 2 retro subsections already in the plan file (if they exist). Surface any pattern: repeated misses, drifting metrics, growing or shrinking adherence. Keep this short — one or two sentences. Do not invent patterns when there is not enough data.
 

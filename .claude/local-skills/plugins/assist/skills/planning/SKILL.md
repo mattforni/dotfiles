@@ -1,6 +1,6 @@
 ---
-name: assist:schedule
-description: Weekly schedule planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions their schedule, weekly planning, Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:training`; this skill calls into it during Monday planning.
+name: assist:planning
+description: Weekly planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions weekly planning, the Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:training`; this skill calls into it during Monday planning.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
   - Skill
@@ -14,9 +14,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Schedule Assist
+# Planning Assist
 
-Help Forni manage his weekly schedule: review the week, slot Todoist tasks into open time, and make calendar adjustments while respecting training and recovery constraints.
+Help Forni plan his week: review the calendar, slot Todoist tasks into open time, and make calendar adjustments while respecting training and recovery constraints.
 
 ## Before Every Invocation
 
@@ -34,15 +34,13 @@ When there is a conflict between the template and the calendar, the calendar is 
 
 These constraints exist for real physiological and practical reasons. They are not suggestions.
 
-**Transitions**: Every movement between locations gets a 30-minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back-to-back without a transition unless they are at the same location.
-
-**Fasting window**: Last meal at 18:30, first meal at 07:30 (13:11 intermittent fasting). Do not schedule dinner events after 18:30 without flagging the fasting impact.
+**Transitions**: Every movement between locations gets a 30-minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back-to-back without a transition unless they are at the same location. Transitions are placeholders — when a scheduled meeting claims part of a transition's time slot, shrink the transition to fit the remaining gap rather than flagging it as a conflict.
 
 **Work hours**: 8:00-16:00 is the target. Mon/Tue/Thu in office at Zero Homes, Wed/Fri from home. Lunch breaks on Mon (yoga 12:15) and Tue (lift 11:00) are already spoken for.
 
-**Lights out**: 21:30. Events that push past 21:00 should be flagged.
-
 **Training adjacent constraints**: Cold plunge sequencing (4 to 6 hour gap after strength), sauna timing post strength, and Thursday SPRC morning protection live in the `assist:training` skill. Defer to that skill when validating moves of training, sauna, contrast, or Thursday morning events.
+
+**Personal anchors (not conflicts)**: Forni's last meal cutoff (currently 19:30) and lights out (currently 22:00) live in `~/Eudaimonia/schedule.md` Daily Anchors. These are personal constraints Forni manages himself — do not flag events that push past them as conflicts.
 
 ## Mode: plan (default)
 
@@ -72,11 +70,11 @@ Present all conflicts to the user, one at a time or in small batches. For each c
 
 Execute only the agreed changes before moving on. The calendar should be clean and conflict-free before the overview.
 
-### Phase 1.5: Training Scheduling
+### Phase 2: Training Scheduling
 
 Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
 
-### Phase 2: Week Overview
+### Phase 3: Week Overview
 
 Present the rectified week at a glance, day by day. For each day show:
 
@@ -87,7 +85,7 @@ Present the rectified week at a glance, day by day. For each day show:
 
 This is a clean view of what the week actually looks like after conflicts are resolved.
 
-### Phase 2.5: Triage
+### Phase 4: Triage
 
 Before slotting, triage the Todoist tasks from the Schedule filter. This is a collaborative pass through all tasks to:
 
@@ -96,7 +94,7 @@ Before slotting, triage the Todoist tasks from the Schedule filter. This is a co
 3. **Reprioritize**: Review priorities and flag anything that looks off. Use best judgment, then confirm with the user.
 4. **Clear p4**: All p4 tasks either get bumped to a real priority or punted to the following Monday. p4 items do not get slotted into the current week.
 
-### Phase 3: Task Slotting
+### Phase 5: Task Slotting
 
 Present the remaining tasks that need scheduling. For each task, suggest a time slot based on:
 
@@ -131,7 +129,7 @@ Google Calendar is still used directly for non-task events: meetings, transition
 
 **Deferred tasks land on Monday**: When deferring tasks to next week or further out, always schedule them for the Monday of the target week. Monday is the landing zone where tasks get triaged during the planning session.
 
-### Phase 4: Summary
+### Phase 6: Summary
 
 After slotting is complete, present:
 
@@ -190,7 +188,7 @@ Include the location when the event is at a specific place.
 
 ## Training Plan Scheduling
 
-Training event creation lives in the `assist:training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Phase 1.5 above invokes it during Monday planning.
+Training event creation lives in the `assist:training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Phase 2 above invokes it during Monday planning.
 
 ## Key Locations
 
