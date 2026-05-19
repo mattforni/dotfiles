@@ -99,7 +99,13 @@ Calibration: 60s poll interval and 45 min cap fit atelic-style repos (CI 1–2 m
     - No comments / "no feedback" / all advisory you'd decline → **merge** (Step 5)
     - Actionable items → **iterate** (next bullet)
     - Mixed → address actionable, decline advisory with reasoning, push, then loop back to Step 3
-- **Iterate**: invoke `sdlc:iterate` with PR_NUMBER. It addresses comments, pushes, and posts the re-review trigger (push alone usually re-triggers Gemini; CodeRabbit may need an explicit `@coderabbitai review` per the repo's `sdlc.review-command` config). Loop back to Step 3.
+- **Iterate**: invoke `sdlc:iterate` with PR_NUMBER. It addresses comments and pushes. **Pushing alone does NOT re-trigger either Gemini Code Assist or CodeRabbit.** After each iterate push you must explicitly post the re-review comment for the configured bot — `/gemini review` for Gemini, `@coderabbitai review` for CodeRabbit (consult the repo's `sdlc.review-command` config). Then check `mergeStateStatus` and rebase if the PR went `DIRTY` while you were iterating (main can move under you, especially in active repos):
+
+  ```bash
+  gh pr view PR_NUMBER --json mergeStateStatus --jq '.mergeStateStatus'
+  ```
+
+  If `DIRTY`, fetch main, rebase, resolve conflicts, force-push with `--force-with-lease`, then post the re-review trigger. Loop back to Step 3.
 - **`CHECKS_FAILED`**: fetch failing job logs. If the failure is something you introduced and can fix in place, fix and push; loop back to Step 3. Otherwise bail to the user with the failing job link.
 - **`HUMAN_REVIEW`**: bail to the user with the review body. Humans get the final word — never auto-merge over a human comment even if it looks like a nit.
 - **`TIMEOUT`**: bail to the user with the current state summary.
