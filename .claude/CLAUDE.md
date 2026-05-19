@@ -83,7 +83,9 @@ Choose the highest available option. Native connectors are smoother and require 
 
 ### gws Profiles
 
-The `gws` CLI uses `$GOOGLE_WORKSPACE_CLI_CONFIG_DIR` for per-account isolation. Forni's shell auto-loads either `~/.config/gws-zero/` or `~/.config/gws-personal/` based on `~/.config/gws-current`. A zsh chpwd hook also walks up from `$PWD` looking for `.gws-profile` marker files and silently switches when one is found, so cd'ing into a personal subtree flips you to personal for that shell. Use `gws-whoami` to confirm which account is active before sending mail or modifying calendars. When ambiguous, ask which account Forni wants the action against. Per-command override: `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...`.
+The `gws` CLI uses `$GOOGLE_WORKSPACE_CLI_CONFIG_DIR` for per-account isolation. Forni's shell auto-loads either `~/.config/gws-zero/` or `~/.config/gws-home/` based on `~/.config/gws-current`. A zsh chpwd hook also walks up from `$PWD` looking for `.account` marker files (a cross-tool convention; the `~/bin/claude` wrapper reads the same marker) and silently switches when one is found, so cd'ing into a home subtree flips you to home for that shell. Use `gws-whoami` to confirm which account is active before sending mail or modifying calendars. When ambiguous, ask which account Forni wants the action against. Per-command override: `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...`.
+
+The `~/bin/claude` wrapper picks a Claude Code config dir (`~/.claude-zero/` or `~/.claude-home/`) at launch from the same `.account` marker, reads the matching `claude-code-oauth-<profile>` Keychain entry, and exec's the real binary. New sessions started in a directory subtree automatically use the right Anthropic account.
 
 ### Google Workspace links (Docs, Sheets, Slides, Drive)
 

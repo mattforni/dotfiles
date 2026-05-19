@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Per-profile wrapper around the real `claude` binary.
+#
+# Walks up from $PWD finding the nearest .account marker (shared with the gws
+# resolver in .functions). Falls back to the ambient profile in
+# ~/.config/gws-current. Reads the matching claude-code-oauth-<profile> entry
+# from macOS Keychain, exports CLAUDE_CONFIG_DIR + CLAUDE_CODE_OAUTH_TOKEN,
+# and exec's the real binary.
+#
+# Profile dirs at ~/.claude-zero/ and ~/.claude-home/ are populated by
+# bin/claude-profiles-init.sh (invoked from setup.sh).
+
+set -euo pipefail
+
+resolve_profile() {
+    local dir="$PWD"
+    local target=""
+    while :; do
+        if [[ -f "$dir/.account" ]]; then
+            target="$(cat "$dir/.account" 2>/dev/null | tr -d '[:space:]')"
+            break
+        fi
+        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
+        dir="$(dirname "$dir")"
+    done
+    if [[ -z "$target" ]]; then
+        if [[ -f "$HOME/.config/gws-current" ]]; then
+            target="$(cat "$HOME/.config/gws-current" | tr -d '[:space:]')"
+        fi
+        [[ -z "$target" ]] && target="zero"
+    fi
+    printf '%s' "$target"
+}
+
+profile=$(resolve_profile)
+cfg_dir="$HOME/.claude-$profile"
+
+# Find the next `claude` on PATH that isn't this wrapper.
+# Bash's `-ef` test compares files by device+inode, so it correctly handles
+# the case where this script is reached via a symlink in PATH (e.g.
+# ~/bin/claude -> .../homebase/bin/claude) and the same physical file appears
+# under a different PATH entry.
+real_claude=""
+IFS=':' read -ra path_parts <<< "$PATH"
+for p in "${path_parts[@]}"; do
+    candidate="$p/claude"
+    if [[ -x "$candidate" && ! "$candidate" -ef "$0" ]]; then
+        real_claude="$candidate"
+        break
+    fi
+done
+if [[ -z "$real_claude" ]]; then
+    echo "claude wrapper: cannot find real claude binary on PATH" >&2
+    exit 127
+fi
+
+# Fall back to default config root if the profile dir does not exist.
+if [[ ! -d "$cfg_dir" ]]; then
+    echo "claude wrapper: $cfg_dir not found, using default config" >&2
+    exec "$real_claude" "$@"
+fi
+
+token=$(security find-generic-password -s "claude-code-oauth-$profile" -w 2>/dev/null || true)
+
+env_args=(CLAUDE_CONFIG_DIR="$cfg_dir")
+[[ -n "$token" ]] && env_args+=(CLAUDE_CODE_OAUTH_TOKEN="$token")
+
+exec env "${env_args[@]}" "$real_claude" "$@"

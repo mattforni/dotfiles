@@ -78,12 +78,12 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 - `log [-p] <executable>` - Run executable and log output with timestamp
 - `numf [-a] [directory]` - Count files in directory
 
-### Google Workspace CLI Profiles
+### Account Profiles (gws + Claude Code)
 
-The `gws` CLI supports multiple Google accounts via per-profile config dirs. Active profile is layered:
+Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Profiles today: `zero` (Zero Homes work) and `home` (personal). Active profile is layered:
 
-1. **Ambient** — recorded in `~/.config/gws-current`, exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
-2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.gws-profile` marker file and silently swaps the env var for that shell.
+1. **Ambient** — recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
+2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. The `~/bin/claude` wrapper reads the same marker at launch time to pick the Claude Code config dir.
 3. **Pin** — `gws-pin` disables the chpwd hook in the current shell.
 
 | Command | Effect |
@@ -93,9 +93,11 @@ The `gws` CLI supports multiple Google accounts via per-profile config dirs. Act
 | `gws-pin` | Lock to current profile in this shell |
 | `gws-unpin` | Resume chpwd hook |
 | `gws-whoami` | Show profile, config dir, and `gws auth status` |
-| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...` | One shot override |
+| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
-OAuth `client_secret.json` files sync across machines via GCP Secret Manager (bootstrap project: `gws-forni`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws-secrets-push.sh` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design.
+**Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and reads the matching `claude-code-oauth-<profile>` entry from macOS Keychain before exec'ing the real binary. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh).
+
+OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager (bootstrap project: `gws-forni`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws-secrets-push.sh` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design.
 
 ## Project Structure
 
