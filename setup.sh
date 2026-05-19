@@ -568,7 +568,7 @@ setup_auth() {
         warn "  mv ~/.config/gws ~/.config/gws-<zero|personal>"
       else
         local migration_target="$HOME/.config/gws-$legacy_profile"
-        if [[ -d "$migration_target" ]]; then
+        if [[ -e "$migration_target" ]]; then
           warn "Both ~/.config/gws (account: $legacy_user) and $migration_target exist. Inspect and remove the stale one manually."
         else
           info "Migrating ~/.config/gws -> $migration_target (detected account: $legacy_user)"
