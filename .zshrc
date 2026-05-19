@@ -52,3 +52,11 @@ export PATH="$HOME/.local/bin:$PATH"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# PATH precedence finalization. Place LAST so it wins over every earlier
+# prepend in this file. `typeset -U path` keeps PATH unique on each
+# re-source of .zshrc; the explicit prepend ensures $HOME/bin (where
+# homebase wrappers like `claude` live) resolves before installers that
+# dropped binaries into $HOME/.local/bin or $BUN_INSTALL/bin.
+typeset -U path
+export PATH="$HOME/bin:$PATH"
