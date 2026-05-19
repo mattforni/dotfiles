@@ -552,7 +552,7 @@ setup_auth() {
     if [[ -d "$HOME/.config/gws" ]]; then
       local legacy_user=""
       legacy_user=$(GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws" gws auth status \
-        | python3 -c "import json,sys; print(json.load(sys.stdin).get('user',''))" \
+        | jq -r '.user // empty' \
         || true)
 
       local legacy_profile=""
