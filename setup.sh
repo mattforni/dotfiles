@@ -545,16 +545,43 @@ setup_auth() {
 
   # Google Workspace CLI (multi-profile)
   if command -v gws &>/dev/null; then
-    # Migrate legacy single-profile layout into the "zero" profile.
-    if [[ -d "$HOME/.config/gws" ]] && [[ ! -d "$HOME/.config/gws-zero" ]]; then
-      info "Migrating ~/.config/gws -> ~/.config/gws-zero"
-      mv "$HOME/.config/gws" "$HOME/.config/gws-zero" || return 1
-      SUMMARY+=("gws: migrated legacy config to zero profile")
-    elif [[ -d "$HOME/.config/gws" ]] && [[ -d "$HOME/.config/gws-zero" ]]; then
-      warn "Both ~/.config/gws and ~/.config/gws-zero exist. Inspect and remove the stale one manually."
+    # Migrate legacy single-profile layout. Detect which profile the legacy
+    # config belongs to by peeking at the authenticated account; map
+    # @zerohomes.io domain to "zero" and anything else to "personal".
+    local migrated_profile=""
+    if [[ -d "$HOME/.config/gws" ]]; then
+      local legacy_user=""
+      legacy_user=$(GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws" gws auth status 2>/dev/null \
+        | python3 -c "import json,sys; print(json.load(sys.stdin).get('user',''))" 2>/dev/null \
+        || true)
+
+      local legacy_profile=""
+      case "$legacy_user" in
+        *@zerohomes.io) legacy_profile=zero ;;
+        "") legacy_profile="" ;;
+        *) legacy_profile=personal ;;
+      esac
+
+      if [[ -z "$legacy_profile" ]]; then
+        warn "Could not detect account in ~/.config/gws (no auth state to inspect)."
+        warn "Rename it manually before re-running setup:"
+        warn "  mv ~/.config/gws ~/.config/gws-<zero|personal>"
+      else
+        local migration_target="$HOME/.config/gws-$legacy_profile"
+        if [[ -d "$migration_target" ]]; then
+          warn "Both ~/.config/gws (account: $legacy_user) and $migration_target exist. Inspect and remove the stale one manually."
+        else
+          info "Migrating ~/.config/gws -> $migration_target (detected account: $legacy_user)"
+          mv "$HOME/.config/gws" "$migration_target" || return 1
+          SUMMARY+=("gws: migrated legacy config to $legacy_profile profile ($legacy_user)")
+          migrated_profile="$legacy_profile"
+        fi
+      fi
     fi
 
-    [[ -f "$HOME/.config/gws-current" ]] || printf 'zero\n' > "$HOME/.config/gws-current"
+    # Seed the active-profile pointer. Prefer the just-migrated profile so a
+    # fresh personal-only machine doesn't default to zero ambient.
+    [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-zero}" > "$HOME/.config/gws-current"
 
     local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-gws-forni}"
     local gws_profile gws_dir
