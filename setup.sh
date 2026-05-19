@@ -643,12 +643,9 @@ setup_auth() {
     else
       info "Claude Code profile dirs already present (~/.claude-zero, ~/.claude-home)"
     fi
-    for cc_profile in zero home; do
-      if ! security find-generic-password -s "claude-code-oauth-$cc_profile" >/dev/null 2>&1; then
-        warn "Missing Keychain entry: claude-code-oauth-$cc_profile"
-        warn "  security add-generic-password -a \$USER -s claude-code-oauth-$cc_profile -w '<token>' -U"
-      fi
-    done
+    info "Per-profile auth: cd into each profile's territory and run \`claude\` once."
+    info "Claude Code stores credentials per CLAUDE_CONFIG_DIR natively (Keychain"
+    info "service \"Claude Code-credentials-<hash>\"). Sign in as the right account."
   fi
 }
 
