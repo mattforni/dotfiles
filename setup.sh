@@ -556,10 +556,11 @@ setup_auth() {
 
     [[ -f "$HOME/.config/gws-current" ]] || printf 'zero\n' > "$HOME/.config/gws-current"
 
+    local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-gws-forni}"
     local gws_profile gws_dir
     for gws_profile in zero personal; do
       gws_dir="$HOME/.config/gws-$gws_profile"
-      if [[ -d "$gws_dir" ]] && [[ "$FORCE" != true ]]; then
+      if [[ -f "$gws_dir/client_secret.json" ]] && [[ -f "$gws_dir/credentials.enc" ]] && [[ "$FORCE" != true ]]; then
         info "gws $gws_profile profile already configured ($gws_dir)"
         continue
       fi
@@ -567,14 +568,32 @@ setup_auth() {
       [[ "$choice" =~ ^[Yy]$ ]] || continue
       mkdir -p "$gws_dir"
       if [[ ! -f "$gws_dir/client_secret.json" ]]; then
-        warn "Missing $gws_dir/client_secret.json"
-        warn "Copy the OAuth client JSON from another machine (or download from GCP Console) into:"
-        warn "  $gws_dir/client_secret.json"
-        warn "Then press Enter to continue."
-        read -r
+        # Try to fetch from GCP Secret Manager first.
+        if command -v gcloud &>/dev/null; then
+          info "Fetching $gws_profile client_secret from Secret Manager (project: $gws_bootstrap_project)"
+          if gcloud secrets versions access latest \
+              --secret="gws-client-secret-$gws_profile" \
+              --project="$gws_bootstrap_project" \
+              > "$gws_dir/client_secret.json" 2>/dev/null; then
+            chmod 600 "$gws_dir/client_secret.json"
+            info "Fetched $gws_profile client_secret from Secret Manager"
+          else
+            rm -f "$gws_dir/client_secret.json"
+            warn "Could not fetch from Secret Manager (auth, network, or missing secret)"
+          fi
+        fi
         if [[ ! -f "$gws_dir/client_secret.json" ]]; then
-          error "Still missing $gws_dir/client_secret.json -- skipping $gws_profile"
-          continue
+          warn "Missing $gws_dir/client_secret.json"
+          warn "Options:"
+          warn "  1. Authenticate gcloud against the GWS bootstrap project and rerun setup:"
+          warn "       gcloud auth login && gcloud config set project $gws_bootstrap_project"
+          warn "  2. Copy the OAuth client JSON manually to $gws_dir/client_secret.json"
+          warn "Press Enter once one of the above is done."
+          read -r
+          if [[ ! -f "$gws_dir/client_secret.json" ]]; then
+            error "Still missing $gws_dir/client_secret.json -- skipping $gws_profile"
+            continue
+          fi
         fi
       fi
       if GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$gws_dir" gws auth login; then

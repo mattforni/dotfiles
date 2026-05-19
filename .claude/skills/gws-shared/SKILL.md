@@ -2,7 +2,7 @@
 name: gws-shared
 description: "gws CLI: Shared patterns for authentication, global flags, and output formatting."
 metadata:
-  version: 0.22.4
+  version: 0.22.5
   openclaw:
     category: "productivity"
     requires:
@@ -51,6 +51,17 @@ The active profile is layered:
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...` | One shot override |
 
 When writing tooling that should always run against a specific account, prefer the per-command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
+
+### Cross-Machine Secret Sync
+
+`client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager. The bootstrap project defaults to `gws-forni`; override via `GWS_BOOTSTRAP_PROJECT`.
+
+| Action | How |
+|--------|-----|
+| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/gws-secrets-push.sh` |
+| Pull on a fresh machine | `./setup.sh` (auto fetches via `gcloud secrets versions access`) |
+
+Tokens (`credentials.enc`, `token_cache.json`) are NOT synced. They are keyring encrypted and bound to the originating machine. Re run `gws auth login` per profile per machine, which the setup.sh per profile loop handles.
 
 ## Global Flags
 

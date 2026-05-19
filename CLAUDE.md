@@ -95,6 +95,8 @@ The `gws` CLI supports multiple Google accounts via per-profile config dirs. Act
 | `gws-whoami` | Show profile, config dir, and `gws auth status` |
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...` | One shot override |
 
+OAuth `client_secret.json` files sync across machines via GCP Secret Manager (bootstrap project: `gws-forni`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws-secrets-push.sh` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design.
+
 ## Project Structure
 
 ```text
