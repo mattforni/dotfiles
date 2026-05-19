@@ -46,6 +46,12 @@ export PATH="$PATH:$HOME/.rvm/bin"
 cd . # Trigger RVM auto-switch on shell start
 export PATH="$HOME/.local/bin:$PATH"
 
+# Prepend $HOME/bin so homebase wrappers (e.g., `claude`) intercept the
+# real binaries that other installers (Anthropic's claude, etc.) drop into
+# $HOME/.local/bin. Appending in the earlier loop is not enough because
+# .local/bin gets prepended above.
+export PATH="$HOME/bin:$PATH"
+
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
