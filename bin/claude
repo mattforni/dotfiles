@@ -24,7 +24,9 @@ resolve_profile() {
         dir="$(dirname "$dir")"
     done
     if [[ -z "$target" ]]; then
-        target="$(cat "$HOME/.config/gws-current" 2>/dev/null | tr -d '[:space:]')"
+        if [[ -f "$HOME/.config/gws-current" ]]; then
+            target="$(cat "$HOME/.config/gws-current" | tr -d '[:space:]')"
+        fi
         [[ -z "$target" ]] && target="zero"
     fi
     printf '%s' "$target"
