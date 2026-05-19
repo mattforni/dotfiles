@@ -10,7 +10,7 @@
 # Profile dirs at ~/.claude-zero/ and ~/.claude-home/ are populated by
 # bin/claude-profiles-init.sh (invoked from setup.sh).
 
-set -uo pipefail
+set -euo pipefail
 
 resolve_profile() {
     local dir="$PWD"
@@ -34,17 +34,17 @@ profile=$(resolve_profile)
 cfg_dir="$HOME/.claude-$profile"
 
 # Find the next `claude` on PATH that isn't this wrapper.
+# Bash's `-ef` test compares files by device+inode, so it correctly handles
+# the case where this script is reached via a symlink in PATH (e.g.
+# ~/bin/claude -> .../homebase/bin/claude) and the same physical file appears
+# under a different PATH entry.
 real_claude=""
-self_real=$(/usr/bin/python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$0" 2>/dev/null || echo "$0")
 IFS=':' read -ra path_parts <<< "$PATH"
 for p in "${path_parts[@]}"; do
     candidate="$p/claude"
-    if [[ -x "$candidate" ]]; then
-        candidate_real=$(/usr/bin/python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$candidate" 2>/dev/null || echo "$candidate")
-        if [[ "$candidate_real" != "$self_real" ]]; then
-            real_claude="$candidate"
-            break
-        fi
+    if [[ -x "$candidate" && ! "$candidate" -ef "$0" ]]; then
+        real_claude="$candidate"
+        break
     fi
 done
 if [[ -z "$real_claude" ]]; then

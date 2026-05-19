@@ -635,7 +635,7 @@ setup_auth() {
   if command -v claude &>/dev/null; then
     if [[ ! -d "$HOME/.claude-zero" ]] || [[ ! -d "$HOME/.claude-home" ]]; then
       info "Bootstrapping Claude Code profile dirs..."
-      if "$DIR/bin/claude-profiles-init.sh"; then
+      if bash "$DIR/bin/claude-profiles-init.sh"; then
         SUMMARY+=("Claude Code profile dirs bootstrapped")
       else
         warn "claude-profiles-init.sh failed"

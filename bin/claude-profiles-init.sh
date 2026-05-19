@@ -15,7 +15,11 @@ set -euo pipefail
 LEGACY="$HOME/.claude"
 ZERO="$HOME/.claude-zero"
 HOME_PROFILE="$HOME/.claude-home"
-HOMEBASE_CLAUDE="$HOME/Eudaimonia/Craft/Development/personal/homebase/.claude"
+# Resolve HOMEBASE_CLAUDE from this script's physical location so the script
+# works whether invoked directly from homebase/bin or via the $HOME/bin
+# symlink. `cd -P` forces physical resolution, following the symlink.
+SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOMEBASE_CLAUDE="$(dirname "$SCRIPT_DIR")/.claude"
 
 for d in "$ZERO" "$HOME_PROFILE"; do
     mkdir -p "$d"/{projects,sessions,plugins,hooks}
@@ -40,15 +44,18 @@ for d in "$ZERO" "$HOME_PROFILE"; do
     done
 done
 
-# Migrate ~/.claude/projects/ by path.
+# Migrate ~/.claude/projects/ by path. Project entries are named after the
+# absolute path with `/` replaced by `-`, so we derive the same encoding
+# from $HOME rather than hardcoding the username.
+HOME_PATTERN="${HOME//\//-}"
 if [[ -d "$LEGACY/projects" ]]; then
     for entry in "$LEGACY/projects"/*; do
         [[ -d "$entry" ]] || continue
         name=$(basename "$entry")
         case "$name" in
-            -Users-mattforni-Eudaimonia-Craft-Development-zero*)
+            "${HOME_PATTERN}-Eudaimonia-Craft-Development-zero"*)
                 dest="$ZERO/projects/$name" ;;
-            -Users-mattforni-Eudaimonia*)
+            "${HOME_PATTERN}-Eudaimonia"*)
                 dest="$HOME_PROFILE/projects/$name" ;;
             *)
                 dest="$ZERO/projects/$name" ;;
