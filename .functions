@@ -425,18 +425,19 @@ find_and_source_env() {
 # Multi-profile support for the gws (Google Workspace) CLI.
 # Layered model:
 #   1. Ambient profile from ~/.config/gws-current (persists across shells)
-#   2. Directory override via .gws-profile markers + chpwd hook (zsh)
+#   2. Directory override via .account markers + chpwd hook (zsh)
 #   3. Pin via gws-pin to disable the hook in the current shell
 # Per-command override stays available: GOOGLE_WORKSPACE_CLI_CONFIG_DIR=... gws ...
+# The .account marker is shared across tools (also read by ~/bin/claude).
 __gws_resolve_profile() {
     [[ "${GWS_AUTO_SWITCH:-1}" == "0" ]] && return 0
 
-    # Walk up from PWD looking for the nearest .gws-profile marker.
+    # Walk up from PWD looking for the nearest .account marker.
     local dir="$PWD"
     local target=""
     while :; do
-        if [[ -f "$dir/.gws-profile" ]]; then
-            target="$(cat "$dir/.gws-profile" 2>/dev/null)"
+        if [[ -f "$dir/.account" ]]; then
+            target="$(cat "$dir/.account" 2>/dev/null)"
             target="${target//[$'\t\r\n ']/}"
             break
         fi

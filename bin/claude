@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Per-profile wrapper around the real `claude` binary.
+#
+# Walks up from $PWD finding the nearest .account marker (shared with the gws
+# resolver in .functions). Falls back to the ambient profile in
+# ~/.config/gws-current. Reads the matching claude-code-oauth-<profile> entry
+# from macOS Keychain, exports CLAUDE_CONFIG_DIR + CLAUDE_CODE_OAUTH_TOKEN,
+# and exec's the real binary.
+#
+# Profile dirs at ~/.claude-zero/ and ~/.claude-home/ are populated by
+# bin/claude-profiles-init.sh (invoked from setup.sh).
+
+set -uo pipefail
+
+resolve_profile() {
+    local dir="$PWD"
+    local target=""
+    while :; do
+        if [[ -f "$dir/.account" ]]; then
+            target="$(cat "$dir/.account" 2>/dev/null | tr -d '[:space:]')"
+            break
+        fi
+        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
+        dir="$(dirname "$dir")"
+    done
+    if [[ -z "$target" ]]; then
+        target="$(cat "$HOME/.config/gws-current" 2>/dev/null | tr -d '[:space:]')"
+        [[ -z "$target" ]] && target="zero"
+    fi
+    printf '%s' "$target"
+}
+
+profile=$(resolve_profile)
+cfg_dir="$HOME/.claude-$profile"
+
+# Find the next `claude` on PATH that isn't this wrapper.
+real_claude=""
+self_real=$(/usr/bin/python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$0" 2>/dev/null || echo "$0")
+IFS=':' read -ra path_parts <<< "$PATH"
+for p in "${path_parts[@]}"; do
+    candidate="$p/claude"
+    if [[ -x "$candidate" ]]; then
+        candidate_real=$(/usr/bin/python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$candidate" 2>/dev/null || echo "$candidate")
+        if [[ "$candidate_real" != "$self_real" ]]; then
+            real_claude="$candidate"
+            break
+        fi
+    fi
+done
+if [[ -z "$real_claude" ]]; then
+    echo "claude wrapper: cannot find real claude binary on PATH" >&2
+    exit 127
+fi
+
+# Fall back to default config root if the profile dir does not exist.
+if [[ ! -d "$cfg_dir" ]]; then
+    echo "claude wrapper: $cfg_dir not found, using default config" >&2
+    exec "$real_claude" "$@"
+fi
+
+token=$(security find-generic-password -s "claude-code-oauth-$profile" -w 2>/dev/null || true)
+
+env_args=(CLAUDE_CONFIG_DIR="$cfg_dir")
+[[ -n "$token" ]] && env_args+=(CLAUDE_CODE_OAUTH_TOKEN="$token")
+
+exec env "${env_args[@]}" "$real_claude" "$@"

@@ -547,7 +547,7 @@ setup_auth() {
   if command -v gws &>/dev/null; then
     # Migrate legacy single-profile layout. Detect which profile the legacy
     # config belongs to by peeking at the authenticated account; map
-    # @zerohomes.io domain to "zero" and anything else to "personal".
+    # @zerohomes.io domain to "zero" and anything else to "home".
     local migrated_profile=""
     if [[ -d "$HOME/.config/gws" ]]; then
       local legacy_user=""
@@ -559,13 +559,13 @@ setup_auth() {
       case "${legacy_user,,}" in
         *@zerohomes.io) legacy_profile=zero ;;
         "") legacy_profile="" ;;
-        *) legacy_profile=personal ;;
+        *) legacy_profile=home ;;
       esac
 
       if [[ -z "$legacy_profile" ]]; then
         warn "Could not detect account in ~/.config/gws (no auth state to inspect)."
         warn "Rename it manually before re-running setup:"
-        warn "  mv ~/.config/gws ~/.config/gws-<zero|personal>"
+        warn "  mv ~/.config/gws ~/.config/gws-<zero|home>"
       else
         local migration_target="$HOME/.config/gws-$legacy_profile"
         if [[ -e "$migration_target" ]]; then
@@ -580,12 +580,12 @@ setup_auth() {
     fi
 
     # Seed the active-profile pointer. Prefer the just-migrated profile so a
-    # fresh personal-only machine doesn't default to zero ambient.
+    # fresh home-only machine doesn't default to zero ambient.
     [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-zero}" > "$HOME/.config/gws-current"
 
     local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-gws-forni}"
     local gws_profile gws_dir
-    for gws_profile in zero personal; do
+    for gws_profile in zero home; do
       gws_dir="$HOME/.config/gws-$gws_profile"
       if [[ -f "$gws_dir/client_secret.json" ]] && [[ -f "$gws_dir/credentials.enc" ]] && [[ "$FORCE" != true ]]; then
         info "gws $gws_profile profile already configured ($gws_dir)"
@@ -627,6 +627,26 @@ setup_auth() {
         SUMMARY+=("gws: $gws_profile profile authenticated")
       else
         error "gws auth login failed for $gws_profile"
+      fi
+    done
+  fi
+
+  # Claude Code (multi-profile)
+  if command -v claude &>/dev/null; then
+    if [[ ! -d "$HOME/.claude-zero" ]] || [[ ! -d "$HOME/.claude-home" ]]; then
+      info "Bootstrapping Claude Code profile dirs..."
+      if "$DIR/bin/claude-profiles-init.sh"; then
+        SUMMARY+=("Claude Code profile dirs bootstrapped")
+      else
+        warn "claude-profiles-init.sh failed"
+      fi
+    else
+      info "Claude Code profile dirs already present (~/.claude-zero, ~/.claude-home)"
+    fi
+    for cc_profile in zero home; do
+      if ! security find-generic-password -s "claude-code-oauth-$cc_profile" >/dev/null 2>&1; then
+        warn "Missing Keychain entry: claude-code-oauth-$cc_profile"
+        warn "  security add-generic-password -a \$USER -s claude-code-oauth-$cc_profile -w '<token>' -U"
       fi
     done
   fi
