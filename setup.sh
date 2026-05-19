@@ -556,7 +556,7 @@ setup_auth() {
         || true)
 
       local legacy_profile=""
-      case "$legacy_user" in
+      case "${legacy_user,,}" in
         *@zerohomes.io) legacy_profile=zero ;;
         "") legacy_profile="" ;;
         *) legacy_profile=personal ;;
