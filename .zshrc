@@ -46,15 +46,17 @@ export PATH="$PATH:$HOME/.rvm/bin"
 cd . # Trigger RVM auto-switch on shell start
 export PATH="$HOME/.local/bin:$PATH"
 
-# Prepend $HOME/bin so homebase wrappers (e.g., `claude`) intercept the
-# real binaries that other installers (Anthropic's claude, etc.) drop into
-# $HOME/.local/bin. Appending in the earlier loop is not enough because
-# .local/bin gets prepended above.
-export PATH="$HOME/bin:$PATH"
-
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# PATH precedence finalization. Place LAST so it wins over every earlier
+# prepend in this file. `typeset -U path` keeps PATH unique on each
+# re-source of .zshrc; the explicit prepend ensures $HOME/bin (where
+# homebase wrappers like `claude` live) resolves before installers that
+# dropped binaries into $HOME/.local/bin or $BUN_INSTALL/bin.
+typeset -U path
+export PATH="$HOME/bin:$PATH"
