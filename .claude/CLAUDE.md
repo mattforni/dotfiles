@@ -196,7 +196,15 @@ For meeting recaps, ecosystem updates, and similar share out posts to a channel,
    - 🎙️ Granola recording link (voice). Use 🎥 only for actual video recordings.
 6. 🖼️ *Photos in Thread* 🧵 closing line when photos will be added in thread
 
-Use ZWSP (U+200B) on its own line between sections to force whitespace (per the existing Slack formatting rule).
+**Forced section spacing via ZWSP.** Slack collapses consecutive newlines into a single line break, so to force visible air between sections, place a literal zero width space (U+200B, the invisible character itself) on its own line between blocks. Use tight single newlines on either side of the ZWSP. Do not bracket it with blank lines — bracketing compounds into 4 to 5 line breaks of vertical whitespace and reads as excessive padding. Example (⟨ZWSP⟩ stands in for the literal U+200B character):
+
+```
+First section.
+⟨ZWSP⟩
+Second section.
+```
+
+Apply every time a Slack post has section headers. Do not skip because the draft looks fine in the editor — Slack does not render the air until U+200B is there.
 
 ## Calendar Preferences
 
