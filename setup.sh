@@ -551,8 +551,8 @@ setup_auth() {
     local migrated_profile=""
     if [[ -d "$HOME/.config/gws" ]]; then
       local legacy_user=""
-      legacy_user=$(GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws" gws auth status 2>/dev/null \
-        | python3 -c "import json,sys; print(json.load(sys.stdin).get('user',''))" 2>/dev/null \
+      legacy_user=$(GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws" gws auth status \
+        | python3 -c "import json,sys; print(json.load(sys.stdin).get('user',''))" \
         || true)
 
       local legacy_profile=""
