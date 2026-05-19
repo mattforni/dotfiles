@@ -122,6 +122,20 @@ OAuth `client_secret.json` files for gws sync across machines via GCP Secret Man
 
 Applies to: `.claude/settings.json` permissions and marketplace paths, skill SKILL.md files, shell rc files, any markdown that references a path. If a tool reads the value literally and does not expand `$HOME` or `~`, surface that as a setup.sh templating gap rather than working around it with a hard-coded username.
 
+## setup.sh Phase Conventions
+
+`setup.sh` is split into phases like `setup_prerequisites`, `install_brew_packages`, `deploy_homebase`, and `setup_auth`. The `setup_auth` phase short circuits early when `INTERACTIVE != true`, because OAuth flows and `read -rp` prompts require a TTY.
+
+**Bootstrap operations must NOT live inside `setup_auth`.** File moves, directory creation, marker file seeding, and other no-TTY-required scaffolding belong in their own phases that run regardless of interactivity. If they sit inside `setup_auth`, a non-interactive run (Claude Code background session, headless launchd, CI) will silently skip them along with the auth prompts.
+
+**Pattern to follow when adding new tooling to setup.sh:**
+
+- Split the work into a bootstrap step (file ops, idempotent, runs always) and an auth step (interactive prompts, runs only when `INTERACTIVE == true`).
+- The bootstrap step goes in its own phase function (e.g., `bootstrap_claude_profiles`) or inside an existing non-auth phase.
+- The auth step goes inside `setup_auth`, gated by the existing `INTERACTIVE` check.
+
+**Why it matters:** Codified 2026-05-19. The Claude Code profile-dir bootstrap initially shipped inside `setup_auth`, which meant a non-interactive `./setup.sh` invocation (the way it runs from inside a Claude Code background session) skipped the entire block. The profile dirs never got created until manually invoking `bin/claude-profiles-init.sh` by hand.
+
 ## Development Workflow
 
 1. Edit files in this repository
