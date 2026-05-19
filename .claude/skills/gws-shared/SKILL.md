@@ -2,7 +2,7 @@
 name: gws-shared
 description: "gws CLI: Shared patterns for authentication, global flags, and output formatting."
 metadata:
-  version: 0.22.3
+  version: 0.22.4
   openclaw:
     category: "productivity"
     requires:
@@ -25,6 +25,32 @@ gws auth login
 # Service Account
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 ```
+
+## Profiles (Multi-Account)
+
+`gws` reads its config from `$GOOGLE_WORKSPACE_CLI_CONFIG_DIR`. Forni's setup uses one config dir per Google account, switched at the shell:
+
+| Profile | Config dir | Account |
+|---------|-----------|---------|
+| `zero` | `~/.config/gws-zero/` | `mattf@zerohomes.io` (Zero Homes) |
+| `personal` | `~/.config/gws-personal/` | personal Gmail |
+
+The active profile is layered:
+
+1. **Ambient** — recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup by `.functions`. Persists across shells.
+2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` on every `cd`, finds the nearest `.gws-profile` marker file (one line text containing the profile name), and silently swaps the env var. `cd` out, snap back to ambient.
+3. **Pin** — `gws-pin` disables the chpwd hook in the current shell.
+
+| Command | Effect |
+|---------|--------|
+| `gws-use` | List profiles; show current |
+| `gws-use personal` | Set ambient profile (persists across shells; also unpins) |
+| `gws-pin` | Lock to current profile in this shell (disables chpwd hook) |
+| `gws-unpin` | Resume chpwd hook |
+| `gws-whoami` | Show profile, config dir, and `gws auth status` |
+| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...` | One shot override |
+
+When writing tooling that should always run against a specific account, prefer the per-command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
 
 ## Global Flags
 

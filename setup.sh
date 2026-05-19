@@ -543,19 +543,46 @@ setup_auth() {
     fi
   fi
 
-  # Google Workspace CLI
+  # Google Workspace CLI (multi-profile)
   if command -v gws &>/dev/null; then
-    if [[ -d "$HOME/.config/gws" ]] && [[ "$FORCE" != true ]]; then
-      info "Google Workspace CLI already authenticated"
-    else
-      read -rp "  ${BOLD}Authenticate Google Workspace CLI (gws auth setup)? [y/N]${NC} " choice
-      if [[ "$choice" =~ ^[Yy]$ ]]; then
-        warn "Note: You may need to add yourself as a test user in the GCP OAuth consent screen"
-        warn "Go to: https://console.cloud.google.com/apis/credentials/consent > Audience > Add test user"
-        gws auth setup || return 1
-        SUMMARY+=("Google Workspace CLI authenticated")
-      fi
+    # Migrate legacy single-profile layout into the "zero" profile.
+    if [[ -d "$HOME/.config/gws" ]] && [[ ! -d "$HOME/.config/gws-zero" ]]; then
+      info "Migrating ~/.config/gws -> ~/.config/gws-zero"
+      mv "$HOME/.config/gws" "$HOME/.config/gws-zero" || return 1
+      SUMMARY+=("gws: migrated legacy config to zero profile")
+    elif [[ -d "$HOME/.config/gws" ]] && [[ -d "$HOME/.config/gws-zero" ]]; then
+      warn "Both ~/.config/gws and ~/.config/gws-zero exist. Inspect and remove the stale one manually."
     fi
+
+    [[ -f "$HOME/.config/gws-current" ]] || printf 'zero\n' > "$HOME/.config/gws-current"
+
+    local gws_profile gws_dir
+    for gws_profile in zero personal; do
+      gws_dir="$HOME/.config/gws-$gws_profile"
+      if [[ -d "$gws_dir" ]] && [[ "$FORCE" != true ]]; then
+        info "gws $gws_profile profile already configured ($gws_dir)"
+        continue
+      fi
+      read -rp "  ${BOLD}Authenticate gws $gws_profile profile? [y/N]${NC} " choice
+      [[ "$choice" =~ ^[Yy]$ ]] || continue
+      mkdir -p "$gws_dir"
+      if [[ ! -f "$gws_dir/client_secret.json" ]]; then
+        warn "Missing $gws_dir/client_secret.json"
+        warn "Copy the OAuth client JSON from another machine (or download from GCP Console) into:"
+        warn "  $gws_dir/client_secret.json"
+        warn "Then press Enter to continue."
+        read -r
+        if [[ ! -f "$gws_dir/client_secret.json" ]]; then
+          error "Still missing $gws_dir/client_secret.json -- skipping $gws_profile"
+          continue
+        fi
+      fi
+      if GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$gws_dir" gws auth login; then
+        SUMMARY+=("gws: $gws_profile profile authenticated")
+      else
+        error "gws auth login failed for $gws_profile"
+      fi
+    done
   fi
 }
 

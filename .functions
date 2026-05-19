@@ -420,3 +420,92 @@ find_and_source_env() {
     fi
     return 1
 }
+
+# GWS-PROFILE
+# Multi-profile support for the gws (Google Workspace) CLI.
+# Layered model:
+#   1. Ambient profile from ~/.config/gws-current (persists across shells)
+#   2. Directory override via .gws-profile markers + chpwd hook (zsh)
+#   3. Pin via gws-pin to disable the hook in the current shell
+# Per-command override stays available: GOOGLE_WORKSPACE_CLI_CONFIG_DIR=... gws ...
+__gws_resolve_profile() {
+    [[ "${GWS_AUTO_SWITCH:-1}" == "0" ]] && return 0
+
+    # Walk up from PWD looking for the nearest .gws-profile marker.
+    local dir="$PWD"
+    local target=""
+    while :; do
+        if [[ -f "$dir/.gws-profile" ]]; then
+            target="$(cat "$dir/.gws-profile" 2>/dev/null)"
+            target="${target//[$'\t\r\n ']/}"
+            break
+        fi
+        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
+        dir="$(dirname "$dir")"
+    done
+
+    # Fall back to the ambient profile from the state file.
+    if [[ -z "$target" ]]; then
+        target="$(cat "$HOME/.config/gws-current" 2>/dev/null)"
+        target="${target//[$'\t\r\n ']/}"
+        [[ -z "$target" ]] && target="zero"
+    fi
+
+    [[ "$target" == "${GWS_PROFILE:-}" ]] && return 0
+
+    local target_dir="$HOME/.config/gws-$target"
+    if [[ -d "$target_dir" ]]; then
+        export GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$target_dir"
+        export GWS_PROFILE="$target"
+    fi
+}
+
+# Register chpwd hook (zsh only) and run once at source time.
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+    autoload -Uz add-zsh-hook 2>/dev/null
+    add-zsh-hook chpwd __gws_resolve_profile 2>/dev/null
+fi
+__gws_resolve_profile
+
+gws-use() {
+    if [[ -z "${1:-}" ]]; then
+        echo "current: ${GWS_PROFILE:-<none>}${GWS_AUTO_SWITCH:+ (pinned)}"
+        echo "available:"
+        local d name
+        for d in "$HOME"/.config/gws-*/; do
+            [[ -d "$d" ]] || continue
+            name="${d##*/.config/gws-}"
+            name="${name%/}"
+            echo "  $name"
+        done
+        return 0
+    fi
+    local profile="$1"
+    local dir="$HOME/.config/gws-$profile"
+    if [[ ! -d "$dir" ]]; then
+        echo "gws profile not found: $profile (expected $dir)" >&2
+        return 1
+    fi
+    printf '%s\n' "$profile" > "$HOME/.config/gws-current"
+    unset GWS_AUTO_SWITCH
+    export GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$dir"
+    export GWS_PROFILE="$profile"
+    echo "gws ambient profile -> $profile"
+}
+
+gws-pin() {
+    export GWS_AUTO_SWITCH=0
+    echo "gws auto-switch disabled (locked to ${GWS_PROFILE:-<none>})"
+}
+
+gws-unpin() {
+    unset GWS_AUTO_SWITCH
+    __gws_resolve_profile
+    echo "gws auto-switch enabled (now: ${GWS_PROFILE:-<none>})"
+}
+
+gws-whoami() {
+    echo "profile: ${GWS_PROFILE:-<none>}${GWS_AUTO_SWITCH:+ (pinned)}"
+    echo "config:  ${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-<none>}"
+    command gws auth status 2>/dev/null || echo "(not authenticated)"
+}
