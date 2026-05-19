@@ -73,6 +73,7 @@ if [[ -d "$LEGACY/sessions" ]] && [[ ! -e "$ZERO/sessions/.migrated" ]]; then
 fi
 
 echo "Done. ~/.claude-zero/ and ~/.claude-home/ ready."
-echo "Next: populate Keychain entries if missing:"
-echo "  security add-generic-password -a \$USER -s claude-code-oauth-zero -w '<token>' -U"
-echo "  security add-generic-password -a \$USER -s claude-code-oauth-home -w '<token>' -U"
+echo "Next: cd into each profile's territory and run \`claude\` once."
+echo "Claude Code will open an OAuth browser flow and store the resulting"
+echo "credential under a per-CLAUDE_CONFIG_DIR Keychain entry. Each profile"
+echo "needs its own login (sign in as the right Anthropic account)."

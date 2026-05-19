@@ -95,7 +95,7 @@ Both the `gws` CLI and Claude Code switch identity per directory subtree via a s
 | `gws-whoami` | Show profile, config dir, and `gws auth status` |
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
-**Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and reads the matching `claude-code-oauth-<profile>` entry from macOS Keychain before exec'ing the real binary. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh).
+**Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and exec's the real binary. Claude Code stores OAuth credentials per CLAUDE_CONFIG_DIR natively in a `Claude Code-credentials-<hash>` Keychain entry, so the wrapper doesn't need to inject a token; setting the config dir is enough. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh); each profile needs a one time `claude` login from inside its directory to seed its Keychain credential.
 
 OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager (bootstrap project: `gws-forni`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws-secrets-push.sh` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design.
 

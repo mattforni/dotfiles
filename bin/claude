@@ -3,12 +3,19 @@
 #
 # Walks up from $PWD finding the nearest .account marker (shared with the gws
 # resolver in .functions). Falls back to the ambient profile in
-# ~/.config/gws-current. Reads the matching claude-code-oauth-<profile> entry
-# from macOS Keychain, exports CLAUDE_CONFIG_DIR + CLAUDE_CODE_OAUTH_TOKEN,
-# and exec's the real binary.
+# ~/.config/gws-current. Sets CLAUDE_CONFIG_DIR for the matching profile and
+# exec's the real binary.
+#
+# Auth note: Claude Code stores OAuth tokens per CLAUDE_CONFIG_DIR natively
+# (in a `Claude Code-credentials-<hash>` Keychain entry where the hash is
+# derived from the config dir path). Setting CLAUDE_CONFIG_DIR is enough to
+# pick the right account; no token injection needed.
 #
 # Profile dirs at ~/.claude-zero/ and ~/.claude-home/ are populated by
-# bin/claude-profiles-init.sh (invoked from setup.sh).
+# bin/claude-profiles-init.sh (invoked from setup.sh). The first time you
+# launch into a freshly-bootstrapped profile dir, Claude Code triggers an
+# OAuth browser flow and stores the resulting credential under the hashed
+# Keychain entry for that dir.
 
 set -euo pipefail
 
@@ -60,9 +67,4 @@ if [[ ! -d "$cfg_dir" ]]; then
     exec "$real_claude" "$@"
 fi
 
-token=$(security find-generic-password -s "claude-code-oauth-$profile" -w 2>/dev/null || true)
-
-env_args=(CLAUDE_CONFIG_DIR="$cfg_dir")
-[[ -n "$token" ]] && env_args+=(CLAUDE_CODE_OAUTH_TOKEN="$token")
-
-exec env "${env_args[@]}" "$real_claude" "$@"
+exec env CLAUDE_CONFIG_DIR="$cfg_dir" "$real_claude" "$@"
