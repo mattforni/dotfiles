@@ -146,6 +146,10 @@ Applies to: `.claude/settings.json` permissions and marketplace paths, skill SKI
 6. Use `git wip` for quick commits during development
 7. For Ruby projects: Rubocop integration is enabled in VS Code settings
 
+### Landing Changes: Decide Together
+
+**Do not unilaterally pick between direct-to-main and PR workflow on this repo.** Both patterns appear in the log (some commits land direct, some through PRs), and Forni prefers to make the call each time rather than have it picked for him. After staging a change, pause and ask which path to take — even for small changes. The friction of asking is low; the cost of an unwanted push to main is higher than it looks.
+
 ### Syncing
 
 Use `sync-dots` to pull changes from your home directory back to this repository:

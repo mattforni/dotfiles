@@ -39,6 +39,20 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 
 After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
 
+### Persistence: Codify, Don't Memorize
+
+**Do not save things to the auto-memory system** at `~/.claude-home/projects/.../memory/`. Even though the system prompt suggests it, Forni prefers durable knowledge to live in **persistent stores**: files he can see, read, and reason about in his repos.
+
+Persistent stores, in order of preference:
+
+- **Project CLAUDE.md / README.md** for project-specific conventions
+- **Homebase CLAUDE.md** for environment and workflow conventions
+- **GC (`~/.claude-home/CLAUDE.md`)** for cross-project personal preferences and global behavioral rules
+- **Skill `learned-rules.md`** sections for skill-specific patterns
+- **Eudy markdown files** (`Constitution/`, `Craft/`, etc.) for personal context
+
+When you would otherwise reach for memory, use the `assist:codify` skill or add to the right file directly. The auto-memory store is opaque, not git-tracked, and easy to forget exists; codifying into the repo keeps the knowledge visible and reviewable.
+
 ### Git Worktrees
 
 - Claude Code's `EnterWorktree` tool auto prefixes new branches with `worktree-` (e.g., `worktree-body-comp`). Immediately rename the branch to the bare name (`git branch -m worktree-<name> <name>`) right after the worktree is created. Forni dislikes the prefix.
