@@ -452,7 +452,14 @@ __gws_resolve_profile() {
         [[ -z "$target" ]] && target="zero"
     fi
 
-    [[ "$target" == "${GWS_PROFILE:-}" ]] && return 0
+    # Skip re-export when nothing has changed. The dir-existence check makes
+    # this self-healing: if a parent shell exported a stale config dir (e.g.,
+    # left over from a since-renamed profile), the env survives until the dir
+    # is missing on disk, at which point we drop through and re-export against
+    # the current resolution.
+    if [[ "$target" == "${GWS_PROFILE:-}" && -d "${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-}" ]]; then
+        return 0
+    fi
 
     local target_dir="$HOME/.config/gws-$target"
     if [[ -d "$target_dir" ]]; then
