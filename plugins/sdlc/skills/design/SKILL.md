@@ -14,6 +14,7 @@ allowed-tools:
   - Read
   - TodoWrite
   - EnterWorktree
+  - EnterPlanMode
   - ExitPlanMode
   - AskUserQuestion
 ---
@@ -148,7 +149,17 @@ git checkout -b "BRANCH_NAME" origin/"BASE_BRANCH"
 
 ## Step 4: Create Implementation Plan
 
-You are now in **plan mode**. Your task is to:
+> # 🛑 STOP — CALL `EnterPlanMode` BEFORE ANYTHING ELSE IN THIS STEP. 🛑
+>
+> **This is not a suggestion. This is not a vibe. This is a hard requirement.**
+>
+> The very first tool call in Step 4 **MUST** be `EnterPlanMode`. Not after a quick exploration. Not after a small Read. Not "I'll enter plan mode once I'm ready to draft." **FIRST. ALWAYS. NO EXCEPTIONS.**
+>
+> Plan mode is the safety rail that prevents accidental writes while requirements are still being discussed. Skipping it has caused real incidents where code was written before the user signed off. Saying "you are now in plan mode" in prose does not put you in plan mode — only the `EnterPlanMode` tool call does.
+>
+> If you find yourself reading a file, drafting a plan, or calling any tool other than `EnterPlanMode` as your first action in Step 4: **STOP, back up, and call `EnterPlanMode` first.**
+
+Once plan mode is active, your task is to:
 
 1. **Understand the requirement** from the issue description
 2. **Explore the codebase** to understand relevant files and patterns
@@ -156,7 +167,7 @@ You are now in **plan mode**. Your task is to:
 4. **Create a detailed plan** using TodoWrite with specific tasks
 5. **Present the plan to the user** for approval
 
-Do not start implementing until the user approves. The plan exists so the user can course-correct before any code is written. When the plan is ready, use ExitPlanMode to request approval.
+Do not start implementing until the user approves. The plan exists so the user can course-correct before any code is written. When the plan is ready, use `ExitPlanMode` to request approval.
 
 After approval, if a valid ISSUE_ID was found in Step 1, check if the Linear CLI is available:
 
