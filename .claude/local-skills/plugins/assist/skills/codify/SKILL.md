@@ -162,3 +162,9 @@ The principle is the same regardless of domain: essentials where they are always
 - **Root pointer should be one line.** It exists only so the knowledge is discoverable.
 - **Examples beat abstractions.** Show the right way and the wrong way side by side when possible.
 - **Date the knowledge when it matters.** If a gotcha is version specific or likely to change, note when it was learned so future readers can assess freshness.
+
+## Learned Rules
+
+- **Tool / CLI operational reference goes in `~/Eudaimonia/Admin/tools/<tool>.md`, not GC, not project CLAUDE.md, not auto-memory.** Anything tool-specific — gotchas, access mechanics, cost notes, version-specific quirks, the "why we picked it" rationale — follows the one-pager pattern in `~/Eudaimonia/Admin/tools/CLAUDE.md`. The pull will be to drop a tool gotcha into GC's existing tool section (e.g., the "Gmail (send, reply, forward, draft)" section) because that's where related behavioral guidance lives. **Resist.** GC is for always-loaded behavioral conventions; `Admin/tools/<tool>.md` is for reference material that loads on relevance. If the entry answers "use it like this" → GC. If it answers "here's what this tool is and what to know about it" → Admin/tools. Codified 2026-05-21 after the gws attachment-truncation gotcha almost landed in GC before getting redirected.
+
+- **GC is a single canonical file shared across all Claude Code profile dirs.** The source of truth lives in the homebase repo at `~/Eudaimonia/Craft/Development/personal/homebase/.claude/CLAUDE.md`. All three profile dirs (`~/.claude-home/`, `~/.claude-zero/`, `~/.claude/`) symlink to it. Editing GC via any symlink all hits the same file — and therefore the same git history in homebase. Don't mentally model GC as living in `~/.claude-home/`; that's just a symlink to the homebase-tracked source.
