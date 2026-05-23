@@ -19,6 +19,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 
 - When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
 - Do not overstate or exaggerate the quality of results. If something looks like it works but has not been thoroughly validated, say so. Let the user judge quality.
+- **Verify transformed outputs before publishing them.** When the work involves a transform (cropping, rotating, OCR, merging, format conversion) and the destination is shared (Drive upload, email attachment, content replacement), spot check the result before pushing it out. Read the produced file or render a preview. A 5 second visual check catches mistakes that are awkward to undo once published.
 
 ## Bash Commands
 
@@ -118,8 +119,9 @@ For Google-native files hosted in Drive, use the matching Docs/Sheets/Slides com
 
 Preferred path: write markdown locally, upload to Drive with conversion via `gws drive files create --upload <path> --upload-content-type text/markdown --json '{"name": "<title>", "mimeType": "application/vnd.google-apps.document"}'`. Update an existing Doc with `gws drive files update --params '{"fileId": "<ID>"}' --upload <path> --upload-content-type text/markdown`.
 
-Three gotchas:
+Four gotchas:
 - `gws` requires upload paths to be inside the current working directory. Use cwd for temp files, not `/tmp`.
+- **Stage upload files at the cwd root, not in a subdirectory.** Observed 2026-05-23: `--upload ./cropped/file.pdf` from cwd `.../scans/` failed with `cropped/cropped/file.pdf` not found, so gws appeared to double-prefix the subdirectory. Workaround: `mv` files up to cwd before calling `gws drive files create --upload ./file.pdf`. Same constraint applies to `--upload` paths on `files.update`.
 - Drive markdown import creates paged, not Pageless, Docs. Forni prefers Pageless. Toggle manually or use `gws docs documents batchUpdate` to set `documentStyle.documentFormat.documentMode = "PAGELESS"`.
 - `gws drive files delete` writes a `download.html` file in the current working directory as a side effect of the API response handling. Clean up the artifact after delete operations or it accumulates.
 
@@ -279,3 +281,27 @@ When deleting a recurring event, also delete the paired transition or travel rec
 ## Local File Conventions
 
 - **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering. Note: macOS Screenshots filenames have a literal leading space character (e.g., ` 2026-05-16 at 09.48.15.png`). `Read` with the bare name fails. Use `ls -1 ~/Screenshots/` to discover the exact name and pass it to `Read` with the leading space included. `ls -la` makes the leading space ambiguous because of column spacing, so prefer `ls -1` or `od -c` to verify.
+- **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. (literal leading space in numbered files). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
+
+### Cropping Scanned PDFs to Their Content
+
+Naive bounding box detection picks up dust, faint scanner noise, or stray marks far from the actual content and produces oversized crops. Use a **row density filter**: only treat a row or column as content when it contains at least N dark pixels.
+
+Tools: `pdftoppm` (poppler, already installed via `pdfunite`), Pillow (`pip3 install --user Pillow`), `pypdf` for combining cropped pages.
+
+Recipe per scan:
+1. Render page to PNG: `pdftoppm -r 200 -png -f 1 -l 1 <pdf> <prefix>`
+2. Open in PIL, grayscale convert
+3. For each row, count pixels where `gray < 200`. A row counts as "content" only if it has at least 30 such pixels (filters dust and small smudges)
+4. First and last content rows define the vertical bounds; same for columns
+5. Add ~25px margin
+6. Crop the PNG and save as a new single page PDF (`Image.save(out, "PDF", resolution=200)`)
+7. For upside down scans, `img.rotate(180, expand=True)` before density analysis
+8. Combine front and back of ID cards with `pdfunite` into one multi page PDF
+
+Parameter calibration (validated on a session of 20+ ID card, passport, vehicle reg, immunization record scans):
+- `WHITE_THRESHOLD = 200` (gray < 200 = content). 235 is too permissive, picks up paper texture. 150 misses faint text.
+- `MIN_ROW_PIXELS = 30` filters single-pixel dust without losing real card edges.
+- `MARGIN_PX = 20-25` keeps card borders visible without bloating the page.
+
+The naive bbox (using `getbbox()` on a mask without density filtering) failed on the Colorado driver's license front: a single stray dot below the card pulled the bbox down to near the page bottom. Density filtering caught the card edges correctly.
