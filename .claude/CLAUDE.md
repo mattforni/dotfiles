@@ -281,17 +281,17 @@ When deleting a recurring event, also delete the paired transition or travel rec
 ## Local File Conventions
 
 - **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering. Note: macOS Screenshots filenames have a literal leading space character (e.g., ` 2026-05-16 at 09.48.15.png`). `Read` with the bare name fails. Use `ls -1 ~/Screenshots/` to discover the exact name and pass it to `Read` with the leading space included. `ls -la` makes the leading space ambiguous because of column spacing, so prefer `ls -1` or `od -c` to verify.
-- **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. (literal leading space in numbered files). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
+- **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. Numbered files contain a literal space between `Scan` and the number, so the bare name must be quoted in shell commands (`"Scan 1.pdf"`). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
 
 ### Cropping Scanned PDFs to Their Content
 
 Naive bounding box detection picks up dust, faint scanner noise, or stray marks far from the actual content and produces oversized crops. Use a **row density filter**: only treat a row or column as content when it contains at least N dark pixels.
 
-Tools: `pdftoppm` (poppler, already installed via `pdfunite`), Pillow (`pip3 install --user Pillow`), `pypdf` for combining cropped pages.
+Tools: `pdftoppm` (poppler, already installed alongside `pdfunite`), Pillow (`pip3 install --user Pillow`).
 
 Recipe per scan:
-1. Render page to PNG: `pdftoppm -r 200 -png -f 1 -l 1 <pdf> <prefix>`
-2. Open in PIL, grayscale convert
+1. Render page to PNG: `pdftoppm -r 200 -png -f 1 -l 1 <pdf> <prefix>` (writes `<prefix>-1.png`)
+2. Open `<prefix>-1.png` in PIL, grayscale convert
 3. For each row, count pixels where `gray < 200`. A row counts as "content" only if it has at least 30 such pixels (filters dust and small smudges)
 4. First and last content rows define the vertical bounds; same for columns
 5. Add ~25px margin
