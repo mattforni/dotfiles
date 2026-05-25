@@ -58,3 +58,9 @@ Training specific rules tied to current life shape. Read on every invocation. St
 - **Vert is co-equal with mileage.** The training plan tracks both Long mi and Vert ft per week. A retro that only evaluates mileage misses half the point. Always pull elevation gain from Strava activity details and total against the plan's Vert ft target.
 - **Lifts at Movement RiNo do not show in Strava.** When a lift is missing from Strava, the status is **open**, not missed. Confirm with the user before logging it as a miss in the retro. Same applies to climbing at Movement.
 - **Strava run elevation in meters; convert to feet.** `meters * 3.28084`. Worth doing per activity then summing, since the plan's vert target is in feet.
+
+- **PAH is transit, not training.** Wed 13:00 to 15:00 PAH (Project Angel Heart Kitchen Assistant) is service, not a training session. The bike ride to and from PAH shows up in Strava as a commute but does not count as a training anchor.
+
+  **Why:** Wk 2 retro counted "Strava bike to PAH (4.36 mi)" as evidence of "Wed PAH ✅" — confusing transit with training. PAH itself is kitchen volunteering; the bike commute is logistics, not the prescribed Wed recovery anchor. Codified 2026-05-25 (Wk 3 planning session).
+
+  **How to apply:** In retro Coverage tables, mark PAH as `n/a` with a note "transit, not training" rather than listing it as a session. Bike commute miles do not contribute to Total miles or vert. The actual Wed training anchor is contrast therapy at Naosu; evaluate that separately.
