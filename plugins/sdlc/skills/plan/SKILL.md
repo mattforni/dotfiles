@@ -89,22 +89,15 @@ linear issue update ISSUE_ID -d "UPDATED_DESCRIPTION"
 
 Do not wait until the end to update. Update after each meaningful exchange so the ticket stays current. The user should be able to read the ticket at any point and see an accurate picture of where planning stands.
 
-## Step 5: Confirm Readiness
+## Step 5: Confirm Readiness and Hand Off to Design
 
 When all sections are filled in and open questions are resolved (or explicitly deferred), summarize the final state of the ticket to the user.
 
 Use AskUserQuestion to confirm:
 
-- **Ready for design** — The ticket is in good shape. Proceed to `/sdlc:design ISSUE_ID`.
-- **Keep refining** — There are still gaps to address. Continue the dialogue.
+- **Ready for design** — Planning is in good shape. Move into design now.
+- **Keep refining** — There are still gaps to address. Stay in dialogue.
 
-## Output
+**On "Ready for design":** Acknowledge in one sentence that planning is complete, then **immediately invoke the `sdlc:design` skill** via the Skill tool with the issue ID as the argument. Do not narrate "Next step: /sdlc:design" and stop — the user has already authorized the transition by selecting "Ready for design," and asking them to type the next command is redundant friction.
 
-When the user confirms readiness:
-
-```text
-Planning complete for ISSUE_ID.
-Ticket updated with overview, requirements, options, and recommendation.
-
-Next step: /sdlc:design ISSUE_ID
-```
+**On "Keep refining":** Return to Step 3 and continue the dialogue.
