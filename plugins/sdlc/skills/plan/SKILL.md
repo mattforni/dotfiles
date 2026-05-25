@@ -9,6 +9,7 @@ allowed-tools:
   - Grep
   - Glob
   - AskUserQuestion
+  - Skill
 ---
 
 # Plan
@@ -89,7 +90,7 @@ linear issue update ISSUE_ID -d "UPDATED_DESCRIPTION"
 
 Do not wait until the end to update. Update after each meaningful exchange so the ticket stays current. The user should be able to read the ticket at any point and see an accurate picture of where planning stands.
 
-## Step 5: Confirm Readiness and Hand Off to Design
+## Step 5: Confirm Readiness and Hand off to Design
 
 When all sections are filled in and open questions are resolved (or explicitly deferred), summarize the final state of the ticket to the user.
 
