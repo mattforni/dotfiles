@@ -99,6 +99,6 @@ Use AskUserQuestion to confirm:
 - **Ready for design** — Planning is in good shape. Move into design now.
 - **Keep refining** — There are still gaps to address. Stay in dialogue.
 
-**On "Ready for design":** Acknowledge in one sentence that planning is complete, then **immediately invoke the `sdlc:design` skill** via the Skill tool with the issue ID as the argument. Do not narrate "Next step: /sdlc:design" and stop — the user has already authorized the transition by selecting "Ready for design," and asking them to type the next command is redundant friction.
+**On "Ready for design":** Acknowledge in one sentence that planning is complete, then **immediately invoke the `sdlc:design` skill** via the Skill tool with `ISSUE_ID` as the argument. Do not narrate "Next step: /sdlc:design" and stop — the user has already authorized the transition by selecting "Ready for design," and asking them to type the next command is redundant friction.
 
 **On "Keep refining":** Return to Step 3 and continue the dialogue.
