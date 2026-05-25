@@ -473,6 +473,44 @@ for k, v in d.get('enabledPlugins', {}).items():
   SUMMARY+=("Claude plugins configured")
 }
 
+install_mcp_servers() {
+  header "Claude Code MCP servers"
+
+  if ! command -v claude &>/dev/null; then
+    warn "Claude Code not found, skipping MCP servers"
+    return 0
+  fi
+
+  # Desired MCP servers at user scope (persist across project entries).
+  # Format: name|transport|command_and_args
+  # First time auth on a new machine: each MCP may require its own credentials
+  # (e.g., strava needs STRAVA_CLIENT_ID/SECRET in ~/.env.local before running
+  # mcp__strava__connect-strava from Claude). Subsequent runs are idempotent.
+  local desired=(
+    "strava|stdio|npx -y @r-huijts/strava-mcp-server"
+  )
+
+  for entry in "${desired[@]}"; do
+    local name="${entry%%|*}"
+    local rest="${entry#*|}"
+    local transport="${rest%%|*}"
+    local cmd="${rest#*|}"
+
+    if claude mcp get "$name" &>/dev/null; then
+      info "Already registered: $name"
+      continue
+    fi
+
+    info "Registering MCP server: $name"
+    # shellcheck disable=SC2086
+    if claude mcp add --scope user --transport "$transport" "$name" -- $cmd; then
+      SUMMARY+=("MCP server registered: $name")
+    else
+      warn "Failed to register MCP server: $name"
+    fi
+  done
+}
+
 configure_repo() {
   header "Repo config"
 
@@ -690,6 +728,7 @@ run_phase link_tracked_configs
 run_phase install_launchagents
 run_phase install_ide_extensions
 run_phase install_claude_plugins
+run_phase install_mcp_servers
 run_phase configure_repo
 run_phase setup_auth
 print_summary
