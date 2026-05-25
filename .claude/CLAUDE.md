@@ -29,6 +29,20 @@ This is "GC" (Global Claude): the user's private global instructions for every p
   - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
   - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
 - Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
+- **Wrapper script escape hatch when `cd` is genuinely required.** Some commands need the project root as cwd to function (RVM `.ruby-version` auto-switch, bundler reading `Gemfile` from cwd, Rails config paths resolved relative to project root, Vite/Bun resolving `package.json`). Setting `BUNDLE_GEMFILE` alone is insufficient — Rails resolves `Rails.root` from cwd, RVM hooks fire on `chpwd` only, etc. The escape hatch: write a small shell script that does the `cd` internally, then invoke the script from the Bash tool. The `cd` lives inside the script, not in the Bash call. Example for atelic-api:
+  ```bash
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "$HOME/Eudaimonia/Craft/atelic/api"
+  if [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
+    set +u
+    source "$HOME/.rvm/scripts/rvm"
+    rvm use "$(cat .ruby-version)" --silent
+    set -u
+  fi
+  exec "$@"
+  ```
+  Then call `bash /tmp/in-api.sh bundle exec rspec ...`. **Durable form:** project-local `bin/in-repo` scripts checked into the repo (preferred for long-lived projects). **Ephemeral form:** `/tmp/in-*.sh` written per session as the fallback when no project-local script exists yet.
 - **Use the Monitor tool for long waits, not Bash sleep.** For CI checks, deploy polling, and any "wait until state X" flow, use Monitor with an `until <check>; do sleep N; done` loop. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes instead of at poll interval granularity.
 
 ## Workflow Conventions
