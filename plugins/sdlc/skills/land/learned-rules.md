@@ -24,3 +24,17 @@ gh api -X POST repos/<owner>/<repo>/pulls/<PR>/comments/<comment_id>/replies \
 ```
 
 Cost is one reply per declined comment. Apply for genuine declines too (where the bot is actually wrong), explaining *why* you are declining, not just that you are. Then check CI and merge once green; do not wait for the bot to figure out resolution itself.
+
+### Do not gate merge on the bot's first review when CI is green and merge_state is CLEAN.
+
+The land workflow's READY condition requires `LATEST_BOT_SHA == HEAD_SHA`, which means it polls until the bot reviews the current SHA. For low-risk PRs (doc-only, codify changes, small config edits), waiting on the bot's first review is pure overhead with no signal value. For code PRs, the bot's first cycle catches real bugs and is worth waiting on, but subsequent cycles often just re-raise (see prior rule) and don't justify another polling window.
+
+**Why:** Surfaced twice in the same session (2026-05-25): on app PR #36 after iterate replies, and on doc-only PR #37. In both cases Forni asked "are we really still waiting?" while CI was already green and merge_state was CLEAN. The poll loop was waiting for Gemini to spin its review, not for any decision-relevant signal.
+
+**How to apply:**
+
+- **First cycle on a code PR:** wait for the bot review (real bug-catch value).
+- **Subsequent cycles after iterate:** if CI is green and merge_state is CLEAN, merge. Do not wait for the bot to re-bless the new SHA.
+- **Doc-only / config-only PRs:** merge as soon as CI is green and merge_state is CLEAN. Skip the bot poll entirely.
+
+Operationally: kill the Monitor (TaskStop) and proceed to merge step. Don't wait the full timeout out of habit.
