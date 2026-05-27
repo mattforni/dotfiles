@@ -213,7 +213,7 @@ When creating new Linear tickets:
 - Never explicitly sign emails (Gmail handles signatures automatically)
 - End emails with "Cheers and chat soon!"
 - Reply to existing email threads instead of creating new ones when following up
-- When including scheduling link, format as: "Here's [my scheduling link](https://app.reclaim.ai/m/forni/chat) if that's easier."
+- When including a scheduling link, choose by context: Zero / work meetings use `https://app.reclaim.ai/m/forni/zero`; personal / RYLLC use `https://app.reclaim.ai/m/forni/chat`. Format as: "Here's [my scheduling link](<the right link>) if that's easier."
 
 ## Slack Announcements
 
