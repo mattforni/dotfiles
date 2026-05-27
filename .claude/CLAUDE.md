@@ -63,10 +63,13 @@ Persistent stores, in order of preference:
 - **Project CLAUDE.md / README.md** for project-specific conventions
 - **Homebase CLAUDE.md** for environment and workflow conventions
 - **GC (`~/.claude-home/CLAUDE.md`)** for cross-project personal preferences and global behavioral rules
+- **Tool docs (`~/Eudaimonia/Admin/tools/<tool>.md`)** for tool-specific reference: gotchas, access mechanics, CLI recipes, version quirks. One file per tool, indexed in that folder's README
 - **Skill `learned-rules.md`** sections for skill-specific patterns
 - **Eudy markdown files** (`Constitution/`, `Craft/`, etc.) for personal context
 
 When you would otherwise reach for memory, use the `assist:codify` skill or add to the right file directly. The auto-memory store is opaque, not git-tracked, and easy to forget exists; codifying into the repo keeps the knowledge visible and reviewable.
+
+**Keep GC lean — it loads on every session, everywhere.** GC pays rent on every turn, so it holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics — gotchas, access mechanics, CLI recipes, version quirks — do NOT go in GC; they belong in that tool's `~/Eudaimonia/Admin/tools/<tool>.md` one-pager (see `Admin/tools/CLAUDE.md`: "use it like this → GC; what this tool is and what to know → tools folder"). When a tool gotcha tempts you into a GC section, resist and file it in the tool doc. Lean into progressive disclosure: pointers here, depth one hop away.
 
 ### Git Worktrees
 
