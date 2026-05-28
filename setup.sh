@@ -488,6 +488,7 @@ install_mcp_servers() {
   # mcp__strava__connect-strava from Claude). Subsequent runs are idempotent.
   local desired=(
     "strava|stdio|npx -y @r-huijts/strava-mcp-server"
+    "playwright|stdio|npx -y @playwright/mcp@latest"
   )
 
   for entry in "${desired[@]}"; do
