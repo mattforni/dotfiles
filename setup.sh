@@ -482,20 +482,25 @@ install_mcp_servers() {
   fi
 
   # Desired MCP servers at user scope (persist across project entries).
-  # Format: name|transport|command_and_args
+  # Format depends on transport:
+  #   stdio: name|stdio|command_and_args
+  #   http:  name|http|url|optional_header  (single header, eg. "Authorization: Bearer $TOKEN")
   # First time auth on a new machine: each MCP may require its own credentials
   # (e.g., strava needs STRAVA_CLIENT_ID/SECRET in ~/.env.local before running
-  # mcp__strava__connect-strava from Claude). Subsequent runs are idempotent.
+  # mcp__strava__connect-strava from Claude; atelic needs ATELIC_API_TOKEN exported
+  # in the shell before this script runs so the Bearer header registers populated).
+  # Subsequent runs are idempotent.
   local desired=(
     "strava|stdio|npx -y @r-huijts/strava-mcp-server"
     "playwright|stdio|npx -y @playwright/mcp@latest"
+    "atelic|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
   )
 
   for entry in "${desired[@]}"; do
     local name="${entry%%|*}"
     local rest="${entry#*|}"
     local transport="${rest%%|*}"
-    local cmd="${rest#*|}"
+    local target_and_extra="${rest#*|}"
 
     if claude mcp get "$name" &>/dev/null; then
       info "Already registered: $name"
@@ -503,8 +508,30 @@ install_mcp_servers() {
     fi
 
     info "Registering MCP server: $name"
-    # shellcheck disable=SC2086
-    if claude mcp add --scope user --transport "$transport" "$name" -- $cmd; then
+    local add_status=1
+    if [[ "$transport" == "http" ]]; then
+      local url="${target_and_extra%%|*}"
+      local header=""
+      if [[ "$target_and_extra" == *"|"* ]]; then
+        header="${target_and_extra#*|}"
+      fi
+
+      # `--header` is a varargs flag in claude mcp add; positionals must precede
+      # it or they get consumed as additional header values.
+      if [[ -n "$header" ]]; then
+        claude mcp add "$name" "$url" --scope user --transport http --header "$header"
+        add_status=$?
+      else
+        claude mcp add "$name" "$url" --scope user --transport http
+        add_status=$?
+      fi
+    else
+      # shellcheck disable=SC2086
+      claude mcp add --scope user --transport "$transport" "$name" -- $target_and_extra
+      add_status=$?
+    fi
+
+    if [[ $add_status -eq 0 ]]; then
       SUMMARY+=("MCP server registered: $name")
     else
       warn "Failed to register MCP server: $name"
