@@ -502,6 +502,14 @@ install_mcp_servers() {
     local transport="${rest%%|*}"
     local target_and_extra="${rest#*|}"
 
+    # Skip atelic when its bearer token is missing. Registering with an empty
+    # token bakes a broken entry that the `Already registered` short circuit
+    # below would silently preserve on future runs.
+    if [[ "$name" == "atelic" && -z "${ATELIC_API_TOKEN:-}" ]]; then
+      warn "Skipping atelic: ATELIC_API_TOKEN not set in environment"
+      continue
+    fi
+
     if claude mcp get "$name" &>/dev/null; then
       info "Already registered: $name"
       continue
