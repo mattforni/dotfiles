@@ -136,6 +136,13 @@ Applies to: `.claude/settings.json` permissions and marketplace paths, skill SKI
 
 **Why it matters:** Codified 2026-05-19. The Claude Code profile-dir bootstrap initially shipped inside `setup_auth`, which meant a non-interactive `./setup.sh` invocation (the way it runs from inside a Claude Code background session) skipped the entire block. The profile dirs never got created until manually invoking `bin/claude-profiles-init.sh` by hand.
 
+### Adding HTTP MCP Entries to `install_mcp_servers`
+
+The desired array supports both stdio and http transports. For http entries that carry an `Authorization: Bearer ${SOME_TOKEN:-}` header, two non-obvious traps apply. Both are documented in `~/Eudaimonia/Admin/tools/claude-code.md`:
+
+- `claude mcp add --header` is variadic, so positionals must precede the flag or the CLI eats them as additional headers.
+- Registering with an empty token bakes a broken auth header that the `Already registered` short circuit silently preserves on later runs. Guard with a `[[ -z "${SOME_TOKEN:-}" ]]` skip before the loop body, matching the atelic guard.
+
 ## Development Workflow
 
 1. Edit files in this repository
