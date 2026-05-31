@@ -173,6 +173,7 @@ Sort by Date header, take the latest, pass its ID to `--message-id`. If any part
 ## Code Review
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
+- **Review bots (Gemini, etc.) re-review fresh on every push, so "clean" is a moving target** — each pass surfaces a new batch, and chasing them is unbounded. Triage each round instead of complying blindly: fix genuine bugs, adopt good suggestions, but reason-decline false positives (e.g. a bot flagged `Rails.env.local?` that RuboCop actively enforces) and suggestions that conflict with an explicit user directive or a tested behavior (e.g. a "gentler titleize" that stopped normalizing all-caps). Pick a convergence point with the user rather than looping. Codified during ATE-369/370 (2026-05-31).
 
 ## MCP Servers
 
