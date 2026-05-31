@@ -44,7 +44,11 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Mode: plan (default)
 
-The Monday morning planning session. This is the primary use case.
+The Monday morning planning session. This is the primary use case. It opens by looking back at the week ending, then plans the week ahead.
+
+### Phase 0: Weekly Retro
+
+Before planning the week ahead, look back at the week that is ending. Invoke the `assist:reflect` skill in `week` mode via the Skill tool. It runs a light, dialogue-driven retrospective (felt sense of the week, what landed, what slipped, the one thing to carry forward) and surfaces anything that should become a planning input: a task to slot, a calendar guardrail, or a measure to watch. This is the broader life retro and is distinct from the training-specific retro that `assist:training` runs in Phase 2; the two complement each other. Carry its outputs into the phases below. Keep it light — a tired Monday does not need a heavy session, and `assist:reflect` knows to watch for fatigue and hand back the wheel.
 
 ### Phase 1: Load and Rectify
 
