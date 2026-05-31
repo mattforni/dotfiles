@@ -215,6 +215,16 @@ When creating new Linear tickets:
 - Reply to existing email threads instead of creating new ones when following up
 - When including a scheduling link, choose by context: Zero / work meetings use `https://app.reclaim.ai/m/forni/zero`; personal / RYLLC use `https://app.reclaim.ai/m/forni/chat`. Format as: "Here's [my scheduling link](<the right link>) if that's easier."
 
+## Phone Contact
+
+When providing a phone number to vendors, warranty teams, or any external party, include these contact preferences alongside the number:
+
+- Calls from unknown numbers go straight to voicemail
+- Texting is appreciated for quick async updates
+- Email is the preferred channel for substantive correspondence
+
+Default to the cell number on vendor forms unless context calls for the Google Voice filter (high-volume vendor, likely-to-share).
+
 ## Slack Announcements
 
 For meeting recaps, ecosystem updates, and similar share out posts to a channel, use this structure:
