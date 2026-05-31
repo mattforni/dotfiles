@@ -133,6 +133,8 @@ Always read Google Workspace links using the `gws` CLI, never WebFetch. WebFetch
 
 For Google-native files hosted in Drive, use the matching Docs/Sheets/Slides command to read content. Use `gws drive files get` for file metadata or to export non-native files.
 
+**Gmail message links** (`mail.google.com/...#inbox/<token>`): the `FMfcgz...` token is opaque and not convertible to an API id. Resolve by listing/searching via gws and matching on sender/subject. See `~/Eudaimonia/Admin/tools/gws.md` → "Resolving a Gmail Web UI Link to an API Message."
+
 ### Creating Google Docs from markdown
 
 Preferred path: write markdown locally, upload to Drive with conversion via `gws drive files create --upload <path> --upload-content-type text/markdown --json '{"name": "<title>", "mimeType": "application/vnd.google-apps.document"}'`. Update an existing Doc with `gws drive files update --params '{"fileId": "<ID>"}' --upload <path> --upload-content-type text/markdown`.
