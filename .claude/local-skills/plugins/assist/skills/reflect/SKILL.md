@@ -24,7 +24,7 @@ Help Forni look back at a boundary he cares about and see the month (or week, qu
 
 1. Read this skill's [learned-rules.md](learned-rules.md) for accumulated corrections.
 2. Read the plugin-level [learned-rules.md](../../learned-rules.md) for cross-skill corrections.
-3. Read the current V2MOM: `~/Eudaimonia/Goals/2026-v2mom.md` (the frame you reflect against).
+3. Read the current V2MOM (the frame you reflect against). Discover it dynamically rather than hardcoding the year, so this never needs an annual edit: `ls ~/Eudaimonia/Goals/*-v2mom.md` and read the most recent (currently `2026-v2mom.md`).
 4. Determine the period and Forni's shifted quarter (below).
 
 ## The Shifted Year
@@ -58,11 +58,13 @@ The monthly reflection. This is the primary, proven flow.
 Pull the data the paper journal does not tally, so the conversation is grounded in what actually happened, not just what is remembered.
 
 - **Movement (Strava):** `mcp__strava__get-all-activities` with `startDate` and `endDate` bounding the month. Summarize against the V2MOM Constitution measures: running miles vs ~15 mi/wk, strength sessions/hours vs 2 hr/wk, yoga, recovery (sauna), and surface the mountain/play/adventure days. Note the posture is joy not rigor (ramping toward the season's goal), so being under a maintenance line is data, not a verdict.
-- **Overconsumption (Gmail takeout tally):** the conscious consumption measure has no automatic log, so build one. Search Gmail for the month's delivery confirmations and count them:
+- **Overconsumption (Gmail takeout tally):** the conscious consumption measure has no automatic log, so build one. Search Gmail for the month's delivery confirmations and count them. The date window is `after:` the first of the reflection month and `before:` the first of the **next** month (so May 2026 is `after:2026/05/01 before:2026/06/01`):
 
   ```bash
+  # Substitute the month boundaries: after = first of the reflection month,
+  # before = first of the NEXT month. Example shown is May 2026.
   GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws gmail users messages list \
-    --params '{"userId":"me","q":"(Domino OR \"Illegal Pete\" OR DoorDash OR Grubhub OR \"Uber Eats\" OR Postmates) after:YYYY/MM/01 before:YYYY/MM/01","maxResults":100}'
+    --params '{"userId":"me","q":"(Domino OR \"Illegal Pete\" OR DoorDash OR Grubhub OR \"Uber Eats\" OR Postmates) after:2026/05/01 before:2026/06/01","maxResults":100}'
   ```
 
   Then fetch each message's Date/From/Subject (`format: metadata`) to confirm they are real orders and build a date-by-vehicle table. (It is "Illegal Pete's" the burrito chain, not "Pete's Kitchen.") Note the pattern, not just the count: weekday vs weekend spread, and whether orders cluster in pairs across consecutive nights.
