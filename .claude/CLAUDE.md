@@ -85,6 +85,7 @@ When you would otherwise reach for memory, use the `assist:codify` skill or add 
   1. `git rebase --onto main <last-commit-of-old-base> <stacked-branch>` to replay only A's own commits on main
   2. `gh pr edit <N> --base main` to update the PR's base ref
   3. `git push --force-with-lease` to update the remote
+- **Merging the base of a stack with `--delete-branch` auto-closes the stacked child PR.** A PR whose *base ref* is deleted gets closed by GitHub (the base no longer exists), and a closed PR refuses `gh pr edit --base` and often `gh pr reopen` (its base branch is gone). So when landing a stack, do the child's `--onto main` rebase + `gh pr edit --base main` *before* merging the base, or merge the base **without** `--delete-branch`. If it already closed, the clean recovery is to rebase the child onto main and open a fresh PR rather than fight the closed one. Bit ATE-370's app PR on 2026-05-31.
 - **`git branch -d` does NOT work on squash-merged branches.** `-d` only checks DAG ancestry — squash merges create a new commit on main with a different SHA, so the branch tip is never an ancestor. The "upstream gone" indicator doesn't change this. The safety check before `-D` is "the branch's distinguishing work is reachable on main", not "the trees are byte-identical." Get the branch's own touched files via `git log --name-only --pretty=format: main..<branch> | sort -u | grep -v '^$'` (NOT `git diff --name-only`, which would also include files main advanced on while the PR was open). Then run `git diff --quiet main..<branch> -- <those-files>` (two dots, options BEFORE `--`). On exit 0, those paths match between main and the branch, so the squash carried the work — safe to `git branch -D <branch>`. Two foot-guns: (1) `--quiet` placed AFTER `--` becomes a pathspec, silently producing exit 0 even when the trees differ — always put options first. (2) Avoid the three-dot form (`git diff main...<branch>`) for this check — three dots compares from the merge base, so the diff stays non-empty by definition even after a clean squash.
 
 - **Repo-level branch auto-deletion is off by default on GitHub.** The `delete_branch_on_merge` setting (Settings → General → Pull Requests → "Automatically delete head branches") controls whether merged head refs auto-delete. Check it with `gh api repos/<owner>/<repo> --jq '.delete_branch_on_merge'`; flip it on with `gh api -X PATCH repos/<owner>/<repo> -f delete_branch_on_merge=true`. Without it on, merged branches linger on the remote and `-d` cleanup becomes more annoying because of the rule above.
@@ -201,6 +202,8 @@ Sort by Date header, take the latest, pass its ID to `--message-id`. If any part
 Manage integrations at <https://www.notion.so/profile/integrations>
 
 ## Linear Ticket Preferences
+
+**When to create a ticket at all.** A ticket tracks work that needs doing: queued for later, spanning sessions, needing prioritization, or handed off. For work that is decided and executed in one sitting, the PR is the tracking unit, so do not mint a ticket for it. Ask before ticketing in-session work. If a ticket is created, actually use it: move it through states and let it close on merge, never leave it orphaned in Todo while its PR is already open.
 
 When creating new Linear tickets:
 
