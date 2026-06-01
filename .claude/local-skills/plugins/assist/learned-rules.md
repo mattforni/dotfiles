@@ -26,6 +26,12 @@ Rules added from triage corrections. Read on every invocation. These override de
 - When someone asks for availability to schedule a call/meeting, default to sharing the Reclaim scheduling link rather than proposing specific time slots. It's simpler and always up to date.
 - When the user has reviewed and approved email drafts, send them directly if asked. Do not insist on creating drafts first. The review already happened in conversation.
 - Stars mean action is needed from the user. Do not star informational emails. When in doubt whether an email needs action, read the full content first before assigning a star. A 1099 "available online" notice is informational (Coinbase handles it), not an action item.
+- **Star semantics (governing rule, applies to BOTH personal and work inboxes; supersedes the green/yellow definitions in triage-rules.md).** The star answers "who has the ball":
+  - 🟡 **YELLOW_STAR** = waiting on *us* — we owe the next move (a reply or an action we're responsible for).
+  - 🟢 **GREEN_STAR** = waiting on *someone else*, kept in inbox to track / keep in scope.
+  - 🔴 **RED_STAR** = same as yellow (waiting on us) but urgent or overdue.
+  - **No star + archive** when nothing needs tracking.
+  - **Always strip every star when archiving** (archived = unstarred). Pass the full star set in `removeLabelIds` on archive: `STARRED`, `YELLOW_STAR`, `GREEN_STAR`, `RED_STAR`.
 
 ## Domain Rules
 
@@ -55,6 +61,20 @@ Rules added from triage corrections. Read on every invocation. These override de
   **Why:** Codified 2026-05-18 (Wk 3 planning session). Initial slot for 📝 Clio Intake and 🏥 Establish Primary Care landed at 15:00–16:00. Forni redirected: "I just don't tend to have time later in the day with work. It just doesn't really work that way." Afternoon slots in practice get displaced by work even when calendar shows them open.
 
   **How to apply:** When triaging Schedule filter tasks, default to morning slots. Strong morning windows: Mon 7:00–10:00 (deep AM at office), Tue/Wed 7:00–10:30 (Heads Down container), Thu 7:30–8:00 (post SPRC pre meetings), Fri 7:00–11:30 (large WFH block). Use afternoon only as a fallback.
+
+## Zero Work Inbox
+
+The default triage-rules.md / label-map.md taxonomy is Forni's **personal** life (Family, Sobriety, the four pillars). The **Zero work inbox** (mattf@zerohomes.io, active under the `zero` gws profile) has a completely separate label set. Those personal labels do not exist there. **When triaging in a Zero directory subtree, confirm which inbox Forni means before scanning** — the active gws profile being `zero` does not by itself mean he wants the work inbox triaged.
+
+Zero workspace user labels: `🏦 Vendors`, `🛠️ Tooling`, `📈 Growth` (sublabels `📍 Local Rank`, `⚙️ Sales Automation`), `💻 Engineering`, `🫂 Partners`, `👯‍♀️ People Ops`, `🤝 Meetings`, `🏥 Benefits`, `📝 Documents`, `💸 Expenses`, `🫠 Personal`.
+
+Routing conventions (established 2026-06-01):
+
+- **Vendor evaluations** (inbound sales demos, tools being assessed) → `🏦 Vendors` + `🛠️ Tooling` + `📈 Growth` (parent). E.g. the Podium-replacement / speed-to-lead bake-off (Aircall, Talkdesk, Avoca, Regal, Hatch).
+- **Live sales-automation tooling / infrastructure** (a tool actually in the stack, or automation work) → `📈 Growth/⚙️ Sales Automation` + `🛠️ Tooling`. E.g. Podium support threads, scheduler attribution, CCEF auto-create-contact automation, building a teammate's scheduler.
+- **GBP / local listings / local SEO** → `📈 Growth/📍 Local Rank`. E.g. MapRanking, Google Business Profile appeals, signage-for-GBP threads, business-directory listing invites.
+- **Customer-reported app/product bugs** → `💻 Engineering`, and route the extracted bug to the **#engineering** Slack channel (tag the relevant engineer; Danny Pier is Lead Mobile Engineer for app bugs), then archive the email — the work lives in Slack/eng, not the inbox.
+- Work that spawns follow-up → cut a **GROW** Linear ticket (Growth Team, assign Forni, Todo) and let the ticket be the source of truth; star the email per the star-semantics rule (yellow if we owe the move, green if waiting on someone else).
 
 ## Codification Rules
 
