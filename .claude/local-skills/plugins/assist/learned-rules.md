@@ -31,7 +31,7 @@ Rules added from triage corrections. Read on every invocation. These override de
   - 🟢 **GREEN_STAR** = waiting on *someone else*, kept in inbox to track / keep in scope.
   - 🔴 **RED_STAR** = same as yellow (waiting on us) but urgent or overdue.
   - **No star + archive** when nothing needs tracking.
-  - **Always strip every star when archiving** (archived = unstarred). Pass the full star set in `removeLabelIds` on archive: `STARRED`, `YELLOW_STAR`, `GREEN_STAR`, `RED_STAR`.
+  - **Always strip every star when archiving** (archived = unstarred). Pass the full star set in `removeLabelIds` on archive: `STARRED`, `YELLOW_STAR`, `GREEN_STAR`, `RED_STAR`. (In Forni's Google Workspace accounts these colored-star IDs are exposed as **system labels** and work in both `addLabelIds` and `removeLabelIds` via gws — confirmed in use. This differs from consumer Gmail, where colored stars are undocumented `^ss_` IDs; do not "simplify" this rule to `STARRED`-only.)
 
 ## Domain Rules
 
@@ -66,7 +66,7 @@ Rules added from triage corrections. Read on every invocation. These override de
 
 The default triage-rules.md / label-map.md taxonomy is Forni's **personal** life (Family, Sobriety, the four pillars). The **Zero work inbox** (mattf@zerohomes.io, active under the `zero` gws profile) has a completely separate label set. Those personal labels do not exist there. **When triaging in a Zero directory subtree, confirm which inbox Forni means before scanning** — the active gws profile being `zero` does not by itself mean he wants the work inbox triaged.
 
-Zero workspace user labels: `🏦 Vendors`, `🛠️ Tooling`, `📈 Growth` (sublabels `📍 Local Rank`, `⚙️ Sales Automation`), `💻 Engineering`, `🫂 Partners`, `👯‍♀️ People Ops`, `🤝 Meetings`, `🏥 Benefits`, `📝 Documents`, `💸 Expenses`, `🫠 Personal`.
+Zero workspace user labels: `🏦 Vendors`, `🛠️ Tooling`, `📈 Growth`, `📈 Growth/📍 Local Rank`, `📈 Growth/⚙️ Sales Automation`, `💻 Engineering`, `🫂 Partners`, `👯‍♀️ People Ops`, `🤝 Meetings`, `🏥 Benefits`, `📝 Documents`, `💸 Expenses`, `🫠 Personal`.
 
 Routing conventions (established 2026-06-01):
 
@@ -74,7 +74,7 @@ Routing conventions (established 2026-06-01):
 - **Live sales-automation tooling / infrastructure** (a tool actually in the stack, or automation work) → `📈 Growth/⚙️ Sales Automation` + `🛠️ Tooling`. E.g. Podium support threads, scheduler attribution, CCEF auto-create-contact automation, building a teammate's scheduler.
 - **GBP / local listings / local SEO** → `📈 Growth/📍 Local Rank`. E.g. MapRanking, Google Business Profile appeals, signage-for-GBP threads, business-directory listing invites.
 - **Customer-reported app/product bugs** → `💻 Engineering`, and route the extracted bug to the **#engineering** Slack channel (tag the relevant engineer; Danny Pier is Lead Mobile Engineer for app bugs), then archive the email — the work lives in Slack/eng, not the inbox.
-- Work that spawns follow-up → cut a **GROW** Linear ticket (Growth Team, assign Forni, Todo) and let the ticket be the source of truth; star the email per the star-semantics rule (yellow if we owe the move, green if waiting on someone else).
+- Work that spawns follow-up → cut a **GROW** Linear ticket (Growth Team, assign Forni, Todo) and let the ticket be the source of truth; star the email per the star-semantics rule (`YELLOW_STAR` if we owe the move, `GREEN_STAR` if waiting on someone else).
 
 ## Codification Rules
 
