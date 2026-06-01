@@ -3,6 +3,7 @@ name: sdlc:groom
 description: Groom a Linear team's queue. Two modes — cycle grooming (when the team runs Linear cycles, trim the active cycle to a realistic slate) and backlog grooming (when the team has a backlog without active cycles, triage by priority, staleness, and intent). Use whenever the user mentions Linear grooming, triaging issues, pruning a backlog, sprint grooming, "the cycle is overstuffed", "let's clean up the queue", "groom the backlog", or wants to make decisions across many issues at once. Use the Linear CLI when available; fall back to the Linear MCP otherwise.
 allowed-tools:
   - Bash(linear *)
+  - Bash(git *)
   - mcp__claude_ai_Linear__list_issues
   - mcp__claude_ai_Linear__get_issue
   - mcp__claude_ai_Linear__save_issue

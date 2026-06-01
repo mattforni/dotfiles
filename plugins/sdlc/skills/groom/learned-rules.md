@@ -26,6 +26,38 @@ The Linear MCP fuzzy-matches state names. Passing `state: "Canceled"` can land t
 
 **How to apply:** When canceling via MCP, either (a) accept the Duplicate-vs-Canceled imprecision since both hide the issue from active views, (b) pass the explicit Canceled state UUID, or (c) use the CLI: `linear issue update ATE-NNN --state Canceled`.
 
+### Default Scope to Assignee == Requesting User, Not the Whole Cycle.
+
+The skill's scope step should default to filtering cycle issues where `assignee.name == user` unless the user explicitly says "groom the whole cycle." Otherwise you partition other people's tickets, confuse the capacity math, and force the user to redirect mid-walk.
+
+**Why:** GROW Cycle 5 groom 2026-06-01. Initial dump showed 68 cycle tickets; Forni owned 42. Capacity math and the first partition table used the wrong denominator. Forni redirected on a Rich owned admin task with "Is this my ticket? Maybe we need to look at my tickets, please?"
+
+**How to apply:** At scope, query the cycle, then immediately filter to `assignee.name == user` for the working set. Surface the full cycle count plus the per assignee distribution so the user can opt into a broader scope if they want. Default working set is always "your tickets."
+
+### Linear `priority: 0` Is "No Priority," Not Urgent. Always Render `priorityLabel`.
+
+Linear priority integers: 1=Urgent, 2=High, 3=Normal, 4=Low, **0=No priority** (untriaged). Rendering the integer as `P0` makes untriaged tickets read as the most urgent thing in the cycle.
+
+**Why:** GROW Cycle 5 groom 2026-06-01. Initial table rendered GROW-292 and GROW-295 as "P0" because of `priority: 0`. Both were untriaged. Wrong framing landed in a recommendation slate before being caught and re-rendered.
+
+**How to apply:** In every table, sort key, and rationale string, use `priorityLabel` (the string Linear computes from the integer), never the integer. When sorting, treat `priority == 0` as Low for scheduling order, not as the top of the list.
+
+### Verify "Shipped but Todo" Against the Team's Main Repo Before Partitioning.
+
+For each cycle groom, grep the team's primary code repo for commits matching the ticket key pattern since cycle start. Any ticket key that appears in a merged commit but still sits in Todo is state drift: probably Done in reality, never moved in Linear.
+
+**Why:** GROW Cycle 5 groom 2026-06-01. Three tickets (GROW-280, GROW-289, GROW-292) shipped in PRs #324/#325/#326 but stayed Todo. Without the repo check they would have been classified as overstuffed cycle work. Only caught because Forni said "I think it's wrapped" on GROW-292, prompting the spot check that surfaced the other two.
+
+**How to apply:** During scope, run `git -C <main-repo> log origin/main --since="<cycle-start>" --grep="<TEAM>-" -i --oneline` (adjust `origin/main` to the team's default branch; run `git -C <main-repo> fetch origin` first so the ref is current). Cross reference each ticket key against Linear states. For shipped-but-Todo, surface as a batch: "verified shipped in PR #N — mark Done?" Querying `origin/main` rather than `HEAD` avoids false positives from unmerged commits on a local feature branch.
+
+### Re-query the Cycle at the End of Partitioning to Catch Newly Added Tickets.
+
+Long groom sessions take an hour or more. New tickets land mid session. The final verification should re-pull the cycle and diff against the original working set so nothing slips through unclassified.
+
+**Why:** GROW Cycle 5 groom 2026-06-01. GROW-296 (Aircall AICSR Spec) was created during the AICSR meeting Forni had cued up; landed in Cycle 5 between the initial JSON dump and the final partition. Only surfaced in the closing verification pass.
+
+**How to apply:** After applying all approved changes, re-run the cycle query and diff `current_set - original_working_set`. Surface any newly-added tickets to the user as a final batch decision before declaring the groom complete.
+
 ### A team's deferral label is sacred. Do not include it in the stale sweep.
 
 The naive backlog stale-sweep heuristic (no priority + no recent activity + no assignee + no project) misfires on any team that uses a label like `👋 Later` to mean "intentionally deferred, save the intent." Items carrying that label are working as designed; bulk canceling them erases real intent.
