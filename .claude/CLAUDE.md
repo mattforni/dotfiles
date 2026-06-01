@@ -14,6 +14,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 ## Writing Style
 
 - **Title Case for all document headers.** Capitalize as if a book title; lowercase short prepositions (of, in, to, for, by) and articles (a, an, the) unless they start the heading. Applies to every heading level in Google Docs, markdown files, slide decks, Linear issue titles, and any structured written output.
+- **Implementation plans are readable prose, not code blueprints.** Describe *what* gets done and *what the user experiences*, in plain language Forni can read without switching into engineering mode. No literal code, no framework jargon (hook names, casing transforms, attribute syntax). Name the files to touch as light pointers, but each step is a sentence of intent. Pseudocode over real code wherever a snippet is unavoidable. Applies to every plan and design doc, including plan-mode output.
 
 ## General Behavior
 
@@ -264,6 +265,8 @@ When creating Google Calendar events, follow these conventions.
 - **Constitution** events → Sage (colorId 2). Runs, lifts, yoga, body care, recovery.
 - **Community** events → Tangerine (colorId 6). Family, friends, social gatherings.
 - **Transition and travel** blocks → Basil (colorId 10). See the distinction below.
+- **Multi-day trips / away blocks** → all-day, transparency `"free"` (informational, never busy), Basil (colorId 10). Title is a place-reflective emoji + the place name (`🏖️ LA`, `🌲 Seattle`, `🏔️ Lake City`); trip details go in the description.
+- **Tentative events** → Banana (colorId 5, yellow). Yellow flags "not confirmed yet" across any category; recolor to the real category color once it's locked.
 
 **Transition vs travel** (both Basil, different purposes):
 
