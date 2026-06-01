@@ -26,7 +26,7 @@ The Linear MCP fuzzy-matches state names. Passing `state: "Canceled"` can land t
 
 **How to apply:** When canceling via MCP, either (a) accept the Duplicate-vs-Canceled imprecision since both hide the issue from active views, (b) pass the explicit Canceled state UUID, or (c) use the CLI: `linear issue update ATE-NNN --state Canceled`.
 
-### Default scope to assignee == requesting user, not the whole cycle.
+### Default Scope to Assignee == Requesting User, Not the Whole Cycle.
 
 The skill's scope step should default to filtering cycle issues where `assignee.name == user` unless the user explicitly says "groom the whole cycle." Otherwise you partition other people's tickets, confuse the capacity math, and force the user to redirect mid-walk.
 
@@ -34,7 +34,7 @@ The skill's scope step should default to filtering cycle issues where `assignee.
 
 **How to apply:** At scope, query the cycle, then immediately filter to `assignee.name == user` for the working set. Surface the full cycle count plus the per assignee distribution so the user can opt into a broader scope if they want. Default working set is always "your tickets."
 
-### Linear `priority: 0` is "No priority," not Urgent. Always render `priorityLabel`.
+### Linear `priority: 0` Is "No Priority," Not Urgent. Always Render `priorityLabel`.
 
 Linear priority integers: 1=Urgent, 2=High, 3=Normal, 4=Low, **0=No priority** (untriaged). Rendering the integer as `P0` makes untriaged tickets read as the most urgent thing in the cycle.
 
@@ -42,7 +42,7 @@ Linear priority integers: 1=Urgent, 2=High, 3=Normal, 4=Low, **0=No priority** (
 
 **How to apply:** In every table, sort key, and rationale string, use `priorityLabel` (the string Linear computes from the integer), never the integer. When sorting, treat `priority == 0` as Low for scheduling order, not as the top of the list.
 
-### Verify "shipped but Todo" against the team's main repo before partitioning.
+### Verify "Shipped but Todo" Against the Team's Main Repo Before Partitioning.
 
 For each cycle groom, grep the team's primary code repo for commits matching the ticket key pattern since cycle start. Any ticket key that appears in a merged commit but still sits in Todo is state drift: probably Done in reality, never moved in Linear.
 
@@ -50,7 +50,7 @@ For each cycle groom, grep the team's primary code repo for commits matching the
 
 **How to apply:** During scope, run `git -C <main-repo> log --since="<cycle-start>" --grep="<TEAM>-" -i --oneline`. Cross reference each ticket key against Linear states. For shipped-but-Todo, surface as a batch: "verified shipped in PR #N — mark Done?"
 
-### Re-query the cycle at the end of partitioning to catch newly-added tickets.
+### Re-query the Cycle at the End of Partitioning to Catch Newly Added Tickets.
 
 Long groom sessions take an hour or more. New tickets land mid session. The final verification should re-pull the cycle and diff against the original working set so nothing slips through unclassified.
 
