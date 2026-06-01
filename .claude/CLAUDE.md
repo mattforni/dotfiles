@@ -298,6 +298,8 @@ When deleting a recurring event, also delete the paired transition or travel rec
 - Monday morning planning sessions are used to schedule these tasks
 - **All follow-ups land on a Monday, no exceptions.** Even when the natural "first day back" or "first business day" is a Tuesday or Wednesday (returning from a trip, day after a holiday), the follow-up still lands on the next Monday that follows the wait condition. Mondays are the planning slot; that is where follow-ups belong.
 - Task titles: emoji prefix + short title (e.g., "📧 [Follow Up with Jeff](https://mail.google.com/...)"). Link to source in the title text when available.
+- **Keep titles short — a few words, scannable at a glance.** The title is the bare action ("📤 Send Jeff Onboarding Docs"); the why, what, and links go in a comment. If a title reads like a sentence, it is too long. Err aggressively toward brevity.
+- **Always Title Case task titles**, same rules as document headers (lowercase short prepositions and articles unless they lead). Applies to every Todoist task, no exceptions.
 - Details go in a comment on the task, not in the description field
 
 ## Code Project Conventions
