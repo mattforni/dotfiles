@@ -48,7 +48,7 @@ For each cycle groom, grep the team's primary code repo for commits matching the
 
 **Why:** GROW Cycle 5 groom 2026-06-01. Three tickets (GROW-280, GROW-289, GROW-292) shipped in PRs #324/#325/#326 but stayed Todo. Without the repo check they would have been classified as overstuffed cycle work. Only caught because Forni said "I think it's wrapped" on GROW-292, prompting the spot check that surfaced the other two.
 
-**How to apply:** During scope, run `git -C <main-repo> log --since="<cycle-start>" --grep="<TEAM>-" -i --oneline`. Cross reference each ticket key against Linear states. For shipped-but-Todo, surface as a batch: "verified shipped in PR #N — mark Done?"
+**How to apply:** During scope, run `git -C <main-repo> log origin/main --since="<cycle-start>" --grep="<TEAM>-" -i --oneline` (adjust `origin/main` to the team's default branch; run `git -C <main-repo> fetch origin` first so the ref is current). Cross reference each ticket key against Linear states. For shipped-but-Todo, surface as a batch: "verified shipped in PR #N — mark Done?" Querying `origin/main` rather than `HEAD` avoids false positives from unmerged commits on a local feature branch.
 
 ### Re-query the Cycle at the End of Partitioning to Catch Newly Added Tickets.
 
