@@ -123,7 +123,7 @@ The shopping list is the primary artifact. Group by section and store.
 ```
 
 Rules for the list:
-- Only include items that need restocking. From `list_pantry`, an item needs buying when `needs_restock` is true; items above their restock threshold are already on hand
+- Only items that need restocking go in the store-specific sections. From `list_pantry`, an item needs buying when `needs_restock` is true; items above their restock threshold are already on hand and belong under "Already Stocked"
 - Flag staples that are low (`needs_restock` true, or "low" in `notes`) and include them if Forni confirms
 - Use the brand stored on the underlying Consumable where one is specified
 - Separate produce by grocery section for efficient store flow (leafy greens, alliums, roots, fruits, etc.)
