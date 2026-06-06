@@ -18,6 +18,9 @@ brew "stow"
 brew "wget"
 brew "zsh"
 
+# Media & image processing
+brew "vips" # libvips: Active Storage variant processor for atelic image hosting (matches the Docker image)
+
 # Languages & build tools
 brew "automake"
 brew "cmake"
