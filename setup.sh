@@ -206,12 +206,15 @@ setup_ruby() {
     info "Ruby $RUBY_DEFAULT_VERSION already installed"
   else
     info "Installing Ruby $RUBY_DEFAULT_VERSION via rbenv (compiles from source, slow)..."
-    rbenv install --skip-existing "$RUBY_DEFAULT_VERSION" || return 1
+    # --force recompiles even if present, so -f genuinely reinstalls (mirrors setup_node).
+    local install_opt="--skip-existing"
+    [[ "$FORCE" == true ]] && install_opt="--force"
+    rbenv install "$install_opt" "$RUBY_DEFAULT_VERSION" || return 1
     SUMMARY+=("Ruby $RUBY_DEFAULT_VERSION installed via rbenv")
   fi
 
   rbenv global "$RUBY_DEFAULT_VERSION" || return 1
-  info "Ruby $(rbenv exec ruby --version 2>/dev/null | awk '{print $2}') is the global default"
+  info "Ruby $(rbenv exec ruby --version | awk '{print $2}') is the global default"
 }
 
 install_npm_globals() {
