@@ -62,7 +62,6 @@
       "Bash(rsvg-convert:*)",
       "Bash(rsync:*)",
       "Bash(ruby:*)",
-      "Bash(rvm:*)",
       "Bash(sed:*)",
       "Bash(sips:*)",
       "Bash(sort:*)",
