@@ -253,6 +253,8 @@ Second section.
 
 Apply every time a Slack post has section headers. Do not skip because the draft looks fine in the editor — Slack does not render the air until U+200B is there.
 
+**Workshop Slack posts in a DM to yourself.** Send the draft with the channel set to your own user ID. Real `<@USER_ID>` mentions render as the named user but don't ping — Slack only fires notifications when the tagged user is a member of the conversation. Iterate until the render is right (table widths, ZWSP spacing, emoji, mention rendering), then re-send the same content to the actual channel.
+
 ## Calendar Preferences
 
 When creating Google Calendar events, follow these conventions.

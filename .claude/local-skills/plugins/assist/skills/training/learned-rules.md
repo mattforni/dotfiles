@@ -11,6 +11,8 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
 - **30 min alignment for travel blocks**: Drive events use 30 minute increments aligned to 30 minute blocks (06:30 to 07:00, not 06:15 to 07:00). Transitions default to 30 minutes (size, not alignment).
 - **Always create both drive flanks**: A long run event without a paired `🚙 <Trailhead>` and `🚙 Home` is incomplete. Create all three together.
+- **Edit training events on the Life calendar only; the Zero copies are Reclaim-synced.** The personal (🌱 Life, `mattforni@gmail.com`) and work (0️⃣ Zero, `mattf@zerohomes.io`) calendars both display the training events, but they are *separate copies* (different iCalUIDs and organizers). Reclaim syncs Life → Zero, so only ever create / modify / delete training events on the **Life** calendar — never touch the Zero copies directly; Reclaim propagates them. Surfaced 2026-06-07.
+- **A split recurring series can't have its start time changed; recreate it.** When a recurring event's ID ends in `_R<timestamp>` (a "this-and-following" split), the Calendar API rejects a start-time change with `400 Invalid start time` because the ID encodes the DTSTART. To move such a series, **delete it and insert a fresh recurring event** at the new time. Plain (non-split) recurring masters shift fine via a full `gws calendar events update` (GET the event, bump start/end, PUT it back) — a bare `events patch` of just start/end fails the same way. Surfaced 2026-06-07 shifting the Tue/Thu lifts +30 min.
 
 ## Mon Flex
 
