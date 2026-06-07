@@ -27,9 +27,11 @@ brew "cmake"
 brew "make"
 brew "maven"
 brew "python@3.12"
+brew "rbenv"
 brew "ruby-build"
 
 # Runtime & package managers
+brew "bun"
 brew "fnm"
 brew "pnpm"
 

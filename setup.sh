@@ -179,6 +179,41 @@ setup_node() {
   fi
 }
 
+# Default Ruby. rbenv reads per-project .ruby-version files, so this is just the
+# global fallback; bump it when the projects you work in move forward.
+RUBY_DEFAULT_VERSION="3.4.7"
+
+setup_ruby() {
+  header "Ruby setup"
+
+  # RVM has been replaced by rbenv. Remove any lingering RVM install so its
+  # shims and PATH entries can't shadow rbenv. Idempotent: a no-op once gone.
+  if [[ -d "$HOME/.rvm" ]]; then
+    info "Removing legacy RVM install (~/.rvm)..."
+    rm -rf "$HOME/.rvm"
+    SUMMARY+=("Removed legacy RVM")
+  fi
+  rm -f "$HOME/.rvmrc"
+
+  if ! command -v rbenv &>/dev/null; then
+    warn "rbenv not found, skipping Ruby setup"
+    return 0
+  fi
+
+  eval "$(rbenv init - bash)"
+
+  if rbenv versions --bare | grep -qx "$RUBY_DEFAULT_VERSION" && [[ "$FORCE" != true ]]; then
+    info "Ruby $RUBY_DEFAULT_VERSION already installed"
+  else
+    info "Installing Ruby $RUBY_DEFAULT_VERSION via rbenv (compiles from source, slow)..."
+    rbenv install --skip-existing "$RUBY_DEFAULT_VERSION" || return 1
+    SUMMARY+=("Ruby $RUBY_DEFAULT_VERSION installed via rbenv")
+  fi
+
+  rbenv global "$RUBY_DEFAULT_VERSION" || return 1
+  info "Ruby $(rbenv exec ruby --version 2>/dev/null | awk '{print $2}') is the global default"
+}
+
 install_npm_globals() {
   header "npm globals"
 
@@ -758,6 +793,7 @@ print_summary() {
 run_phase setup_prerequisites
 run_phase install_brew_packages
 run_phase setup_node
+run_phase setup_ruby
 run_phase install_npm_globals
 run_phase deploy_homebase
 run_phase link_tracked_configs
