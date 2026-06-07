@@ -114,7 +114,7 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+# Add Homebrew keg-only binaries to PATH.
 directories=("/usr/local/opt/postgresql@15/bin")
 for directory in "${directories[@]}"; do
   if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
@@ -123,5 +123,5 @@ for directory in "${directories[@]}"; do
 done
 
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
+# rbenv: shims + auto-switch Ruby from .ruby-version files
+command -v rbenv &>/dev/null && eval "$(rbenv init - bash)"

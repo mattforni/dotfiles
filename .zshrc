@@ -36,22 +36,13 @@ done
 export EDITOR=vim
 eval "$(fzf --zsh)"
 
-# Load RVM into a shell session *as a function*
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+# rbenv: shims + auto-switch Ruby from .ruby-version files
+command -v rbenv &>/dev/null && eval "$(rbenv init - zsh)"
 
-# Add RVM to PATH for scripting
-export PATH="$PATH:$HOME/.rvm/bin"
-
-# Enable RVM to automatically use Ruby version from .ruby-version files
-cd . # Trigger RVM auto-switch on shell start
 export PATH="$HOME/.local/bin:$PATH"
 
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+# bun is installed via Homebrew (see brew/Brewfile), so it lives on
+# /opt/homebrew/bin and needs no extra PATH or completion wiring here.
 
 # PATH precedence finalization. Place LAST so it wins over every earlier
 # prepend in this file. `typeset -U path` keeps PATH unique on each

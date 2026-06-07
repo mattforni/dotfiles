@@ -1,4 +1,4 @@
 . $HOME/.bashrc
 
-# Load RVM into a shell session *as a function*
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+# rbenv: shims + auto-switch Ruby from .ruby-version files
+command -v rbenv &>/dev/null && eval "$(rbenv init - bash)"
