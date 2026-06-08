@@ -147,7 +147,8 @@
     "skill-creator@claude-plugins-official": true,
     "assist@local-skills": true,
     "linear-lifecycle@skillset": true,
-    "sdlc@skillset": true
+    "sdlc@skillset": true,
+    "vercel@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-code-workflows": {
