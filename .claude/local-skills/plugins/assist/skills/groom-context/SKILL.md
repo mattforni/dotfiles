@@ -32,7 +32,7 @@ Keep the context architecture honest. The failure this skill exists to fix is **
 - **Reorganize in layers.** Align the shape first (renames, creates, deletes, the authoritative homes), then move content into it. Saves rework when a filled structure turns out to need reshaping.
 - **Propose, then apply.** Present the full diff for approval before touching anything. Never silently edit context files.
 
-## The Layers (the grooming surface)
+## The Layers (The Grooming Surface)
 
 - **GC** (`~/.claude/CLAUDE.md`, a symlink to homebase `.claude/CLAUDE.md`): always-loaded behavioral conventions and pointers.
 - **Eudaimonia CLAUDE.md chain**: root and nested (`Craft/`, `Craft/Development/`, `Admin/`, pillar dirs), loaded by location.
@@ -44,9 +44,9 @@ Keep the context architecture honest. The failure this skill exists to fix is **
 
 The audit produces proposed changes. It never edits silently.
 
-### Step 1: Map (fan out)
+### Step 1: Map (Fan Out)
 
-Spawn parallel readers, roughly one per layer, using the Agent tool. Each reader returns the rules it found as a topic to location list plus any smells it noticed (duplication, a stale reference, a tool specific living outside its tool doc, a process gate with no enforcement). Aggregate the returns into a single topic to location map so every place a rule is encoded is visible at once. If a starting topic was passed as an argument, lead with it, but still cover the whole surface.
+Spawn parallel readers, roughly one per layer, using the Agent tool. Each reader returns the rules it found as a topic to location list plus any smells it noticed (duplication, a stale reference, a tool detail living outside its tool doc, a process gate with no enforcement). Aggregate the returns into a single topic to location map so every place a rule is encoded is visible at once. If a starting topic was passed as an argument, lead with it, but still cover the whole surface.
 
 ### Step 2: Cull
 
@@ -64,7 +64,7 @@ Move each rule to the layer that owns it. In particular: tool-specific content g
 
 Ask whether GC, or any always-loaded file, has grown too large to be read with attention, and whether the load-bearing rules are visually prioritized. Recommend trimming the always-loaded layer toward pointers plus a short list of non-negotiables, pushing detail down a layer.
 
-### Step 6: Enforcement Check (the highest-value step)
+### Step 6: Enforcement Check (The Highest Value Step)
 
 For each load-bearing process gate, ask "what actually makes me follow this?" A prose line is weak. A step inside the relevant flow skill, a checklist item, or a hook in `settings.json` is strong. Recommend migrating enforcement to where the flow runs. Example: review-before-merge belongs enforced inside `sdlc:land`, not only stated in GC prose.
 
@@ -80,7 +80,7 @@ Append a short dated entry to [log.md](log.md) in this skill's directory: scope 
 
 A compact report: the topic to location map (or the slice that had findings), then the proposal grouped as Cull / Dedup / Relocate / Enforce, then the per-repo change plan. Lead with the load-bearing fixes (enforcement migrations, contradictions), not the cosmetic ones.
 
-## Anti-patterns
+## Anti Patterns
 
 - **Do not** audit only a slice and call it done. Full pass, every run.
 - **Do not** apply edits before presenting the diff.

@@ -73,7 +73,7 @@ When you would otherwise reach for memory, use the `assist:codify-context` skill
 The persistent stores listed above are the **layers** of the context architecture (GC, the Eudy CLAUDE.md chain, repo CLAUDE.md, skill SKILL.md and learned-rules, tool docs). Two principles govern them, and `assist:groom-context` audits the whole set against this section:
 
 - **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it (the Persistence order above is that ownership map), stated once, with other layers pointing to it rather than repeating it. Three copies in always-loaded prose is worse than one in the right place.
-- **Load-bearing process gates belong at the point of use, and enforced.** A gate that must fire during a flow (for example review before merge) belongs surfaced in the relevant repo's Workflow and enforced by the flow skill that runs it (such as `sdlc:land`), not buried in always-loaded prose where it competes for attention and gets dropped. A prose line is the weakest form of a rule; a skill step or a hook is the strongest.
+- **Load-bearing process gates belong at the point of use, and must be enforced there.** A gate that must fire during a flow (for example review before merge) belongs surfaced in the relevant repo's Workflow and enforced by the flow skill that runs it (such as `sdlc:land`), not buried in always-loaded prose where it competes for attention and gets dropped. A prose line is the weakest form of a rule; a skill step or a hook is the strongest.
 
 When context sprawls or duplicates, or a basic keeps getting dropped, run `assist:groom-context` (also run monthly via `assist:reflect`). Its write-in counterpart is `assist:codify-context`.
 
