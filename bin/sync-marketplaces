@@ -28,6 +28,12 @@ current=0
 reset=0
 failed=0
 
+# Per-invocation temp file for capturing git output. mktemp avoids the symlink
+# races and cross-invocation collisions of a predictable /tmp path; the trap
+# cleans it up on any exit.
+tmp_out="$(mktemp)" || exit 1
+trap 'rm -f "$tmp_out"' EXIT
+
 # default_branch <repo> — echo the clone's default branch name, or empty if
 # it cannot be determined. Prefer origin/HEAD; fall back to probing main then
 # master. Never guess blindly: a master-based clone defaulted to main would be
@@ -80,8 +86,8 @@ for repo in "$MARKETPLACES_DIR"/*/; do
   fi
 
   # Fast forward first.
-  if git -C "$repo" pull --ff-only origin "$br" >/tmp/sync-marketplaces.txt 2>&1; then
-    if grep -q "Already up to date" /tmp/sync-marketplaces.txt; then
+  if git -C "$repo" pull --ff-only origin "$br" >"$tmp_out" 2>&1; then
+    if grep -q "Already up to date" "$tmp_out"; then
       echo "CURRENT $name ($br)"
       current=$((current + 1))
     else
@@ -93,7 +99,7 @@ for repo in "$MARKETPLACES_DIR"/*/; do
 
   # ff-only refused: clone drifted, history rewritten upstream, or local
   # commits exist. Recover by hard-resetting to the remote.
-  reason="$(tail -1 /tmp/sync-marketplaces.txt)"
+  reason="$(tail -1 "$tmp_out")"
   if git -C "$repo" fetch origin "$br" >/dev/null 2>&1 \
     && git -C "$repo" reset --hard "origin/$br" >/dev/null 2>&1 \
     && git -C "$repo" clean -fd >/dev/null 2>&1; then
