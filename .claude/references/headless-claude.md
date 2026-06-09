@@ -112,6 +112,17 @@ Note: even with `--dangerously-skip-permissions`, writes to `.claude/`, `.git/`,
 `.vscode/`, `.idea/`, `.husky/` still prompt. For a true no prompt run in those
 paths, use `--allowedTools` with explicit patterns instead.
 
+**Compound shell commands cannot be allowlisted.** A `Bash(git:*)` entry matches
+only a single bare `git ...` invocation. A multi-statement command (a `for`
+loop, piped commands, `cmd1 && cmd2`, anything with shell control flow) matches
+no single-prefix entry and is denied every run, even when each inner command
+would be allowed on its own. When a skill needs mechanical multi-step shell in a
+headless run, extract it into a committed script and allowlist that one path
+(e.g. `Bash(./bin/sync-marketplaces:*)`). Bonus: far fewer model turns spent
+authoring loops, which shrinks the window for a transient API/socket drop. The
+mise marketplace-sync step thrashed on denied loops for a week before this fix
+(PR #109, 2026-06-09).
+
 ## Success detection
 
 Exit code alone is not enough. `claude -p "/unknown:skill"` returns 0 with
@@ -134,6 +145,13 @@ Where `<expected>` is the distinctive success string the skill emits.
   the flow.
 - **`id -u` via subshell in bash `local`**: `local var="$(id -u)"` masks the
   return value (ShellCheck SC2155). Split declare and assign.
+- **Transient API/socket drops on long runs**: `claude -p` can die mid-stream
+  with `API Error: The socket connection was closed unexpectedly` and exit
+  non-zero, especially on long sessions. Wrap the invocation in a `timeout` with
+  a single retry on a transient signature (`socket connection was closed|API
+  Error|overloaded|Connection error`); a clean skill-level abort (e.g. a merge
+  conflict) should not match and should report immediately. Idempotent routines
+  are safe to retry. Reference impl: `bin/run-mise` (PR #109, 2026-06-09).
 
 ## Email reporting via Resend
 

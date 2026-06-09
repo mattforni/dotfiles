@@ -470,6 +470,13 @@ install_claude_plugins() {
     claude plugin marketplace add "$local_skills_dir"
   fi
 
+  # Refresh marketplace metadata from sources so plugin version bumps become
+  # visible to the update step below. `marketplace add` short-circuits when a
+  # marketplace is already on disk and does not refresh, so without this a
+  # bumped version would never be seen. Git sources do a network fetch here.
+  info "Refreshing marketplaces..."
+  claude plugin marketplace update >/dev/null 2>&1 || warn "Marketplace refresh hit an error"
+
   # Extract installed plugin names from formatted `claude plugin list` output.
   # Lines look like: "  ❯ feature-dev@claude-code-plugins"
   local installed_plugins
@@ -499,7 +506,20 @@ for k, v in d.get('enabledPlugins', {}).items():
     [[ -z "$plugin" ]] && continue
 
     if [[ -n "${installed_set[$plugin]+x}" ]] && [[ "$FORCE" != true ]]; then
-      info "Already installed: $plugin"
+      # Already installed: proactively update so version bumps actually deploy.
+      # setup.sh used to short-circuit here, so a bumped plugin never upgraded
+      # until a manual `claude plugin update`. update is a near no-op when the
+      # plugin is already current. Changes apply on the next claude launch.
+      local update_output
+      if update_output=$(claude plugin update "$plugin" 2>&1); then
+        if echo "$update_output" | grep -q "updated from"; then
+          info "Updated: $plugin"
+        else
+          info "Already current: $plugin"
+        fi
+      else
+        warn "Failed to update $plugin: $update_output"
+      fi
     else
       info "Installing: $plugin"
       claude plugin install "$plugin" || warn "Failed to install $plugin"
