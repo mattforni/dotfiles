@@ -1,6 +1,6 @@
 ---
-name: assist:codify
-description: Codify knowledge from the current session into the appropriate location using progressive disclosure. Use this skill whenever the user says "codify" followed by a topic, wants to capture something they just figured out, asks to document a pattern or convention, or says something like "we should write this down" or "future me needs to know this." Also trigger when the user discovers a gotcha, foot-gun, or non-obvious behavior worth preserving. Works for both project directories (three-layer CLAUDE.md/README.md pattern) and skill directories (Learned Rules in SKILL.md). Named after the "plan, delegate, assess, codify" Level 4 compounding loop.
+name: assist:codify-context
+description: Codify knowledge from the current session into the appropriate location in the context architecture using progressive disclosure. Use this skill whenever the user says "codify" followed by a topic, wants to capture something they just figured out, asks to document a pattern or convention, or says something like "we should write this down" or "future me needs to know this." Also trigger when the user discovers a gotcha, foot-gun, or non-obvious behavior worth preserving. Works for both project directories (three-layer CLAUDE.md/README.md pattern) and skill directories (Learned Rules in SKILL.md). Named after the "plan, delegate, assess, codify" Level 4 compounding loop. This is the write-in counterpart to `assist:groom-context`, which audits and prunes the same context architecture.
 argument-hint: "<topic> [in <directory>]"
 allowed-tools:
   - Bash

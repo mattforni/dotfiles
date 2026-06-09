@@ -114,6 +114,10 @@ When Forni is ready, write the reflection to `~/Eudaimonia/Contemplation/Reflect
 
 After Forni blesses the content, commit to Eudaimonia (`git -C ~/Eudaimonia ...`). Ask before pushing only if the content is unusually sensitive; otherwise pull it in. Eudaimonia commits can land direct to main.
 
+### Step 7: Groom the Context
+
+The month boundary is also when the context architecture gets tidied. After the reflection is written and committed, invoke `/assist:groom-context` via the Skill tool for a full grooming pass. Keep this separate from the felt work above: it is the operational close of the monthly, not part of the dialogue. If Forni is spent, offer to defer it, but the default at a month boundary is to run it.
+
 ## Mode: week
 
 The weekly retro. Lighter and faster than monthly. Called standalone, or by `assist:planning` before it plans the next week (the broader life retro that complements the training-specific retro `assist:training` already runs).

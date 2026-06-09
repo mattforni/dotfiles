@@ -49,7 +49,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 
 ### Plan to Codify Bridge
 
-After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
+After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify-context`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
 
 ### Persistence: Codify, Don't Memorize
 
@@ -64,9 +64,18 @@ Persistent stores, in order of preference:
 - **Skill `learned-rules.md`** sections for skill-specific patterns
 - **Eudy markdown files** (`Constitution/`, `Craft/`, etc.) for personal context
 
-When you would otherwise reach for memory, use the `assist:codify` skill or add to the right file directly. The auto-memory store is opaque, not git-tracked, and easy to forget exists; codifying into the repo keeps the knowledge visible and reviewable.
+When you would otherwise reach for memory, use the `assist:codify-context` skill or add to the right file directly. The auto-memory store is opaque, not git-tracked, and easy to forget exists; codifying into the repo keeps the knowledge visible and reviewable.
 
 **Keep GC lean — it loads on every session, everywhere.** GC pays rent on every turn, so it holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics — gotchas, access mechanics, CLI recipes, version quirks — do NOT go in GC; they belong in that tool's `~/Eudaimonia/Admin/tools/<tool>.md` one-pager (see `Admin/tools/CLAUDE.md`: "use it like this → GC; what this tool is and what to know → tools folder"). When a tool gotcha tempts you into a GC section, resist and file it in the tool doc. Lean into progressive disclosure: pointers here, depth one hop away.
+
+### Context Architecture
+
+The persistent stores listed above are the **layers** of the context architecture (GC, the Eudy CLAUDE.md chain, repo CLAUDE.md, skill SKILL.md and learned-rules, tool docs). Two principles govern them, and `assist:groom-context` audits the whole set against this section:
+
+- **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it (the Persistence order above is that ownership map), stated once, with other layers pointing to it rather than repeating it. Three copies in always-loaded prose is worse than one in the right place.
+- **Load-bearing process gates belong at the point of use, and enforced.** A gate that must fire during a flow (for example review before merge) belongs surfaced in the relevant repo's Workflow and enforced by the flow skill that runs it (such as `sdlc:land`), not buried in always-loaded prose where it competes for attention and gets dropped. A prose line is the weakest form of a rule; a skill step or a hook is the strongest.
+
+When context sprawls or duplicates, or a basic keeps getting dropped, run `assist:groom-context` (also run monthly via `assist:reflect`). Its write-in counterpart is `assist:codify-context`.
 
 ### Git Worktrees
 

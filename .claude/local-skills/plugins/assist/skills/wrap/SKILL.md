@@ -123,7 +123,7 @@ Walk the session for codifiable durables:
 - Patterns or conventions that became clear
 - Workflow improvements worth saving
 
-If candidates exist, ask the user whether to invoke `/assist:codify` via the Skill tool for each candidate. If nothing is codifiable, say so explicitly and skip. Most sessions skip. Forcing codify creates documentation bloat.
+If candidates exist, ask the user whether to invoke `/assist:codify-context` via the Skill tool for each candidate. If nothing is codifiable, say so explicitly and skip. Most sessions skip. Forcing codify creates documentation bloat.
 
 ### Step 7: Todoist Logging
 

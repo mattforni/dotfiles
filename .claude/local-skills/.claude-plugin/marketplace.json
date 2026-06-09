@@ -12,7 +12,7 @@
     {
       "name": "assist",
       "source": "./plugins/assist",
-      "version": "2.1.5",
+      "version": "2.2.0",
       "license": "MIT",
       "description": "Personal productivity skills: email triage, weekly planning, knowledge capture, BD outreach, and job applications.",
       "author": {
@@ -23,18 +23,19 @@
       "keywords": ["assist", "email", "planning", "reflect", "learn", "bd", "job-apply", "present", "productivity"],
       "strict": false,
       "skills": [
-        "./skills/emails/SKILL.md",
-        "./skills/planning/SKILL.md",
-        "./skills/reflect/SKILL.md",
-        "./skills/codify/SKILL.md",
-        "./skills/bd-email/SKILL.md",
-        "./skills/job-apply/SKILL.md",
-        "./skills/meals/SKILL.md",
-        "./skills/mise/SKILL.md",
-        "./skills/permissions/SKILL.md",
-        "./skills/present/SKILL.md",
-        "./skills/sharpen/SKILL.md",
-        "./skills/wrap/SKILL.md"
+        "./skills/emails",
+        "./skills/planning",
+        "./skills/reflect",
+        "./skills/codify-context",
+        "./skills/groom-context",
+        "./skills/bd-email",
+        "./skills/job-apply",
+        "./skills/meals",
+        "./skills/mise",
+        "./skills/permissions",
+        "./skills/present",
+        "./skills/sharpen",
+        "./skills/wrap"
       ]
     }
   ]
