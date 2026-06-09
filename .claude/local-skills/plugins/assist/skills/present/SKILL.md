@@ -141,7 +141,7 @@ Forni names the deck himself, often only after the content is mostly there. Do n
 
 ## Codify Bridge
 
-After the deck ships and the demo lands, prompt Forni: "Anything from this build worth codifying via `assist:codify`?" Common candidates:
+After the deck ships and the demo lands, prompt Forni: "Anything from this build worth codifying via `assist:codify-context`?" Common candidates:
 
 - A new narrative spine that worked well (add to "Useful spines" above)
 - A class or layout pattern worth promoting from this deck into the splat reference

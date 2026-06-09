@@ -29,7 +29,8 @@ Move our collaboration one rung at a time toward Level 7 (background agents) and
 - **Propose, then ask.** Surface one or two options with Forni's voice, not a menu of five. Let him pick at most one.
 - **Levels 3 through 5 are the foundation.** If context engineering, compounding, or skills feel sloppy, sharpening those is a legitimate move even though they are not 7 or 8. Clean foundation lets higher levels scale.
 - **Evidence over theory.** Ground proposals in what actually happened in recent sessions, not abstract ideals.
-- **Codify what you learn.** If the session surfaces a durable lesson, invoke `assist:codify` or append directly to the right learned-rules.md.
+- **Codify what you learn.** If the session surfaces a durable lesson, invoke `assist:codify-context` or append directly to the right learned-rules.md.
+- **Sprawl is a grooming job, not a sharpen move.** If the session reveals the context architecture is duplicated, stale, at the wrong altitude, or a basic keeps getting dropped, that is `assist:groom-context` (run monthly via reflect, or on demand), not a sharpen rep.
 
 ## Workflow
 
@@ -96,7 +97,7 @@ If the session surfaced a rule, preference, or insight worth preserving:
 
 - **Cross-skill correction** → append to `~/.claude/local-skills/plugins/assist/learned-rules.md`
 - **Sharpen-specific rule** → append to this skill's `learned-rules.md` (create if missing)
-- **Broader Eudaimonia convention** → invoke `assist:codify` for the full three-layer write up
+- **Broader Eudaimonia convention** → invoke `assist:codify-context` for the full three-layer write up
 
 ## Output Shape
 
