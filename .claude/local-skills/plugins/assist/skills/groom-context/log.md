@@ -17,4 +17,18 @@ Entry format:
 
 ---
 
-_(No passes logged yet. The first formal invocation will write the first entry and calibrate how aggressive culling should be.)_
+## 2026-06-09
+
+**Scope:** Full pass, all five layers, via parallel per-layer readers. Inaugural run.
+
+**Enforced:** Added a PreToolUse(Bash) merge-gate hook (`.claude/hooks/merge-gate.sh`) that fires a review/CI checklist on `gh pr merge`, non-blocking, nudging toward /sdlc:land. Closes the GROW-316 gap: the review-before-merge gate existed in `sdlc:land` and in `public-web/CLAUDE.md` prose but nothing surfaced it at merge time when a merge happened outside the flow.
+
+**Relocated (GC → tool docs):** Slimmed GC from ~365 to ~223 lines by moving tool specifics to `Admin/tools/`: gws/Gmail command tables + Doc-from-markdown recipe → `gws.md`; Todoist conventions → `todoist.md`; new `notion.md` (MCP config), `google-calendar.md` (colorIds, transition/travel, flanking), `pdf-crop.md` (density-filter recipe). GC left with one-line pointers. This is the salience win against the original "rules lost in a too-large file" problem.
+
+**Culled:** Stale Japan 2025/2026 planning block in `Craft/Adventure/CLAUDE.md` (trip completed; records remain in `2025 Japan/`).
+
+**Security:** Removed a session-specific leaked-key TODO from `resend.md`, kept the general lesson. Flagged the actual key rotation to Forni (needs dashboard).
+
+**Deferred / reason-declined:** Home-Purchase closing timeline (`Constitution/3033 Blake 118/Purchase/CLAUDE.md`) left intact — durable transaction history, not a misleading rule, only loads in-directory. Fitness lift-time conditional left intact — self-documenting, needs a calendar verify. The "never hard-code username" dup across Eudy-root and homebase-root CLAUDE.md left intact — homebase clones standalone, so each copy is defensible. The gws Profiles section in GC overlaps homebase CLAUDE.md "Account Profiles" + `gws.md` Access; left for a future pass.
+
+**Skill tweak surfaced:** groom-context should ignore `.worktrees/` and `.claude/worktrees/` subtrees (67 of 85 zero CLAUDE.md files are ephemeral worktree copies, not real architecture).

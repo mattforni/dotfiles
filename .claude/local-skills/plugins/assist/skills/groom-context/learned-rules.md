@@ -14,4 +14,10 @@ Corrections and calibration for how groom-context should reason. Seeded from the
 
 - **The fix is usually placement or enforcement, not a new line.** When an incident reveals a forgotten basic, resist adding another prose rule. Ask first whether the rule already exists somewhere, and whether the real gap is altitude (wrong layer), salience (buried in a too-large file), or enforcement (no flow-skill step or hook makes it stick).
 
+## Calibration (from the 2026-06-09 inaugural run)
+
+- **Ignore worktree subtrees when mapping.** `.worktrees/` and `.claude/worktrees/` hold ephemeral checkout copies of CLAUDE.md files (on the first run, 67 of 85 zero CLAUDE.md files were worktree copies). They are not part of the architecture and regenerate on their own. Exclude them from the surface so the map reflects canonical files only.
+- **Records are not rules.** Personal historical records (a completed home-purchase timeline, a finished trip) that only load in their own directory are not a salience problem and not "stale guidance." Do not cull them by default; they are history, not a misleading rule. Cull stale *guidance*, archive or leave stale *records*.
+- **A doc can defensibly repeat a rule across separately-cloned repos.** "Never hard-code a username" living in both the Eudy-root and homebase-root CLAUDE.md is not duplication to collapse, because homebase clones standalone on machines without Eudy. Confirm a file's deployment context before treating repetition as dedup.
+
 _(Populated further as Forni corrects groom-context's judgment over time. Calibrate how aggressive culling should be from his vetoes.)_

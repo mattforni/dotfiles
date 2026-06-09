@@ -127,57 +127,9 @@ The `gws` CLI uses `$GOOGLE_WORKSPACE_CLI_CONFIG_DIR` for per-account isolation.
 
 The `~/bin/claude` wrapper picks a Claude Code config dir (`~/.claude-zero/` or `~/.claude-home/`) at launch from the same `.account` marker and exec's the real binary. Claude Code's OAuth credential storage is per CLAUDE_CONFIG_DIR natively (Keychain service `Claude Code-credentials-<hash>`), so the right Anthropic account is selected automatically. New sessions in a directory subtree use the right account.
 
-### Google Workspace links (Docs, Sheets, Slides, Drive)
+### Google Workspace (reading links, Docs, Gmail)
 
-Always read Google Workspace links using the `gws` CLI, never WebFetch. WebFetch fails with HTTP 401 on authenticated Google URLs. Extract the file ID from the URL path (`.../d/<ID>/...`) and use the matching command:
-
-| Link host/path | Service | Read command |
-|---|---|---|
-| `docs.google.com/document` | Docs | `gws docs documents get --params '{"documentId": "<ID>"}'` |
-| `docs.google.com/spreadsheets` | Sheets | `gws sheets +read --spreadsheet <ID> --range Sheet1` |
-| `docs.google.com/presentation` | Slides | `gws slides presentations get --params '{"presentationId": "<ID>"}'` |
-| `drive.google.com/file` | Drive | `gws drive files get --params '{"fileId": "<ID>"}'` |
-
-For Google-native files hosted in Drive, use the matching Docs/Sheets/Slides command to read content. Use `gws drive files get` for file metadata or to export non-native files.
-
-**Gmail message links** (`mail.google.com/...#inbox/<token>`): the `FMfcgz...` token is opaque and not convertible to an API id. Resolve by listing/searching via gws and matching on sender/subject. See `~/Eudaimonia/Admin/tools/gws.md` → "Resolving a Gmail Web UI Link to an API Message."
-
-### Creating Google Docs from markdown
-
-Preferred path: write markdown locally, upload to Drive with conversion via `gws drive files create --upload <path> --upload-content-type text/markdown --json '{"name": "<title>", "mimeType": "application/vnd.google-apps.document"}'`. Update an existing Doc with `gws drive files update --params '{"fileId": "<ID>"}' --upload <path> --upload-content-type text/markdown`.
-
-Four gotchas:
-- `gws` requires upload paths to be inside the current working directory. Use cwd for temp files, not `/tmp`.
-- **Stage upload files at the cwd root, not in a subdirectory.** Observed 2026-05-23: `--upload ./cropped/file.pdf` from cwd `.../scans/` failed with `cropped/cropped/file.pdf` not found, so gws appeared to double-prefix the subdirectory. Workaround: `mv` files up to cwd before calling `gws drive files create --upload ./file.pdf`. Same constraint applies to `--upload` paths on `files.update`.
-- Drive markdown import creates paged, not Pageless, Docs. Forni prefers Pageless. Toggle manually or use `gws docs documents batchUpdate` to set `documentStyle.documentFormat.documentMode = "PAGELESS"`.
-- `gws drive files delete` writes a `download.html` file in the current working directory as a side effect of the API response handling. Clean up the artifact after delete operations or it accumulates.
-
-### Gmail (send, reply, forward, draft)
-
-Use `gws gmail` helpers over the Gmail MCP connector. `gws` preserves full email mechanics; MCP `create_draft` does not.
-
-| Action | Command |
-|---|---|
-| Draft a reply | `gws gmail +reply --message-id <ID> --html --body '<p>...</p>' --draft` |
-| Draft a reply-all | `gws gmail +reply-all --message-id <ID> --html --body '<p>...</p>' --draft` |
-| Draft a new message | `gws gmail +send --to <EMAIL> --subject '...' --html --body '<p>...</p>' --draft` |
-| Draft a forward | `gws gmail +forward --message-id <ID> --to <EMAIL> --html --body '<p>...</p>' --draft` |
-| Send existing draft | `gws gmail users drafts send --params '{"userId":"me"}' --json '{"id":"<draft-id>"}'` |
-
-Why `gws` over MCP:
-- `gws` sets In-Reply-To, References, and threadId, so replies are truly threaded. MCP `create_draft` does not accept threadId, so "Re:" subjects only group visually and are not real replies.
-- `gws` supports send-as aliases, attachments via `-a`, and HTML with preserved quoted history via gmail_quote CSS.
-- `--draft` gates sending. Omit the flag for direct send.
-
-**Reply targeting:** Always target the **last message in the thread**, never a mid-thread one. Replying to a mid-thread message can drop participants who were dropped between that point and the current thread state, and lands the draft in the wrong position when Forni opens Gmail. Look up the last message with:
-
-```bash
-gws gmail users threads get --params '{"userId":"me","id":"<thread-id>","format":"metadata"}'
-```
-
-Sort by Date header, take the latest, pass its ID to `--message-id`. If any participants were dropped along the way, explicitly re-add them with `--cc`. This holds even when the last message is one of Forni's own that did not get a reply: the new email body carries the topic, the reply target only controls where the draft lands.
-
-**Self-replies on dangling threads.** When the last message in the thread is one of Forni's own, `+reply` will set the new `To` to its sender (Forni), which is wrong. Use `+reply-all --remove mattforni@gmail.com --to <actual recipient>` instead so the draft addresses the real counterparty, not Forni himself. Verify with `gws gmail users messages get --params '{"userId":"me","id":"<draft-msg-id>","format":"metadata"}'` before reporting the draft saved — confirm the `To` header is the intended recipient.
+Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/forward/draft Gmail through the `gws` CLI, never WebFetch or the Gmail MCP. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc-from-markdown recipe, reply targeting, self-reply handling, and the gotchas live in `~/Eudaimonia/Admin/tools/gws.md`.
 
 ## Code Review
 
@@ -186,30 +138,7 @@ Sort by Date header, take the latest, pass its ID to `--message-id`. If any part
 
 ## MCP Servers
 
-### Notion MCP (Official)
-
-**Config location:** `~/.mcp.json`
-**Package:** `@notionhq/notion-mcp-server` (official Notion MCP by makenotion)
-**Server name:** `notion`
-
-**Enable per project:** Add to project's `.claude/settings.local.json`:
-
-```json
-{
-  "enabledMcpjsonServers": ["notion"]
-}
-```
-
-**Disable per project:** Add to project's `.claude/settings.local.json`:
-
-```json
-{
-  "disabledMcpjsonServers": ["notion"]
-}
-```
-
-**Token:** Stored as `NOTION_TOKEN` env var in `~/.zshrc`. Config references it via `${NOTION_TOKEN}`.
-Manage integrations at <https://www.notion.so/profile/integrations>
+Notion MCP config, token, and per-project enable/disable live in `~/Eudaimonia/Admin/tools/notion.md`.
 
 ## Linear Ticket Preferences
 
@@ -266,49 +195,11 @@ Apply every time a Slack post has section headers. Do not skip because the draft
 
 ## Calendar Preferences
 
-When creating Google Calendar events, follow these conventions.
-
-**Color coding by pillar:**
-
-- **Constitution** events → Sage (colorId 2). Runs, lifts, yoga, body care, recovery.
-- **Community** events → Tangerine (colorId 6). Family, friends, social gatherings.
-- **Transition and travel** blocks → Basil (colorId 10). See the distinction below.
-- **Multi-day trips / away blocks** → all-day, transparency `"free"` (informational, never busy), Basil (colorId 10). Title is a place-reflective emoji + the place name (`🏖️ LA`, `🌲 Seattle`, `🏔️ Lake City`); trip details go in the description.
-- **Tentative events** → Banana (colorId 5, yellow). Yellow flags "not confirmed yet" across any category; recolor to the real category color once it's locked.
-
-**Transition vs travel** (both Basil, different purposes):
-
-- **↔️ Transition** — *holding space* between contexts. The mental shift buffer between activities, not necessarily vehicle time. Title is literally `↔️ Transition`; destination goes in the description (e.g., `→ Office`, `→ Home`). 30 minutes by default. Use when the gap is about context shift more than physical movement.
-- **🚙 Travel** — *explicit* drive or transit. Vehicle / flight / transit time. Title is `🚙 <LOCATION>` with the destination in the title. Use when the block is concretely about getting somewhere.
-
-They are complementary, not interchangeable. A short walk between adjacent rooms is a transition; a 30 minute drive to a trailhead is travel.
-
-**Flanking on location shifts:**
-
-Any event that involves a change of location (training session, therapy, PAH, sauna, meetings off site, social plans at a venue, etc.) needs flanking transition or travel events on the sides that involve movement. An event without its matching flanks is incomplete. No flank needed when adjacent events share a location.
-
-When deleting a recurring event, also delete the paired transition or travel recurring series. Stranded flanks clutter the calendar and quietly break the mental model.
-
-**Title formats:**
-
-- Long runs: `🏃 <MILES> mi Long Run` (e.g., `🏃 7.5 mi Long Run`)
-- Travel: `🚙 <LOCATION>` (e.g., `🚙 Mt Falcon East Trailhead`)
-- Transition: `↔️ Transition` with destination in description
-
-**Time alignment:**
-
-- Travel events use 30 minute increments aligned to 30 minute blocks (e.g., 06:30 to 07:00, not 06:15 to 07:00).
-- Transitions default to 30 minutes (size, not alignment).
+Google Calendar conventions (pillar color coding, transition vs travel, flanking on location shifts, title formats, time alignment) live in `~/Eudaimonia/Admin/tools/google-calendar.md`.
 
 ## Todoist Preferences
 
-- Tasks that need scheduling go on the following Monday
-- Monday morning planning sessions are used to schedule these tasks
-- **All follow-ups land on a Monday, no exceptions.** Even when the natural "first day back" or "first business day" is a Tuesday or Wednesday (returning from a trip, day after a holiday), the follow-up still lands on the next Monday that follows the wait condition. Mondays are the planning slot; that is where follow-ups belong.
-- Task titles: emoji prefix + short title (e.g., "📧 [Follow Up with Jeff](https://mail.google.com/...)"). Link to source in the title text when available.
-- **Keep titles short — a few words, scannable at a glance.** The title is the bare action ("📤 Send Jeff Onboarding Docs"); the why, what, and links go in a comment. If a title reads like a sentence, it is too long. Err aggressively toward brevity.
-- **Always Title Case task titles**, same rules as document headers (lowercase short prepositions and articles unless they lead). Applies to every Todoist task, no exceptions.
-- Details go in a comment on the task, not in the description field
+Todoist conventions (Monday scheduling, follow-ups always land on a Monday, short Title Case task titles, details in a comment) live in `~/Eudaimonia/Admin/tools/todoist.md`.
 
 ## Code Project Conventions
 
@@ -329,25 +220,4 @@ When deleting a recurring event, also delete the paired transition or travel rec
 - **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering. Note: macOS Screenshots filenames have a literal leading space character (e.g., ` 2026-05-16 at 09.48.15.png`). `Read` with the bare name fails. Use `ls -1 ~/Screenshots/` to discover the exact name and pass it to `Read` with the leading space included. `ls -la` makes the leading space ambiguous because of column spacing, so prefer `ls -1` or `od -c` to verify.
 - **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. Numbered files contain a literal space between `Scan` and the number, so the bare name must be quoted in shell commands (`"Scan 1.pdf"`). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
 
-### Cropping Scanned PDFs to Their Content
-
-Naive bounding box detection picks up dust, faint scanner noise, or stray marks far from the actual content and produces oversized crops. Use a **row density filter**: only treat a row or column as content when it contains at least N dark pixels.
-
-Tools: `pdftoppm` (poppler, already installed alongside `pdfunite`), Pillow (`pip3 install --user Pillow`).
-
-Recipe per scan:
-1. Render page to PNG: `pdftoppm -r 200 -png -f 1 -l 1 <pdf> <prefix>` (writes `<prefix>-1.png`)
-2. Open `<prefix>-1.png` in PIL, grayscale convert
-3. For each row, count pixels where `gray < 200`. A row counts as "content" only if it has at least 30 such pixels (filters dust and small smudges)
-4. First and last content rows define the vertical bounds; same for columns
-5. Add ~25px margin
-6. Crop the PNG and save as a new single page PDF (`Image.save(out, "PDF", resolution=200)`)
-7. For upside down scans, `img.rotate(180, expand=True)` before density analysis
-8. Combine front and back of ID cards with `pdfunite` into one multi page PDF
-
-Parameter calibration (validated on a session of 20+ ID card, passport, vehicle reg, immunization record scans):
-- `WHITE_THRESHOLD = 200` (gray < 200 = content). 235 is too permissive, picks up paper texture. 150 misses faint text.
-- `MIN_ROW_PIXELS = 30` filters single-pixel dust without losing real card edges.
-- `MARGIN_PX = 20-25` keeps card borders visible without bloating the page.
-
-The naive bbox (using `getbbox()` on a mask without density filtering) failed on the Colorado driver's license front: a single stray dot below the card pulled the bbox down to near the page bottom. Density filtering caught the card edges correctly.
+The recipe for cropping scanned PDFs to their content (density-filter approach, calibrated parameters) lives in `~/Eudaimonia/Admin/tools/pdf-crop.md`.
