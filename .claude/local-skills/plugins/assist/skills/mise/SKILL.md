@@ -2,10 +2,11 @@
 name: assist:mise
 description: Morning prep sync for Forni's workstation. Pulls latest in ~/Eudaimonia and ~/Eudaimonia/Craft/Development/personal/homebase, then runs homebase's setup.sh to deploy dotfiles and refresh brew, npm globals, IDE extensions, and Claude plugins. Use this skill whenever Forni says "mise", "mise en place", "prep the station", "morning sync", "get the station ready", or otherwise wants his dev environment neat and tidy before the day's work. Also trigger for "/assist:mise". Named after mise en place: everything in its place before service.
 allowed-tools:
-  - Bash(git *)
-  - Bash(test *)
-  - Bash(date *)
-  - Bash(./setup.sh)
+  - Bash(git:*)
+  - Bash(test:*)
+  - Bash(date:*)
+  - Bash(./setup.sh:*)
+  - Bash(./bin/sync-marketplaces:*)
   - Read
   - Skill
 ---
@@ -60,39 +61,19 @@ Same conflict handling: stop on conflict, do not proceed to setup.sh.
 
 setup.sh installs Claude plugins from cached marketplace clones at `~/.claude/plugins/marketplaces/`, not from source repos directly. If any clone lags behind its remote, setup.sh installs stale plugin contents and recently merged skills do not appear after Claude Code restarts. Claude Code does not auto refresh these clones; mise owns keeping them current.
 
-For each subdirectory of `~/.claude/plugins/marketplaces/`, check whether it is a git repo and pull it. Skip directories that are not git repos (e.g., `claude-plugins-official` is a flat manifest, not a clone).
-
-Detect git repo status:
+This sync is purely mechanical, so it lives in a committed script rather than in this prose. Run it from the homebase path:
 
 ```bash
-git -C "$MARKETPLACE" rev-parse --git-dir
+./bin/sync-marketplaces
 ```
 
-Discover the default branch per repo. Most use `main` but some (older external mirrors) use `master`:
+The script iterates every clone, skips non git directories (`claude-plugins-official` is a flat manifest) and scratch `temp_*` clones, detects each clone's default branch, fast forwards it, and hard resets to the remote when a clone has drifted. It always exits 0 so one broken clone never blocks the rest, and it prints one status line per clone plus a final aggregate.
 
-```bash
-git -C "$MARKETPLACE" symbolic-ref --short refs/remotes/origin/HEAD
-```
+Parse its output for the summary. Each line is one of `PULLED`, `CURRENT`, `RESET`, `FAIL`, or `SKIP`. Fold the counts into the aggregate marketplace line, and call out by name any clone that reported `RESET` (drift recovered) or `FAIL` (could not sync) on its own line so a recovery or breakage stays unmissable. Clean `CURRENT`/`PULLED` clones roll into the aggregate without individual lines.
 
-The output is `origin/<branch>`. Strip the `origin/` prefix to get `$DEFAULT_BRANCH`. If `origin/HEAD` is not set, probe the remote refs in order: try `refs/remotes/origin/main` first, then `refs/remotes/origin/master`. Use the first one that exists. If neither exists, record failure for that marketplace and continue to the next — defaulting blindly to `main` would silently leave a `master` based clone stale.
+A `RESET` is safe and expected on occasion: these clones are caches, and anything unique to them is by definition ephemeral state or accidental drift, never real user work. A `FAIL` means setup.sh may install stale content for that one clone, but the rest install current.
 
-Try fast forward first:
-
-```bash
-git -C "$MARKETPLACE" pull --ff-only origin "$DEFAULT_BRANCH"
-```
-
-These clones are read only mirrors. They should never carry local commits or untracked work. If `pull --ff-only` refuses (clone has drifted, history rewritten on remote, no merge base, or local commits exist), auto recover:
-
-```bash
-git -C "$MARKETPLACE" fetch origin "$DEFAULT_BRANCH"
-git -C "$MARKETPLACE" reset --hard "origin/$DEFAULT_BRANCH"
-git -C "$MARKETPLACE" clean -fd
-```
-
-Log the recovery loudly in the mise summary (call out which marketplace and that a reset happened) so Forni notices when a clone needed rescuing rather than a clean ff. Auto recovery is safe because these clones are caches — anything unique to them is by definition either ephemeral state or accidental drift, never real user work.
-
-If recovery itself fails (network, auth, missing remote), record the failure for that marketplace and continue to the next one. One broken marketplace should not block setup.sh from refreshing the others. Surface the per marketplace failures in the summary; setup.sh may still install stale content for the affected clones but the rest will install current.
+Why this was extracted into a script: the headless run (`bin/run-mise`) pre-allows a tight tool list, and compound shell loops authored at runtime cannot match a single-prefix allowlist entry like `Bash(git:*)`. The old prose loops were denied on every headless run, which also widened the window for a transient API/socket drop. One allowlisted script call fixes both.
 
 ### Step 4: Run setup.sh
 

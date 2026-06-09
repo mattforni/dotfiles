@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Refresh the cached Claude plugin marketplace clones under
+# ~/.claude/plugins/marketplaces/ so setup.sh installs current plugin
+# contents rather than stale skills.
+#
+# This carries the marketplace-sync logic that used to live as prose in the
+# assist:mise skill (Step 3). It was extracted into a script for two reasons:
+#   1. Headless mise (bin/run-mise) pre-allows a tight tool list. Compound
+#      shell loops authored at runtime cannot match a single-prefix allowlist
+#      entry like Bash(git:*), so the old prose loops were denied every run.
+#      One committed script is a single allowlistable command.
+#   2. Asking the model to author git loops burned turns and widened the
+#      window for a transient API/socket drop. This is purely mechanical work.
+#
+# These clones are read-only mirrors. They should never carry local commits or
+# untracked work, so on drift we hard-reset to the remote default branch.
+# Anything unique to a clone is by definition ephemeral state or accidental
+# drift, never real user work.
+#
+# Always exits 0: one broken clone must not block setup.sh from refreshing the
+# rest. Per-clone failures are reported on stderr and rolled into the summary.
+set -uo pipefail
+
+MARKETPLACES_DIR="${CLAUDE_MARKETPLACES_DIR:-$HOME/.claude/plugins/marketplaces}"
+
+pulled=0
+current=0
+reset=0
+failed=0
+
+# default_branch <repo> — echo the clone's default branch name, or empty if
+# it cannot be determined. Prefer origin/HEAD; fall back to probing main then
+# master. Never guess blindly: a master-based clone defaulted to main would be
+# silently left stale.
+default_branch() {
+  local repo="$1" head br
+  head="$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"
+  br="${head#origin/}"
+  if [[ -n "$br" ]]; then
+    echo "$br"
+    return 0
+  fi
+  if git -C "$repo" show-ref --verify --quiet refs/remotes/origin/main; then
+    echo "main"
+  elif git -C "$repo" show-ref --verify --quiet refs/remotes/origin/master; then
+    echo "master"
+  fi
+}
+
+if [[ ! -d "$MARKETPLACES_DIR" ]]; then
+  echo "SKIP-ALL no marketplaces dir at $MARKETPLACES_DIR"
+  echo "Marketplaces: 0 total (none found)"
+  exit 0
+fi
+
+for repo in "$MARKETPLACES_DIR"/*/; do
+  [[ -d "$repo" ]] || continue
+  repo="${repo%/}"
+  name="$(basename "$repo")"
+
+  # Scratch clones Claude Code leaves behind; not real marketplaces.
+  case "$name" in
+    temp_*)
+      echo "SKIP $name (scratch clone)"
+      continue
+      ;;
+  esac
+
+  # Skip non-git directories (e.g. claude-plugins-official is a flat manifest).
+  if ! git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "SKIP $name (not a git repo)"
+    continue
+  fi
+
+  br="$(default_branch "$repo")"
+  if [[ -z "$br" ]]; then
+    echo "FAIL $name (no default branch)" >&2
+    failed=$((failed + 1))
+    continue
+  fi
+
+  # Fast forward first.
+  if git -C "$repo" pull --ff-only origin "$br" >/tmp/sync-marketplaces.txt 2>&1; then
+    if grep -q "Already up to date" /tmp/sync-marketplaces.txt; then
+      echo "CURRENT $name ($br)"
+      current=$((current + 1))
+    else
+      echo "PULLED $name ($br)"
+      pulled=$((pulled + 1))
+    fi
+    continue
+  fi
+
+  # ff-only refused: clone drifted, history rewritten upstream, or local
+  # commits exist. Recover by hard-resetting to the remote.
+  reason="$(tail -1 /tmp/sync-marketplaces.txt)"
+  if git -C "$repo" fetch origin "$br" >/dev/null 2>&1 \
+    && git -C "$repo" reset --hard "origin/$br" >/dev/null 2>&1 \
+    && git -C "$repo" clean -fd >/dev/null 2>&1; then
+    echo "RESET $name ($br) :: drift recovered (${reason})"
+    reset=$((reset + 1))
+  else
+    echo "FAIL $name ($br) :: recovery failed (${reason})" >&2
+    failed=$((failed + 1))
+  fi
+done
+
+total=$((pulled + current + reset + failed))
+echo "Marketplaces: ${total} total, ${pulled} pulled, ${current} current, ${reset} reset, ${failed} failed"
+
+exit 0

@@ -31,11 +31,24 @@ KEYCHAIN_SERVICE="claude-code-oauth"
 ALLOWED_TOOLS=(
   "Bash(git:*)"
   "Bash(./setup.sh:*)"
+  "Bash(./bin/sync-marketplaces:*)"
   "Bash(date:*)"
   "Read"
   "Skill"
   "SlashCommand"
 )
+
+# Guard the headless claude invocation against transient API/socket drops and
+# hangs. Each attempt runs under a timeout; on a timeout or a transient API
+# error we retry once. Mise is idempotent, so a retry just re-syncs (mostly
+# no-ops) and completes. A clean skill-level abort (e.g. a merge conflict the
+# skill deliberately reports) does not match the transient signature, so it is
+# reported immediately without a wasteful retry.
+ATTEMPT_TIMEOUT="15m"
+MAX_ATTEMPTS=2
+RETRY_BACKOFF_SECONDS=15
+# Output substrings that mark a transient failure worth one retry.
+TRANSIENT_SIGNATURE='socket connection was closed|API Error|overloaded|Connection error|terminated'
 
 mkdir -p "$(dirname "$LOG")"
 
@@ -117,7 +130,7 @@ fi
     exit 1
   fi
 
-  for tool in claude jq curl security; do
+  for tool in claude jq curl security timeout; do
     if ! command -v "$tool" &>/dev/null; then
       fatal_report "$tool not on PATH ($PATH)"
       exit 1
@@ -130,10 +143,40 @@ fi
     echo "auth: no token found in keychain or file; relying on claude default"
   fi
 
-  result=$(claude -p "/assist:mise" \
-    --allowedTools "${ALLOWED_TOOLS[@]}" \
-    --output-format json)
-  rc=$?
+  stderr_file="$(dirname "$LOG")/mise-claude-stderr.txt"
+  attempt=1
+  while :; do
+    echo "=== $(date -Iseconds) claude attempt $attempt/$MAX_ATTEMPTS (timeout $ATTEMPT_TIMEOUT) ==="
+    # Keep stdout (the JSON) in $result for the downstream jq parse; tee stderr
+    # to a file so the transient check below can inspect it without polluting
+    # the JSON.
+    result=$(timeout "$ATTEMPT_TIMEOUT" claude -p "/assist:mise" \
+      --allowedTools "${ALLOWED_TOOLS[@]}" \
+      --output-format json 2>"$stderr_file")
+    rc=$?
+
+    [[ $rc -eq 0 ]] && break
+
+    # rc 124 = timeout killed the attempt. Otherwise inspect both streams for a
+    # transient API/socket signature (the error can surface in the JSON result
+    # or on stderr). Anything else is a real failure: report it without retrying.
+    transient=false
+    if [[ $rc -eq 124 ]]; then
+      transient=true
+      echo "claude attempt $attempt timed out after $ATTEMPT_TIMEOUT"
+    elif { printf '%s' "$result"; cat "$stderr_file" 2>/dev/null; } | grep -qiE "$TRANSIENT_SIGNATURE"; then
+      transient=true
+      echo "claude attempt $attempt hit a transient API error (exit $rc)"
+    fi
+
+    if [[ "$transient" == true && $attempt -lt $MAX_ATTEMPTS ]]; then
+      echo "retrying in ${RETRY_BACKOFF_SECONDS}s"
+      attempt=$((attempt + 1))
+      sleep "$RETRY_BACKOFF_SECONDS"
+      continue
+    fi
+    break
+  done
 
   echo "$result"
   echo "=== $(date -Iseconds) run-mise end (exit $rc) ==="
