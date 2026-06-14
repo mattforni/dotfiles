@@ -2,6 +2,10 @@
 
 Guidance for authoring and maintaining Claude Code skills. Load when working on a SKILL.md, a learned-rules.md, or when invoking /skill-creator.
 
+## Naming
+
+Skill names lead with a verb. Add an object when it sharpens the meaning (`plan-week`, `triage-email`); a bare verb is fine when it already reads unambiguously (`reflect`, `sharpen`, `wrap`). New skills follow this. Rename an existing skill only when its name actively misleads, not for conformity's sake.
+
 ## SKILL.md vs learned-rules.md
 
 The two files have distinct jobs. Keeping them clean takes discipline.

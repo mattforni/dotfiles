@@ -1,6 +1,6 @@
 ---
-name: assist:training
-description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:planning` during Monday planning.
+name: assist:plan-training
+description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
 argument-hint: "[week | long-run | move | retro]"
 allowed-tools:
   - Bash
@@ -14,9 +14,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Training Assist
+# Plan Training Assist
 
-Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:planning` during Monday planning before triage and slotting.
+Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:plan-week` during Monday planning before triage and slotting.
 
 ## Before Every Invocation
 
@@ -58,7 +58,7 @@ Color coding, transition / travel, and title formats live in GC `Calendar Prefer
 
 ## Mode: week (default)
 
-The Monday morning training pass. Runs as part of `/assist:planning` plan mode (Phase 2), or standalone for ad hoc training planning.
+The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode (Phase 2), or standalone for ad hoc training planning.
 
 The pass has two stages: **retrospective** on the just-closed week, then **scheduling** the current week. Retro first is non-negotiable — scheduling without knowing what happened last week causes drift to compound.
 

@@ -1,6 +1,6 @@
 ---
-name: assist:planning
-description: Weekly planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions weekly planning, the Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:training`; this skill calls into it during Monday planning.
+name: assist:plan-week
+description: Weekly planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions weekly planning, the Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training`; this skill calls into it during Monday planning.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
   - Skill
@@ -14,7 +14,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Planning Assist
+# Plan Week Assist
 
 Help Forni plan his week: review the calendar, slot Todoist tasks into open time, and make calendar adjustments while respecting training and recovery constraints.
 
@@ -38,7 +38,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 **Work hours**: 8:00-16:00 is the target. Mon/Tue/Thu in office at Zero Homes, Wed/Fri from home. Lunch breaks on Mon (yoga 12:15) and Tue (lift 11:00) are already spoken for.
 
-**Training adjacent constraints**: Cold plunge sequencing (4 to 6 hour gap after strength), sauna timing post strength, and Thursday SPRC morning protection live in the `assist:training` skill. Defer to that skill when validating moves of training, sauna, contrast, or Thursday morning events.
+**Training adjacent constraints**: Cold plunge sequencing (4 to 6 hour gap after strength), sauna timing post strength, and Thursday SPRC morning protection live in the `assist:plan-training` skill. Defer to that skill when validating moves of training, sauna, contrast, or Thursday morning events.
 
 **Personal anchors (not conflicts)**: Forni's last meal cutoff (currently 19:30) and lights out (currently 22:00) live in `~/Eudaimonia/schedule.md` Daily Anchors. These are personal constraints Forni manages himself — do not flag events that push past them as conflicts.
 
@@ -48,7 +48,7 @@ The Monday morning planning session. This is the primary use case. It opens by l
 
 ### Phase 0: Weekly Retro
 
-Before planning the week ahead, look back at the week that is ending. Invoke the `assist:reflect` skill in `week` mode via the Skill tool. It runs a light, dialogue-driven retrospective (felt sense of the week, what landed, what slipped, the one thing to carry forward) and surfaces anything that should become a planning input: a task to slot, a calendar guardrail, or a measure to watch. This is the broader life retro and is distinct from the training-specific retro that `assist:training` runs in Phase 2; the two complement each other. Carry its outputs into the phases below. Keep it light — a tired Monday does not need a heavy session, and `assist:reflect` knows to watch for fatigue and hand back the wheel.
+Before planning the week ahead, look back at the week that is ending. Invoke the `assist:reflect` skill in `week` mode via the Skill tool. It runs a light, dialogue-driven retrospective (felt sense of the week, what landed, what slipped, the one thing to carry forward) and surfaces anything that should become a planning input: a task to slot, a calendar guardrail, or a measure to watch. This is the broader life retro and is distinct from the training-specific retro that `assist:plan-training` runs in Phase 2; the two complement each other. Carry its outputs into the phases below. Keep it light — a tired Monday does not need a heavy session, and `assist:reflect` knows to watch for fatigue and hand back the wheel.
 
 ### Phase 1: Load and Rectify
 
@@ -62,7 +62,7 @@ Before planning the week ahead, look back at the week that is ending. Invoke the
 
 - Overlapping busy events (two events claiming the same time)
 - One-off events that displace recurring template activities (e.g., a party during sauna time)
-- Constraint violations (missing transitions, fasting window breaches, training adjacent issues per `assist:training`)
+- Constraint violations (missing transitions, fasting window breaches, training adjacent issues per `assist:plan-training`)
 
 Present all conflicts to the user, one at a time or in small batches. For each conflict, propose a resolution:
 
@@ -76,7 +76,7 @@ Execute only the agreed changes before moving on. The calendar should be clean a
 
 ### Phase 2: Training Scheduling
 
-Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
+Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:plan-training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
 
 ### Phase 3: Week Overview
 
@@ -168,7 +168,7 @@ Move or swap an existing event.
 
 1. User describes what to move (e.g., "Move my Wednesday sauna to Thursday")
 2. Fetch the relevant events
-3. Check constraints (transitions, conflicts). Defer to `assist:training` move mode when any of these apply:
+3. Check constraints (transitions, conflicts). Defer to `assist:plan-training` move mode when any of these apply:
    - the target event is training (Sage color, training emoji, or session type like sauna / contrast / lift / run / climb)
    - the proposed destination lands in Thursday morning (SPRC window is protected regardless of what is being moved)
    - the move could affect training adjacent sequencing (e.g., a sauna or contrast block landing on a strength day, an event displacing a recurring training session)
@@ -192,7 +192,7 @@ Include the location when the event is at a specific place.
 
 ## Training Plan Scheduling
 
-Training event creation lives in the `assist:training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Phase 2 above invokes it during Monday planning.
+Training event creation lives in the `assist:plan-training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Phase 2 above invokes it during Monday planning.
 
 ## Key Locations
 
@@ -241,8 +241,8 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - Transition and travel conventions are in GC `Calendar Preferences`. Both Basil. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title).
 - When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `~/Eudaimonia/koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
 - EnterWorktree at the start of plan mode if any Eudaimonia repo edits are anticipated (schedule.md changes, koan creation, file moves). Don't wait until mid session — relocating uncommitted edits to a worktree later requires stash/pop and is avoidable. Use a date stamped name like `schedule-YYYY-MM-DD` and rename the branch to drop the `worktree-` prefix per global GC instructions.
-- Do not skip Phase 2 (invoke `assist:training` in week mode), even when training decisions feel already made inline during conflict resolution. The training skill carries its own gate — the previous week's retro — which has no other place to live. Surfaced 2026-05-25 when I rationalized skipping Phase 2 because strength moves had been discussed in Phase 1; Forni caught it. The retro turned up real signal (PAH as transit, PT miss, weigh-in trend) that would otherwise have stayed invisible until next Monday.
+- Do not skip Phase 2 (invoke `assist:plan-training` in week mode), even when training decisions feel already made inline during conflict resolution. The training skill carries its own gate — the previous week's retro — which has no other place to live. Surfaced 2026-05-25 when I rationalized skipping Phase 2 because strength moves had been discussed in Phase 1; Forni caught it. The retro turned up real signal (PAH as transit, PT miss, weigh-in trend) that would otherwise have stayed invisible until next Monday.
 - **Walk slotting one task at a time; never bulk-date the Schedule filter.** Phase 5 means presenting each task's proposed slot via AskUserQuestion (accept / move / defer / skip) and waiting for Forni before touching it. Do NOT batch-reschedule the whole filter onto dates in one shot and summarize after. The collaborative per-task pass *is* the process; bulk-dating erases his input and forces him to re-read and unwind it. Surfaced 2026-05-31: I rescheduled 17 filter tasks at once. Forni: "you just created a bunch of tasks and put them onto dates. That's not really how we go through the scheduling process," and "you took a lot of action without asking me. Now I've got to go back and read through your summary and readjust it."
 - **Default to asking before acting throughout planning, not just slotting.** Bias toward confirming each change with Forni rather than executing a batch and reporting. Calendar moves, task reschedules, deferrals — present, then wait. Same-session feedback as above.
-- **Do not place training sessions before the training readjustment is done.** The Friday long run distance depends on the week's retro and any special-week adjustment, so run the training readjustment (Phase 2 / `assist:training`) first, then schedule the run. Surfaced 2026-05-31: I placed an 8 mi long run before the Wk 4 retro; the readjusted number was 6 mi off the calf restart.
+- **Do not place training sessions before the training readjustment is done.** The Friday long run distance depends on the week's retro and any special-week adjustment, so run the training readjustment (Phase 2 / `assist:plan-training`) first, then schedule the run. Surfaced 2026-05-31: I placed an 8 mi long run before the Wk 4 retro; the readjusted number was 6 mi off the calf restart.
 - **Cut a `wk-<ISO week>` branch at the start of every planning session.** Each planning pass gets its own branch named for the ISO week being planned (e.g., `wk-24` for ISO 2026-W24), and the session's changes land on it, then go up as a PR. This supersedes the older `schedule-YYYY-MM-DD` worktree naming in the EnterWorktree rule above. Changes often span two repos — Eudaimonia for planning artifacts (schedule.md, training plan, koans) and homebase for skill/config edits — so cut `wk-XX` in each repo that gets touched. Surfaced 2026-06-07.

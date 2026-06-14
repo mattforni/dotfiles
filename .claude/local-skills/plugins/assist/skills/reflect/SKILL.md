@@ -1,6 +1,6 @@
 ---
 name: assist:reflect
-description: Guided reflection at the boundaries Forni looks back on (weekly, monthly, quarterly, yearly). A dialogue-driven retrospective, not a journal reader. Brings the quantitative spine the paper journal misses (movement, overconsumption tally), then reflects by conversation against the V2MOM frame. Use this skill whenever Forni says "reflect", "let's reflect", "reflect on the month", "monthly reflection", "look back on May/the month/the week", "end of month", "retrospective", "retro", "weekly reflection", or invokes "/assist:reflect". Also trigger at quarter or year boundaries when Forni wants to look back. Monthly is the default. Weekly retro is also called by `assist:planning` before planning the next week. Quarterly hands off to the V2MOM eval walk.
+description: Guided reflection at the boundaries Forni looks back on (weekly, monthly, quarterly, yearly). A dialogue-driven retrospective, not a journal reader. Brings the quantitative spine the paper journal misses (movement, overconsumption tally), then reflects by conversation against the V2MOM frame. Use this skill whenever Forni says "reflect", "let's reflect", "reflect on the month", "monthly reflection", "look back on May/the month/the week", "end of month", "retrospective", "retro", "weekly reflection", or invokes "/assist:reflect". Also trigger at quarter or year boundaries when Forni wants to look back. Monthly is the default. Weekly retro is also called by `assist:plan-week` before planning the next week. Quarterly hands off to the V2MOM eval walk.
 argument-hint: "[week | month | quarter | year]"
 allowed-tools:
   - Skill
@@ -120,12 +120,12 @@ The month boundary is also when the context architecture gets tidied. After the 
 
 ## Mode: week
 
-The weekly retro. Lighter and faster than monthly. Called standalone, or by `assist:planning` before it plans the next week (the broader life retro that complements the training-specific retro `assist:training` already runs).
+The weekly retro. Lighter and faster than monthly. Called standalone, or by `assist:plan-week` before it plans the next week (the broader life retro that complements the training-specific retro `assist:plan-training` already runs).
 
 1. Optionally pull a quick movement glance for the week (Strava) if useful, but keep it light.
 2. Ask the felt sense of the week.
 3. Three questions, conversational: what landed, what slipped, what is the one thing to carry into next week.
-4. Surface anything that wants to become a planning input (a task, a calendar guardrail, a measure to watch) and hand it back to `assist:planning` if invoked from there.
+4. Surface anything that wants to become a planning input (a task, a calendar guardrail, a measure to watch) and hand it back to `assist:plan-week` if invoked from there.
 5. No heavy write up. A short note is enough; only write a file if Forni asks. The value is the seeing, not the artifact.
 
 ## Mode: quarter
