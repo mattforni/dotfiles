@@ -148,7 +148,7 @@ Look back on a completed (or in progress) training week. Compare planned vs actu
 Pull from two sources in parallel:
 
 1. **Training plan**: read the row in `2026-training-plan.md` for the target week. Note **Long mi**, **Vert ft**, **Fri shape**, **Weight** target, **Nutrition focus**.
-2. **Strava**: pull the week's activities via `mcp__claude_ai_Strava__list_activities` with `range_start` and `range_end` (ISO LocalDateTime). Each activity's summary already includes **distance** and **elevation_gain in meters** (convert to ft: meters * 3.28084), so no per activity detail call is needed for the coverage table. Reach for `mcp__claude_ai_Strava__get_activity_performance` or `get_activity_streams` only when splits or stream data are needed.
+2. **Strava**: pull the week's activities via `mcp__claude_ai_Strava__list_activities` with `range_start` and `range_end` (ISO LocalDateTime). Each activity's summary already includes **distance** and **elevation_gain**, both in meters (convert: miles = meters / 1609.34, feet = meters * 3.28084), so no per activity detail call is needed for the coverage table. Reach for `mcp__claude_ai_Strava__get_activity_performance` or `get_activity_streams` only when splits or stream data are needed.
 
 **Strava is the source of truth for what happened.** Do not pull calendar data for retro purposes. The calendar shows scheduled intent, not completion. A calendar event existing is not evidence the session happened.
 
