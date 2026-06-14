@@ -9,7 +9,7 @@ allowed-tools:
   - Edit
   - Write
   - AskUserQuestion
-  - mcp__strava__*
+  - mcp__claude_ai_Strava__*
 ---
 
 # Reflect Assist
@@ -57,7 +57,7 @@ The monthly reflection. This is the primary, proven flow.
 
 Pull the data the paper journal does not tally, so the conversation is grounded in what actually happened, not just what is remembered.
 
-- **Movement (Strava):** `mcp__strava__get-all-activities` with `startDate` and `endDate` bounding the month. Summarize against the V2MOM Constitution measures: running miles vs ~15 mi/wk, strength sessions/hours vs 2 hr/wk, yoga, recovery (sauna), and surface the mountain/play/adventure days. Note the posture is joy not rigor (ramping toward the season's goal), so being under a maintenance line is data, not a verdict.
+- **Movement (Strava):** `mcp__claude_ai_Strava__list_activities` with `range_start` and `range_end` bounding the month (ISO LocalDateTime; the connector returns metric, so convert: miles = m / 1609.34, feet = m * 3.28084). Summarize against the V2MOM Constitution measures: running miles vs ~15 mi/wk, strength sessions/hours vs 2 hr/wk, yoga, recovery (sauna), and surface the mountain/play/adventure days. Note the posture is joy not rigor (ramping toward the season's goal), so being under a maintenance line is data, not a verdict.
 - **Overconsumption (Gmail takeout tally):** the conscious consumption measure has no automatic log, so build one. Search Gmail for the month's delivery confirmations and count them. The date window is `after:` the first of the reflection month and `before:` the first of the **next** month (so May 2026 is `after:2026/05/01 before:2026/06/01`):
 
   ```bash
