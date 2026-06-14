@@ -1,11 +1,11 @@
 ---
-name: assist:training
-description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:planning` during Monday planning.
+name: assist:plan-training
+description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
 argument-hint: "[week | long-run | move | retro]"
 allowed-tools:
   - Bash
   - mcp__claude_ai_Google_Calendar__*
-  - mcp__strava__*
+  - mcp__claude_ai_Strava__*
   - WebSearch
   - WebFetch
   - Read
@@ -14,9 +14,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Training Assist
+# Plan Training Assist
 
-Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:planning` during Monday planning before triage and slotting.
+Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:plan-week` during Monday planning before triage and slotting.
 
 ## Before Every Invocation
 
@@ -58,7 +58,7 @@ Color coding, transition / travel, and title formats live in GC `Calendar Prefer
 
 ## Mode: week (default)
 
-The Monday morning training pass. Runs as part of `/assist:planning` plan mode (Phase 2), or standalone for ad hoc training planning.
+The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode (Phase 2), or standalone for ad hoc training planning.
 
 The pass has two stages: **retrospective** on the just-closed week, then **scheduling** the current week. Retro first is non-negotiable — scheduling without knowing what happened last week causes drift to compound.
 
@@ -148,7 +148,7 @@ Look back on a completed (or in progress) training week. Compare planned vs actu
 Pull from two sources in parallel:
 
 1. **Training plan**: read the row in `2026-training-plan.md` for the target week. Note **Long mi**, **Vert ft**, **Fri shape**, **Weight** target, **Nutrition focus**.
-2. **Strava**: pull all activities for the week via `mcp__strava__get-all-activities` with `startDate` and `endDate`. Then call `mcp__strava__get-activity-details` on each run to get **distance** and **elevation gain in meters** (convert to ft: meters * 3.28084).
+2. **Strava**: pull the week's activities via `mcp__claude_ai_Strava__list_activities` with `range_start` and `range_end` (ISO LocalDateTime). Each activity's summary already includes **distance** and **elevation_gain**, both in meters (convert: miles = meters / 1609.34, feet = meters * 3.28084), so no per activity detail call is needed for the coverage table. Reach for `mcp__claude_ai_Strava__get_activity_performance` or `get_activity_streams` only when splits or stream data are needed.
 
 **Strava is the source of truth for what happened.** Do not pull calendar data for retro purposes. The calendar shows scheduled intent, not completion. A calendar event existing is not evidence the session happened.
 

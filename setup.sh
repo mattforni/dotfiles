@@ -544,21 +544,13 @@ install_mcp_servers() {
   #   stdio: name|stdio|command_and_args
   #   http:  name|http|url|optional_header  (single header, eg. "Authorization: Bearer $TOKEN")
   # First time auth on a new machine: each MCP may require its own credentials
-  # (e.g., strava needs STRAVA_CLIENT_ID/SECRET in ~/.env.local before running
-  # mcp__strava__connect-strava from Claude; atelic needs ATELIC_API_TOKEN exported
-  # in the shell before this script runs so the Bearer header registers populated).
-  # Subsequent runs are idempotent.
-  # Official Strava MCP (strava-mcp) is OAuth based and currently gated behind a
-  # gradual rollout: until Strava grants the account access it only exposes an
-  # `eligibility` check (eligible:false) and no activity/athlete tools. Keep the
-  # community `strava` server registered alongside it so Strava access keeps
-  # working; once the official server is eligible everywhere, drop the community
-  # entry and make strava-mcp the sole Strava server. First-run auth on a new
-  # machine: run `/mcp` in Claude Code and complete the browser OAuth for
-  # strava-mcp (no token needed in this array; it auths interactively).
+  # (e.g., atelic needs ATELIC_API_TOKEN exported in the shell before this script
+  # runs so the Bearer header registers populated). Subsequent runs are idempotent.
+  # Strava is connected via the native claude.ai Strava connector (account level,
+  # managed in claude.ai Settings > Connectors), so it needs no entry here. The
+  # old self hosted servers (community `strava` and the gated `strava-mcp`) were
+  # retired 2026-06-14 when the native connector became available.
   local desired=(
-    "strava|stdio|npx -y @r-huijts/strava-mcp-server"
-    "strava-mcp|http|https://mcp.strava.com/mcp"
     "playwright|stdio|npx -y @playwright/mcp@latest"
     "atelic|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
   )

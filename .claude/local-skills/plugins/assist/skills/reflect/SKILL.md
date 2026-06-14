@@ -1,6 +1,6 @@
 ---
 name: assist:reflect
-description: Guided reflection at the boundaries Forni looks back on (weekly, monthly, quarterly, yearly). A dialogue-driven retrospective, not a journal reader. Brings the quantitative spine the paper journal misses (movement, overconsumption tally), then reflects by conversation against the V2MOM frame. Use this skill whenever Forni says "reflect", "let's reflect", "reflect on the month", "monthly reflection", "look back on May/the month/the week", "end of month", "retrospective", "retro", "weekly reflection", or invokes "/assist:reflect". Also trigger at quarter or year boundaries when Forni wants to look back. Monthly is the default. Weekly retro is also called by `assist:planning` before planning the next week. Quarterly hands off to the V2MOM eval walk.
+description: Guided reflection at the boundaries Forni looks back on (weekly, monthly, quarterly, yearly). A dialogue-driven retrospective, not a journal reader. Brings the quantitative spine the paper journal misses (movement, overconsumption tally), then reflects by conversation against the V2MOM frame. Use this skill whenever Forni says "reflect", "let's reflect", "reflect on the month", "monthly reflection", "look back on May/the month/the week", "end of month", "retrospective", "retro", "weekly reflection", or invokes "/assist:reflect". Also trigger at quarter or year boundaries when Forni wants to look back. Monthly is the default. Weekly retro is also called by `assist:plan-week` before planning the next week. Quarterly hands off to the V2MOM eval walk.
 argument-hint: "[week | month | quarter | year]"
 allowed-tools:
   - Skill
@@ -9,7 +9,7 @@ allowed-tools:
   - Edit
   - Write
   - AskUserQuestion
-  - mcp__strava__*
+  - mcp__claude_ai_Strava__*
 ---
 
 # Reflect Assist
@@ -57,7 +57,7 @@ The monthly reflection. This is the primary, proven flow.
 
 Pull the data the paper journal does not tally, so the conversation is grounded in what actually happened, not just what is remembered.
 
-- **Movement (Strava):** `mcp__strava__get-all-activities` with `startDate` and `endDate` bounding the month. Summarize against the V2MOM Constitution measures: running miles vs ~15 mi/wk, strength sessions/hours vs 2 hr/wk, yoga, recovery (sauna), and surface the mountain/play/adventure days. Note the posture is joy not rigor (ramping toward the season's goal), so being under a maintenance line is data, not a verdict.
+- **Movement (Strava):** `mcp__claude_ai_Strava__list_activities` with `range_start` and `range_end` bounding the month (ISO LocalDateTime; the connector returns metric, so convert: miles = m / 1609.34, feet = m * 3.28084). Summarize against the V2MOM Constitution measures: running miles vs ~15 mi/wk, strength sessions/hours vs 2 hr/wk, yoga, recovery (sauna), and surface the mountain/play/adventure days. Note the posture is joy not rigor (ramping toward the season's goal), so being under a maintenance line is data, not a verdict.
 - **Overconsumption (Gmail takeout tally):** the conscious consumption measure has no automatic log, so build one. Search Gmail for the month's delivery confirmations and count them. The date window is `after:` the first of the reflection month and `before:` the first of the **next** month (so May 2026 is `after:2026/05/01 before:2026/06/01`):
 
   ```bash
@@ -120,12 +120,12 @@ The month boundary is also when the context architecture gets tidied. After the 
 
 ## Mode: week
 
-The weekly retro. Lighter and faster than monthly. Called standalone, or by `assist:planning` before it plans the next week (the broader life retro that complements the training-specific retro `assist:training` already runs).
+The weekly retro. Lighter and faster than monthly. Called standalone, or by `assist:plan-week` before it plans the next week (the broader life retro that complements the training-specific retro `assist:plan-training` already runs).
 
 1. Optionally pull a quick movement glance for the week (Strava) if useful, but keep it light.
 2. Ask the felt sense of the week.
 3. Three questions, conversational: what landed, what slipped, what is the one thing to carry into next week.
-4. Surface anything that wants to become a planning input (a task, a calendar guardrail, a measure to watch) and hand it back to `assist:planning` if invoked from there.
+4. Surface anything that wants to become a planning input (a task, a calendar guardrail, a measure to watch) and hand it back to `assist:plan-week` if invoked from there.
 5. No heavy write up. A short note is enough; only write a file if Forni asks. The value is the seeing, not the artifact.
 
 ## Mode: quarter
