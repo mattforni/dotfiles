@@ -25,6 +25,14 @@ gh api -X POST repos/<owner>/<repo>/pulls/<PR>/comments/<comment_id>/replies \
 
 Cost is one reply per declined comment. Apply for genuine declines too (where the bot is actually wrong), explaining *why* you are declining, not just that you are. Then check CI and merge once green; do not wait for the bot to figure out resolution itself.
 
+### Detect review bots proactively and as a set, not from the current PR's reviews.
+
+Step 2 must learn which bots review the repo without waiting on the current PR, and must allow more than one. A just-opened PR has zero reviews, so reading only its reviews returns empty and the loop concludes "no bot configured," then merges on green CI, racing past the first pass. And a repo can run several bots at once.
+
+**Why:** Surfaced on dev-tools PR #19 (2026-06-15). The repo has Gemini configured, but the PR was brand new with fast CI (one format check, green in under a minute). Detection read only PR #19's reviews (empty), so the loop merged on CLEAN and Gemini posted 10 seconds later. The merge was defensible (doc-only PR, see the doc-only rule below), but the agent wrongly reported "no bot configured" — a detection failure. Probing while fixing it revealed homebase runs BOTH CodeRabbit and Gemini, so single-bot detection was wrong in a second way.
+
+**How to apply:** Union two signals into a BOT_LOGINS set (see Step 2). Signal A is a live HEAD probe of check-suite app slugs and commit-status contexts — instant, and the only no-wait signal that catches CodeRabbit (it posts a `coderabbitai` check suite and a pending `CodeRabbit` status within seconds). Signal B scans recent PRs for reviewer logins — the only way to catch review-only bots like Gemini, which leave no footprint on the commit until they post. The installed-apps API would be authoritative but returns 401/404 to a user token. Step 3 then waits for every bot in the set to clear HEAD. Residual cold-start gap: a repo whose first-ever PR is the one being landed has no history for Signal B, so a review-only bot stays invisible until it posts — accept the early merge there (rare, self-corrects next PR).
+
 ### Do not gate merge on the bot's first review when CI is green and merge_state is CLEAN.
 
 The land workflow's READY condition requires `LATEST_BOT_SHA == HEAD_SHA`, which means it polls until the bot reviews the current SHA. For low-risk PRs (doc-only, codify changes, small config edits), waiting on the bot's first review is pure overhead with no signal value. For code PRs, the bot's first cycle catches real bugs and is worth waiting on, but subsequent cycles often just re-raise (see prior rule) and don't justify another polling window.
