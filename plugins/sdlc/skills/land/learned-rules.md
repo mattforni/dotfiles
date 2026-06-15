@@ -46,3 +46,11 @@ The land workflow's READY condition requires `LATEST_BOT_SHA == HEAD_SHA`, which
 - **Doc-only / config-only PRs:** merge as soon as CI is green and merge_state is CLEAN. Skip the bot poll entirely.
 
 Operationally: kill the Monitor (TaskStop) and proceed to merge step. Don't wait the full timeout out of habit.
+
+### Match the review bot by its `[bot]`-suffixed login, not the bare name.
+
+When comparing `.user.login` from the reviews API (Step 2 detection, Step 3 poll), the Gemini reviewer's login is `gemini-code-assist[bot]`, not `gemini-code-assist` (GitHub appends `[bot]` to every GitHub App account's login; CodeRabbit is `coderabbitai[bot]` likewise). Matching the bare name silently never fires: the poll's `LATEST_BOT_SHA` stays empty, the READY condition never trips, and the Monitor spins to timeout while the bot's review has actually already landed on HEAD.
+
+**Why:** Surfaced on public-web PR #383 (2026-06-15). BOT_LOGIN was hardcoded to `gemini-code-assist`, so `select(.user.login == $BOT_LOGIN)` matched nothing and the monitor ran on while the review sat on HEAD the whole time (Forni: "still waiting? seems wrong"). The repo's own CLAUDE.md names the bot `gemini-code-assist` without the suffix, which is what seeds the mistake.
+
+**How to apply:** Use the full `[bot]`-suffixed login in the BOT_LOGINS set and every `.user.login ==` comparison. Detection that derives logins from prior reviews (Signal B) gets the suffix for free; the trap is hardcoding the bare name from memory or a CLAUDE.md mention. If a poll loop is silent past the bot's normal latency, confirm the exact string with `gh api repos/<owner>/<repo>/pulls/<PR>/reviews --jq '.[].user.login'` before assuming "no review yet."
