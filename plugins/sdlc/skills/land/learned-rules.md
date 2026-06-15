@@ -25,13 +25,13 @@ gh api -X POST repos/<owner>/<repo>/pulls/<PR>/comments/<comment_id>/replies \
 
 Cost is one reply per declined comment. Apply for genuine declines too (where the bot is actually wrong), explaining *why* you are declining, not just that you are. Then check CI and merge once green; do not wait for the bot to figure out resolution itself.
 
-### Detect the review bot from recent PRs, not the current one. A fresh PR has no reviews yet.
+### Detect review bots proactively and as a set, not from the current PR's reviews.
 
-Step 2 must learn which bot reviews the repo by scanning recent PRs, not by reading the current PR's reviews. A just-opened PR has zero reviews, so a current-PR-only query returns empty and the loop concludes "no bot configured" — then merges as soon as CI is green, racing past the bot's first pass.
+Step 2 must learn which bots review the repo without waiting on the current PR, and must allow more than one. A just-opened PR has zero reviews, so reading only its reviews returns empty and the loop concludes "no bot configured," then merges on green CI, racing past the first pass. And a repo can run several bots at once.
 
-**Why:** Surfaced on dev-tools PR #19 (2026-06-15). The repo has Gemini Code Assist configured, but the PR was brand new with fast CI (one format-validation check, green in under a minute). Step 2 read only PR #19's reviews (empty), set BOT_LOGIN empty, and the loop merged on CLEAN. Gemini posted its review 10 seconds after the merge. The merge itself was defensible (doc-only PR, see the doc-only rule below), but the agent wrongly reported "no bot configured" — a detection failure, not a timing one.
+**Why:** Surfaced on dev-tools PR #19 (2026-06-15). The repo has Gemini configured, but the PR was brand new with fast CI (one format check, green in under a minute). Detection read only PR #19's reviews (empty), so the loop merged on CLEAN and Gemini posted 10 seconds later. The merge was defensible (doc-only PR, see the doc-only rule below), but the agent wrongly reported "no bot configured" — a detection failure. Probing while fixing it revealed homebase runs BOTH CodeRabbit and Gemini, so single-bot detection was wrong in a second way.
 
-**How to apply:** Use the recent-PR scan in Step 2. Once BOT_LOGIN is correctly set, the Step 3 poll loop already waits for the bot to review HEAD, so the fix is purely in detection. Residual cold-start gap: a repo whose very first PR is the one being landed has no reviewed history to scan — accept the early merge there (rare).
+**How to apply:** Union two signals into a BOT_LOGINS set (see Step 2). Signal A is a live HEAD probe of check-suite app slugs and commit-status contexts — instant, and the only no-wait signal that catches CodeRabbit (it posts a `coderabbitai` check suite and a pending `CodeRabbit` status within seconds). Signal B scans recent PRs for reviewer logins — the only way to catch review-only bots like Gemini, which leave no footprint on the commit until they post. The installed-apps API would be authoritative but returns 401/404 to a user token. Step 3 then waits for every bot in the set to clear HEAD. Residual cold-start gap: a repo whose first-ever PR is the one being landed has no history for Signal B, so a review-only bot stays invisible until it posts — accept the early merge there (rare, self-corrects next PR).
 
 ### Do not gate merge on the bot's first review when CI is green and merge_state is CLEAN.
 
