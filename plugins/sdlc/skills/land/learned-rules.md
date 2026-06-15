@@ -46,3 +46,11 @@ The land workflow's READY condition requires `LATEST_BOT_SHA == HEAD_SHA`, which
 - **Doc-only / config-only PRs:** merge as soon as CI is green and merge_state is CLEAN. Skip the bot poll entirely.
 
 Operationally: kill the Monitor (TaskStop) and proceed to merge step. Don't wait the full timeout out of habit.
+
+### Match the Review Bot by Its `[bot]`-Suffixed Login, Not the App Slug
+
+A review's `.user.login` carries a `[bot]` suffix (`gemini-code-assist[bot]`, `coderabbitai[bot]`), but the check-suite **app slug** that Step 2's Signal A probe reads (`.check_suites[].app.slug`) is the bare `gemini-code-assist`. So a bot that lands in `BOT_LOGINS` via the slug probe never matches Step 3's `select(.user.login == "$bot")`: it stays stuck in `PENDING`, READY never fires, and the Monitor spins to timeout even though the review already landed on HEAD. Signal B (which reads `.user.login` from prior reviews) gets the suffix right; the slug path and any bare name hardcoded from a repo CLAUDE.md mention are the traps.
+
+**Why:** Surfaced on public-web PR #383 (2026-06-15), running the then-installed single-`BOT_LOGIN` land flow hardcoded to `gemini-code-assist`. The poll matched nothing and the monitor ran on while Gemini's review sat on HEAD the whole time (Forni: "still waiting? seems wrong"). public-web's CLAUDE.md names the bot `gemini-code-assist` without the suffix, which seeds the mistake.
+
+**How to apply:** Before comparing against `.user.login`, normalize every `BOT_LOGINS` entry to the `[bot]` form (append `[bot]` to a bare slug, or strip `[bot]` from both sides of the comparison). If a poll loop is silent past the bot's normal latency, confirm the exact string with `gh api repos/<owner>/<repo>/pulls/<PR>/reviews --jq '.[].user.login'` before assuming "no review yet."
