@@ -24,7 +24,7 @@ In all bash steps below, substitute placeholder names (like PR_NUMBER, HEAD_SHA,
 ## Workflow
 
 1. **Identify PR or open one** (call `sdlc:review` if no PR exists for the branch)
-2. **Detect bot reviewer** by walking the PR's reviews list
+2. **Detect bot reviewer** by scanning recent PRs (a fresh PR has no reviews yet)
 3. **Poll** for state changes via Monitor — exits on bot re-review, CI failure, human review, or timeout
 4. **Decide and act**: merge / address feedback / bail
 5. **Merge and complete** when ready — invoke `sdlc:complete` for cleanup
@@ -51,14 +51,19 @@ Store as REPO (format: `owner/repo`).
 
 ## Step 2: Detect Bot Reviewer
 
-Walk the existing reviews and identify a bot account (Gemini Code Assist or CodeRabbit are the common ones):
+Identify the repo's review bot (Gemini Code Assist or CodeRabbit are the common ones). **Do not look only at the current PR.** A freshly opened PR usually has no reviews yet, so a current-PR-only query returns empty and you would wrongly conclude the repo has no bot, then merge before its first pass. Scan recent PRs to learn which bot reviews this repo:
 
 ```bash
-gh api repos/REPO/pulls/PR_NUMBER/reviews \
-  --jq '[.[] | select(.user.login | test("(?i)gemini|coderabbit"))] | last | .user.login'
+BOT_LOGIN=$(
+  gh api "repos/REPO/pulls?state=all&per_page=15&sort=updated&direction=desc" --jq '.[].number' 2>/dev/null \
+  | while read -r pr; do
+      gh api "repos/REPO/pulls/$pr/reviews" \
+        --jq '.[].user.login | select(test("(?i)gemini|coderabbit"))' 2>/dev/null
+    done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}'
+)
 ```
 
-Store as BOT_LOGIN. If empty, no bot is reviewing this repo. The loop still works — it just skips the iterate cycles and merges as soon as CI passes.
+Store as BOT_LOGIN. If empty after the scan, the repo genuinely has no review bot (or has no reviewed history yet) — the loop still works, it just skips the iterate cycles and merges as soon as CI passes. Once BOT_LOGIN is set, Step 3 waits for that bot to review THIS PR's HEAD before declaring READY, which closes the cold-start race.
 
 ## Step 3: Poll for State Changes
 
