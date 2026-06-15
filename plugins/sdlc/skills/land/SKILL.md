@@ -77,7 +77,7 @@ PROBE=$(
 # Signal B — historical roster. Reads PAST PRs (not the current review), so it catches
 # review-only bots like Gemini that leave no footprint on the commit.
 HIST=$(
-  gh api "repos/REPO/pulls?state=all&per_page=10&sort=updated&direction=desc" --jq '.[].number' 2>/dev/null \
+  gh api "repos/REPO/pulls?state=closed&per_page=10&sort=updated&direction=desc" --jq '.[].number' 2>/dev/null \
   | while read -r pr; do
       gh api "repos/REPO/pulls/$pr/reviews" \
         --jq '.[].user.login | select(test("(?i)gemini|coderabbit"))' 2>/dev/null
@@ -111,15 +111,15 @@ while [ $(date +%s) -lt $END ]; do
   FAILED=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
     --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out")] | length' 2>/dev/null || echo 0)
 
-  if [ "$HUMAN" -gt 0 ];  then echo "HUMAN_REVIEW head=$HEAD_SHA";   exit 3; fi
-  if [ "$FAILED" -gt 0 ]; then echo "CHECKS_FAILED head=$HEAD_SHA";  exit 2; fi
+  if [ "${HUMAN:-0}" -gt 0 ];  then echo "HUMAN_REVIEW head=$HEAD_SHA";   exit 3; fi
+  if [ "${FAILED:-0}" -gt 0 ]; then echo "CHECKS_FAILED head=$HEAD_SHA";  exit 2; fi
 
   # Which detected bots have NOT yet weighed in on HEAD?
   PENDING=""
   for bot in $BOT_LOGINS; do
     REVIEWED=$(gh api repos/REPO/pulls/PR_NUMBER/reviews \
       --jq "[.[] | select(.user.login==\"$bot\" and .commit_id==\"$HEAD_SHA\")] | length" 2>/dev/null || echo 0)
-    [ "$REVIEWED" -gt 0 ] && continue
+    [ "${REVIEWED:-0}" -gt 0 ] && continue
     if [ "$bot" = "coderabbitai[bot]" ]; then          # clears via its commit status, not a review
       CR=$(gh api repos/REPO/commits/$HEAD_SHA/statuses \
         --jq '[.[] | select(.context=="CodeRabbit")] | sort_by(.updated_at) | last | .state' 2>/dev/null)
