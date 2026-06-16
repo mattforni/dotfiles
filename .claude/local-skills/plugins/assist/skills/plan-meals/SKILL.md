@@ -1,6 +1,6 @@
 ---
-name: assist:meals
-description: Weekly meal planning, shopping list generation, and pantry aware grocery runs. Produces a plant based, seasonal, batch prep friendly meal plan for the week, plus a consolidated shopping list grouped by store. Use this skill whenever the user mentions meal planning, wants to plan the week's food, asks for a shopping list, wants help figuring out what to cook, mentions batch prep, macros, recipes, a grocery run, a Sprouts or Costco trip, or says things like "back on the healthy eating train" or "kick the takeout habit." Also trigger for "/assist:meals", "meals for the week", or "what should I cook". Prefer invoking this skill even when the user's ask is oblique (e.g., "I want to stop eating out" or "I need to hit my macros this week") since meal planning is usually the underlying need.
+name: assist:plan-meals
+description: Weekly meal planning, shopping list generation, and pantry aware grocery runs. Produces a plant based, seasonal, batch prep friendly meal plan for the week, authored into the Atelic app, plus a consolidated shopping list grouped by store. Use this skill whenever the user mentions meal planning, wants to plan the week's food, asks for a shopping list, wants help figuring out what to cook, mentions batch prep, macros, recipes, a grocery run, a Sprouts or Costco trip, or says things like "back on the healthy eating train" or "kick the takeout habit." Also trigger for "/assist:plan-meals", "meals for the week", or "what should I cook". Prefer invoking this skill even when the user's ask is oblique (e.g., "I want to stop eating out" or "I need to hit my macros this week") since meal planning is usually the underlying need.
 argument-hint: "[optional week, e.g. 2026-W17]"
 allowed-tools:
   - Bash
@@ -14,15 +14,15 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Meals Assist
+# Plan Meals Assist
 
-Help Forni plan a week of plant based, seasonal, batch prep friendly meals and produce a single primary shopping list. The goal is less decision fatigue mid week and more momentum on the healthy eating front.
+Help Forni plan a week of plant based, seasonal, batch prep friendly meals, author it into the Atelic app, and produce a single primary shopping list. The goal is less decision fatigue mid week and more momentum on the healthy eating front.
 
 ## Why This Matters
 
 Forni's 2026 growth edge is eliminating overconsumption. The most visible form is defaulting to takeout when the week gets tired. A good meal plan removes the decision and the cravings compound. A bad plan (boring, unrealistic, mismatched to his week) is worse than no plan; it generates friction and a story to push against. Aim for plans he wants to eat, sized to his actual week, using ingredients he actually has or can easily get.
 
-The shopping list is the primary artifact. The meal plan exists mostly to produce a good list and to guide batch prep day.
+The meal plan now lives in the Atelic app, where Forni can actually look at it through the week and work the Sunday prep checklist; that presence is what makes the plan change behavior instead of dying in a file. The shopping list is still the action artifact for the grocery run.
 
 ## Before Every Invocation
 
@@ -30,7 +30,7 @@ The shopping list is the primary artifact. The meal plan exists mostly to produc
 2. Read the canonical nutrition context:
    - `~/Eudaimonia/Constitution/Nutrition/README.md` — daily macro targets, meal budgets, supplement stack
    - **Pantry inventory and staples live in the Atelic api db** (migrated from `pantry.md` and `staples.md` on 2026-05-15 in ATE-141), reached through the Atelic MCP tools (`mcp__atelic__list_pantry`, etc.) — see the Pantry Access section below.
-3. Read the most recent plan file in `~/Eudaimonia/Constitution/Nutrition/plans/` (sort by filename) for format reference and to see what we just ate
+3. Read the most recent plan(s) from Atelic with `mcp__atelic__list_meal_plans` (and `mcp__atelic__get_meal_plan` for a week's detail) to see what we just ate and avoid repeating it
 4. Read [references/recipe-sources.md](references/recipe-sources.md) for the preferred recipe sites and what's worked in the past
 5. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
 
@@ -50,11 +50,12 @@ A storeless item (no `store` set) surfaces under any `store` filter, so staples 
 |--------|---------|
 | `Constitution/Nutrition/README.md` | Daily macros and meal slot budgets |
 | Atelic api db (`PantryItem`, `Consumable`) via MCP | What is already on hand + brand preferences. Read with `mcp__atelic__list_pantry`. See Pantry Access above |
-| `Constitution/Nutrition/plans/*` | Prior weekly plans (format reference) |
+| Atelic api db (`MealPlan`) via MCP | Prior weekly plans. Read with `mcp__atelic__list_meal_plans` / `get_meal_plan`; author with `create_meal_plan` / `update_meal_plan` |
+| Atelic api db (`Recipe`) via MCP | Existing recipes to link meals against. Discover with `mcp__atelic__list_recipes` |
 | `references/recipe-sources.md` | Approved recipe sites and historical ratings |
 | `learned-rules.md` | Corrections learned through use |
 
-The weekly plan file format mirrors `Constitution/Nutrition/plans/2026-W14-meal-plan.md`. Do not invent a new format unless the user asks.
+Meal plans live in Atelic, not in markdown. Author them through the MCP tools (see Phase 5 and the Meal Plan Shape section); do not write plan files.
 
 ## Principles
 
@@ -89,17 +90,16 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 
 ### Phase 3: Draft the Plan
 
-1. Pull a small set of candidate recipes from the preferred sites (see recipe-sources.md). Use WebFetch sparingly; favor recipes already referenced in prior plans or recipes Forni has rated. You do not need to fetch every recipe, only the ones being introduced this week.
-2. Build the plan in the format of `2026-W14-meal-plan.md`:
-   - Daily macro budget header
+1. Discover existing recipes to build on with `mcp__atelic__list_recipes` (optionally a name `query`). Linking a meal to a real recipe means its macros and ingredients come through automatically. For new ideas, pull a small set of candidate recipes from the preferred sites (see recipe-sources.md); use WebFetch sparingly and favor recipes already referenced in prior plans or ones Forni has rated.
+2. Build the plan's content (this maps onto the Meal Plan Shape authored in Phase 5):
+   - Daily macro budget (from README)
    - Meal structure (7:30 to 18:30 IF window)
-   - Batch prep section (grains/legumes, proteins, vegetables, sauces)
-   - Daily meals: breakfast, lunch (per day table), dinner (per day table)
-   - Daily macro summary
-3. For meals skipped on social days, show "Social" or the event name in the table rather than leaving blank.
+   - Batch prep steps (grains/legumes, proteins, vegetables, sauces)
+   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each linked to a recipe by name where one exists or freeform text otherwise
+3. For meals skipped on social days, give the meal a freeform description like "Social" or the event name rather than leaving it out.
 4. Repeat lunches up to twice per week. Keep breakfast mostly consistent (batch prep reality). Dinners vary more.
 
-Present the draft plan inline before saving. Let Forni redirect before committing to the shopping list.
+Present the draft plan inline before authoring it. Let Forni redirect before committing to the shopping list.
 
 ### Phase 4: Shopping List
 
@@ -131,49 +131,31 @@ Rules for the list:
 
 ### Phase 5: Save and Record
 
-1. Write the full plan to `~/Eudaimonia/Constitution/Nutrition/plans/YYYY-WNN-meal-plan.md` (ISO week). Do not overwrite an existing plan for the same week without confirmation.
+1. Author the plan into Atelic with `mcp__atelic__create_meal_plan` (or `mcp__atelic__update_meal_plan` if a plan for that week already exists; the create tool will error if it does, pointing you at update). See the Meal Plan Shape section for the arguments. The tool returns `unmatched_recipes` — recipe names that did not link to an existing record and were kept as freeform text. Tell Forni which meals stayed freeform so he can decide whether any deserve a real recipe later.
 2. Append the recipes used to `references/recipe-sources.md` under "Recipes Used" with week, site, and rating left blank (Forni fills the rating in later).
-3. Push the primary shopping list (the store being shopped today) to Apple Reminders using the Groceries list. See the Apple Reminders Integration section below. Items for other stores (e.g., Costco next run) stay in the plan file only.
+3. Push the primary shopping list (the store being shopped today) into Atelic, one `mcp__atelic__add_shopping_item` call per item, setting `store` and any brand/quantity hint in `notes`. Items for other stores (e.g., a Costco next run) can be added with their own `store` or left for that run.
 4. Print the shopping list in chat as a preview and backup.
 
-## Apple Reminders Integration
+## Shopping List in Atelic
 
-Forni's shopping list is pushed into the Apple Reminders "Groceries" list so it shows up natively on his phone during the shopping run. Reminders auto groups the list into store sections (Produce, Dairy, Pantry, etc.) when the list type is set to Grocery.
+The shopping list is pushed into Atelic's shopping plan with `mcp__atelic__add_shopping_item` (one call per item), so it shows up wherever Forni views the app during the run. `created_via` is set to `mcp` automatically.
 
-Use AppleScript via `osascript` with a heredoc:
-
-```bash
-osascript <<'APPLESCRIPT'
-tell application "Reminders"
-    tell list "Groceries"
-        make new reminder with properties {name:"Asparagus, 1 bunch"}
-        make new reminder with properties {name:"Snap peas, 1 lb"}
-        # one line per item
-    end tell
-end tell
-APPLESCRIPT
-```
-
-Notes:
 - Keep item names concise but include quantity, e.g. `"Sweet potatoes, 4 large"`. Quantities help the checkout/counting moment.
-- Include brand hints in parens when the brand matters, e.g. `"Pearl couscous, Bob's Red Mill tri color"`.
-- Single quotes inside item names (e.g. "Bob's") are fine inside the heredoc.
-- The Groceries list accumulates items across weeks. Assume Forni will clean up completed items himself. If you see a lot of uncompleted items before pushing, ask before adding more (dupes are annoying).
+- Put brand hints and recipe associations in `notes`, e.g. `notes: "Bob's Red Mill tri color"`.
+- Set `store` to the store being shopped (e.g. `"Sprouts"`); a storeless item surfaces under any store filter.
+- Only items that need buying go on the list. From `list_pantry`, that is items with `needs_restock` true; already-stocked items stay off it.
 
-## Meal Plan File Format
+## Meal Plan Shape
 
-Match `Constitution/Nutrition/plans/2026-W14-meal-plan.md`. Key sections in order:
+`create_meal_plan` / `update_meal_plan` take a full week as one payload:
 
-1. `# Meal Plan: Week NN (Mon Date – Sun Date, YYYY)`
-2. Short italic subtitle (plant based, seasonal, store)
-3. `## Daily Macro Budget` table
-4. `## Meal Structure` with IF window and meal slots
-5. `## Batch Prep` with grains/legumes, proteins, vegetables, sauces
-6. `## Daily Meals` with breakfast description, lunch table, dinner table
-7. `### Daily Macro Summary` table
-8. `## Shopping List` grouped by store and section
+- `week` (ISO, e.g. `"2026-W24"`), `starts_on`, `ends_on` (Monday and Sunday, `YYYY-MM-DD`)
+- `intro` — the short one-line summary of the week
+- `target_calories`, `target_protein`, `target_carbs`, `target_fat` — the daily macro target snapshot (from README)
+- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and either a `recipe_name` to link an existing recipe (macros come through automatically) or a freeform `description` (leftovers, social, out). Optional `context` (e.g. `"lift, DRC"`) and per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat` for freeform meals.
+- `batch_prep_steps` — the Sunday/midweek prep checklist. Each has a `description` and an optional `target_day` label (e.g. `"Sunday"`).
 
-Keep notes and variances in italic after tables. Call out gaps (e.g., "Fat is ~7g under target. Add extra tahini or nuts to close the gap.")
+Call out macro gaps to Forni in chat (e.g., "Fat is ~7g under target; add extra tahini or nuts"), the same way the old plan notes did.
 
 ## Recipe Sources
 
