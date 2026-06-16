@@ -95,7 +95,7 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
    - Daily macro budget (from README)
    - Meal structure (7:30 to 18:30 IF window)
    - Batch prep steps (grains/legumes, proteins, vegetables, sauces)
-   - Daily meals: an all-week breakfast, then lunch and dinner per day, each linked to a recipe by name where one exists or freeform text otherwise
+   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each linked to a recipe by name where one exists or freeform text otherwise
 3. For meals skipped on social days, give the meal a freeform description like "Social" or the event name rather than leaving it out.
 4. Repeat lunches up to twice per week. Keep breakfast mostly consistent (batch prep reality). Dinners vary more.
 
@@ -131,7 +131,7 @@ Rules for the list:
 
 ### Phase 5: Save and Record
 
-1. Author the plan into Atelic with `mcp__atelic__create_meal_plan` (or `mcp__atelic__update_meal_plan` if a plan for that week already exists; create errors if it does, pointing you at update). See the Meal Plan Shape section for the arguments. The tool returns `unmatched_recipes` — recipe names that did not link to an existing record and were kept as freeform text. Tell Forni which meals stayed freeform so he can decide whether any deserve a real recipe later.
+1. Author the plan into Atelic with `mcp__atelic__create_meal_plan` (or `mcp__atelic__update_meal_plan` if a plan for that week already exists; the create tool will error if it does, pointing you at update). See the Meal Plan Shape section for the arguments. The tool returns `unmatched_recipes` — recipe names that did not link to an existing record and were kept as freeform text. Tell Forni which meals stayed freeform so he can decide whether any deserve a real recipe later.
 2. Append the recipes used to `references/recipe-sources.md` under "Recipes Used" with week, site, and rating left blank (Forni fills the rating in later).
 3. Push the primary shopping list (the store being shopped today) into Atelic, one `mcp__atelic__add_shopping_item` call per item, setting `store` and any brand/quantity hint in `notes`. Items for other stores (e.g., a Costco next run) can be added with their own `store` or left for that run.
 4. Print the shopping list in chat as a preview and backup.
