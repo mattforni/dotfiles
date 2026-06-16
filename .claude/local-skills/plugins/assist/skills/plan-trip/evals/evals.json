@@ -1,0 +1,26 @@
+{
+  "skill_name": "assist:plan-trip",
+  "evals": [
+    {
+      "id": 0,
+      "name": "permit-objective-house-hunt",
+      "prompt": "A few of us are trying to day-hike Half Dome the weekend of 2026-09-19. Four guys, want to split a house with maybe 3 bedrooms near Yosemite, doesn't have to be in the park itself. We'd drive in Friday and the Sunday is the soft edge. Can you find us some options?",
+      "expected_output": "Scopes via one-at-a-time questions or reasonable defaults; pulls dated availability across a couple of gateway towns; presents a tiered table with per-head cost; verifies all-in price and cancellation policy; and critically, surfaces the Half Dome cables permit lottery as the driving constraint (release/preseason lottery timing) rather than treating it as just a house hunt. Hands off booking rather than booking. Offers a trip doc.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "getaway-no-objective",
+      "prompt": "Planning a guys' weekend in Bend, Oregon for 6 of us, 2026-10-09 to 2026-10-11. Want a big house with a hot tub and space to hang. What are our options?",
+      "expected_output": "Scopes headcount/budget basis/dates; pulls live dated availability for the window; presents a grouped, tiered options table with per-head cost and the recommendation collapsed into the preferred row; verifies all-in vs subtotal and cancellation policy on the top pick; respects the booking boundary; offers to capture a trip doc. No invented permit constraint where none exists.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "mid-pipeline-capture-and-followup",
+      "prompt": "We just booked an Airbnb in Leadville for the crew, 2026-07-10 to 2026-07-13, for a Mount Massive and Mount Elbert weekend. Can you write up the trip doc and make sure I don't forget to sort out anything time-sensitive?",
+      "expected_output": "Enters the pipeline mid-stream at Capture: creates a trip README with the right structure (Status, Crew, Dates, Lodging, Plan, Logistics, Options, Open Items), registers it in Adventure/CLAUDE.md, and schedules the time-sensitive follow-ups in Todoist (e.g., overnight parking/permit considerations, anything date-gated) with a timezone caveat. Does not redo a search that's already settled.",
+      "files": []
+    }
+  ]
+}
