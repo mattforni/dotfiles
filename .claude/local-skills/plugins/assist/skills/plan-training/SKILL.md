@@ -70,7 +70,7 @@ Run the full retro workflow on the just-closed ISO week (see Mode: retro below).
 - An adherence read on what hit, what slipped
 - A plan adjustment check: do the current week's targets still hold, or do they step down?
 
-When the retro reveals drift (long run missed, weekly mileage 30%+ under plan, two consecutive weeks of misses, or weight off trajectory), pause before scheduling. Propose adjustments to the current week's targets and get user confirmation before continuing to Phase 2.
+When the retro reveals drift (long run missed, weekly mileage 30%+ under plan, two consecutive weeks of misses, or weight off trajectory) or the load safety check fires a flag (ceiling breach, weekly ramp over ~15%, or two big days clustered within 48 hours), pause before scheduling. Propose adjustments to the current week's targets and get user confirmation before continuing to Phase 2.
 
 If a `### Wk N` subsection already exists in the plan for the just-closed week, skip Phase 1 and continue to Phase 2.
 
@@ -174,7 +174,20 @@ Compare each against the plan row. Express delta as percentage and direction.
 
 **Vert is co-equal with mileage.** The plan tracks both; the retro evaluates against both. Hitting mileage and missing vert (e.g., long run on flat terrain instead of trail) is a partial hit, not a hit.
 
-### Phase 5: Interrogate Significant Deltas
+**From Wk 7 onward the plan numbers are ceilings, not floors** (see the Maximums recalibration note in `2026-training-plan.md`). A positive delta against a back-half row is a breach to flag in Phase 5, not an overachievement to celebrate.
+
+### Phase 5: Load Safety Check
+
+Run this every retro, right after the numbers and before interrogating deltas. The historical injury driver was not peak volume but ramp speed and the clustering of long and vertical days: the 2026-04 spike of 31 mi with three trail efforts in five days, and the 2026-06 stack of a high-effort Friday long onto a 14er the next morning. The under-performance triggers miss this entirely, so check the over-side explicitly. Four checks against the week's actuals:
+
+1. **Ceiling breach.** Compare actual weekly miles, weekly vert, and longest single day against the week's MAX in the plan row. Any value over its ceiling is a breach. State the amount over.
+2. **Ramp.** Compare this week's actual mileage to the prior week's actual (read the previous `### Wk N` retro's Numbers row). An increase over roughly 15% is a flag, stated as a percentage. Ramp off a low base (returning from a layoff) is the highest risk; call it out even when the absolute mileage looks modest.
+3. **Clustering.** Scan the week's Strava activities for two big days within 48 hours of each other, where a big day is any effort over 8 mi or over 1,000 ft. The specific pattern to catch is a Saturday 14er or trail day stacked on the back of the Friday long. One flag per cluster.
+4. **Recovery read (heart rate).** Pull `mcp__claude_ai_Strava__get_activity_performance` for the week's easy and recovery-labeled runs, and `get_athlete_zones` for the Z2 ceiling. Two signals: (a) easy days that are not actually easy, with average HR drifting above the Z2 ceiling; (b) HR at a comparable easy pace climbing across the week, which reads as accumulating fatigue. Note either; absence of both is worth one line of reassurance.
+
+If any flag fires, carry it into Phase 6 and Phase 8: a load safety flag is as much a reason to step the next week down as an under-performance miss is. Record the outcome in the retro's Load Check section. When all four are clean, say so in one line and move on.
+
+### Phase 6: Interrogate Significant Deltas
 
 When the numbers show significant divergence from plan — mileage 30%+ under, long run missed entirely, two consecutive weeks of misses, or weight off trajectory — interrogate the cause before writing the retro. Numbers alone are not the read; they are the symptom. The cause shapes the adjustment.
 
@@ -189,7 +202,7 @@ Ask one focused question for category, then leave room for the user to fill in d
 
 Skip this phase only when the retro lands at or above plan with no meaningful gap.
 
-### Phase 6: Write the Retro Subsection
+### Phase 7: Write the Retro Subsection
 
 Append a new subsection at the bottom of the **Weekly Retrospectives** section in `2026-training-plan.md`. Use this skeleton (note the heading levels: `###` for the week, `####` for the inner sections so the table of contents stays clean):
 
@@ -213,6 +226,10 @@ Append a new subsection at the bottom of the **Weekly Retrospectives** section i
 | Vert ft | ... | ... | ... |
 | Weight | ... | ... | ... |
 
+#### Load Check
+
+<One line each: ceiling (within, or breached by X), ramp (+X% vs last week), clustering (none, or Sat 14er on Fri long), recovery (easy days easy, no HR drift). State clean explicitly when clean.>
+
 #### The Read
 
 <2 to 4 short paragraphs on what hit, what slipped, what's open. Be specific and direct. Avoid effusive praise or hedging.>
@@ -228,9 +245,9 @@ Append a new subsection at the bottom of the **Weekly Retrospectives** section i
 
 Before writing, present the draft inline and ask the user one question via `AskUserQuestion`: anything to add or correct? Save after they confirm or redirect. Use `Edit` to insert the new subsection at the end of the Weekly Retrospectives section, immediately before the `## References` heading.
 
-### Phase 7: Plan Adjustment Check
+### Phase 8: Plan Adjustment Check
 
-Compare the just-written retro to the **current** week's plan row. When the retro shows under-coverage — long run missed, weekly mileage 30%+ under, two weeks in a row of misses, or weight off trajectory — the current week's targets likely need to step down rather than press forward.
+Compare the just-written retro to the **current** week's plan row. When the retro shows under-coverage — long run missed, weekly mileage 30%+ under, two weeks in a row of misses, or weight off trajectory — the current week's targets likely need to step down rather than press forward. The same step-down applies when Phase 5 fired a load safety flag (ceiling breach, ramp over ~15%, or clustered big days): lower the ceiling and space the big days before continuing the build. Per the standing guardrail, any calf, heel, or foot signal drops the next week to the current week's numbers, no exceptions.
 
 Propose adjustment options to the user via `AskUserQuestion`. Typical levers:
 
@@ -242,7 +259,7 @@ After the user decides, update the row in `2026-training-plan.md` to reflect the
 
 Skip this phase only when the retro shows the week landed at or above plan.
 
-### Phase 8: Surface Trends
+### Phase 9: Surface Trends
 
 After saving, briefly scan the prior 1 to 2 retro subsections already in the plan file (if they exist). Surface any pattern: repeated misses, drifting metrics, growing or shrinking adherence. Keep this short — one or two sentences. Do not invent patterns when there is not enough data.
 

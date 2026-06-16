@@ -49,13 +49,19 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
   **Why:** Pressing forward on a plan that already slipped multiplies the gap. Adjusting in response to reality keeps adherence honest. Codified 2026-05-18.
 
-  **How to apply:** Phase 7 of retro mode does this explicitly. If the retro shows missed long run, mileage 30%+ under, or back to back misses, surface adjustment options before continuing to schedule.
+  **How to apply:** Phase 8 of retro mode does this explicitly. If the retro shows missed long run, mileage 30%+ under, or back to back misses, surface adjustment options before continuing to schedule.
 
 - **Interrogate significant deltas, don't just record them.** When retro numbers diverge sharply from plan, the read is incomplete without knowing the cause. Ask the user via `AskUserQuestion` about category (injury / schedule / motivation / conditions), then prompt for detail in chat. The cause drives the adjustment more than the numbers do. When the cause is medical, ask for any provider notes or AI consults the user wants captured in the retro.
 
   **Why:** Wk 2 (ISO 2026-W20) came in -51% on mileage and -89% on vert. Numbers alone read as "fell off." Actual cause was a left heel injury (suspected plantar fasciitis). Without interrogating, the adjustment would have been wrong — push harder Wk 3 rather than step back and prioritize healing. Codified 2026-05-18.
 
-  **How to apply:** Phase 5 of retro mode. Always run it when the gap is 30%+ on any tracked metric or when a marquee session (long run, Thu SPRC) is fully missed.
+  **How to apply:** Phase 6 of retro mode. Always run it when the gap is 30%+ on any tracked metric or when a marquee session (long run, Thu SPRC) is fully missed.
+
+- **Load safety is the over-side of the retro: ramp and clustering injure, not peak volume.** Every retro runs Phase 5 (Load Safety Check) before interrogating deltas: ceiling breach, weekly ramp over ~15%, two big days clustered within 48 hours, and an HR recovery read. A flag steps the next week down exactly like an under-coverage miss does.
+
+  **Why:** A January-to-June 2026 Strava look-back showed both injury episodes shared one signature, and it was not high mileage. The Apr 13-19 week hit 31 mi with three trail efforts in five days; the June rebuild stacked a 124-relative-effort Friday long onto the Holy Cross 14er the next morning. HR data cleared intensity discipline (easy days were genuinely easy, the 14er was paced in Z1), so the cause was structural: ramp speed and clustered big days. Codified 2026-06-16.
+
+  **How to apply:** Run Phase 5 every retro. Compare actuals against the week's MAX, since back-half plan rows are ceilings, not floors. Flag a Saturday 14er sitting on the back of a Friday long. Pull `get_activity_performance` on easy days to confirm they stayed in Z2. Any flag, or any calf, heel, or foot signal, drops the next week to the current week's numbers.
 
 - **Vert is co-equal with mileage.** The training plan tracks both Long mi and Vert ft per week. A retro that only evaluates mileage misses half the point. Always pull elevation gain from Strava activity details and total against the plan's Vert ft target.
 - **Lifts at Movement RiNo do not show in Strava.** When a lift is missing from Strava, the status is **open**, not missed. Confirm with the user before logging it as a miss in the retro. Same applies to climbing at Movement.
