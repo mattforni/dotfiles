@@ -79,7 +79,7 @@ When you surface one of these, say plainly that it matters more than the house, 
 
 **Never run Forni's card through an automated browser session.** Even with his go ahead to book, the final Reserve and payment click is his. This is a hard boundary, not a courtesy. Set him up so it is one click: the direct listing link with dates and guests prefilled, the all in number, and the confirmed cancellation policy so he knows the safety net before he commits. Then hand off.
 
-If he wants the crew told, draft the message in the right register (a casual group text reads nothing like an email; see GC for tone). Offer to copy it to his clipboard with `pbcopy`.
+If he wants the crew told, draft the message in the right register: a casual group text reads nothing like an email. The register rule and the comms tone notes live in [learned-rules.md](learned-rules.md). Offer to copy it to his clipboard with `pbcopy`.
 
 ### Phase 7: Capture
 
