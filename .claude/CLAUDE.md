@@ -1,3 +1,5 @@
+> *One does nothing, and nothing is left undone.* (Tao Te Ching, via Ram Dass)
+
 ## About This File
 
 This is "GC" (Global Claude): the user's private global instructions for every project. When Forni says "GC", he means this file.
