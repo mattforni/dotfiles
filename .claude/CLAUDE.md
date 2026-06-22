@@ -207,6 +207,10 @@ Todoist conventions (Monday scheduling, follow-ups always land on a Monday, shor
 
 - Root level directories should be 3-4 characters that clearly identify contents (e.g., `src/`, `docs/`, `adr/`, `lib/`)
 
+## Growth Engineering
+
+For any SEO, GEO, or growth engineering work (Zero, RYLLC clients, or personal), the canonical playbook is `~/Eudaimonia/Craft/Growth/README.md`. It is built on two vectors: **The Funnel** (the map of where a site leaks) and **The Loop** (the repeatable measure, find the constraint, ship, measure again motion). Apply it and extend it there.
+
 ## Problem Solving Approach
 
 - Always be problem-first. Understand the problem deeply before jumping to solutions or tooling. Technology serves the problem, not the other way around.
