@@ -59,6 +59,34 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: Forni said so on 2026-04-17.
   - How to apply: do not propose recipes that use bananas, and do not include bananas on any shopping list. For the quinoa breakfast alt (previously sweetened with banana), use dates, a small drizzle of agave, or seasonal berries instead.
 
+## Food Preferences
+
+Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-check the draft against this list, and append here whenever Forni states a new preference during planning. New entries follow the same Why / How to apply structure as the rules above. A durable product home for preferences and allergies is tracked as an Atelic ticket; until it ships, this section is the source of truth.
+
+**Dislikes / avoid:**
+
+- **Corn.** Keep it off menus and shopping lists entirely.
+  - Why: Dislikes the taste, and it disagrees with his digestion. Stated 2026-06-21.
+  - How to apply: Do not propose recipes containing corn, and never add it to a shopping list.
+- **Pasta.** Favor grain bowls and skillet formats over pasta dishes.
+  - Why: Not a fan of pasta. Stated 2026-06-21.
+  - How to apply: Reach for quinoa or rice instead of building a meal around pasta.
+- **Bananas.** Does not eat them, anywhere.
+  - Why: Stated 2026-04-17. See the dedicated rule under Recipe Rules above.
+  - How to apply: No bananas in recipes or on shopping lists; sweeten with dates or berries instead.
+
+**Grain preference:**
+
+- **Quinoa over rice** when a recipe leaves the grain open.
+  - Why: Stated preference on 2026-06-21.
+  - How to apply: Default to quinoa unless the recipe specifically calls for rice or Forni asks for it.
+
+**Already well stocked (do not add to a list by default, confirm first):**
+
+- **Tahini.** Do not add to a list by default; confirm first.
+  - Why: Owns plenty. Stated 2026-06-21.
+  - How to apply: Use lemon juice plus olive oil for bowl dressings rather than defaulting to tahini.
+
 ## Macro Rules
 
 (none yet)

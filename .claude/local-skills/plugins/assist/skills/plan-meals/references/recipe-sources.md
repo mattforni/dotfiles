@@ -34,6 +34,10 @@ Appended automatically when a plan introduces a new recipe. Forni fills in the r
 | 2026-W17 | Creamy Spring Pea & Mint Soup | — (Claude drafted, no site source) | | Immersion blender showcase. Thu dinner |
 | 2026-W17 | Sweet Nut & Fruit Protein Bars | Forni's Paprika (ChatGPT originated) | | Bonus batch item, 16 bars, post workout snack |
 | 2026-W21 | Coconut Red Lentil Dal over Basmati | — (Claude drafted, no site source) | | Mon dinner centerpiece, batch carries to Thu pre Odell |
+| 2026-W26 | Lentil & White Bean Salad | — (Claude drafted, no site source) | | Travel week. Make ahead, holds days. Uses red onion + shallot. Low fat protein anchor |
+| 2026-W26 | Crispy Tofu & Summer Squash Bowl over Quinoa | — (Claude drafted, no site source) | | Travel week cook 1. Lemon + olive oil dressing |
+| 2026-W26 | Burst Tomato & White Bean Skillet over Quinoa | — (Claude drafted, no site source) | | Travel week cook 2. One pot, no pasta |
+| 2026-W26 | Black Bean Tacos with Cabbage Slaw | — (Claude drafted, no site source) | | Travel week cook 3. Seasonal slaw, no corn |
 
 ## Favorites
 
