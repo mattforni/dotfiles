@@ -47,7 +47,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Calendar Event Conventions
 
-Color coding, transition / travel, and title formats live in GC `Calendar Preferences`. Training specific use:
+Color coding, transition / travel, and title formats live in GC `Calendar Preferences`. Calendar reads and writes go through the `gws` CLI; see `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax (`calendarId` in `--params`, event body in `--json`). Training specific use:
 
 - Training events use Sage (colorId 2): runs, lifts, yoga, body care, recovery
 - Long runs: `🏃 <MILES> mi Long Run`
