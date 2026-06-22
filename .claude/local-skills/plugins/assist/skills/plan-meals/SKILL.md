@@ -98,7 +98,7 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
    - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each linked to a recipe by name where one exists or freeform text otherwise
 3. For meals skipped on social days, give the meal a freeform description like "Social" or the event name rather than leaving it out.
 4. Repeat lunches up to twice per week. Keep breakfast mostly consistent (batch prep reality). Dinners vary more.
-5. Cross-check the draft against the Food Preferences section in learned-rules.md before presenting: nothing on a dislike/avoid list, honor grain and ingredient preferences, and do not buy items he already owns in quantity. When Forni states a new like, dislike, avoid food, or allergy at any point during planning, append it to that section so the next plan inherits it.
+5. Cross-check the draft against the Food Preferences section in learned-rules.md before presenting: nothing on a dislike/avoid list, honor grain and ingredient preferences, and do not buy items he already owns in quantity. When Forni states a new like, dislike, avoid food, or allergy at any point during planning, append it to that section, following the same Why / How to apply sub-bullet structure as the other rules, so the next plan inherits it.
 
 Present the draft plan inline before authoring it. Let Forni redirect before committing to the shopping list.
 
