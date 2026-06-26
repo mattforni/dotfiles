@@ -45,6 +45,8 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
   **How to apply:** Strava query first for runs; user question for non Strava sessions; calendar stays out of retro source data entirely.
 
+- **Tally by sport_type, not distance alone.** Pull each activity's type and filter to runs (`Run` / `TrailRun`) before summing weekly mileage. Walks, hikes, and yoga carry distances (or N/A) and get miscounted as running otherwise. The native connector's `list_activities` carries `sport_type` in the summary; the older `mcp__strava__get-recent-activities` listing omits type, so reach for the connector. Codified 2026-06-26 after a Walk and a yoga session got folded into a running total.
+
 - **Use retro findings to adjust the current week.** When the previous week shows significant under coverage, propose stepping down the current week's targets rather than pressing forward on the original plan. Annotate adjustments inline in the plan table (e.g., `20 (adjusted from 22)`) so both the original and adjusted targets stay visible for trend reading.
 
   **Why:** Pressing forward on a plan that already slipped multiplies the gap. Adjusting in response to reality keeps adherence honest. Codified 2026-05-18.

@@ -16,6 +16,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 ## Writing Style
 
 - **Title Case for all document headers.** Capitalize as if a book title; lowercase short prepositions (of, in, to, for, by) and articles (a, an, the) unless they start the heading. Applies to every heading level in Google Docs, markdown files, slide decks, Linear issue titles, and any structured written output.
+- **Distance and elevation in imperial, always.** Present distance in miles and elevation in feet, never metric, in every context (training analysis, Strava readouts, adventure and gear planning, anywhere). Convert at the presentation layer; do not show metric even alongside imperial. Forni reads imperial at a glance and finds metric harder to parse.
 - **Implementation plans are readable prose, not code blueprints.** Describe *what* gets done and *what the user experiences*, in plain language Forni can read without switching into engineering mode. No literal code, no framework jargon (hook names, casing transforms, attribute syntax). Name the files to touch as light pointers, but each step is a sentence of intent. Pseudocode over real code wherever a snippet is unavoidable. Applies to every plan and design doc, including plan-mode output.
 
 ## General Behavior
