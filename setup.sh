@@ -578,6 +578,15 @@ install_mcp_servers() {
   # Code expands at runtime from the env var the bin/claude wrapper injects from
   # the login Keychain. The canonical token lives in BitWarden; setup_auth seeds
   # the Keychain entry on a fresh machine. So no literal token is ever baked in.
+
+  # Self-heal: when the env var is empty (headless runs do not source ~/.zshrc),
+  # fall back to the token stashed in the macOS Keychain so a fresh machine can
+  # re-register atelic without a manual export. The empty-token guard below still
+  # protects us if neither source has it.
+  if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
+    ATELIC_API_TOKEN="$(security find-generic-password -s atelic-api-token -w 2>/dev/null || true)"
+  fi
+
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
     "atelic|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
