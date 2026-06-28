@@ -61,10 +61,20 @@ if [[ -z "$real_claude" ]]; then
     exit 127
 fi
 
+# Inject the YNAB personal access token from the login Keychain so the `ynab`
+# MCP server (registered in .claude.json with a ${YNAB_ACCESS_TOKEN}
+# placeholder) resolves to a real value at launch. The token is kept out of the
+# JSON on disk; the canonical copy lives in BitWarden, seeded into Keychain by
+# setup.sh. A missing entry leaves the var unset, so non-YNAB sessions are
+# untouched. ${arr[@]+...} guards the empty-array case under bash 3.2 + set -u.
+ynab_env=()
+ynab_token="$(security find-generic-password -a "$USER" -s YNAB_ACCESS_TOKEN -w 2>/dev/null || true)"
+[[ -n "$ynab_token" ]] && ynab_env+=("YNAB_ACCESS_TOKEN=$ynab_token")
+
 # Fall back to default config root if the profile dir does not exist.
 if [[ ! -d "$cfg_dir" ]]; then
     echo "claude wrapper: $cfg_dir not found, using default config" >&2
-    exec "$real_claude" "$@"
+    exec env ${ynab_env[@]+"${ynab_env[@]}"} "$real_claude" "$@"
 fi
 
-exec env CLAUDE_CONFIG_DIR="$cfg_dir" "$real_claude" "$@"
+exec env CLAUDE_CONFIG_DIR="$cfg_dir" ${ynab_env[@]+"${ynab_env[@]}"} "$real_claude" "$@"
