@@ -74,3 +74,26 @@ Training specific rules tied to current life shape. Read on every invocation. St
   **Why:** Wk 2 retro counted "Strava bike to PAH (4.36 mi)" as evidence of "Wed PAH ✅" — confusing transit with training. PAH itself is kitchen volunteering; the bike commute is logistics, not the prescribed Wed recovery anchor. Codified 2026-05-25 (Wk 3 planning session).
 
   **How to apply:** In retro Coverage tables, mark PAH as `n/a` with a note "transit, not training" rather than listing it as a session. Bike commute miles do not contribute to Total miles or vert. The actual Wed training anchor is contrast therapy at Naosu; evaluate that separately.
+
+## Route Selection (Altitude Long Runs)
+
+- **Forni's route taste.** Propose from this first; offer 2 to 3 candidates with distance / vert and a one-line terrain read, not a single pick.
+  - Prefers **rolling, undulating profiles** (cols, saddles, multi-summit ridge) over a single up-and-up-then-down-and-down out-and-back.
+  - **Road running is out** ("gross"). Mt Evans / Blue Sky Road hits numbers but only as a true last resort.
+  - **Avoids loose talus / scree "rock hopping"** (Princeton-style descents). On any ankle, heel, or foot signal, drop the Class 3 / loose options entirely.
+  - **Happy to drive further out and camp Thursday night** to run Friday from camp. Surface the camp logistics (departure window, dispersed vs permitted) when this shape applies.
+  - Bias toward objectives that double as **Four Pass Loop altitude prep**, and toward **a fresh peak** he has not run this block.
+
+- **Do not re-propose peaks already run this block** unless he asks: Massive, DeCaLiBron, Princeton, Shavano + Tabeguache, Holy Cross, Sherman, West Maroon (CB recon). He values a new objective.
+
+- **Vetted shortlist (2026-06-27), ~13 to 16 mi / ~4,500 ft at altitude:**
+
+  | Route | Dist / Vert | Terrain read |
+  |---|---|---|
+  | Mt Harvard (North Cottonwood) | 12.8 / 4,475 | Runnable Horn Fork basin approach; only the summit pitch is rocky. Ankle-kind. |
+  | Harvard–Columbia traverse (Horn Fork loop) | 15.5 / ~6,000 | Big saddle drop-and-reclimb (rolling); Columbia descent is loose. Vert over a 4,500 cap. |
+  | Grays + Torreys (Stevens Gulch) | 8.3 / 3,602 | Class 1 double 14er, sustained altitude, under distance. |
+  | Bierstadt + Sawtooth + Blue Sky | 12.6 / 4,904 | Rolling two-14er, but Class 3 exposed scramble — skip on any foot signal. |
+  | Missouri / Belford / Oxford | 15.1 / 7,217 | Distance perfect, vert way over — only for a true peak week with no cap. |
+
+  Codified 2026-06-27 after a five-round route hunt during Wk 9 planning. The shortlist is a starting menu, not a constraint; extend it as new objectives get run.
