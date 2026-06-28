@@ -550,9 +550,15 @@ install_mcp_servers() {
   # managed in claude.ai Settings > Connectors), so it needs no entry here. The
   # old self hosted servers (community `strava` and the gated `strava-mcp`) were
   # retired 2026-06-14 when the native connector became available.
+  # ynab (stdio, Deno) reads YNAB_ACCESS_TOKEN. It is registered with a literal
+  # ${YNAB_ACCESS_TOKEN} placeholder (see the stdio branch below) that Claude
+  # Code expands at runtime from the env var the bin/claude wrapper injects from
+  # the login Keychain. The canonical token lives in BitWarden; setup_auth seeds
+  # the Keychain entry on a fresh machine. So no literal token is ever baked in.
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
     "atelic|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
+    "ynab|stdio|deno run --allow-net=api.ynab.com --allow-env=YNAB_ACCESS_TOKEN,YNAB_READ_ONLY,YNAB_DEFAULT_PLAN_ID,YNAB_CACHE_PATH,PORT jsr:@jsclayton/ynab-mcp"
   )
 
   for entry in "${desired[@]}"; do
@@ -592,6 +598,15 @@ install_mcp_servers() {
         claude mcp add "$name" "$url" --scope user --transport http
         add_status=$?
       fi
+    elif [[ "$name" == "ynab" ]]; then
+      # Single-quote the placeholder so setup.sh's own shell does not expand it
+      # and bake a literal token into .claude.json; Claude Code expands
+      # ${YNAB_ACCESS_TOKEN} at runtime. Name precedes --env because, like
+      # --header, --env is variadic and would otherwise eat the positional.
+      # shellcheck disable=SC2086
+      claude mcp add "$name" --scope user --transport stdio \
+        --env 'YNAB_ACCESS_TOKEN=${YNAB_ACCESS_TOKEN}' -- $target_and_extra
+      add_status=$?
     else
       # shellcheck disable=SC2086
       claude mcp add --scope user --transport "$transport" "$name" -- $target_and_extra
@@ -779,6 +794,26 @@ setup_auth() {
     info "Per-profile auth: cd into each profile's territory and run \`claude\` once."
     info "Claude Code stores credentials per CLAUDE_CONFIG_DIR natively (Keychain"
     info "service \"Claude Code-credentials-<hash>\"). Sign in as the right account."
+  fi
+
+  # YNAB personal access token, Keychain-backed for the ynab MCP server. The
+  # canonical copy lives in the BitWarden "YNAB" entry (PAT field); the login
+  # Keychain is the operational store the bin/claude wrapper reads at launch and
+  # injects as YNAB_ACCESS_TOKEN, which Claude Code expands into the ynab MCP
+  # placeholder. -s read keeps the pasted token off the terminal.
+  if security find-generic-password -a "$USER" -s YNAB_ACCESS_TOKEN -w &>/dev/null && [[ "$FORCE" != true ]]; then
+    info "YNAB token already in Keychain"
+  else
+    read -rsp "  ${BOLD}Paste YNAB personal access token (from BitWarden, blank to skip):${NC} " ynab_pat
+    echo
+    if [[ -n "$ynab_pat" ]]; then
+      if security add-generic-password -U -a "$USER" -s YNAB_ACCESS_TOKEN -w "$ynab_pat"; then
+        SUMMARY+=("YNAB token stored in Keychain")
+      else
+        warn "Failed to store YNAB token in Keychain"
+      fi
+      unset ynab_pat
+    fi
   fi
 }
 
