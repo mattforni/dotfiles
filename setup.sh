@@ -558,7 +558,7 @@ install_mcp_servers() {
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
     "atelic|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
-    "ynab|stdio|deno run --allow-net --allow-env jsr:@jsclayton/ynab-mcp"
+    "ynab|stdio|deno run --allow-net=api.ynab.com --allow-env=YNAB_ACCESS_TOKEN,YNAB_READ_ONLY,YNAB_DEFAULT_PLAN_ID,YNAB_CACHE_PATH,PORT jsr:@jsclayton/ynab-mcp"
   )
 
   for entry in "${desired[@]}"; do
