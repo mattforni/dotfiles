@@ -1,6 +1,6 @@
 ---
 name: assist:plan-week
-description: Weekly planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions weekly planning, the Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training`; this skill calls into it during Monday planning.
+description: Weekly planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions weekly planning, the Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training` and meal planning in `assist:plan-meals`; this skill calls into both during Monday planning.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
   - Skill
@@ -153,7 +153,11 @@ Google Calendar is still used directly for non-task events: meetings, transition
 
 **Deferred tasks land on Monday**: When deferring tasks to next week or further out, always schedule them for the Monday of the target week. Monday is the landing zone where tasks get triaged during the planning session.
 
-### Phase 8: Summary
+### Phase 8: Meal Planning
+
+With the week's events and tasks set, plan the week's food around the finalized calendar. Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch-prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed). Return here once meal planning is complete.
+
+### Phase 9: Summary
 
 After slotting is complete, present:
 
