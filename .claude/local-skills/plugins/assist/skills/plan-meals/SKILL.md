@@ -81,12 +81,14 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
 
 Present the week back as a simple list of planned vs skipped meal slots. Ask Forni if anything is missing before continuing.
 
-### Phase 2: Inventory Check
+### Phase 2: Reconcile the Pantry First
+
+**The pantry data drifts and must be reconciled against reality before drafting. Do not trust stock levels at face value, especially after a travel week.** Planning against a stale pantry means building meals around produce that is no longer there and buying duplicates of what is already on hand. This reconcile is the first real move of every weekly plan.
 
 1. Pull the full pantry with `mcp__atelic__list_pantry` (see Pantry Access above)
-2. The restock signal (staple + `needs_restock`) and any items with "low" in `notes` are the first candidates to ask about. Favor items that get used heavily week to week (tofu, soy milk, kimchi, hummus, greens, lentils, rice, oats)
-3. Ask Forni in one batch (use AskUserQuestion) for what's on hand. Group the questions by category (produce, refrigerated, dry goods, condiments) to keep it scannable. Keep it targeted; do not ask about every staple
-4. Update the api db with his answers before generating the plan, using `mcp__atelic__update_pantry_item` (or `mcp__atelic__add_pantry_item` for something new). The pantry gets more accurate over time, which matters more here than the small overhead of the write
+2. **Reconcile the perishables first.** Produce, dairy, and fresh proteins are where the data rots. Present what is currently shown in stock (group hardy vs delicate so it is fast to answer) and have Forni confirm what actually survived; knock everything else to level 0. After a travel week, assume most fresh stock is gone unless he says otherwise. For a full reconcile, present the list and let him name the survivors rather than asking thirty one-at-a-time questions (that scales badly on a phone); reserve the one-at-a-time pattern (see Pantry Rules in learned-rules.md) for the smaller set of genuinely ambiguous staples.
+3. Write the reconciliation back immediately with `mcp__atelic__update_pantry_item` (level up survivors, 0 for gone), `mcp__atelic__add_pantry_item` for new items, and `mcp__atelic__remove_pantry_item` for ones no longer tracked, so the rest of the flow reads accurate data. When zeroing, route each out item to its store (or remove it); a storeless `needs_restock` item pollutes every store's shopping view (see Pantry Rules).
+4. Then surface restock candidates (staple + `needs_restock`, anything "low" in `notes`) for items used heavily week to week (tofu, soy milk, kimchi, hummus, greens, lentils, rice, oats) and confirm before adding to the shopping list
 
 ### Phase 3: Draft the Plan
 
