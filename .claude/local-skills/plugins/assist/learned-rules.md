@@ -88,3 +88,30 @@ Routing conventions (established 2026-06-01):
   **How to apply:** New phase goes at its integer position. Every phase after it shifts up by one. Update body cross references (e.g., "continue to Phase 5") and any references in learned-rules.md or other skills that point at numbered phases. Worth a final grep for `Phase [0-9]\.[0-9]` to catch stragglers.
 
 ## Created Filters
+
+## Spend Categorization
+
+Rules for `assist:handle-budget`. The payee map is [reference/payee-map.md](reference/payee-map.md); these corrections override it.
+
+Mechanics (hard-won, do not rediscover):
+
+- Write through the YNAB REST API directly (`curl` plus Keychain `YNAB_ACCESS_TOKEN`), never the `ynab` MCP. The MCP read output hides the transaction and category IDs needed to write.
+- Imported transactions land **unapproved**, and categorizing does NOT approve them. Approve as the final step (`approved: true`) or the changes never flow into budget views. This is the usual cause of "my changes aren't showing up."
+- YNAB clients use delta sync. After API writes, an open app or web session needs a hard refresh to display them.
+- Payee names carry HTML entities (`&amp;`). Decode before matching.
+- Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, RYLLC `e0d471f0-bf90-452c-8232-b1153b7411be`.
+
+Conventions:
+
+- Trips are itemized into real categories with a memo `<emoji> <Trip Name>` (e.g. `🏔️ Crested Butte`, `⛷️ Vail`), NOT a YNAB flag. Quarantines vacation from the everyday baseline while keeping a per-trip total. Non-discretionary trip-time charges (vehicle repair) stay untagged.
+- Admin is not a generic catch-all. Estate and legal bills go to `📑 Admin / ⚖️ Legal`. Home-purchase costs (down payment, lender fees, inspection) go to `📑 Admin / 🏡 3033 Blake St Home Purchase`.
+- A couples outing or show with Jasmine can be `🍿 Entertainment` or `❤️ Dating`; ask. Forni chose Entertainment for The Empire Strips Back.
+
+Payee corrections (session 2026-06-29):
+
+- `7-Eleven` -> `🚬 Nicotine` (confirmed, buys nicotine there).
+- `Bunny and Clyde's` -> `☕️ Caffeine` (Salida coffee).
+- `Body Jewelry`, `Easy Steez Vintage` -> `🧥 Clothing`.
+- `Gem Figueroa` (friend, Venmo) -> context dependent; was `🍿 Entertainment` (a movie).
+- `Badfish SUP` -> `🎒 Gear`. `Rhino Air`, `Discount Tire`, `Costco Gas` -> `🚙 Transportation`.
+- `Amazon` history is split (~52%); always confirm, never auto.
