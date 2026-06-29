@@ -66,7 +66,7 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
 - **Macro anchored.** The daily target is 2,112 cal / 118g P / 257g C / 68g F. The shake handles ~32g of protein and ~225 cal. The remaining three meals should roughly split the rest as laid out in README.
 - **Realistic for the week.** Social events, travel, and team lunches eat meals. Do not prep for meals that will not happen.
 - **Repeatable, not boring.** Repeating a lunch twice in a week is fine (batch prep reality). Three or four times in a row is a trap; rotate a second lunch option in.
-- **Recipe backed, not hand waved.** Every real cooked meal links to a Recipe with actual ingredients, amounts, and directions, so Forni can open it and cook it and the macros are computed rather than guessed. If a recipe does not exist yet, create it (Phase 3). Reserve freeform text and estimated macros for genuinely uncooked slots (Social, Out, Leftovers).
+- **Recipe backed, not hand waved.** Every real cooked meal links to a Recipe with actual ingredients, amounts, and directions, so Forni can open it and cook it and the macros are computed rather than guessed. If a recipe does not exist yet, create it (Phase 3b). Reserve freeform text and estimated macros for genuinely uncooked slots (Social, Out, Leftovers).
 
 ## The Plan Flow
 
@@ -99,7 +99,7 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
    - Daily macro budget (from README)
    - Meal structure (7:30 to 18:30 IF window)
    - Batch prep steps (grains/legumes, proteins, vegetables, sauces), each **with amounts** (e.g. "Cook 1.5 cups dry quinoa", not "Cook a big batch")
-   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each backed by a recipe (see step 3)
+   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each backed by a recipe (see Phase 3b)
 3. For meals skipped on social days, give the meal a freeform description like "Social" or the event name rather than leaving it out.
 4. Repeat lunches up to twice per week. Keep breakfast mostly consistent (batch prep reality). Dinners vary more.
 5. Cross-check the draft against the Food Preferences section in learned-rules.md before presenting: nothing on a dislike/avoid list, honor grain and ingredient preferences, and do not buy items he already owns in quantity. When Forni states a new like, dislike, avoid food, or allergy at any point during planning, append it to that section, following the same Why / How to apply sub-bullet structure as the other rules, so the next plan inherits it.
