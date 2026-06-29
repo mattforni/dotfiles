@@ -7,6 +7,7 @@ allowed-tools:
   - mcp__claude_ai_Google_Calendar__*
   - mcp__atelic__*
   - WebFetch
+  - WebSearch
   - Read
   - Edit
   - Write
@@ -51,7 +52,7 @@ A storeless item (no `store` set) surfaces under any `store` filter, so staples 
 | `Constitution/Nutrition/README.md` | Daily macros and meal slot budgets |
 | Atelic api db (`PantryItem`, `Consumable`) via MCP | What is already on hand + brand preferences. Read with `mcp__atelic__list_pantry`. See Pantry Access above |
 | Atelic api db (`MealPlan`) via MCP | Prior weekly plans. Read with `mcp__atelic__list_meal_plans` / `get_meal_plan`; author with `create_meal_plan` / `update_meal_plan` |
-| Atelic api db (`Recipe`) via MCP | Existing recipes to link meals against. Discover with `mcp__atelic__list_recipes` |
+| Atelic api db (`Recipe`) via MCP | Recipes meals link against. Discover with `mcp__atelic__list_recipes`; create new ones (import from a URL or author from scratch) with `mcp__atelic__create_recipe` |
 | `references/recipe-sources.md` | Approved recipe sites and historical ratings |
 | `learned-rules.md` | Corrections learned through use |
 
@@ -65,6 +66,7 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
 - **Macro anchored.** The daily target is 2,112 cal / 118g P / 257g C / 68g F. The shake handles ~32g of protein and ~225 cal. The remaining three meals should roughly split the rest as laid out in README.
 - **Realistic for the week.** Social events, travel, and team lunches eat meals. Do not prep for meals that will not happen.
 - **Repeatable, not boring.** Repeating a lunch twice in a week is fine (batch prep reality). Three or four times in a row is a trap; rotate a second lunch option in.
+- **Recipe backed, not hand waved.** Every real cooked meal links to a Recipe with actual ingredients, amounts, and directions, so Forni can open it and cook it and the macros are computed rather than guessed. If a recipe does not exist yet, create it (Phase 3b). Reserve freeform text and estimated macros for genuinely uncooked slots (Social, Out, Leftovers).
 
 ## The Plan Flow
 
@@ -92,17 +94,32 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 
 ### Phase 3: Draft the Plan
 
-1. Discover existing recipes to build on with `mcp__atelic__list_recipes` (optionally a name `query`). Linking a meal to a real recipe means its macros and ingredients come through automatically. For new ideas, pull a small set of candidate recipes from the preferred sites (see recipe-sources.md); use WebFetch sparingly and favor recipes already referenced in prior plans or ones Forni has rated.
+1. Discover existing recipes to build on with `mcp__atelic__list_recipes` (optionally a name `query`). A meal that links to a real recipe carries its ingredients, amounts, directions, and computed macros automatically, so prefer reusing what already exists, especially recipes Forni has rated.
 2. Build the plan's content (this maps onto the Meal Plan Shape authored in Phase 5):
    - Daily macro budget (from README)
    - Meal structure (7:30 to 18:30 IF window)
-   - Batch prep steps (grains/legumes, proteins, vegetables, sauces)
-   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each linked to a recipe by name where one exists or freeform text otherwise
+   - Batch prep steps (grains/legumes, proteins, vegetables, sauces), each **with amounts** (e.g. "Cook 1.5 cups dry quinoa", not "Cook a big batch")
+   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each backed by a recipe (see Phase 3b)
 3. For meals skipped on social days, give the meal a freeform description like "Social" or the event name rather than leaving it out.
 4. Repeat lunches up to twice per week. Keep breakfast mostly consistent (batch prep reality). Dinners vary more.
 5. Cross-check the draft against the Food Preferences section in learned-rules.md before presenting: nothing on a dislike/avoid list, honor grain and ingredient preferences, and do not buy items he already owns in quantity. When Forni states a new like, dislike, avoid food, or allergy at any point during planning, append it to that section, following the same Why / How to apply sub-bullet structure as the other rules, so the next plan inherits it.
 
-Present the draft plan inline before authoring it. Let Forni redirect before committing to the shopping list.
+Present the draft plan inline before authoring it. Let Forni redirect before committing to building recipes and the shopping list.
+
+### Phase 3b: Back Every Real Meal With a Recipe
+
+Before authoring the plan, make sure every cooked meal points at a Recipe, so the plan links by `recipe_name` (not freeform text with guessed macros). Work through the draft's lunches and dinners (and the breakfast and shake anchors). For each:
+
+1. **Reuse if it exists.** If `list_recipes` already has a good match, link to it by name; nothing to create.
+2. **Import a real dish from a trusted source.** For something cookable Forni would follow steps for (an enchilada bake, a curry, a skillet), find a specific recipe URL on a preferred site (see recipe-sources.md; use WebSearch scoped to those domains, WebFetch to sanity check it is plant based and a fit), then call `mcp__atelic__create_recipe` with that `url`. The API reads the page's recipe data and fills ingredients, amounts, and directions. Prefer the preferred sites; verify plant based before importing.
+3. **Author a simple assembly meal from scratch.** For a grain bowl, salad, or other "components plus a dressing" meal, call `mcp__atelic__create_recipe` with `name`, a short `directions` (the assembly), `servings`, and `ingredients` as free-text lines with amounts (one per line, e.g. "2 cups cooked quinoa"). The API parses the lines into ingredients and resolves the consumables.
+4. **Set `servings` honestly.** Use the number of servings the batch yields (a big-batch enchilada bake that covers four dinners is `servings: 4`), so per-serving macros land right.
+5. **Anchors are recipes too.** Create light recipes for the breakfast bowl and the shake once (with portions), so even breakfast states its amounts; reuse them by linking in later weeks.
+
+Notes:
+- `create_recipe` errors if a recipe with that name already exists, pointing at the existing record. Treat that as "already there" and link to it instead.
+- New ingredients get real macros backfilled from USDA automatically. If a recipe comes back with incomplete nutrition, the panel will say so; mention it to Forni rather than papering over it with an estimate.
+- Record each imported or authored recipe in `references/recipe-sources.md` under "Recipes Used" (Phase 5), with the source site or "Claude drafted" for scratch builds.
 
 ### Phase 4: Shopping List
 
@@ -134,8 +151,8 @@ Rules for the list:
 
 ### Phase 5: Save and Record
 
-1. Author the plan into Atelic with `mcp__atelic__create_meal_plan` (or `mcp__atelic__update_meal_plan` if a plan for that week already exists; the create tool will error if it does, pointing you at update). See the Meal Plan Shape section for the arguments. The tool returns `unmatched_recipes` — recipe names that did not link to an existing record and were kept as freeform text. Tell Forni which meals stayed freeform so he can decide whether any deserve a real recipe later.
-2. Append the recipes used to `references/recipe-sources.md` under "Recipes Used" with week, site, and rating left blank (Forni fills the rating in later).
+1. Author the plan into Atelic with `mcp__atelic__create_meal_plan` (or `mcp__atelic__update_meal_plan` if a plan for that week already exists; the create tool will error if it does, pointing you at update). See the Meal Plan Shape section for the arguments. Because every real meal got a recipe in Phase 3b, the tool's `unmatched_recipes` should now come back empty for cooked meals; if a name does land there, it means the recipe was not created, so go back and create it rather than leaving the meal freeform. Genuinely uncooked slots (Social, Out) are expected to have no recipe.
+2. Append the recipes created or imported this week to `references/recipe-sources.md` under "Recipes Used" with week, site (or "Claude drafted" for scratch builds), and rating left blank (Forni fills the rating in later).
 3. Push the primary shopping list (the store being shopped today) into Atelic, one `mcp__atelic__add_shopping_item` call per item, setting `store` and any brand/quantity hint in `notes`. Items for other stores (e.g., a Costco next run) can be added with their own `store` or left for that run.
 4. Print the shopping list in chat as a preview and backup.
 
@@ -155,7 +172,7 @@ The shopping list is pushed into Atelic's shopping plan with `mcp__atelic__add_s
 - `week` (ISO, e.g. `"2026-W24"`), `starts_on`, `ends_on` (Monday and Sunday, `YYYY-MM-DD`)
 - `intro` — the short one-line summary of the week
 - `target_calories`, `target_protein`, `target_carbs`, `target_fat` — the daily macro target snapshot (from README)
-- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and either a `recipe_name` to link an existing recipe (macros come through automatically) or a freeform `description` (leftovers, social, out). Optional `context` (e.g. `"lift, DRC"`) and per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat` for freeform meals.
+- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and a `recipe_name` linking the recipe created in Phase 3b (macros and ingredients come through automatically). Only genuinely uncooked slots use a freeform `description` (leftovers, social, out) with optional per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat`. Optional `context` (e.g. `"lift, DRC"`).
 - `batch_prep_steps` — the Sunday/midweek prep checklist. Each has a `description` and an optional `target_day` label (e.g. `"Sunday"`).
 
 Call out macro gaps to Forni in chat (e.g., "Fat is ~7g under target; add extra tahini or nuts"), the same way the old plan notes did.
