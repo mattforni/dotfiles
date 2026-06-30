@@ -145,6 +145,8 @@ Notion MCP config, token, and per-project enable/disable live in `~/Eudaimonia/A
 
 ## Linear Ticket Preferences
 
+**Linear is the tracker for engineering and development work; Todoist is for personal and operational tasks.** Anything code (bugs, tech debt, features, follow-ups from a build session) goes to Linear, never Todoist. Route the personal/operational side to Todoist (see Todoist Preferences). Do not offer Todoist for dev follow-ups.
+
 **When to create a ticket at all.** A ticket tracks work that needs doing: queued for later, spanning sessions, needing prioritization, or handed off. For work that is decided and executed in one sitting, the PR is the tracking unit, so do not mint a ticket for it. Ask before ticketing in-session work. If a ticket is created, actually use it: move it through states and let it close on merge, never leave it orphaned in Todo while its PR is already open.
 
 When creating new Linear tickets:
