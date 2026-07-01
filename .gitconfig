@@ -46,7 +46,6 @@
     cob = !checkout-branch.sh
     email = "config user.email 'mattforni@gmail.com'"
     name = "config user.name 'Matthew Fornaciari'"
-    zero = "config user.email 'mattf@zerohomes.com'"
 [color]
     ui = auto
 [color "diff"]
