@@ -2,7 +2,7 @@
 # Bootstrap ~/.claude-zero/ and ~/.claude-home/ from the legacy ~/.claude/.
 #
 # Splits sessions/memory by project path: entries under Eudaimonia/Craft/
-# Development/zero go to zero; other Eudaimonia entries go to home; everything
+# Vocation/Zero go to zero; other Eudaimonia entries go to home; everything
 # else goes to zero (ambient on this machine). Copies user-level settings into
 # both profiles. Symlinks the shared homebase surface (skills, commands,
 # references, local-skills, statusline, project CLAUDE.md) into both.
