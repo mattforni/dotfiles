@@ -39,6 +39,7 @@ Keep the context architecture honest. The failure this skill exists to fix is **
 - **Repo CLAUDE.md chain**: per-repo and nested (e.g. `zero/public-web/CLAUDE.md` and its `app/...` children), loaded when working in-repo.
 - **Skill files**: `SKILL.md` and `learned-rules.md` per skill in the `assist` plugin (`.claude/local-skills/plugins/assist/skills/*`) and the `skillset` plugins (`sdlc`, `linear-lifecycle`).
 - **Tool docs**: `~/Eudaimonia/Admin/tools/<tool>.md`, reference loaded on relevance.
+- **Auto memory**: the Claude Code per-project memory store (MEMORY.md index plus topic files). A first class layer since 2026-07-04: Claude-discovered learnings live there (per Anthropic's division of labor), so groom it for staleness and duplication against the repo-file layers, but do not treat its existence as a smell.
 
 ## Workflow
 

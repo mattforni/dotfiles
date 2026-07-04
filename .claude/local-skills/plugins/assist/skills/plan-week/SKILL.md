@@ -39,7 +39,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 **Transitions**: Every movement between locations gets a 30-minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back-to-back without a transition unless they are at the same location. Transitions are placeholders — when a scheduled meeting claims part of a transition's time slot, shrink the transition to fit the remaining gap rather than flagging it as a conflict.
 
-**Work hours**: 8:00-16:00 is the target. Mon/Tue/Thu in office at Zero Homes, Wed/Fri from home. Lunch breaks on Mon (yoga 12:15) and Tue (lift 11:00) are already spoken for.
+**Work hours**: No W2 as of 2026-06-29 and the weekly skeleton is being rebuilt. Treat `~/Eudaimonia/schedule.md` as the source of truth for anchors and do not assume office days.
 
 **Training adjacent constraints**: Cold plunge sequencing (4 to 6 hour gap after strength), sauna timing post strength, and Thursday SPRC morning protection live in the `assist:plan-training` skill. Defer to that skill when validating moves of training, sauna, contrast, or Thursday morning events.
 
@@ -210,7 +210,7 @@ Color coding, transition / travel, and title formats live in GC `Calendar Prefer
 - **Emoji prefix**: All personal events use an emoji prefix (e.g., "🏋️ Strength", "✍️ Writing")
 - **Contemplation events**: Use colorId "4" (Flamingo) for recovery meetings
 - **Craft events**: Use colorId "6" (Tangerine) for writing, personal projects
-- **Heads Down (deep work)**: Use "🙈 Heads Down" with colorId "8" (Graphite). Protected focus blocks. Recurring template lives Tue/Wed 7:00–10:30; can also be created as one-offs when a particular day needs a protected window. No transitions needed (block stays at current location).
+- **Heads Down (deep work)**: Use "🙈 Heads Down" with colorId "8" (Graphite). Protected focus blocks, created as one-offs when a particular day needs a protected window. No transitions needed (block stays at current location). The recurring Tue/Wed container retired with the Zero separation (2026-06-29).
 
 Include the location when the event is at a specific place.
 
@@ -222,10 +222,8 @@ Training event creation lives in the `assist:plan-training` skill. See that skil
 
 | Name | Address |
 |------|---------|
-| Zero Homes | RiNo (office) |
 | Movement RiNo | 3201 Walnut St #107, Denver, CO 80205 |
 | Improper City | 3201 Walnut St #107, Denver, CO 80205 |
-| Naosu Sauna | 3145 Larimer St, Denver, CO 80205 |
 | Ratio Beerworks | 2920 Larimer St, Denver, CO 80205 |
 | Hearth | 2500 Lawrence St, Denver, CO 80205 |
 | Project Angel Heart | 4950 Washington St Suite 200, Denver, CO 80216 |

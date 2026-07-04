@@ -76,9 +76,8 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
 2. Fetch Google Calendar events for that range. Filter out `transparency: "transparent"` (free/informational) events
 3. Identify meals we should NOT plan for:
    - Social dinners (restaurants, invited events)
-   - Team lunches (e.g., Thursday at Zero Homes)
    - Out of town travel
-   - Wednesday evening Wine Down (flexible, social)
+   - Any other eating-out anchors the calendar shows; confirm these against the calendar each run rather than assuming a weekly pattern
 4. Note which shopping day is likely this week. Default assumption: Sprouts run after High Noon on Wednesday or Friday. Confirm with Forni if the calendar makes it unclear.
 
 Present the week back as a simple list of planned vs skipped meal slots. Ask Forni if anything is missing before continuing.
@@ -204,8 +203,6 @@ When Forni mentions outside this skill that he bought or finished something (e.g
 
 **Current weekly pattern** (things that *can* go stale as jobs and seasons change — **always verify against the calendar pulled in Phase 1**, and update the date stamp below when confirmed or corrected):
 
-- **Wednesday evening**: Wine Down. Keep dinner light or flexible. *(Confirmed 2026-04-17.)*
-- **Thursday lunch**: Team lunch at Zero Homes around 12:30. Do not plan Thursday lunch unless the calendar contradicts. *(Confirmed 2026-04-17.)*
 - **Tuesday evening**: DRC run club meets ~18:00 at Ratio Beerworks. Plan dinner before, optional protein snack after. *(Confirmed 2026-04-17.)*
 - **Wednesday midday**: PAH Kitchen Assistant volunteering ~13:00 to 15:00; lunch goes before leaving at 12:30. *(Confirmed 2026-04-17.)*
 

@@ -121,11 +121,7 @@ After all new emails are processed, acknowledge emails that remain in the inbox 
 
 **Multi-label routing**: Emails can take multiple labels. An Anthropic receipt is both `📑 Admin/🛒 Purchases` and `🛠️ Craft/💻 Development`. Always route to the most specific sublabel, never a parent pillar alone.
 
-**Star assignment**: Apply colored stars via system label IDs. Never star emails that get archived.
-
-- `GREEN_STAR`: Needs action but NOT a response (download a document, review something)
-- `YELLOW_STAR`: Needs a response from me
-- `RED_STAR`: Urgent or overdue response needed
+**Star assignment**: Apply colored stars via system label IDs. Never star emails that get archived. Star meanings follow the governing "Star semantics" rule in [learned-rules.md](../../learned-rules.md) (Behavior Rules); that rule is the single source of truth for which star means what.
 
 **When in doubt, ask**: If there is any ambiguity about classification, or an email could take multiple labels, ask the user via AskUserQuestion. Do not guess. Defaulting to asking is always correct.
 

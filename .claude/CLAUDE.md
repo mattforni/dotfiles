@@ -62,51 +62,30 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
 
 After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify-context`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
 
-### Persistence: Codify, Don't Memorize
+### Persistence: Rules in Files, Learnings in Memory
 
-**Do not save things to the auto-memory system** at `~/.claude-home/projects/.../memory/`. Even though the system prompt suggests it, Forni prefers durable knowledge to live in **persistent stores**: files he can see, read, and reason about in his repos.
+Follows Anthropic's published division of labor (adopted 2026-07-04, reversing the earlier "codify, don't memorize" policy):
 
-Persistent stores, in order of preference:
+- **Human-authored rules and conventions live in repo files.** Project CLAUDE.md for project conventions, homebase CLAUDE.md for environment and workflow, GC (`~/.claude/CLAUDE.md`) for cross-project behavior, tool docs (`~/Eudaimonia/Admin/tools/<tool>.md`) for tool reference, skill `learned-rules.md` for skill-specific patterns, Eudy markdown for personal context.
+- **Claude-discovered learnings live in the auto-memory store.** Corrections, preferences, debugging insights, and patterns Claude notices belong in the per-project memory directory with its MEMORY.md index. Save there freely as the system prompt directs; prune stale entries when noticed. One caveat: memory is per repo and not synced across machines, so anything that must survive a machine swap belongs in a repo file.
 
-- **Project CLAUDE.md / README.md** for project-specific conventions
-- **Homebase CLAUDE.md** for environment and workflow conventions
-- **GC (`~/.claude-home/CLAUDE.md`)** for cross-project personal preferences and global behavioral rules
-- **Tool docs (`~/Eudaimonia/Admin/tools/<tool>.md`)** for tool-specific reference: gotchas, access mechanics, CLI recipes, version quirks. One file per tool, indexed in that folder's README
-- **Skill `learned-rules.md`** sections for skill-specific patterns
-- **Eudy markdown files** (`Constitution/`, `Craft/`, etc.) for personal context
+`assist:codify-context` is the deliberate write-in path for the repo-file layers when Forni says "codify."
 
-When you would otherwise reach for memory, use the `assist:codify-context` skill or add to the right file directly. The auto-memory store is opaque, not git-tracked, and easy to forget exists; codifying into the repo keeps the knowledge visible and reviewable.
-
-**Keep GC lean — it loads on every session, everywhere.** GC pays rent on every turn, so it holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics — gotchas, access mechanics, CLI recipes, version quirks — do NOT go in GC; they belong in that tool's `~/Eudaimonia/Admin/tools/<tool>.md` one-pager (see `Admin/tools/CLAUDE.md`: "use it like this → GC; what this tool is and what to know → tools folder"). When a tool gotcha tempts you into a GC section, resist and file it in the tool doc. Lean into progressive disclosure: pointers here, depth one hop away.
+**Keep GC lean — it loads on every session, everywhere.** Anthropic's guidance targets under 200 lines per CLAUDE.md; longer files reduce adherence. GC holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics belong in that tool's `~/Eudaimonia/Admin/tools/<tool>.md` one-pager. Progressive disclosure: pointers here, depth one hop away.
 
 ### Context Architecture
 
-The persistent stores listed above are the **layers** of the context architecture (GC, the Eudy CLAUDE.md chain, repo CLAUDE.md, skill SKILL.md and learned-rules, tool docs). Two principles govern them, and `assist:groom-context` audits the whole set against this section:
+The stores above are the **layers** of the context architecture (GC, the Eudy CLAUDE.md chain, repo CLAUDE.md, skill files, tool docs, auto memory). Principles, grounded in Anthropic's context engineering guidance, audited by `assist:groom-context`:
 
-- **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it (the Persistence order above is that ownership map), stated once, with other layers pointing to it rather than repeating it. Three copies in always-loaded prose is worse than one in the right place.
-- **Load-bearing process gates belong at the point of use, and must be enforced there.** A gate that must fire during a flow (for example review before merge) belongs surfaced in the relevant repo's Workflow and enforced by the flow skill that runs it (such as `sdlc:land`), not buried in always-loaded prose where it competes for attention and gets dropped. A prose line is the weakest form of a rule; a skill step or a hook is the strongest.
+- **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it, stated once, with other layers pointing to it rather than repeating it.
+- **Load-bearing process gates belong at the point of use, and must be enforced there.** Prose is the weakest form of a rule; a flow-skill step is stronger; a hook is strongest and is the only deterministic guarantee. Review before merge lives in the merge-gate hook and `sdlc:land`, not here.
+- **Trim before adding.** When a rule keeps getting dropped, the first response is shrinking and scoping the file it lives in, not restating it louder.
 
-When context sprawls or duplicates, or a basic keeps getting dropped, run `assist:groom-context` (also run monthly via `assist:reflect`). Its write-in counterpart is `assist:codify-context`.
+When context sprawls or duplicates, run `assist:groom-context` (also run monthly via `assist:reflect`).
 
-### Git Worktrees
+### Git, Worktrees, and PR Gotchas
 
-- Claude Code's `EnterWorktree` tool auto prefixes new branches with `worktree-` (e.g., `worktree-body-comp`). Immediately rename the branch to the bare name (`git branch -m worktree-<name> <name>`) right after the worktree is created. Forni dislikes the prefix.
-- The statusline already surfaces the worktree with a `🪵 <name>` marker after `🌿 repo:branch`, so the branch name itself should stay clean.
-- **EnterWorktree's session record sticks to `worktree-<name>` even after you rename.** `ExitWorktree(remove)` cleans up the worktree directory but the renamed local branch lingers. After the PR merges it shows `[gone]`; clean up via the squash-merge `-d` → content parity → `-D` flow from the Git and PR Gotchas section.
-- **`ExitWorktree(remove)` ancestry check trips on squash merges, same trap as `git branch -d`.** It refuses with "commits on the worktree branch" because the worktree's commits are not ancestors of the squash. Verify content parity with `git diff origin/<base-branch>..HEAD --quiet`; on exit 0 the squash on origin contains the work, safe to re-invoke with `discard_changes: true`. Never auto-discard purely on `PR_STATE = MERGED` — a user can add post-merge commits to the worktree, so the diff check is the real safety guarantee.
-- **`EnterWorktree` acts on the session-root repo, not nested repos.** When the session is anchored at one repo (e.g. Eudaimonia) but the work targets a *separate nested* git repo inside it (e.g. `Craft/atelic/api`, or the `Craft/Development/personal/*` repos, which are their own repos and gitignored by the parent), `EnterWorktree` creates a worktree of the *session-root* repo, not the nested one. A "worktree" branch strategy would silently branch the wrong repo. Skip EnterWorktree for nested repos and cut a plain branch directly: `git -C <nested-repo-path> checkout -b <branch> origin/<base>`. Hit during an sdlc:design run where the branch strategy returned "worktree" but the work lived in `atelic/api` (2026-06-05).
-
-### Git and PR Gotchas
-
-- **Never rename a PR's head branch via the GitHub API.** `POST /repos/.../branches/<name>/rename` renames the branch but detaches the PR. GitHub auto closes the PR because its `headRefName` still points at the old, now missing branch. If a branch rename is needed, do it in the GitHub UI (which properly updates attached PRs), or close the current PR and open a new one from the renamed branch.
-- **Stacked PR rebase after the base merges.** When PR A is stacked on PR B and B squash merges to main, A's history no longer traces to main. Recovery:
-  1. `git rebase --onto main <last-commit-of-old-base> <stacked-branch>` to replay only A's own commits on main
-  2. `gh pr edit <N> --base main` to update the PR's base ref
-  3. `git push --force-with-lease` to update the remote
-- **Merging the base of a stack with `--delete-branch` auto-closes the stacked child PR.** A PR whose *base ref* is deleted gets closed by GitHub (the base no longer exists), and a closed PR refuses `gh pr edit --base` and often `gh pr reopen` (its base branch is gone). So when landing a stack, do the child's `--onto main` rebase + `gh pr edit --base main` *before* merging the base, or merge the base **without** `--delete-branch`. If it already closed, the clean recovery is to rebase the child onto main and open a fresh PR rather than fight the closed one. Bit ATE-370's app PR on 2026-05-31.
-- **`git branch -d` does NOT work on squash-merged branches.** `-d` only checks DAG ancestry — squash merges create a new commit on main with a different SHA, so the branch tip is never an ancestor. The "upstream gone" indicator doesn't change this. The safety check before `-D` is "the branch's distinguishing work is reachable on main", not "the trees are byte-identical." Get the branch's own touched files via `git log --name-only --pretty=format: main..<branch> | sort -u | grep -v '^$'` (NOT `git diff --name-only`, which would also include files main advanced on while the PR was open). Then run `git diff --quiet main..<branch> -- <those-files>` (two dots, options BEFORE `--`). On exit 0, those paths match between main and the branch, so the squash carried the work — safe to `git branch -D <branch>`. Two foot-guns: (1) `--quiet` placed AFTER `--` becomes a pathspec, silently producing exit 0 even when the trees differ — always put options first. (2) Avoid the three-dot form (`git diff main...<branch>`) for this check — three dots compares from the merge base, so the diff stays non-empty by definition even after a clean squash.
-
-- **Repo-level branch auto-deletion is off by default on GitHub.** The `delete_branch_on_merge` setting (Settings → General → Pull Requests → "Automatically delete head branches") controls whether merged head refs auto-delete. Check it with `gh api repos/<owner>/<repo> --jq '.delete_branch_on_merge'`; flip it on with `gh api -X PATCH repos/<owner>/<repo> -f delete_branch_on_merge=true`. Without it on, merged branches linger on the remote and `-d` cleanup becomes more annoying because of the rule above.
+Deep git and GitHub reference (EnterWorktree branch renames and nested-repo trap, squash-merge branch cleanup, stacked PR rebases, branch auto-deletion settings) lives in `~/Eudaimonia/Admin/tools/github.md`. Read it before worktree cleanup, stacked PR landings, or deleting branches after squash merges.
 
 ## Skills
 
@@ -116,7 +95,7 @@ Building recurring headless Claude automations (launchd, Keychain auth, `--allow
 
 ### Manual First, Then Codify
 
-When building a workflow skill, do the work by hand once with real data before writing the skill. Skills written without a real first run are thin: the gotchas, shortcut candidates, and calibration numbers (capacity multipliers, typical bucket sizes, priority distributions) only surface under actual use. The pattern is: run the workflow manually, capture learnings inline as they come up, then write the skill as the last step. The `linear-groom` skill gained ~10 Learned Rules and a recalibrated capacity multiplier only after one real C3 grooming pass.
+When building a workflow skill, do the work by hand once with real data before writing the skill. Skills written without a real first run are thin: the gotchas, shortcut candidates, and calibration numbers (capacity multipliers, typical bucket sizes, priority distributions) only surface under actual use. The pattern is: run the workflow manually, capture learnings inline as they come up, then write the skill as the last step. The Linear grooming skill (now `sdlc:groom`) gained ~10 Learned Rules and a recalibrated capacity multiplier only after one real grooming pass.
 
 ### Levels shorthand
 
@@ -134,9 +113,7 @@ Choose the highest available option. Native connectors are smoother and require 
 
 ### gws Profiles
 
-The `gws` CLI uses `$GOOGLE_WORKSPACE_CLI_CONFIG_DIR` for per-account isolation. Forni's shell auto-loads either `~/.config/gws-zero/` or `~/.config/gws-home/` based on `~/.config/gws-current`. A zsh chpwd hook also walks up from `$PWD` looking for `.account` marker files (a cross-tool convention; the `~/bin/claude` wrapper reads the same marker) and silently switches when one is found, so cd'ing into a home subtree flips you to home for that shell. Use `gws-whoami` to confirm which account is active before sending mail or modifying calendars. When ambiguous, ask which account Forni wants the action against. Per-command override: `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...`.
-
-The `~/bin/claude` wrapper picks a Claude Code config dir (`~/.claude-zero/` or `~/.claude-home/`) at launch from the same `.account` marker and exec's the real binary. Claude Code's OAuth credential storage is per CLAUDE_CONFIG_DIR natively (Keychain service `Claude Code-credentials-<hash>`), so the right Anthropic account is selected automatically. New sessions in a directory subtree use the right account.
+The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Only the `home` profile is active today (the `zero` profile retired with the Zero W2, 2026-06-29); the machinery remains for future multi-account needs. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/tools/gws.md`.
 
 ### Google Workspace (reading links, Docs, Gmail)
 
@@ -145,11 +122,11 @@ Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/for
 ## Code Review
 
 - During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
-- **Review bots (Gemini, etc.) re-review fresh on every push, so "clean" is a moving target** — each pass surfaces a new batch, and chasing them is unbounded. Triage each round instead of complying blindly: fix genuine bugs, adopt good suggestions, but reason-decline false positives (e.g. a bot flagged `Rails.env.local?` that RuboCop actively enforces) and suggestions that conflict with an explicit user directive or a tested behavior (e.g. a "gentler titleize" that stopped normalizing all-caps). Pick a convergence point with the user rather than looping. Codified during ATE-369/370 (2026-05-31).
+- **Triage bot review feedback, do not comply blindly.** Bots re-review fresh on every push, so "clean" is a moving target. Fix genuine bugs, adopt good suggestions, reason-decline false positives and suggestions that conflict with an explicit directive or tested behavior. Pick a convergence point with Forni rather than looping. The mechanics (re-review triggers, merge gating) are enforced by the merge-gate hook and `sdlc:land`; bot footprints per repo live in that repo's CLAUDE.md.
 
 ## MCP Servers
 
-Notion MCP config, token, and per-project enable/disable live in `~/Eudaimonia/Admin/tools/notion.md`.
+Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Admin/tools/notion.md`.
 
 ## Linear Ticket Preferences
 
@@ -168,7 +145,7 @@ When creating new Linear tickets:
 - Never explicitly sign emails (Gmail handles signatures automatically)
 - End emails with "Cheers and chat soon!"
 - Reply to existing email threads instead of creating new ones when following up
-- When including a scheduling link, choose by context: Zero / work meetings use `https://app.reclaim.ai/m/forni/zero`; personal / RYLLC use `https://app.reclaim.ai/m/forni/chat`. Format as: "Here's [my scheduling link](<the right link>) if that's easier."
+- When including a scheduling link, use `https://app.reclaim.ai/m/forni/chat`. Format as: "Here's [my scheduling link](https://app.reclaim.ai/m/forni/chat) if that's easier."
 
 ## Phone Contact
 
@@ -220,7 +197,7 @@ Todoist conventions (Monday scheduling, follow-ups always land on a Monday, shor
 
 ## Growth Engineering
 
-For any SEO, GEO, or growth engineering work (Zero, RYLLC clients, or personal), the canonical playbook is `~/Eudaimonia/Craft/Vocation/RYLLC/Growth/README.md`. It is built on two vectors: **The Funnel** (the map of where a site leaks) and **The Loop** (the repeatable measure, find the constraint, ship, measure again motion). Apply it and extend it there.
+For any SEO, GEO, or growth engineering work (RYLLC clients or personal), the canonical playbook is `~/Eudaimonia/Craft/Vocation/RYLLC/Growth/README.md`. It is built on two vectors: **The Funnel** (the map of where a site leaks) and **The Loop** (the repeatable measure, find the constraint, ship, measure again motion). Apply it and extend it there.
 
 ## Problem Solving Approach
 

@@ -15,7 +15,7 @@ description: Analyze job roles for fit, draft application question responses, fi
 4. **Draft responses** to application questions
 5. **Find hiring manager** via LinkedIn/web search
 6. **Generate follow-up email** using job posting outreach template
-7. **Create Gmail draft** with labels: `Craft` and `RYLLC`
+7. **Create Gmail draft** with label: `🛠️ Craft/💼 Vocation/💻 RYLLC`
 
 ## Candidate Profile
 
@@ -274,7 +274,7 @@ Filter by:
 
 ## Follow-Up Email Generation
 
-Use template: `~/Craft/vocation/templates/07-job-posting-cold-outreach.md`
+Use template: `~/Eudaimonia/Craft/Vocation/templates/07-job-posting-cold-outreach.md`
 
 ### Key Elements
 
@@ -311,8 +311,8 @@ Matthew Fornaciari
 
 After generating email:
 
-1. **Create draft** using `draft_email` tool
-2. **Apply labels:** `Craft` and `RYLLC`
+1. **Create draft** via the `gws` CLI (see the gws-gmail skills): `gws gmail +send --to <EMAIL> --subject '...' --html --body '<p>...</p>' --draft`
+2. **Apply label:** `🛠️ Craft/💼 Vocation/💻 RYLLC`
 3. **Verify:**
    - Subject line in Title Case
    - Scheduling link: <https://app.reclaim.ai/m/forni/chat>
@@ -332,7 +332,7 @@ When skill is invoked with job posting URL:
 - [ ] Draft responses to all application questions found
 - [ ] Search for hiring manager (LinkedIn → job posting → website → GitHub)
 - [ ] Generate follow-up email using template 07
-- [ ] Create Gmail draft with `Craft` and `RYLLC` labels
+- [ ] Create Gmail draft with the `🛠️ Craft/💼 Vocation/💻 RYLLC` label
 - [ ] Report summary: fit assessment, cover letter, application responses, hiring manager found, email drafted
 
 ## Output Format
@@ -380,7 +380,7 @@ When skill is invoked with job posting URL:
 ## Follow-Up Email
 
 **Status:** [Draft created in Gmail / Ready to send]
-**Labels:** Craft, RYLLC
+**Label:** 🛠️ Craft/💼 Vocation/💻 RYLLC
 **Subject:** [Subject line]
 
 [Email preview]
@@ -392,23 +392,19 @@ When skill is invoked with job posting URL:
 1. [Copy cover letter to job application]
 2. [Copy application question responses to job portal]
 3. [Review and send Gmail draft to hiring manager]
-4. [Track in vocation repo: companies/[company-name].md]
+4. [Track the company and contact in the RYLLC HubSpot instance]
 ```
 
 ## Resources
 
 **Email template:**
 
-- `~/Craft/vocation/templates/07-job-posting-cold-outreach.md`
+- `~/Eudaimonia/Craft/Vocation/templates/07-job-posting-cold-outreach.md`
 
 **Project guidelines:**
 
-- `~/Craft/vocation/CLAUDE.md`
+- `~/Eudaimonia/Craft/Vocation/CLAUDE.md`
 
-**Contact tracking:**
+**Contact and company tracking:**
 
-- `~/Craft/vocation/network/contacts.md`
-
-**Company profiles:**
-
-- `~/Craft/vocation/companies/`
+- The RYLLC HubSpot instance (contacts and companies migrated there 2026-07-01)

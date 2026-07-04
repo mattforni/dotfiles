@@ -44,36 +44,12 @@ Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 
 ## Star Rules
 
+Star semantics are governed by the "Star semantics" rule in learned-rules.md (Behavior Rules): the star answers "who has the ball." Do not restate the definitions here; that rule is the single source of truth.
+
 **Core behavior:**
 
 - Never star emails that get archived. Stars mean action is needed.
 - Always mark emails as read when archiving. Remove both INBOX and UNREAD together.
-
-### GREEN_STAR (needs action, but NOT a response)
-
-- Download a document, review something, FYI with a to-do
-- Tax documents needing download (W-2s, forms)
-- Financial statements and account summaries
-- Insurance claims needing review
-- Newsletters worth reading (substack.com, mailchimp, convertkit, beehiiv)
-- Subscription renewal confirmations
-
-### YELLOW_STAR (needs a response from me)
-
-- Direct emails from known contacts (not automated/noreply)
-- Emails with explicit questions requiring response
-- Meeting requests and calendar invitations needing RSVP
-- Account security alerts (password reset, 2FA, suspicious activity)
-- Forms, surveys, or document signing requests
-- Deadlines mentioned in subject or body
-
-### RED_STAR (urgent or overdue response needed)
-
-- Any email needing a response that is >7 days old, regardless of relationship (only if there is actually something to respond to; photo-only or empty-body emails do not count)
-- Emails from close friends or family (see Family Rules below)
-- Business emails with "urgent", "ASAP", "deadline", "action required"
-- Payment due notices, overdue notices
-- Emails from active business engagements (Zero, RYLLC clients)
 
 ## Family Rules
 
@@ -139,8 +115,8 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 **Craft signals:**
 
 - Job search, recruiting, career -> `🛠️ Craft/💼 Vocation`
-- Zero Homes -> `🛠️ Craft/💼 Vocation/0️⃣ Zero`
-- Gremlin -> `🛠️ Craft/💼 Vocation/😈 Gremlin`
+- Zero Homes -> `🛠️ Craft/💼 Vocation/0️⃣ Zero` (historical; W2 ended 2026-06-29, still matches old mail)
+- Gremlin -> `🛠️ Craft/💼 Vocation/😈 Gremlin` (historical; still matches old mail)
 - Networking, intros, conferences -> `🛠️ Craft/💼 Vocation/🕸 Networking`
 - Mentorship -> `🛠️ Craft/💼 Vocation/👨‍🏫 Mentorship`
 - Software, dev tools, GitHub -> `🛠️ Craft/💻 Development`

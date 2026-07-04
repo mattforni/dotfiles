@@ -123,7 +123,7 @@ Matthew Fornaciari
 
 1. **Identify email flavor** - Which template/approach fits?
 2. **Gather context** - Relationship history, company details, technical fit
-   - **Email history analysis:** Use Gmail MCP to search and read past email threads with the contact
+   - **Email history analysis:** Use the `gws` CLI (`gws gmail`, per the gws-gmail skills) to search and read past email threads with the contact
    - Look for: Last contact date, nature of relationship, how things ended, any commitments made, warm/cold signals
    - Key insights: Did they offer to stay in touch? Was there a previous engagement discussion? Any specific topics discussed?
 3. **Enrich from LinkedIn** - Current role, company stage, recent activity, mutual connections
@@ -160,18 +160,16 @@ Matthew Fornaciari
 
 All templates available in:
 
-- `~/Craft/vocation/templates/`
+- `~/Eudaimonia/Craft/Vocation/templates/`
 
 Contact database:
 
-- `~/Craft/vocation/network/contacts.md`
+- Contacts and companies live in the RYLLC HubSpot instance (migrated 2026-07-01)
 
 Project guidelines:
 
-- `~/Craft/vocation/CLAUDE.md`
+- `~/Eudaimonia/Craft/Vocation/CLAUDE.md`
 
 ## Gmail Integration
 
-For details on using Gmail MCP server to draft emails directly in Gmail, see `gmail-integration.md`.
-
-**Quick start:** After Claude Code restart, use `draft_email` tool to create drafts directly in Gmail instead of copy/paste.
+Draft directly in Gmail via the `gws` CLI (see the gws-gmail skills): `gws gmail +send --to <EMAIL> --subject '...' --html --body '<p>...</p>' --draft`. Omit `--draft` only after explicit approval to send.

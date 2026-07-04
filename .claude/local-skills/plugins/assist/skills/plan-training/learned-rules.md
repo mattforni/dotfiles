@@ -11,7 +11,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
 - **30 min alignment for travel blocks**: Drive events use 30 minute increments aligned to 30 minute blocks (06:30 to 07:00, not 06:15 to 07:00). Transitions default to 30 minutes (size, not alignment).
 - **Always create both drive flanks**: A long run event without a paired `🚙 <Trailhead>` and `🚙 Home` is incomplete. Create all three together.
-- **Edit training events on the Life calendar only; the Zero copies are Reclaim-synced.** The personal (🌱 Life, `mattforni@gmail.com`) and work (0️⃣ Zero, `mattf@zerohomes.io`) calendars both display the training events, but they are *separate copies* (different iCalUIDs and organizers). Reclaim syncs Life → Zero, so only ever create / modify / delete training events on the **Life** calendar — never touch the Zero copies directly; Reclaim propagates them. Surfaced 2026-06-07.
+- **Edit training events on the Life calendar only.** Create, modify, and delete training events on the personal calendar (🌱 Life, `mattforni@gmail.com`). The work calendar (0️⃣ Zero, `mattf@zerohomes.io`) and its Reclaim sync ended with the W2 (2026-06-29). Surfaced 2026-06-07.
 - **A split recurring series can't have its start time changed; recreate it.** When a recurring event's ID ends in `_R<timestamp>` (a "this-and-following" split), the Calendar API rejects a start-time change with `400 Invalid start time` because the ID encodes the DTSTART. To move such a series, **delete it and insert a fresh recurring event** at the new time. Plain (non-split) recurring masters shift fine via a full `gws calendar events update` (GET the event, bump start/end, PUT it back) — a bare `events patch` of just start/end fails the same way. Surfaced 2026-06-07 shifting the Tue/Thu lifts +30 min.
 
 ## Mon Flex
@@ -73,7 +73,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
   **Why:** Wk 2 retro counted "Strava bike to PAH (4.36 mi)" as evidence of "Wed PAH ✅" — confusing transit with training. PAH itself is kitchen volunteering; the bike commute is logistics, not the prescribed Wed recovery anchor. Codified 2026-05-25 (Wk 3 planning session).
 
-  **How to apply:** In retro Coverage tables, mark PAH as `n/a` with a note "transit, not training" rather than listing it as a session. Bike commute miles do not contribute to Total miles or vert. The actual Wed training anchor is contrast therapy at Naosu; evaluate that separately.
+  **How to apply:** In retro Coverage tables, mark PAH as `n/a` with a note "transit, not training" rather than listing it as a session. Bike commute miles do not contribute to Total miles or vert. The Wed contrast therapy anchor at Naosu is retired (Naosu closed 2026-06-13; contrast therapy is off the skeleton until a new sauna home is found, per schedule.md).
 
 ## Route Selection (Altitude Long Runs)
 

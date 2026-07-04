@@ -80,7 +80,7 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 
 ### Account Profiles (gws + Claude Code)
 
-Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Profiles today: `zero` (Zero Homes work) and `home` (personal). Active profile is layered:
+Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Only the `home` profile is active today; the `zero` profile retired with the Zero Homes W2 (2026-06-29), and the machinery below remains for future multi-account needs. Active profile is layered:
 
 1. **Ambient** — recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
 2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. The `~/bin/claude` wrapper reads the same marker at launch time to pick the Claude Code config dir.
@@ -142,6 +142,10 @@ The desired array supports both stdio and http transports. For http entries that
 
 - `claude mcp add --header` is variadic, so positionals must precede the flag or the CLI eats them as additional headers.
 - Registering with an empty token bakes a broken auth header that the `Already registered` short circuit silently preserves on later runs. Guard with a `[[ -z "${SOME_TOKEN:-}" ]]` skip before the loop body, matching the atelic guard.
+
+## Code Review Bots
+
+**Both CodeRabbit and Gemini Code Assist review PRs on `mattforni/homebase`** (confirmed 2026-06-15). They leave different footprints: CodeRabbit posts a `coderabbitai` check suite and a `CodeRabbit` commit status within seconds of a PR opening, so it is detectable before it reviews; Gemini leaves nothing on the commit until its review lands. After addressing CodeRabbit feedback and pushing fixes, its "Changes requested" status stays stale until it re-reviews; if all comments are addressed, dismiss the stale review via `gh api -X PUT repos/{owner}/{repo}/pulls/{pr}/reviews/{review_id}/dismissals -f message="All changes addressed"` or in the GitHub UI. Neither bot re-reviews on a bare push; trigger them with `@coderabbitai review` and `/gemini review`. Triage guidance lives in GC's Code Review section.
 
 ## Development Workflow
 

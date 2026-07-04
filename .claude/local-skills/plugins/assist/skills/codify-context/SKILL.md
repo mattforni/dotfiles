@@ -16,6 +16,10 @@ allowed-tools:
 
 Codify knowledge from the current conversation into documentation that serves two audiences: humans (README.md) and Claude Code (CLAUDE.md). The goal is progressive disclosure where each layer adds depth without duplicating the others.
 
+## Placement Policy
+
+Human-authored rules and conventions live in repo files: the CLAUDE.md chain, tool docs (`~/Eudaimonia/Admin/tools/<tool>.md`), and skill files. Claude-discovered learnings, corrections, and preferences may live in the Claude Code auto-memory store. This skill is the deliberate write-in path for the repo-file layers, invoked when Forni explicitly asks to codify. The owning statement of this division lives in GC (Persistence: Rules in Files, Learnings in Memory).
+
 ## Before Every Invocation
 
 1. Read [learned-rules.md](../../learned-rules.md) for any prior corrections about documentation style or placement
@@ -165,6 +169,6 @@ The principle is the same regardless of domain: essentials where they are always
 
 ## Learned Rules
 
-- **Tool / CLI operational reference goes in `~/Eudaimonia/Admin/tools/<tool>.md`, not GC, not project CLAUDE.md, not auto-memory.** Anything tool-specific — gotchas, access mechanics, cost notes, version-specific quirks, the "why we picked it" rationale — follows the one-pager pattern in `~/Eudaimonia/Admin/tools/CLAUDE.md`. The pull will be to drop a tool gotcha into GC's existing tool section (e.g., the "Gmail (send, reply, forward, draft)" section) because that's where related behavioral guidance lives. **Resist.** GC is for always-loaded behavioral conventions; `Admin/tools/<tool>.md` is for reference material that loads on relevance. If the entry answers "use it like this" → GC. If it answers "here's what this tool is and what to know about it" → Admin/tools. Codified 2026-05-21 after the gws attachment-truncation gotcha almost landed in GC before getting redirected.
+- **Tool / CLI operational reference goes in `~/Eudaimonia/Admin/tools/<tool>.md`, not GC, not project CLAUDE.md.** Anything tool-specific — gotchas, access mechanics, cost notes, version-specific quirks, the "why we picked it" rationale — follows the one-pager pattern in `~/Eudaimonia/Admin/tools/CLAUDE.md`. The pull will be to drop a tool gotcha into GC's existing tool section (e.g., the "Gmail (send, reply, forward, draft)" section) because that's where related behavioral guidance lives. **Resist.** GC is for always-loaded behavioral conventions; `Admin/tools/<tool>.md` is for reference material that loads on relevance. If the entry answers "use it like this" → GC. If it answers "here's what this tool is and what to know about it" → Admin/tools. Codified 2026-05-21 after the gws attachment-truncation gotcha almost landed in GC before getting redirected.
 
 - **GC is a single canonical file shared across all Claude Code profile dirs.** The source of truth lives in the homebase repo at `~/Eudaimonia/Craft/Development/personal/homebase/.claude/CLAUDE.md`. All three profile dirs (`~/.claude-home/`, `~/.claude-zero/`, `~/.claude/`) symlink to it. Editing GC via any symlink all hits the same file — and therefore the same git history in homebase. Don't mentally model GC as living in `~/.claude-home/`; that's just a symlink to the homebase-tracked source.

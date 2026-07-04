@@ -268,7 +268,6 @@ After saving, briefly scan the prior 1 to 2 retro subsections already in the pla
 | Name | Address |
 |------|---------|
 | Movement RiNo | 3201 Walnut St #107, Denver, CO 80205 |
-| Naosu Sauna | 3145 Larimer St, Denver, CO 80205 |
 
 ## Learned Rules
 

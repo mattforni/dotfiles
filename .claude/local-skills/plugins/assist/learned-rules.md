@@ -4,7 +4,6 @@ Rules added from triage corrections. Read on every invocation. These override de
 
 ## Sender Rules
 
-- `scheduling@acuityscheduling.com` (NAOSU SAUNA) -> 🍏 Constitution/🧖 Personal Care (NOT Athlete)
 - `heather.frechette@gmail.com` (Heather Frechette, HNGC secretary) -> 🍏 Constitution/🍾 Sobriety. Auto-reply "Thank you for your service! 🙏", then label and archive. HNGC = High Noon Group Conscience (AA home group business meeting).
 - `info@bluesprucemaids.com` (Blue Spruce Maids cleaning reminders) -> 🍏 Constitution/🧖 Personal Care. Mark read, archive. Recurring 7-day cleaning reminders.
 - `EnergyReport@xcelenergy.com` (Xcel Home Energy Report, usage marketing email distinct from actual Xcel bills) -> Informational only. Unsubscribe (URL only, no mailto) and archive without label. The actual Xcel utility bill goes to Bills; this monthly usage/marketing report has no value to keep.
@@ -52,32 +51,17 @@ Rules added from triage corrections. Read on every invocation. These override de
 
 ## Calendar Rules
 
-- **Daily Operations Standup** is informational only. Forni does not attend; it is a placeholder in case he ever wants to drop in. Do not treat it as a conflict or a busy block.
 - Never move, reschedule, or delete existing calendar events without explicit permission. Always present the proposed change and wait for approval.
 - Events booked via Reclaim.ai scheduling links were scheduled by other people. Extra caution required.
 - Deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect. Warn about this.
 
 ## Slotting Rules
 
-- **Personal admin tasks slot to morning windows, not afternoon.** Afternoons fill with Zero work and meetings; admin only reliably lands in the morning. Default to slotting Todoist personal tasks (admin, errands, paperwork, follow ups, calls) before the workday starts. Use afternoon slots only when the task explicitly requires business hours (e.g., calling an office that opens at 09:00) or when no morning slot exists.
+- **Personal admin tasks slot to morning windows, not afternoon.** Default to slotting Todoist personal tasks (admin, errands, paperwork, follow ups, calls) into morning slots. Use afternoon slots only when the task explicitly requires business hours (e.g., calling an office that opens at 09:00) or when no morning slot exists.
 
-  **Why:** Codified 2026-05-18 (Wk 3 planning session). Initial slot for 📝 Clio Intake and 🏥 Establish Primary Care landed at 15:00–16:00. Forni redirected: "I just don't tend to have time later in the day with work. It just doesn't really work that way." Afternoon slots in practice get displaced by work even when calendar shows them open.
+  **Why:** Codified 2026-05-18 (Wk 3 planning session). Forni redirected afternoon admin slots: "I just don't tend to have time later in the day with work. It just doesn't really work that way."
 
-  **How to apply:** When triaging Schedule filter tasks, default to morning slots. Strong morning windows: Mon 7:00–10:00 (deep AM at office), Tue/Wed 7:00–10:30 (Heads Down container), Thu 7:30–8:00 (post SPRC pre meetings), Fri 7:00–11:30 (large WFH block). Use afternoon only as a fallback.
-
-## Zero Work Inbox
-
-The default triage-rules.md / label-map.md taxonomy is Forni's **personal** life (Family, Sobriety, the four pillars). The **Zero work inbox** (mattf@zerohomes.io, active under the `zero` gws profile) has a completely separate label set. Those personal labels do not exist there. **When triaging in a Zero directory subtree, confirm which inbox Forni means before scanning** — the active gws profile being `zero` does not by itself mean he wants the work inbox triaged.
-
-Zero workspace user labels: `🏦 Vendors`, `🛠️ Tooling`, `📈 Growth`, `📈 Growth/📍 Local Rank`, `📈 Growth/⚙️ Sales Automation`, `💻 Engineering`, `🫂 Partners`, `👯‍♀️ People Ops`, `🤝 Meetings`, `🏥 Benefits`, `📝 Documents`, `💸 Expenses`, `🫠 Personal`.
-
-Routing conventions (established 2026-06-01):
-
-- **Vendor evaluations** (inbound sales demos, tools being assessed) → `🏦 Vendors` + `🛠️ Tooling` + `📈 Growth` (parent). E.g. the Podium-replacement / speed-to-lead bake-off (Aircall, Talkdesk, Avoca, Regal, Hatch).
-- **Live sales-automation tooling / infrastructure** (a tool actually in the stack, or automation work) → `📈 Growth/⚙️ Sales Automation` + `🛠️ Tooling`. E.g. Podium support threads, scheduler attribution, CCEF auto-create-contact automation, building a teammate's scheduler.
-- **GBP / local listings / local SEO** → `📈 Growth/📍 Local Rank`. E.g. MapRanking, Google Business Profile appeals, signage-for-GBP threads, business-directory listing invites.
-- **Customer-reported app/product bugs** → `💻 Engineering`, and route the extracted bug to the **#engineering** Slack channel (tag the relevant engineer; Danny Pier is Lead Mobile Engineer for app bugs), then archive the email — the work lives in Slack/eng, not the inbox.
-- Work that spawns follow-up → cut a **GROW** Linear ticket (Growth Team, assign Forni, Todo) and let the ticket be the source of truth; star the email per the star-semantics rule (`YELLOW_STAR` if we owe the move, `GREEN_STAR` if waiting on someone else).
+  **How to apply:** This rule predates the Zero separation (W2 ended 2026-06-29); re-derive the specific morning windows from the rebuilt schedule.md once the post-Zero week is designed.
 
 ## Codification Rules
 

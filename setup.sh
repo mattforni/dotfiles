@@ -759,13 +759,15 @@ setup_auth() {
       fi
     fi
 
-    # Seed the active-profile pointer. Prefer the just-migrated profile so a
-    # fresh home-only machine doesn't default to zero ambient.
-    [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-zero}" > "$HOME/.config/gws-current"
+    # Seed the active-profile pointer. Prefer the just-migrated profile;
+    # otherwise default to home (the zero profile retired with the Zero W2,
+    # 2026-06-29; add profiles back to the loop below if multi-account
+    # returns).
+    [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-home}" > "$HOME/.config/gws-current"
 
     local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-gws-forni}"
     local gws_profile gws_dir
-    for gws_profile in zero home; do
+    for gws_profile in home; do
       gws_dir="$HOME/.config/gws-$gws_profile"
       if [[ -f "$gws_dir/client_secret.json" ]] && [[ -f "$gws_dir/credentials.enc" ]] && [[ "$FORCE" != true ]]; then
         info "gws $gws_profile profile already configured ($gws_dir)"

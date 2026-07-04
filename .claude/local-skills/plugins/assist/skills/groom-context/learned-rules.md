@@ -10,6 +10,11 @@ Corrections and calibration for how groom-context should reason. Seeded from the
 
 - **Gemini re-review needs an explicit `/gemini review` comment on later pushes.** It only auto-reviews when a PR opens, not on subsequent pushes. This was genuinely missing, now encoded in `public-web/CLAUDE.md`. **How to apply:** distinguish the two failure modes when you audit. Some forgotten basics are encoded-but-unenforced (migrate enforcement); some are genuinely absent (codify them, then place at the right altitude).
 
+## Ground Truth Is Anthropic's Published Guidance (2026-07-04)
+
+- **Audit against Anthropic's released best practices, not only the self-authored GC spec.** Forni called out that the inaugural framework was entirely self-referential and asked for the audit to be grounded in Anthropic's published guidance instead ("There are far more knowledgeable people informing those best practices"). Key anchors as of 2026-07: CLAUDE.md under 200 lines per file (longer files reduce adherence); CLAUDE.md holds human-authored rules while the auto-memory store holds Claude-discovered learnings; SKILL.md under 500 lines with reference files for depth; hooks are the only deterministic enforcement; the first response to a dropped rule is trimming and scoping, not restating. **How to apply:** on each groom, re-verify the current guidance (docs move), and when GC's spec and Anthropic's guidance conflict, surface the conflict to Forni rather than silently preferring either.
+- **The memory ban is reversed.** The "codify, don't memorize" policy was removed from GC on 2026-07-04. The auto-memory store is a legitimate layer; groom it like any other (stale entries out, duplicates collapsed toward the human-authored rule), but do not propose migrating live memories into repo files unless they must survive a machine swap.
+
 ## Operating Bias
 
 - **The fix is usually placement or enforcement, not a new line.** When an incident reveals a forgotten basic, resist adding another prose rule. Ask first whether the rule already exists somewhere, and whether the real gap is altitude (wrong layer), salience (buried in a too-large file), or enforcement (no flow-skill step or hook makes it stick).
