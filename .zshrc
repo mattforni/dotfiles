@@ -28,7 +28,7 @@ fi
 
 # Atelic API token lives in the macOS Keychain (not a plaintext dotfile).
 # Export it for setup.sh's atelic MCP registration. Reads silently; no-op if absent.
-if [[ -z "${ATELIC_API_TOKEN:-}" ]]; then
+if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
   ATELIC_API_TOKEN="$(security find-generic-password -s atelic-api-token -w 2>/dev/null)"
   [[ -n "$ATELIC_API_TOKEN" ]] && export ATELIC_API_TOKEN || unset ATELIC_API_TOKEN
 fi

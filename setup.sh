@@ -584,7 +584,7 @@ install_mcp_servers() {
   # re-register atelic without a manual export. The empty-token guard below still
   # protects us if neither source has it.
   if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
-    ATELIC_API_TOKEN="$(security find-generic-password -s atelic-api-token -w 2>/dev/null || true)"
+    ATELIC_API_TOKEN="$(security find-generic-password -s atelic-api-token -w)" || ATELIC_API_TOKEN=""
   fi
 
   local desired=(
