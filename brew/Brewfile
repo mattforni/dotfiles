@@ -4,6 +4,7 @@ tap "schpet/tap"
 tap "supabase/tap"
 
 # CLI essentials
+brew "agent-browser" # Browser automation for AI agents; setup.sh fetches its Chrome for Testing
 brew "bash"
 brew "coreutils"
 brew "fzf"

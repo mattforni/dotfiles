@@ -243,6 +243,29 @@ install_npm_globals() {
   done
 }
 
+setup_agent_browser() {
+  header "agent-browser"
+
+  if ! command -v agent-browser &>/dev/null; then
+    warn "agent-browser not found, skipping"
+    return 0
+  fi
+
+  # `agent-browser install` downloads Chrome for Testing into
+  # ~/.agent-browser/browsers/ on first run and no-ops once present.
+  if [[ "$FORCE" != true ]] && compgen -G "$HOME/.agent-browser/browsers/chrome-*" > /dev/null; then
+    info "agent-browser Chrome already installed"
+    return 0
+  fi
+
+  if agent-browser install; then
+    SUMMARY+=("agent-browser Chrome installed")
+  else
+    warn "agent-browser install failed"
+    return 1
+  fi
+}
+
 deploy_homebase() {
   header "Homebase"
 
@@ -854,6 +877,7 @@ run_phase install_brew_packages
 run_phase setup_node
 run_phase setup_ruby
 run_phase install_npm_globals
+run_phase setup_agent_browser
 run_phase deploy_homebase
 run_phase link_tracked_configs
 run_phase install_launchagents
