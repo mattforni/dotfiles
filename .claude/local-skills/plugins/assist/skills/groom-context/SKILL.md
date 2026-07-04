@@ -73,9 +73,9 @@ For each load-bearing process gate, ask "what actually makes me follow this?" A 
 
 Group the proposed culls, moves, merges, and enforcement migrations by repo, since changes can span the Eudaimonia, homebase, and skillset repos plus gitignored zero repos, each landing by its own convention. Reorganize in layers (shape first, then content). Apply only after Forni signs off.
 
-### Step 8: Log
+### Step 8: Commit
 
-Append a short dated entry to [log.md](log.md) in this skill's directory: scope covered, what was culled, moved, and migrated, and anything deferred. This is the grooming history, co-located with the skill so the two never drift.
+Land the changes per each repo's convention. The commit messages are the only record of the pass; there is no grooming log (cut 2026-07-04, everything here is ephemeral), so write commit messages that carry the intent.
 
 ## Output Shape
 
