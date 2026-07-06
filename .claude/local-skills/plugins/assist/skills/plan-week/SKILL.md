@@ -69,6 +69,13 @@ The look forward, the mirror of the Retrospective. Holding the retro's carry for
 
 The Prospective sets the week's intention before the mechanical planning begins. Its outputs flow into Load and Rectify and into Slotting.
 
+**Name the week's theme, and write it onto the calendar.** The Prospective produces a short theme for the week, a word or a brief phrase (for example "Presence", or "Point the Energy at the Forge"). The theme is the compass, not a task. Codify it onto the week opening banner, the all day training week event that sits at the start of the week (created by `assist:plan-training`, for example "Wk 10: Deload (LA)"):
+
+- **Title** becomes the theme, led by an emoji chosen to match the theme (for example `🪷 Presence`). The theme owns the title; nothing else sits there.
+- **Body** carries a one sentence theme framing, then the full training block: the week label and phase, the mileage and vert numbers, and the guardrails. Every training detail moves off the title and into the body.
+
+Confirm the theme with Forni first. Present the title and the body shape, then patch the banner via `gws` (summary and description only). If the banner does not exist yet this week, let `assist:plan-training` create it first, then set the theme.
+
 ### Phase 3: Load and Rectify
 
 1. Fetch this week's calendar events (Monday through Sunday) via `gws` (the `🌱 Life` calendar)
@@ -211,6 +218,7 @@ Color coding, transition / travel, and title formats live in GC `Calendar Prefer
 - **Contemplation events**: Use colorId "4" (Flamingo) for recovery meetings
 - **Craft events**: Use colorId "6" (Tangerine) for writing, personal projects
 - **Heads Down (deep work)**: Use "🙈 Heads Down" with colorId "8" (Graphite). Protected focus blocks, created as one-offs when a particular day needs a protected window. No transitions needed (block stays at current location). The recurring Tue/Wed container retired with the Zero separation (2026-06-29).
+- **Week theme banner**: The all day event that opens the week (the training week banner created by `assist:plan-training`) carries the week's theme as its title, led by a theme matched emoji (for example "🪷 Presence"). Every training detail (week label, phase, mileage and vert, guardrails) lives in the body, never the title. Set during Phase 2 (Prospective).
 
 Include the location when the event is at a specific place.
 
