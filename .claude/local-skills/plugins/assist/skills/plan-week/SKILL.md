@@ -72,7 +72,7 @@ The Prospective sets the week's intention before the mechanical planning begins.
 **Name the week's theme, and write it onto the calendar.** The Prospective produces a short theme for the week, a word or a brief phrase (for example "Presence", or "Point the Energy at the Forge"). The theme is the compass, not a task. Codify it onto the week opening banner, the all day training week event that sits at the start of the week (created by `assist:plan-training`, for example "Wk 10: Deload (LA)"):
 
 - **Title** becomes the theme, led by an emoji chosen to match the theme (for example `🪷 Presence`). The theme owns the title; nothing else sits there.
-- **Body** carries a one sentence theme framing, then the full training block: the week label and phase, the mileage and vert numbers, and the guardrails. Every training detail moves off the title and into the body.
+- **Body** carries a one sentence theme framing, then the full training block: the week label and phase, the mileage and vert numbers, the week's run shape, and the guardrails. Every training detail moves off the title and into the body. The run shape is produced by `assist:plan-training` (its Phase 3, Week Run Shape) and written into this block when training scheduling runs in Phase 4, so a plan-week pass writes the theme and framing first, and the run shape joins the block once training runs.
 
 Confirm the theme with Forni first. Present the title and the body shape, then patch the banner via `gws` (summary and description only). If the banner does not exist yet this week, let `assist:plan-training` create it first, then set the theme.
 
@@ -103,7 +103,7 @@ Execute only the agreed changes before moving on. The calendar should be clean a
 
 ### Phase 4: Training Scheduling
 
-Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:plan-training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
+Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:plan-training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, lay out the week's run shape (days, rough distance, purpose, adapted to the block phase), and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
 
 ### Phase 5: Week Overview
 

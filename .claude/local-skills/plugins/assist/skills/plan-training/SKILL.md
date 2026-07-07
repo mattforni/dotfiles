@@ -85,11 +85,28 @@ Fetch the week's calendar events (Monday through Sunday) and check for already e
 
 If a recurring placeholder is missing, surface it to the user rather than silently creating it. The user may have skipped the session this week intentionally.
 
-### Phase 3: Friday Long Run
+### Phase 3: Week Run Shape
+
+Lay out the week's runs as a light shape, not a prescription. This is the step that turns the static weekday skeleton into an intentional week. Read the block row for the current week (weekly mileage ceiling, long run distance and vert, phase), subtract the long run to get the weekday running budget, then distribute it across the run days as a small table of **day, rough distance, purpose**.
+
+Keep purpose simple: **easy**, **pickups** (the Tue DRC sprint work), **long**, or **optional shakeout**. Do not prescribe tempo or interval workouts. The block posture is move with joy, not rigor.
+
+Shape the week to the phase:
+
+- **Build**: Mon optional easy, Tue DRC with pickups, Thu SPRC easy, Fri long. The weekday runs fill the budget under the long.
+- **Peak**: protect the long, trim weekday volume so the marquee lands fresh.
+- **Cutback or taper**: everything short and easy, weekday runs well under the build shape.
+- **Travel or recovery**: time on feet only, easy, no prescribed distances. Do not force a shape onto a week meant to be unstructured (the LA deload is the archetype).
+
+Present the shape to Forni as one small table. It is a default he can deviate from freely, never a leash. Then write it into the **week banner body** alongside the training block (see the Week theme banner convention in `assist:plan-week`), so the whole week's runs are visible in one place when he taps the banner. Do not rewrite the individual recurring DRC / SPRC events. The shape lives in the banner; the recurring blocks stay put so a run can move days without the calendar fighting it.
+
+The Friday long run (next phase) is the anchor of this shape; its distance and vert come straight from the block row.
+
+### Phase 4: Friday Long Run
 
 Run the Friday long run workflow (see Mode: long-run below). This is the primary one off creation each week.
 
-### Phase 4: Special Week Handling
+### Phase 5: Special Week Handling
 
 Check the current week number against the training plan and apply special week logic:
 
@@ -97,7 +114,7 @@ Check the current week number against the training plan and apply special week l
 - **Altitude weeks (9, 10)**: Front Range altitude (week 9) or Aspen recon (week 10). Week 10 includes a Thu drive out + overnight; surface logistics to the user before creating events.
 - **Race week (13)**: Fri 7/31 is the FPL race itself. Coordinate the race day plan as a separate workflow, not a training long run.
 
-### Phase 5: Mon Flex
+### Phase 6: Mon Flex
 
 Optional easy ~4 mi run on Mon. Energy dependent. Do not auto schedule. Surface as an option, do not create without explicit user confirmation.
 
@@ -160,6 +177,8 @@ For every planned session in the week, record actual status:
 - **Yoga, lifts, climbing, sauna, contrast therapy**: not captured in Strava. Ask the user explicitly via `AskUserQuestion` whether each happened. Batch the questions when there are several. Do not infer completion from calendar events existing.
 
 Mark each session as `✅` (hit), `❌` (missed), `↪️` (shifted), `❓` (open / status unknown), or `n/a` (not applicable this week).
+
+When the week had a planned run shape (Phase 3 of week mode, recorded in the week banner), compare actuals against that shape rather than the static skeleton. A run that landed on a different day but served its purpose is a hit, not a shift; the shape is a default, and honoring it loosely is the point.
 
 ### Phase 4: Compute the Numbers
 
