@@ -116,7 +116,19 @@ Present the rectified week at a glance, day by day. For each day show:
 
 This is a clean view of what the week actually looks like after conflicts are resolved.
 
-### Phase 6: Triage
+### Phase 6: Email Sweep
+
+Turn the inbox into tasks before triage, so email follow ups ride the same triage and slotting pass as everything else instead of living only in Gmail.
+
+1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
+2. Classify each email by the action it implies:
+   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a Todoist task. Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
+   - **Needs an actual reply**: leave it in the inbox for a proper `assist:emails` session. Note that it exists; do not draft or send replies during this phase.
+   - **No action**: skip it.
+3. Confirm each task creation with Forni before writing, one at a time, consistent with the ask before acting posture.
+4. When nothing actionable surfaces, say so in one line and continue to Triage.
+
+### Phase 7: Triage
 
 Before slotting, triage the Todoist tasks from the Schedule filter. Prune hard: the filter routinely surfaces far too many items, so default to aggressively deleting notes, deferring the non-critical, and combining duplicates rather than slotting everything. This is a collaborative pass through all tasks to:
 
@@ -125,7 +137,7 @@ Before slotting, triage the Todoist tasks from the Schedule filter. Prune hard: 
 3. **Reprioritize**: Review priorities and flag anything that looks off. Use best judgment, then confirm with the user.
 4. **Clear p4**: All p4 tasks either get bumped to a real priority or punted to the following Monday. p4 items do not get slotted into the current week.
 
-### Phase 7: Task Slotting
+### Phase 8: Task Slotting
 
 Present the remaining tasks that need scheduling. For each task, suggest a time slot based on:
 
@@ -160,11 +172,11 @@ Google Calendar is still used directly for non-task events: meetings, transition
 
 **Deferred tasks land on Monday**: When deferring tasks to next week or further out, always schedule them for the Monday of the target week. Monday is the landing zone where tasks get triaged during the planning session.
 
-### Phase 8: Meal Planning
+### Phase 9: Meal Planning
 
 With the week's events and tasks set, plan the week's food around the finalized calendar. Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch-prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed). Return here once meal planning is complete.
 
-### Phase 9: Summary
+### Phase 10: Summary
 
 After slotting is complete, present:
 
@@ -272,7 +284,7 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `~/Eudaimonia/koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
 - Worktree mechanics for planning live in Before Every Invocation and the worktree rule below. Cut and enter the `wk-<ISO week>` worktree before any Eudaimonia or homebase edits, never mid session.
 - Do not skip Phase 4 (invoke `assist:plan-training` in week mode), even when training decisions feel already made inline during rectify. The training skill carries its own gate, the previous week's retro, which has no other place to live. Surfaced 2026-05-25 when I rationalized skipping it because strength moves had been discussed during conflict resolution; Forni caught it. The retro turned up real signal (PAH as transit, PT miss, weigh-in trend) that would otherwise have stayed invisible until next Monday.
-- **Walk slotting one task at a time; never bulk-date the Schedule filter.** Phase 7 means presenting each task's proposed slot via AskUserQuestion (accept / move / defer / skip) and waiting for Forni before touching it. Do NOT batch-reschedule the whole filter onto dates in one shot and summarize after. The collaborative per-task pass *is* the process; bulk-dating erases his input and forces him to re-read and unwind it. Surfaced 2026-05-31: I rescheduled 17 filter tasks at once. Forni: "you just created a bunch of tasks and put them onto dates. That's not really how we go through the scheduling process," and "you took a lot of action without asking me. Now I've got to go back and read through your summary and readjust it."
+- **Walk slotting one task at a time; never bulk-date the Schedule filter.** Phase 8 means presenting each task's proposed slot via AskUserQuestion (accept / move / defer / skip) and waiting for Forni before touching it. Do NOT batch-reschedule the whole filter onto dates in one shot and summarize after. The collaborative per-task pass *is* the process; bulk-dating erases his input and forces him to re-read and unwind it. Surfaced 2026-05-31: I rescheduled 17 filter tasks at once. Forni: "you just created a bunch of tasks and put them onto dates. That's not really how we go through the scheduling process," and "you took a lot of action without asking me. Now I've got to go back and read through your summary and readjust it."
 - **Default to asking before acting throughout planning, not just slotting.** Bias toward confirming each change with Forni rather than executing a batch and reporting. Calendar moves, task reschedules, deferrals — present, then wait. Same-session feedback as above.
 - **Do not place training sessions before the training readjustment is done.** The Friday long run distance depends on the week's retro and any special-week adjustment, so run the training readjustment (Phase 4 / `assist:plan-training`) first, then schedule the run. Surfaced 2026-05-31: I placed an 8 mi long run before the Wk 4 retro; the readjusted number was 6 mi off the calf restart.
 - **Plan in a `wk-<ISO week>` worktree, not a shared branch.** Each planning pass runs in its own worktree (see Before Every Invocation), cut in every repo it touches: Eudaimonia for planning artifacts (schedule.md, training plan, koans) and homebase for skill or config edits. A plain shared branch is not enough. On 2026-06-14 a branch switch in another terminal moved HEAD under the session mid-plan and scattered commits onto an unrelated branch. A worktree gives the session its own working directory, so concurrent terminal activity cannot collide. All planning edits must target the worktree copy, not the main checkout. **Foot-gun: an absolute path like `~/Eudaimonia/...` resolves to the main checkout even when the session cwd is the worktree, so edits silently land on the wrong tree.** Target the worktree path (`.claude/worktrees/wk-<ISO week>/...`). If a slip happens, move it with `git -C <main> diff -- <file>` piped to `git -C <worktree> apply`, then restore main. Surfaced 2026-06-22. Supersedes the older shared branch and date stamped approaches.
