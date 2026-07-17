@@ -103,7 +103,7 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 
 ### Phase 4: Present the Full Plan in Plan Mode
 
-**Nothing writes to Atelic before this gate.** Enter plan mode and write the complete plan as readable prose: the menu table, the batch prep checklist with amounts, every Atelic write to be made (recipes to create or reuse, the plan author, shopping list changes item by item), and the shopping day. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
+**No plan artifact writes to Atelic before this gate.** (The Phase 2 pantry reconcile is the deliberate exception: it records reality, not plan decisions.) Enter plan mode and write the complete plan as readable prose: the menu table, the batch prep checklist with amounts, every Atelic write to be made (recipes to create or reuse, authoring the plan, shopping list changes item by item), and the shopping day. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
 
 ### Phase 5: Execute the Writes
 
@@ -113,7 +113,7 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
    - **Author simple assembly meals from scratch** with `name`, short `directions`, `servings`, and free-text `ingredients` lines with amounts (one per line, e.g. "2 cups cooked quinoa").
    - **Set `servings` honestly** to what the batch yields, so per-serving macros land right.
    - **Anchors are recipes too.** The breakfast bowl and shake get light recipes once, reused by link in later weeks.
-   - `create_recipe` errors if the name exists; treat as "already there" and link. New ingredients get USDA macros backfilled automatically; if nutrition comes back incomplete, tell Forni and give a hand-math estimate rather than papering over it.
+   - `create_recipe` errors if the name exists. Before linking the existing record, confirm it is actually the same dish (check its ingredients via `list_recipes`); if a different recipe wears the name, use a distinguishing name rather than linking blind. New ingredients get USDA macros backfilled automatically; if nutrition comes back incomplete, tell Forni and give a hand-math estimate rather than papering over it.
 2. **Author the plan** with `mcp__atelic__create_meal_plan` (or `update_meal_plan` if the week exists; create errors and points you at update). `unmatched_recipes` must come back empty for cooked meals; a name landing there means the recipe was not created, so create it rather than leaving the meal freeform.
 3. **Record the recipes** in `references/recipe-sources.md` under "Recipes Used": week, site (or "Claude drafted"), rating left blank.
 4. **Push the shopping list** for the store being shopped, one `mcp__atelic__add_shopping_item` per item, `store` set, quantities in the item name (lb, oz, fl oz; never "1 bag"), brand and recipe hints in `notes`. Only `needs_restock` items belong on it; flag low staples and include only what Forni confirmed. Mark single-recipe items in `notes` so they are easy to skip if a meal gets cut. Print the list in chat as the backup copy.
@@ -124,7 +124,7 @@ When Forni reports the shop is done (same session or later), write reality back 
 
 1. Ask whether everything made it into the cart or there were misses and substitutions.
 2. Check off the bought items with `mcp__atelic__update_shopping_item` (`checked_off: true`).
-3. Restore pantry levels for restocked tracked items with `mcp__atelic__update_pantry_item`; add new residents with `mcp__atelic__add_pantry_item` (set `category` and `store`; a consumable born from a recipe import defaults the category to `other`, so fix it). Skip one-shot ingredients that will be consumed within a day or two.
+3. Restore pantry levels for restocked tracked items with `mcp__atelic__update_pantry_item`; add newly tracked items with `mcp__atelic__add_pantry_item` (set `category` and `store`; a consumable born from a recipe import defaults the category to `other`, so fix it). Skip one-shot ingredients that will be consumed within a day or two.
 
 ## Shopping List in Atelic
 
@@ -142,7 +142,7 @@ The shopping list is pushed into Atelic's shopping plan with `mcp__atelic__add_s
 - `week` (ISO, e.g. `"2026-W24"`), `starts_on`, `ends_on` (Monday and Sunday, `YYYY-MM-DD`)
 - `intro` — the short one-line summary of the week
 - `target_calories`, `target_protein`, `target_carbs`, `target_fat` — the daily macro target snapshot (from README)
-- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and a `recipe_name` linking the recipe created in Phase 5 (macros and ingredients come through automatically). Only genuinely uncooked slots use a freeform `description` (leftovers, social, out) with optional per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat`. Optional `context` (e.g. `"lift, DRC"`).
+- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and a `recipe_name` linking the recipe created or reused in Phase 5 (macros and ingredients come through automatically). Only genuinely uncooked slots use a freeform `description` (leftovers, social, out) with optional per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat`. Optional `context` (e.g. `"lift, DRC"`).
 - `batch_prep_steps` — the Sunday/midweek prep checklist. Each has a `description` and an optional `target_day` label (e.g. `"Sunday"`).
 
 Call out macro gaps to Forni in chat (e.g., "Fat is ~7g under target; add extra tahini or nuts"), the same way the old plan notes did.
