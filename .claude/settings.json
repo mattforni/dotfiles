@@ -215,6 +215,11 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/merge-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/worktree-gate.sh",
+            "timeout": 10
           }
         ]
       }
