@@ -59,6 +59,7 @@ Delegate matching work to the user level agent roster in `~/.claude/agents/` pro
 
 ## Workflow Conventions
 
+- **Work in worktrees, not primary checkouts.** Before modifying any tracked repo, enter a dedicated worktree for the session (EnterWorktree) instead of operating on the primary checkout, so concurrent sessions cannot collide. Deliberate landing steps (merging, pulling main, deleting a merged branch) are the exception and happen on the primary checkout. Enforced by the worktree gate hook (`~/.claude/hooks/worktree-gate.sh`), which injects a reminder when a mutating git command targets a primary checkout. Worktree mechanics and gotchas live in `~/Eudaimonia/Admin/tools/github.md`.
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
 
