@@ -97,7 +97,9 @@ Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-
 
 ## Macro Rules
 
-(none yet)
+- **Every batch prep step ends with a portion card: total cooked yield in grams and grams per container.** The container is the unit of account; one box equals one meal slot with known macros. Portioning happens by weight at the end of the Sunday cook (weigh the batch, divide by box count, tare each box and fill), never by eyeball during the week.
+  - Why: Forni identified on 2026-07-16 that the missing link between batch cooking and hitting macros is the portioning moment ("how much is what"). Deciding portions once at prep time is what makes the rest of the week autopilot.
+  - How to apply: size every batch recipe to a whole number of containers and set `servings` to that number so per-serving macros match one box. In `batch_prep_steps`, each step's description carries the divide line, e.g. "Cook 1.5 cups dry quinoa, yields ~830g cooked, 165g per box." For component bowls, give per-box grams for each component. The final prep step is always filling and stacking the boxes.
 
 ## Plan Format Rules
 
