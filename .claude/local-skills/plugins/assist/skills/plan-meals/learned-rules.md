@@ -19,6 +19,14 @@ Corrections and preferences specific to meal planning. Read on every invocation.
 - **Thursday "Kitchen Cruising" with Ross is an optional social cooking event**, not a fixed commitment. Don't reorganize the meal plan around it; plan a normal Thursday dinner and let Forni flex if the event is on.
   - Why: Forni clarified on 2026-04-17 that it's a "fun cooking" thing with Ross, not required.
 
+- **The menu is a conversation, not a deliverable.** Start from what is in season (read `seasons.md`), ask which seasonal anchors appeal, source 2 or 3 candidate recipes per anchor from the approved sites, verify them against the house rules, and walk the choices with Forni one question at a time. Never compose a finished menu and present it for a yes or no.
+  - Why: On 2026-07-16 the first W29 draft was composed, authored, and pushed to Atelic in one motion. Forni pulled it back: "can we discuss the menu before you just make decisions on my behalf." The walking of options IS the value, not overhead.
+  - How to apply: Phase 3 is a dialogue: seasonal anchors first, then sourced options with links, then his picks, then protein and macro audit on the picks. Only then does a full plan exist to present.
+
+- **Plan mode gate: present the complete plan and get approval before ANY Atelic write.** No recipe creation, no meal plan author, no shopping list push until Forni has approved the full picture (menu, prep with amounts, every Atelic write, shopping list changes) through plan mode.
+  - Why: Forni asked for this explicitly on 2026-07-16 ("switch into planning mode and present it") after the first draft went to Atelic without a review gate. An AskUserQuestion answer about one slot is not plan approval.
+  - How to apply: after the menu conversation lands, enter plan mode, write the full plan (readable prose, amounts everywhere), and exit plan mode for approval. Execute only after the green light.
+
 ## Shopping Rules
 
 - **All bulk dry goods come from Sprouts, not Costco.** Beans (black, kidney, adzuki), rice (white basmati, brown short grain), lentils (green, red), quinoa, and similar bulk items live in the Sprouts bulk bin section.
@@ -51,9 +59,9 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: Forni rejected the W21 draft on 2026-05-15 with "way too much variety." He had asked for fun food but the response (bourguignon + risotto + bibimbap + pad thai + soba) was over indexed.
   - How to apply: pick one or two centerpiece dinners per week. The rest is batch prep variations (bowls, stir fry, leftovers). Specialty ingredient purchases should support the centerpiece, not five different cuisines.
 
-- **Forni is experimenting with blender based soups in 2026.** He bought an immersion blender on 2026-04-17 and wants to try pureed soups. Brothy chunky soups remain unappealing; lean toward silky pureed varieties that showcase the blender.
-  - Why: Reversed the earlier "no soup" rule the same day he stated it, specifically because of the new blender.
-  - How to apply: propose pureed soups when spring/fall seasonality supports it (asparagus, pea, leek, cauliflower, broccoli, butternut). Avoid chunky minestrones, chilis, and brothy bean soups unless explicitly requested.
+- **No soups, hot or cold.** Not a soup fan in general; gazpacho and other chilled soups included.
+  - Why: Stated 2026-07-16 when gazpacho was offered as a summer blender showcase. This REVERSES the 2026-04-17 blender soup experiment rule that used to live here; do not resurrect it.
+  - How to apply: do not propose soups of any kind (pureed, chunky, brothy, chilled) unless Forni explicitly asks. The immersion blender earns its keep on sauces, dressings, and salsas instead.
 
 - **No bananas.** Forni does not eat them, anywhere.
   - Why: Forni said so on 2026-04-17.

@@ -38,6 +38,12 @@ Appended automatically when a plan introduces a new recipe. Forni fills in the r
 | 2026-W26 | Crispy Tofu & Summer Squash Bowl over Quinoa | — (Claude drafted, no site source) | | Travel week cook 1. Lemon + olive oil dressing |
 | 2026-W26 | Burst Tomato & White Bean Skillet over Quinoa | — (Claude drafted, no site source) | | Travel week cook 2. One pot, no pasta |
 | 2026-W26 | Black Bean Tacos with Cabbage Slaw | — (Claude drafted, no site source) | | Travel week cook 3. Seasonal slaw, no corn |
+| 2026-W29 | Kimchi Fried Rice with Crispy Tofu | — (Claude drafted, no site source) | | Draft scrapped before cooking; kept in library for a future week (kimchi stocked) |
+| 2026-W29 | Burst Tomato and White Bean Skillet over Quinoa | — (Claude drafted, no site source) | | Draft scrapped before cooking; kept in library |
+| 2026-W29 | Refried Bean Burritos | — (Claude drafted, no site source) | | Five minute pantry lunch: tortillas, refried beans, 505 salsa |
+| 2026-W29 | Peanut Butter Date Oatmeal | — (Claude drafted, no site source) | | Draft scrapped; kept in library as a bare fridge fallback |
+| 2026-W29 | Lentil and Couscous Stuffed Peppers | Cookie and Kate (adapted) | | Feta swapped for kalamata olives, lentils bumped to 1.5 cups dry. Cook Night centerpiece |
+| 2026-W29 | Black Bean Tacos with Grilled Peach Salsa | Cookie and Kate (salsa adapted) | | Peaches grilled before dicing, TVP simmered into the beans. Stone fruit centerpiece |
 
 ## Favorites
 
