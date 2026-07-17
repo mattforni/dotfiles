@@ -66,7 +66,7 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
 - **Macro anchored.** The daily target is 2,112 cal / 118g P / 257g C / 68g F. The shake handles ~32g of protein and ~225 cal. The remaining three meals should roughly split the rest as laid out in README.
 - **Realistic for the week.** Social events, travel, and team lunches eat meals. Do not prep for meals that will not happen.
 - **Repeatable, not boring.** Repeating a lunch twice in a week is fine (batch prep reality). Three or four times in a row is a trap; rotate a second lunch option in.
-- **Recipe backed, not hand waved.** Every real cooked meal links to a Recipe with actual ingredients, amounts, and directions, so Forni can open it and cook it and the macros are computed rather than guessed. If a recipe does not exist yet, create it (Phase 3b). Reserve freeform text and estimated macros for genuinely uncooked slots (Social, Out, Leftovers).
+- **Recipe backed, not hand waved.** Every real cooked meal links to a Recipe with actual ingredients, amounts, and directions, so Forni can open it and cook it and the macros are computed rather than guessed. If a recipe does not exist yet, create it (Phase 5). Reserve freeform text and estimated macros for genuinely uncooked slots (Social, Out, Leftovers).
 
 ## The Plan Flow
 
@@ -78,7 +78,7 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
    - Social dinners (restaurants, invited events)
    - Out of town travel
    - Any other eating-out anchors the calendar shows; confirm these against the calendar each run rather than assuming a weekly pattern
-4. Note which shopping day is likely this week. Default assumption: Sprouts run after High Noon on Wednesday or Friday. Confirm with Forni if the calendar makes it unclear.
+4. Confirm the shopping day with Forni rather than assuming it. The Sprouts run after High Noon on Wednesday or Friday is a hint for reading the calendar, not a default; shop days move (2026-07-16's run was a Thursday afternoon).
 
 Present the week back as a simple list of planned vs skipped meal slots. Ask Forni if anything is missing before continuing.
 
@@ -91,69 +91,40 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 3. Write the reconciliation back immediately with `mcp__atelic__update_pantry_item` (level up survivors, 0 for gone), `mcp__atelic__add_pantry_item` for new items, and `mcp__atelic__remove_pantry_item` for ones no longer tracked, so the rest of the flow reads accurate data. When zeroing, route each out item to its store (or remove it); a storeless `needs_restock` item pollutes every store's shopping view (see Pantry Rules).
 4. Then surface restock candidates (staple + `needs_restock`, anything "low" in `notes`) for items used heavily week to week (tofu, soy milk, kimchi, hummus, greens, lentils, rice, oats) and confirm before adding to the shopping list
 
-### Phase 3: Draft the Plan
+### Phase 3: Choose the Menu Together
 
-1. Discover existing recipes to build on with `mcp__atelic__list_recipes` (optionally a name `query`). A meal that links to a real recipe carries its ingredients, amounts, directions, and computed macros automatically, so prefer reusing what already exists, especially recipes Forni has rated.
-2. Build the plan's content (this maps onto the Meal Plan Shape authored in Phase 5):
-   - Daily macro budget (from README)
-   - Meal structure (7:30 to 18:30 IF window)
-   - Batch prep steps (grains/legumes, proteins, vegetables, sauces), each **with amounts** (e.g. "Cook 1.5 cups dry quinoa", not "Cook a big batch")
-   - Daily meals: an all-week breakfast and an all-week shake (PLNT v2 + soy milk, counted in the macro budget), then lunch and dinner per day, each backed by a recipe (see Phase 3b)
-3. For meals skipped on social days, give the meal a freeform description like "Social" or the event name rather than leaving it out.
-4. Repeat lunches up to twice per week. Keep breakfast mostly consistent (batch prep reality). Dinners vary more.
-5. Cross-check the draft against the Food Preferences section in learned-rules.md before presenting: nothing on a dislike/avoid list, honor grain and ingredient preferences, and do not buy items he already owns in quantity. When Forni states a new like, dislike, avoid food, or allergy at any point during planning, append it to that section, following the same Why / How to apply sub-bullet structure as the other rules, so the next plan inherits it.
+**The menu is a conversation, not a deliverable.** Never compose a finished week and present it for a yes or no; the walking of options IS the value. Work in rounds, one question at a time:
 
-Present the draft plan inline before authoring it. Let Forni redirect before committing to building recipes and the shopping list.
+1. **Start from the season.** Read `Constitution/Nutrition/seasons.md` and present the month's board (minus standing dislikes from learned-rules.md) as pickable anchors. Ask which appeal.
+2. **Source candidates on the picked anchors.** Check the library first with `mcp__atelic__list_recipes` (prefer rated repeats), then find 2 or 3 candidates per anchor on the preferred sites (WebSearch scoped to those domains). Verify each with WebFetch against the house rules (plant based, no alcohol, no corn, no pasta, no soups, everything in Food Preferences) before showing it; report casualties ("SVB's version has corn, it's out") so the vetting is visible.
+3. **Present the board with links** (hyperlink the recipe names) and let Forni pick the centerpieces. One or two centerpieces per week; the rest is batch variations and leftovers.
+4. **Audit the picks.** Protein and macro math on the chosen menu against the daily targets, with concrete boosts offered (extra lentils, TVP in the taco beans) rather than silently applied.
+5. **Slot the picks into the framed week.** Repeat lunches up to twice; breakfast mostly constant; social days get a freeform "Social" slot rather than being left out. Batch prep steps carry amounts (e.g. "Cook 1.5 cups dry quinoa", never "a big batch"). When Forni states a new like, dislike, avoid food, or allergy at any point, append it to Food Preferences in learned-rules.md with the Why / How to apply structure so the next plan inherits it.
 
-### Phase 3b: Back Every Real Meal With a Recipe
+### Phase 4: Present the Full Plan in Plan Mode
 
-Before authoring the plan, make sure every cooked meal points at a Recipe, so the plan links by `recipe_name` (not freeform text with guessed macros). Work through the draft's lunches and dinners (and the breakfast and shake anchors). For each:
+**No plan artifact writes to Atelic before this gate.** (The Phase 2 pantry reconcile is the deliberate exception: it records reality, not plan decisions.) Enter plan mode and write the complete plan as readable prose: the menu table, the batch prep checklist with amounts, every Atelic write to be made (recipes to create or reuse, authoring the plan, shopping list changes item by item), and the shopping day. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
 
-1. **Reuse if it exists.** If `list_recipes` already has a good match, link to it by name; nothing to create.
-2. **Import a real dish from a trusted source.** For something cookable Forni would follow steps for (an enchilada bake, a curry, a skillet), find a specific recipe URL on a preferred site (see recipe-sources.md; use WebSearch scoped to those domains, WebFetch to sanity check it is plant based and a fit), then call `mcp__atelic__create_recipe` with that `url`. The API reads the page's recipe data and fills ingredients, amounts, and directions. Prefer the preferred sites; verify plant based before importing.
-3. **Author a simple assembly meal from scratch.** For a grain bowl, salad, or other "components plus a dressing" meal, call `mcp__atelic__create_recipe` with `name`, a short `directions` (the assembly), `servings`, and `ingredients` as free-text lines with amounts (one per line, e.g. "2 cups cooked quinoa"). The API parses the lines into ingredients and resolves the consumables.
-4. **Set `servings` honestly.** Use the number of servings the batch yields (a big-batch enchilada bake that covers four dinners is `servings: 4`), so per-serving macros land right.
-5. **Anchors are recipes too.** Create light recipes for the breakfast bowl and the shake once (with portions), so even breakfast states its amounts; reuse them by linking in later weeks.
+### Phase 5: Execute the Writes
 
-Notes:
-- `create_recipe` errors if a recipe with that name already exists, pointing at the existing record. Treat that as "already there" and link to it instead.
-- New ingredients get real macros backfilled from USDA automatically. If a recipe comes back with incomplete nutrition, the panel will say so; mention it to Forni rather than papering over it with an estimate.
-- Record each imported or authored recipe in `references/recipe-sources.md` under "Recipes Used" (Phase 5), with the source site or "Claude drafted" for scratch builds.
+1. **Back every real meal with a recipe** so the plan links by `recipe_name` (not freeform text with guessed macros). For each cooked meal and anchor:
+   - **Reuse if it exists.** If `list_recipes` already has a good match, link by name; nothing to create.
+   - **Import a real dish from a trusted source** by calling `mcp__atelic__create_recipe` with the vetted `url` from Phase 3; the API reads the page's recipe data. When the plan adapts the dish (feta swapped out, protein bumped), author from scratch instead with the adaptations baked in, crediting the site, so the computed macros match what actually gets cooked.
+   - **Author simple assembly meals from scratch** with `name`, short `directions`, `servings`, and free-text `ingredients` lines with amounts (one per line, e.g. "2 cups cooked quinoa").
+   - **Set `servings` honestly** to what the batch yields, so per-serving macros land right.
+   - **Anchors are recipes too.** The breakfast bowl and shake get light recipes once, reused by link in later weeks.
+   - `create_recipe` errors if the name exists. Before linking the existing record, confirm it is actually the same dish (check its ingredients via `list_recipes`); if a different recipe wears the name, use a distinguishing name rather than linking blind. New ingredients get USDA macros backfilled automatically; if nutrition comes back incomplete, tell Forni and give a hand-math estimate rather than papering over it.
+2. **Author the plan** with `mcp__atelic__create_meal_plan` (or `update_meal_plan` if the week exists; create errors and points you at update). `unmatched_recipes` must come back empty for cooked meals; a name landing there means the recipe was not created, so create it rather than leaving the meal freeform.
+3. **Record the recipes** in `references/recipe-sources.md` under "Recipes Used": week, site (or "Claude drafted"), rating left blank.
+4. **Push the shopping list** for the store being shopped, one `mcp__atelic__add_shopping_item` per item, `store` set, quantities in the item name (lb, oz, fl oz; never "1 bag"), brand and recipe hints in `notes`. Only `needs_restock` items belong on it; flag low staples and include only what Forni confirmed. Mark single-recipe items in `notes` so they are easy to skip if a meal gets cut. Print the list in chat as the backup copy.
 
-### Phase 4: Shopping List
+### Phase 6: Close the Loop After the Shop
 
-The shopping list is the primary artifact. Group by section and store.
+When Forni reports the shop is done (same session or later), write reality back so next week's Phase 2 reconcile starts nearly true:
 
-```
-## Shopping List
-
-### Sprouts (Wed or Fri after High Noon)
-#### Produce
-- [ ] Asparagus, 1 bunch
-...
-#### Refrigerated
-...
-
-### Costco (if due for a run)
-...
-
-### Already Stocked (from list_pantry)
-...
-```
-
-Rules for the list:
-- Only items that need restocking go in the store-specific sections. From `list_pantry`, an item needs buying when `needs_restock` is true; items above their restock threshold are already on hand and belong under "Already Stocked"
-- Flag staples that are low (`needs_restock` true, or "low" in `notes`) and include them if Forni confirms
-- Use the brand stored on the underlying Consumable where one is specified
-- Separate produce by grocery section for efficient store flow (leafy greens, alliums, roots, fruits, etc.)
-- Put anything that is specific to a single recipe in a `recipe specific` subsection so it's easy to skip if Forni decides to cut that meal
-
-### Phase 5: Save and Record
-
-1. Author the plan into Atelic with `mcp__atelic__create_meal_plan` (or `mcp__atelic__update_meal_plan` if a plan for that week already exists; the create tool will error if it does, pointing you at update). See the Meal Plan Shape section for the arguments. Because every real meal got a recipe in Phase 3b, the tool's `unmatched_recipes` should now come back empty for cooked meals; if a name does land there, it means the recipe was not created, so go back and create it rather than leaving the meal freeform. Genuinely uncooked slots (Social, Out) are expected to have no recipe.
-2. Append the recipes created or imported this week to `references/recipe-sources.md` under "Recipes Used" with week, site (or "Claude drafted" for scratch builds), and rating left blank (Forni fills the rating in later).
-3. Push the primary shopping list (the store being shopped today) into Atelic, one `mcp__atelic__add_shopping_item` call per item, setting `store` and any brand/quantity hint in `notes`. Items for other stores (e.g., a Costco next run) can be added with their own `store` or left for that run.
-4. Print the shopping list in chat as a preview and backup.
+1. Ask whether everything made it into the cart or there were misses and substitutions.
+2. Check off the bought items with `mcp__atelic__update_shopping_item` (`checked_off: true`).
+3. Restore pantry levels for restocked tracked items with `mcp__atelic__update_pantry_item`; add newly tracked items with `mcp__atelic__add_pantry_item` (set `category` and `store`; a consumable born from a recipe import defaults the category to `other`, so fix it). Skip one-shot ingredients that will be consumed within a day or two.
 
 ## Shopping List in Atelic
 
@@ -171,7 +142,7 @@ The shopping list is pushed into Atelic's shopping plan with `mcp__atelic__add_s
 - `week` (ISO, e.g. `"2026-W24"`), `starts_on`, `ends_on` (Monday and Sunday, `YYYY-MM-DD`)
 - `intro` — the short one-line summary of the week
 - `target_calories`, `target_protein`, `target_carbs`, `target_fat` — the daily macro target snapshot (from README)
-- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and a `recipe_name` linking the recipe created in Phase 3b (macros and ingredients come through automatically). Only genuinely uncooked slots use a freeform `description` (leftovers, social, out) with optional per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat`. Optional `context` (e.g. `"lift, DRC"`).
+- `meals` — one entry per slot. Each has a `slot` (`breakfast` / `shake` / `lunch` / `dinner`), an optional `day` (`monday`..`sunday`; omit or null to mean every day, e.g. a constant breakfast), and a `recipe_name` linking the recipe created or reused in Phase 5 (macros and ingredients come through automatically). Only genuinely uncooked slots use a freeform `description` (leftovers, social, out) with optional per-slot `est_calories`/`est_protein`/`est_carbs`/`est_fat`. Optional `context` (e.g. `"lift, DRC"`).
 - `batch_prep_steps` — the Sunday/midweek prep checklist. Each has a `description` and an optional `target_day` label (e.g. `"Sunday"`).
 
 Call out macro gaps to Forni in chat (e.g., "Fat is ~7g under target; add extra tahini or nuts"), the same way the old plan notes did.
