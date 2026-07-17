@@ -35,7 +35,7 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
 
 ## Agent Fan Out Defaults
 
-Delegate matching work to the user level agent roster in `~/.claude/agents/` proactively, without waiting for explicit invocation. When a task in front of you matches an agent's description, dispatch to it rather than doing the work inline: multi subsystem recon fans out to explore instances in parallel, claims and fresh changes get a skeptic pass, test and build runs go to runner, mechanical multi file sweeps go to migrator instances with non overlapping file ownership, and web research goes to researcher. Cap concurrent migrator writers at three; read only agents can fan wider. Agents return summaries with pointers, never transcripts. This does not override the rule against unprompted exploration; it governs how requested work gets executed, not whether to start work.
+Delegate matching work to the user level agent roster in `~/.claude/agents/` proactively, without waiting for explicit invocation. When a task matches an agent's description, dispatch to it rather than doing the work inline. Multi subsystem recon fans out to explore instances in parallel. Claims and fresh changes get a skeptic pass. Test and build runs go to runner. Mechanical multi file sweeps go to migrator instances with non overlapping file ownership. Web research goes to researcher. Cap concurrent migrator writers at three; read only agents can fan wider. Agents return summaries with pointers, never transcripts. This does not override the rule against unprompted exploration; it governs how requested work gets executed, not whether to start work.
 
 ## Bash Commands
 
