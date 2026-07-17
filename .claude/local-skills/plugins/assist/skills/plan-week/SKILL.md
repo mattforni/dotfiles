@@ -123,7 +123,7 @@ Turn the inbox into tasks before triage, so email follow ups ride the same triag
 1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
    - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a Todoist task. Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
-   - **Needs an actual reply**: leave it in the inbox for a proper `assist:emails` session. Note that it exists; do not draft or send replies during this phase.
+   - **Needs an actual reply**: leave it in the inbox for a proper `assist:triage-inbox` session. Note that it exists; do not draft or send replies during this phase.
    - **No action**: skip it.
 3. Confirm each task creation with Forni before writing, one at a time, consistent with the ask before acting posture.
 4. When nothing actionable surfaces, say so in one line and continue to Triage.

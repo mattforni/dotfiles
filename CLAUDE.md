@@ -21,6 +21,8 @@ Use semver:
 - **Minor** (`2.2.1` to `2.3.0`): new skill, new command, new hook, new public surface area.
 - **Major** (`2.2.1` to `3.0.0`): breaking change to a skill's contract, argument shape, or removed surface.
 
+**Renaming a skill is always a major bump.** A rename removes the old invocation surface (`assist:oldname` stops resolving), so it is a breaking change by definition regardless of how much the body changed. Renaming also has a blast radius beyond the version fields: the skill directory, its `name:` frontmatter, the `skills` array entry in `marketplace.json`, and every cross-reference in other skills or docs (`grep` for the old `assist:<name>`) must all move together in the same change.
+
 Top-level repo files (`CLAUDE.md`, `README.md`, `.gitconfig`, `.aliases`, etc.) do **not** trigger a plugin version bump because they live outside any plugin directory.
 
 ## Installation
