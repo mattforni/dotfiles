@@ -84,7 +84,8 @@ Do not act or present a bulk plan in this phase. Prep only.
 Execute label/star/archive changes with `modify` (pass the full star set in `removeLabelIds` when archiving, per the governing star rule):
 
 ```bash
-gws gmail users messages modify --params '{"userId":"me","id":"<ID>"}' --json '{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX","UNREAD"]}' 2>&1 | grep -v "^Using"
+# Archiving strips the full star set (STARRED plus the colored-star system labels), per the governing star rule.
+gws gmail users messages modify --params '{"userId":"me","id":"<ID>"}' --json '{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX","UNREAD","STARRED","YELLOW_STAR","GREEN_STAR","RED_STAR"]}' 2>&1 | grep -v "^Using"
 ```
 
 ### Follow-ups (Todoist)
