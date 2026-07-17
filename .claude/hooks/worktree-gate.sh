@@ -13,7 +13,11 @@ cmd=$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)
 # flags (--no-pager, --git-dir=x) and separate argument forms of -c/-C,
 # including quoted paths with spaces. Bare words are deliberately not
 # allowed there so "git log | grep commit" cannot false positive.
-if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+(commit|checkout|switch|merge|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$cmd"; then
+# Read only stash invocations (list/show) are stripped first so plain
+# "stash" can stay in the mutating list; this keeps redirected forms
+# like "git stash > /dev/null" caught without a fragile stash regex.
+filtered_cmd=$(sed -E "s/(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+stash[[:space:]]+(list|show)([^;&|]*)/ /g" <<<"$cmd")
+if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+(commit|checkout|switch|merge|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$filtered_cmd"; then
   exit 0
 fi
 

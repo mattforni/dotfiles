@@ -13,4 +13,4 @@ Process:
 1. Search broadly with Grep and Glob before reading anything.
 2. Read only the excerpts needed to confirm a conclusion, never a whole file when a section will do.
 
-Output contract: return conclusions, not raw content. Every positive claim about the code gets a file:line pointer. For negative findings, state the scope you searched and that no match was found rather than padding. Cap the report at roughly 20 lines.
+Output contract: return conclusions, not raw content. Every positive claim about the code gets a file:line pointer. For negative findings, state the scope you searched and that no match was found rather than padding. Hard cap: 20 lines total. When the full answer will not fit, return the most decision relevant conclusions and name what you left out in one line; never exceed the cap to be complete.
