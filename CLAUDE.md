@@ -149,6 +149,8 @@ The desired array supports both stdio and http transports. For http entries that
 
 **CodeRabbit is the sole review bot on `mattforni/homebase`** (as of 2026-07-17). Gemini Code Assist also reviewed here until that date, when Google sunset the consumer GitHub app; its final review landed on PR #130 the same day, and `/gemini review` triggers in older notes are historical. Google's paid Gemini Code Assist tiers are a separate product and are not in use. CodeRabbit posts a `coderabbitai` check suite and a `CodeRabbit` commit status within seconds of a PR opening, so it is detectable before it reviews. After addressing its feedback and pushing fixes, the "Changes requested" status stays stale until it re-reviews; if all comments are addressed, dismiss the stale review via `gh api -X PUT repos/{owner}/{repo}/pulls/{pr}/reviews/{review_id}/dismissals -f message="All changes addressed"` or in the GitHub UI. It does not re-review on a bare push; trigger it with `@coderabbitai review`. Triage guidance lives in GC's Code Review section.
 
+**Do not wait on CodeRabbit when it is in its rate-limit cooldown.** CodeRabbit enforces a per-developer PR review limit; when hit, it posts a "Review limit reached" comment with a cooldown (often ~30 to 40 minutes) in place of a real review, and its `CodeRabbit` commit status can still read "Review completed" even though no review ran. Treat a cooldown as no review available, not as pending feedback. When landing (`sdlc:land`), bypass it: proceed on CI, any other available review, and your own read rather than blocking on the cooldown window. Paying for usage-based reviews to skip the wait is the user's call, never assumed.
+
 ## Development Workflow
 
 1. Edit files in this repository
