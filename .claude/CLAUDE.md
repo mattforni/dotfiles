@@ -46,11 +46,11 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
   #!/usr/bin/env bash
   set -euo pipefail
   cd "$HOME/Eudaimonia/Craft/atelic/api"
-  # rbenv shims read the project's .ruby-version automatically once cd'd in.
-  command -v rbenv >/dev/null && eval "$(rbenv init - bash)"
+  # Shims on PATH is all rbenv needs; they read .ruby-version from cwd.
+  export PATH="$HOME/.rbenv/shims:$PATH"
   exec "$@"
   ```
-  Then call `bash /tmp/in-api.sh bundle exec rspec ...`. **Durable form:** project-local `bin/in-repo` scripts checked into the repo (preferred for long-lived projects). **Ephemeral form:** `/tmp/in-*.sh` written per session as the fallback when no project-local script exists yet.
+  Then call `bash /tmp/in-api.sh bundle exec rspec ...`. **Do not run `rbenv init` in the wrapper:** its `rbenv rehash` step writes to the shims directory, which the sandbox denies, and under `set -e` the whole script dies with zero output (exit 1, nothing on stderr). Exporting the shims PATH directly does everything the wrapper needs. (Bit on 2026-07-16; the failure is silent and maddening to trace.) **Durable form:** project-local `bin/in-repo` scripts checked into the repo (preferred for long-lived projects). **Ephemeral form:** `/tmp/in-*.sh` written per session as the fallback when no project-local script exists yet.
 - **Use the Monitor tool for long waits, not Bash sleep.** For CI checks, deploy polling, and any "wait until state X" flow, use Monitor with an `until <check>; do sleep N; done` loop. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes instead of at poll interval granularity.
 
 ## Workflow Conventions
@@ -141,6 +141,7 @@ When creating new Linear tickets:
 
 ## Email Preferences
 
+- **Two sender identities, routed by audience.** Email to another human (outreach, replies, correspondence) goes through gws as Forni. Email whose recipient is Forni himself (agent reports, review docs, session artifacts, notifications) sends from `Claude <claude@atelic.me>` via Resend, so the inbox shows who it came from instead of a from me / to me self-send. Mechanics and the shared library live in `~/Eudaimonia/Admin/tools/resend.md`.
 - Subject lines should use Title Case (see Writing Style)
 - Never explicitly sign emails (Gmail handles signatures automatically)
 - End emails with "Cheers and chat soon!"
