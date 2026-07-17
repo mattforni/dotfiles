@@ -30,7 +30,7 @@ if printf '%s' "$CMD" | grep -qE 'gh[[:space:]]+pr[[:space:]]+merge'; then
   jq -n '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
-      additionalContext: "Merge gate (GROW-316): before merging, confirm the review bot (gemini-code-assist / CodeRabbit) has reviewed the CURRENT head SHA and that CI is green. Re-review is NOT automatic on later pushes — request it with a `/gemini review` PR comment and wait for the fresh review. Green CI alone is not sufficient. Prefer driving merges through /sdlc:land, which polls for the bot review on HEAD via Monitor and bails to you on human review or CI failure."
+      additionalContext: "Merge gate (GROW-316): before merging, confirm CodeRabbit has reviewed the CURRENT head SHA and that CI is green. Re-review is NOT automatic on later pushes — request it with an `@coderabbitai review` PR comment and wait for the fresh review. Green CI alone is not sufficient. Prefer driving merges through /sdlc:land, which polls for the bot review on HEAD via Monitor and bails to you on human review or CI failure."
     }
   }'
 fi
