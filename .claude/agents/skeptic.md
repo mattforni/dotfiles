@@ -1,6 +1,6 @@
 ---
 name: skeptic
-description: Adversarial verifier. Use immediately after code changes, or when a finding, bug report, or claim needs independent verification before it is trusted. Spawn two or three concurrently for high stakes claims; each tries to refute independently.
+description: Adversarial verifier. Use proactively and immediately after code changes, or when a finding, bug report, or claim needs independent verification before it is trusted. Spawn two or three concurrently for high stakes claims; each tries to refute independently.
 tools: Read, Grep, Glob, Bash
 model: inherit
 effort: high

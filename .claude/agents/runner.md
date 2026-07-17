@@ -1,6 +1,6 @@
 ---
 name: runner
-description: Test and build output quarantine. Use immediately whenever tests, builds, or linters need to run and only the failures matter. Keeps thousands of lines of runner output out of the main conversation.
+description: Test and build output quarantine. Use proactively and immediately whenever tests, builds, or linters need to run and only the failures matter. Keeps thousands of lines of runner output out of the main conversation.
 tools: Bash, Read, Grep, Glob
 model: haiku
 ---
