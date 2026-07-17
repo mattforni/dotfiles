@@ -181,6 +181,12 @@ Output:
 - Subject is always `[<Routine>] YYYY-MM-DD` regardless of status. Status
   and any failure reason live in the body so the inbox stays calm and date
   sortable; filter to a Gmail label by routine prefix.
+- **The bracketed routine tag is load bearing** (2026-07-17): Gmail filters
+  archive report mail by subject tag while interactive claude@atelic.me mail
+  (review asks, anything needing action) stays in the inbox. When adding a
+  new routine, add its `[Tag]` to the archive filter's subject terms, and
+  never give an interactive email a bracketed subject prefix. Full
+  convention: `~/Eudaimonia/Admin/tools/resend.md`.
 - Body: status heading, optional reason note, `<pre>` block with the
   skill's `.result` text (HTML escaped), metadata table (duration, cost,
   turns, exit code, session id).
