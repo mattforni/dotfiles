@@ -2,8 +2,9 @@
 
 Build recurring `claude -p` automations that run on launchd, survive sleep, auth
 from Keychain, and fail visibly. Based on the 2026-04-23 implementation of
-L7 mise; see Eudy's `LEVELS.md` and homebase's `bin/run-mise` +
-`launchagents/com.mattforni.mise.plist` for a live example.
+L7 mise; see Eudy's `LEVELS.md` and homebase's `bin/run-mise` for the reference
+implementation. (The scheduled mise plist was retired 2026-07-16; `run-mise`
+remains for manual runs and as the template for new routines.)
 
 ## When to use this pattern
 
@@ -203,6 +204,7 @@ predicate. Email path is reused unchanged.
 
 - `claude --help` for current flag list
 - `launchd.plist(5)` and `security(1)` man pages
-- L7 mise source: `homebase/bin/run-mise`, `homebase/launchagents/*.plist`,
-  `homebase/setup.sh`'s `install_launchagents` phase
+- L7 mise source: `homebase/bin/run-mise`, `homebase/setup.sh`'s
+  `install_launchagents` phase (no plists are tracked today; the mise
+  plist was retired 2026-07-16)
 - Resend API: https://resend.com/docs/api-reference/emails/send-email
