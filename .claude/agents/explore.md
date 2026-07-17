@@ -1,6 +1,6 @@
 ---
 name: explore
-description: Fast, cheap codebase reconnaissance. Use immediately when a question spans multiple files, directories, or subsystems and only conclusions are needed. Safe to fan out several instances concurrently, one per subsystem or search angle.
+description: Fast, cheap codebase reconnaissance. Use proactively and immediately when a question spans multiple files, directories, or subsystems and only conclusions are needed. Safe to fan out several instances concurrently, one per subsystem or search angle.
 tools: Read, Grep, Glob
 model: haiku
 effort: low

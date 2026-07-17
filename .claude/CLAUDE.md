@@ -33,6 +33,10 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
 - Do not overstate or exaggerate the quality of results. If something looks like it works but has not been thoroughly validated, say so. Let the user judge quality.
 - **Verify transformed outputs before publishing them.** When the work involves a transform (cropping, rotating, OCR, merging, format conversion) and the destination is shared (Drive upload, email attachment, content replacement), spot check the result before pushing it out. Read the produced file or render a preview. A 5 second visual check catches mistakes that are awkward to undo once published.
 
+## Agent Fan Out Defaults
+
+Delegate matching work to the user level agent roster in `~/.claude/agents/` proactively, without waiting for explicit invocation. When a task matches an agent's description, dispatch to it rather than doing the work inline. Multi subsystem recon fans out to explore instances in parallel. Claims and fresh changes get a skeptic pass. Test and build runs go to runner. Mechanical multi file sweeps go to migrator instances with non overlapping file ownership. Web research goes to researcher. Cap concurrent migrator writers at three; read only agents can fan wider. Agents return summaries with pointers, never transcripts. This does not override the rule against unprompted exploration; it governs how requested work gets executed, not whether to start work.
+
 ## Bash Commands
 
 - **Never use `cd` in Bash tool calls.** Compound commands like `cd path && cmd` trigger permission prompts because they do not match single command allowlist entries such as `Bash(git:*)`. Use path aware flags instead:
