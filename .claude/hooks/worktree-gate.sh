@@ -13,7 +13,9 @@ cmd=$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)
 # flags (--no-pager, --git-dir=x) and separate argument forms of -c/-C,
 # including quoted paths with spaces. Bare words are deliberately not
 # allowed there so "git log | grep commit" cannot false positive.
-if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+(commit|checkout|switch|merge|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$cmd"; then
+# stash gets special handling: bare stash and its mutating verbs (or a
+# flag form like stash -u) match, while read only stash list/show do not.
+if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+((commit|checkout|switch|merge|rebase|cherry-pick|reset|restore|revert|am)([[:space:]]|\$)|stash([[:space:]]+(push|pop|apply|drop|clear|branch|save|create|store)([[:space:]]|\$)|[[:space:]]+-|[[:space:]]*([;&|]|\$)))" <<<"$cmd"; then
   exit 0
 fi
 
