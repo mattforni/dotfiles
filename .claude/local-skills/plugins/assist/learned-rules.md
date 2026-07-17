@@ -12,12 +12,16 @@ Rules added from triage corrections. Read on every invocation. These override de
 - `prime@amazon.com` membership change confirmations (renewal, cancellation) -> 📑 Admin/🛒 Purchases. Mark read, archive.
 - `support@email.mill.com` (Mill food waste device) -> 📑 Admin/🛒 Purchases. Mark read, archive.
 - `*@coestatematters.com` (Colorado Estate Matters, estate planning attorney) -> 🍏 Constitution/💰 Financial/📜 Trust (NOT Financial parent). Route to Phase 4 for manual review; auto-archive patterns will codify once enough subject lines are observed.
+- `askme@blackblum.com` (Black+Blum houseware) -> 📑 Admin/🛒 Purchases. A brand "Thank you!" is usually a post-purchase receipt, not a promo, even with an unsubscribe header. Label Purchases, archive. Confirmed 2026-07-17.
+- `do-not-reply@denvergov.org` "Denver Tax Return(s)/Charge Form(s) Now Available" -> the monthly **Denver OPT (Occupational Privilege Tax)** notice for RELIABLY YOURS LLC. It is a **$0 return** filed by hand in the eBiz Tax Center each month payroll is paused (the notice never names the period; only the portal does). How-to and filing log: RYLLC README "Denver OPT". Defer (create a follow-up to file), label 🍏 Constitution/💰 Financial/💸 Taxes, and **keep in inbox (with a star) until the $0 return is filed, then archive and clear stars** (do not archive the notice while filing is still pending). Only the paired "Received: Denver OPT Return (Period Ending ...)" confirmation is archive-on-sight: label Taxes, archive.
 
 ## Topic Rules
 
 - **Home buying (purchase, mortgage, title, closing) is NOT Home Improvement.** Home purchase correspondence goes under 🍏 Constitution/💰 Financial + 🤝 Community/🏙️ Cities/🌇 Denver. The 🛠️ Craft/🏡 Home Improvement label is for actual improvement work (renovations, fixtures, tools), not the transaction of buying the home. Senders this applies to: NEO Home Loans, Trelora (greg@trelora.com), CTM eContracts, Land Title Guarantee Company, seller (Matt Bigelow), inspection vendors, HO6 insurance for the unit.
 
 ## Subject Rules
+
+- **Pure marketing promos default to unsubscribe + trash, not archive.** A bare newsletter/offer with an unsubscribe header and no personal value gets the unsubscribe sent and the message trashed. Only keep (label + archive) when the sender is genuinely wanted, or when the "promo" is actually a receipt (see Black+Blum in Sender Rules). Confirmed 2026-07-17.
 
 ## Behavior Rules
 
