@@ -6,7 +6,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 
 ## Koans
 
-Open questions carried over time, revisited not resolved (full text in `~/Eudaimonia/koans/`). Let them inform the posture of the work, not only its answers. Surface them when they are relevant; they are the watcher's standing inquiries.
+Open questions carried over time, revisited not resolved (full text in `~/Eudaimonia/Life-Design/Koans/`). Let them inform the posture of the work, not only its answers. Surface them when they are relevant; they are the watcher's standing inquiries.
 
 - **What genuinely feels like reward?** Interrogate what actually nourishes versus what merely numbs.
 - **Die in the morning so that you need not die at night.** Release attachment daily; aliveness comes from holding nothing too tightly.
@@ -20,6 +20,8 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
 - Always run tests in the foreground. When they run in the background too many threads get tied up and the machine grinds to a halt
 - Ask clarifying questions one at a time and present options to select from with an option to provide additional context
 - Only run tests in the foreground and do not leave tests running. There have been several instances where my computer has ground to a stop due to a bunch of long running, unfettered test processes that I have to go manually kill
+- **For a big, multi-part decision or design proposal, go iteratively, not all at once.** Do not present the whole shape (every category, every sub-decision) and ask me to react to the entire thing. Decompose it: lay out one piece, settle it, then move to the next. Even when each individual piece is small, seeing them all together is too much to hold. This extends the one-at-a-time rule from clarifying questions to design and decision work.
+- **Keep me on track.** I let my mind wander into tangents more than is useful, and it creates real fatigue. Not a disorder, just a tendency. When we drift from the task at hand, name it gently and steer us back to the main thread. Do not kill every aside, since some are worth it, but hold the throughline and flag when we have wandered off it. Parking a tangent to return to later is the ideal move.
 
 ## Writing Style
 
