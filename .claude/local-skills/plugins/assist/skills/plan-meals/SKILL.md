@@ -65,7 +65,7 @@ Meal plans live in Atelic, not in markdown. Author them through the MCP tools (s
 - **Batch prep friendly.** One prep session on Sunday or Monday carries most of the week. A mid week refresh handles the rest. Favor ingredients that survive the fridge for several days.
 - **Macro anchored.** The daily target is 2,112 cal / 118g P / 257g C / 68g F. The shake handles ~32g of protein and ~225 cal. The remaining three meals should roughly split the rest as laid out in README.
 - **Realistic for the week.** Social events, travel, and team lunches eat meals. Do not prep for meals that will not happen.
-- **Repeatable, not boring.** Repeating a lunch twice in a week is fine (batch prep reality). Three or four times in a row is a trap; rotate a second lunch option in.
+- **A couple of meal kinds, eaten repeatedly.** The whole point of prepping is a few meals eaten several times; one batch can rightly carry four days. Variety comes week to week, not within the week.
 - **Recipe backed, not hand waved.** Every real cooked meal links to a Recipe with actual ingredients, amounts, and directions, so Forni can open it and cook it and the macros are computed rather than guessed. If a recipe does not exist yet, create it (Phase 5). Reserve freeform text and estimated macros for genuinely uncooked slots (Social, Out, Leftovers).
 
 ## The Plan Flow
@@ -103,7 +103,13 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 
 ### Phase 4: Present the Full Plan in Plan Mode
 
-**No plan artifact writes to Atelic before this gate.** (The Phase 2 pantry reconcile is the deliberate exception: it records reality, not plan decisions.) Enter plan mode and write the complete plan as readable prose: the menu table, the batch prep checklist with amounts, every Atelic write to be made (recipes to create or reuse, authoring the plan, shopping list changes item by item), and the shopping day. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
+**No plan artifact writes to Atelic before this gate.** (The Phase 2 pantry reconcile is the deliberate exception: it records reality, not plan decisions.) Enter plan mode and write the complete plan in the three section format. The plan's one job is decision elimination: the tired mid week moment ("Wednesday 17:30, what happens next") must get its answer in one glance, already cooked.
+
+1. **The Meals.** Every meal and snack named, with Cal / P / C / F per serving. Clean numbers, no tildes or hedge marks (he knows they are estimates). A couple of meal kinds per week, period; snacks are one or two standing items, never per day engineering.
+2. **The Plan.** Every slot of every day explicit (breakfast, lunch, snacks, dinner; no "mornings are all the same" shorthand), each day totaled as actual / target for all four macros. Dinners out get an asterisk on the day and the event with a single footnote under the table; those days' totals count home food only.
+3. **The Prep.** Numbered cook sessions with exact amounts, times, and temperatures. Fresh proteins and grains cook no more than 2 days ahead, so the back half of the week gets a midweek refresh session. Prep beyond the current week belongs to next week's planning session.
+
+After the three sections: every Atelic write to be made (recipes to create or reuse, authoring the plan, shopping list changes item by item) and the shopping day when there is one. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
 
 ### Phase 5: Execute the Writes
 

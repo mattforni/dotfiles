@@ -97,3 +97,19 @@ Training specific rules tied to current life shape. Read on every invocation. St
   | Missouri / Belford / Oxford | 15.1 / 7,217 | Distance perfect, vert way over — only for a true peak week with no cap. |
 
   Codified 2026-06-27 after a five-round route hunt during Wk 9 planning. The shortlist is a starting menu, not a constraint; extend it as new objectives get run.
+
+## Transitions
+
+- **Transitions are ALWAYS 30 minutes. Never 15.** Do not shrink a transition series to fit a tight block; move the adjacent block instead (end Deep Work earlier, shift the lift). Forni, 2026-07-19: "always 30 minutes for transitions always, always, always." The plan-week shrink to fit behavior applies only when a one off meeting eats into a transition's slot that week; the standing series size is never 15.
+
+## Full Week Planning
+
+- **Plan the whole training week with explicit budget math, and say where everything fits.** The week pass is not just the Friday long. State the weekly MAX miles and vert, subtract the committed runs (Tue DRC 3.1, Thu SPRC 5.2), state the remainder and where it lands, and flag when the sum would breach the ceiling with the tradeoff spelled out plainly. Present the full cross training slate alongside the runs (lifts with upper/lower intent, swims, yoga, climb, PT), confirming each anchor exists on the calendar. Surfaced 2026-07-19: "I don't even know how many miles I'm supposed to run this week... The plan should actually plan the training and it should plan our cross-training."
+
+## Reference Library
+
+- **Settled research lives in `reference/` beside this skill; consult it before re researching.** `reference/tapering.md` (2026-07-19) covers taper duration, the last big effort window, the repeated bout effect, race week, and altitude. Extend the library rather than re deriving answers. The `coach` agent (`~/.claude/agents/coach.md`) reads the same plan and references; delegate load analysis, retro reads, and route vetting to it.
+
+## Weekly Summary
+
+- **Every training pass ends with the one look weekly summary before anything else gets discussed:** total miles, total vert, the type of week in one sentence, then the day by day table. Surfaced 2026-07-19: after a full planning pass Forni still had to ask "how many miles am I supposed to run this week?" The summary is the deliverable; the mechanics are supporting detail. Write the same summary into the week banner body.

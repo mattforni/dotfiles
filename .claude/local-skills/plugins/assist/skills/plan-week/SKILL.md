@@ -39,7 +39,7 @@ When there is a conflict between the template and the calendar, the calendar is 
 
 These constraints exist for real physiological and practical reasons. They are not suggestions.
 
-**Transitions**: Every movement between locations gets a 30 minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back to back without a transition unless they are at the same location. Transitions are placeholders — when a scheduled meeting claims part of a transition's time slot, shrink the transition to fit the remaining gap rather than flagging it as a conflict.
+**Transitions**: Every movement between locations gets a 30 minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back to back without a transition unless they are at the same location. Transitions are placeholders: when a one off meeting claims part of a transition's time slot that week, shrink that week's instance to fit the remaining gap rather than flagging it as a conflict. This applies only to the single affected instance; the standing transition series is always 30 minutes and is never resized (see `assist:plan-training` learned rules).
 
 **Work hours**: No W2 as of 2026-06-29 and the weekly skeleton is being rebuilt. Treat `~/Eudaimonia/schedule.md` as the source of truth for anchors and do not assume office days.
 
@@ -236,7 +236,7 @@ The named label table (names, hexes, label IDs) and the transition / travel / ti
 
 - **Emoji prefix**: All personal events use an emoji prefix (e.g., "🏋️ Strength", "✍️ Writing")
 - **Labels, not colors**: every created event carries the `eventLabelId` matching its meaning (🍏 Constitution, 🧠 Contemplation, 🤝 Community, 🛠️ Craft, and the rest of the table)
-- **Heads Down (deep work)**: Use "🙈 Heads Down" with the 🙈 Heads Down label. Protected focus blocks, created as one offs when a particular day needs a protected window. No transitions needed (block stays at current location).
+- **Deep work**: 🔨 Deep Work blocks carry the 🛠️ Craft label (the Heads Down label retired 2026-07-19; deep work is Craft, not its own category). Protected focus, no transitions needed (block stays at current location).
 - **Week banner**: the all day event spanning Monday through Sunday that carries the week's theme, created by Set Intention with the 🧭 Theme label, transparency `"free"`. Title is emoji + theme only; training detail lives in the body, written there by `assist:plan-training`.
 
 Include the location when the event is at a specific place.
@@ -287,7 +287,7 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - Add an appropriate emoji prefix to tasks that lack one. Shorten task names to fit well on a calendar.
 - When slotting a task, always set: date/time via reschedule-tasks, then duration + Scheduled label via update-tasks.
 - Todoist deadlineDate is Premium only. Note deadlines in the task description instead.
-- Transition and travel conventions are in `~/Eudaimonia/Admin/tools/google-calendar.md`. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title). They carry separate labels (↔️ Transition, 🚙 Travel).
+- Transition and travel conventions are in `~/Eudaimonia/Admin/tools/google-calendar.md`. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title). Both carry the single 🚙 Travel label (Basil); the distinction lives in the title. Transitions are always 30 minutes, never 15.
 - When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `~/Eudaimonia/Life-Design/Koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
 - Worktree mechanics for planning live in Before Every Invocation and the worktree rule below. Cut and enter the `wk-<ISO week>` worktree before any Eudaimonia or homebase edits, never mid session.
 - Do not skip Plan Training (invoke `assist:plan-training` in week mode), even when training decisions feel already made inline during Sweep Calendar. The training skill carries its own gate, the previous week's retro, which has no other place to live. Surfaced 2026-05-25 when I rationalized skipping it because strength moves had been discussed during conflict resolution; Forni caught it. The retro turned up real signal (PAH as transit, PT miss, weigh-in trend) that would otherwise have stayed invisible until next Monday.

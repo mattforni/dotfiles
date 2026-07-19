@@ -130,3 +130,14 @@ Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-
 - **Pantry inventory questions go one at a time, not in a batch.** Use AskUserQuestion with structured options rather than asking for a batched reply in chat.
   - Why: Forni corrected this on 2026-04-17. A long checklist in chat feels tedious; one question at a time keeps the rhythm conversational.
   - How to apply: loop through pantry items individually. Each question should offer the common answers (Yes on hand, No need to buy, Have some but low, Skip) plus a free text option for quantity or notes. (Exception: a full post-travel reconcile uses the "name the survivors" pass above, not this.)
+
+## Plan Presentation (Codified 2026-07-19, Week 30 Session)
+
+- **The plan's one job is decision elimination.** The mid week moment ("Wednesday 17:30, tired, what happens next") must get its answer in one glance, already cooked. Every format choice serves that; macros exist so Forni never has to think about them mid week, not so he reads them daily.
+- **Present every plan in three sections: The Meals, The Plan, The Prep.** The Meals names each meal with full macros (Cal / P / C / F), snacks included, the trust layer read once at approval. The Plan shows every slot of every day explicitly (breakfast, lunch, snacks, dinner; no "mornings are all the same" shorthand) with per day totals shown as actual / target for all four macros. The Prep is numbered sessions with exact amounts and times.
+- **A couple of meal kinds per week, period.** The whole point of prepping is a few meals eaten several times. Do not engineer per day snack variety or one off meals to tune macros; a protein bar and one snack pairing is plenty. Forni, 2026-07-19: "The whole point of meal prepping is to make a couple kinds of meals... make this very fucking simple."
+- **No tildes or hedge marks on estimates in the presented plan.** He knows they are approximate. Clean numbers only.
+- **Dinner out days: asterisk the day and the event, one footnote under the table.** Do not scatter asterisks across every cell; totals count home food only.
+- **Breakfasts are protein and carb forward, never fat heavy.** The 21g fat yogurt bowl was rejected 2026-07-19; more yogurt, fruit forward, granola as a sprinkle.
+- **Fresh proteins and grains cook no more than ~2 days ahead.** Back half meals get a midweek refresh session (bake tofu and cook grains Wednesday for Friday, never Sunday for Friday).
+- **Prep beyond the current week belongs to next week's planning session.** Do not put next Sunday's cooking in this week's plan.
