@@ -180,17 +180,13 @@ Google Calendar is still used directly for non task events: meetings, transition
 
 ### Phase 8: Present Week
 
-The finished board. Present the planned week at a glance, day by day. For each day show:
+The finished board is the Google Calendar week view. Present a link to it (`https://calendar.google.com/calendar/u/0/r/week/YYYY/M/D`). Todoist sync already renders slotted tasks there alongside training, meetings, and events, so do not rebuild the week as prose day lists or summary tables (see the Learned Rules entry).
 
-- Training, transitions, and recovery from the calendar
-- Meetings and Reclaim blocks
-- One off events (social plans, appointments)
-- Slotted tasks
+Supplement the link only with what the calendar cannot show:
 
-Close with:
-
-- Any tasks that could not be slotted (no available time)
+- The deferred ledger: any tasks that could not be slotted (no available time)
 - Remaining open slots for spontaneous work
+- The week's theme
 
 ## Mode: week
 
@@ -297,3 +293,9 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - **Plan in a `wk-<ISO week>` worktree, not a shared branch.** Each planning pass runs in its own worktree (see Before Every Invocation), cut in every repo it touches: Eudaimonia for planning artifacts (schedule.md, training plan, koans) and homebase for skill or config edits. A plain shared branch is not enough. On 2026-06-14 a branch switch in another terminal moved HEAD under the session mid plan and scattered commits onto an unrelated branch. A worktree gives the session its own working directory, so concurrent terminal activity cannot collide. All planning edits must target the worktree copy, not the main checkout. **Foot gun: an absolute path like `~/Eudaimonia/...` resolves to the main checkout even when the session cwd is the worktree, so edits silently land on the wrong tree.** Target the worktree path (`.claude/worktrees/wk-<ISO week>/...`). If a slip happens, move it with `git -C <main> diff -- <file>` piped to `git -C <worktree> apply`, then restore main. Surfaced 2026-06-22. Supersedes the older shared branch and date stamped approaches.
 - **Green stars are walked, not auto skipped, during Sweep Inbox.** A green star means "waiting on someone else" as of the moment it was set, but the ball can quietly return: a vendor quote thread that is actually awaiting Forni's decision, or a tracker thread hiding a scheduling action. Present every starred thread for disposition rather than unilaterally classifying green stars as no action. Surfaced 2026-07-13 on the first live sweep: the skylight quote (green) was waiting on Forni's decision, and the new servicer thread (green) contained a launch call to schedule. Both were initially skipped and had to be corrected into tasks.
 - **The ⏰ Scheduled label requires a specific time; label without time is an anti pattern.** Slotting means both a datetime and the label (the two Slot steps together); a task carrying the label with a date only due hides from the Schedule filter indefinitely while looking handled. The filter's `(@⏰ Scheduled & no time)` branch (added 2026-07-13) drags offenders back into triage: when one surfaces, either give it a real time or strip the label (or swap to ⏲️ Recurring for genuinely recurring reminders). Surfaced 2026-07-13: two tasks due that very day (Connect for Health enrollment, a site review) were invisible during planning, and one had already spawned an accidental duplicate.
+- **Review Week presents movement as a table.** One row per activity (day, name, type, distance, vert, moving time, effort), totals as a bold summary line underneath. Requested 2026-07-19.
+- **Sweep Inbox links every email to its Gmail thread.** Use `https://mail.google.com/mail/u/0/#all/<message id>` in the presented board and in every question that references a message. Forni cannot act on an email he cannot open. Surfaced 2026-07-19.
+- **Estimate durations honestly during slotting; 30 minutes is a floor, not a default.** After proposing slots, walk the 30 minute tasks and ask which actually need more, then reflow the day around the answers. Surfaced 2026-07-19: several 30 minute slots were clearly hour long work.
+- **Present Week is a link to the Google Calendar week view** (`https://calendar.google.com/calendar/u/0/r/week/YYYY/M/D`). Todoist sync already renders scheduled tasks there, so the calendar IS the at a glance board. Do not rebuild it as prose day lists, packed summary tables, or rendered board artifacts; all three were rejected in one sitting on 2026-07-19. Supplement the link only with what the calendar cannot show: the deferred ledger, the open air summary, the week's theme.
+- **Never pack multiple items into one table cell, anywhere.** One line per item, times first. Packed cells were rejected twice on 2026-07-19 (a meal grid cell carrying commentary, a week summary cramming whole days into single cells).
+- **When several tasks share an undecided direction, collapse them into one planning task instead of slotting them individually.** The planning task gets the slot; the others become its unscheduled subtasks and earn slots only after the direction session. Slotting unconverged work spends the week's open air on intent that has not been decided. Surfaced 2026-07-19 with the RYLLC cluster.
