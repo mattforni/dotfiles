@@ -103,3 +103,15 @@ Payee corrections (session 2026-06-29):
 - `Gem Figueroa` (friend, Venmo) -> context dependent; was `🍿 Entertainment` (a movie).
 - `Badfish SUP` -> `🎒 Gear`. `Rhino Air`, `Discount Tire`, `Costco Gas` -> `🚙 Transportation`.
 - `Amazon` history is split (~52%); always confirm, never auto.
+
+Payee corrections (session 2026-07-18):
+
+- `Illegalpetes` (Toast POS variant of Illegal Pete's) -> `🍟 Fast Food`.
+- Santa Barbara trip (July 8 to 14): itemize each charge into its real category (coffee -> `☕️ Caffeine`, pool/swim like Cal Lutheran Pool -> `🧗 Movement`, restaurants -> `🍽️ Dining Out`, groceries -> `🛒 Groceries`, lodging -> `🌏 Adventure`) AND stamp the memo `💍 Santa Barbara` so it totals as a trip. Do NOT dump the whole cluster into `🌏 Adventure`; Forni corrected exactly this ("coffee shops are coffee, Cal Lutheran Pool is Athlete"). The memo, not the category, is what quarantines the trip. Nicotine buys (ARCO, 7-Eleven) inside a trip window stay in `🚬 Nicotine` untagged, to keep the growth-edge total honest.
+
+Payee cleanup mechanics (session 2026-07-18, hard-won):
+
+- **Renaming a payee to an existing name does NOT merge them via the API.** It just creates a second payee with the same display name (verified: renamed `Illegalpetes` -> `Illegal Pete's` and ended with two `Illegal Pete's` records). The app merges on rename; the public API does not.
+- **The real merge primitive is transaction reassignment.** Get the duplicate's transactions (`GET /payees/{id}/transactions`), PATCH each with `payee_id` = the canonical payee, and the source drains to 0 transactions.
+- **The API cannot delete payees** (no DELETE endpoint). Emptied/orphan payees are removed by YNAB's own maintenance (unused payees auto-purge), but not on demand. For an immediate purge of hundreds of orphans, use the app's Manage Payees screen (multi-select delete / Combine). Native Renaming Rules to strip Venmo quoted-note sprawl are also app-only.
+- Only bother merging clusters where **two or more spellings both have transactions**; single-used-plus-orphan clusters need no action since the orphan auto-purges. Most Venmo note-variants (e.g. Azam Mughal 15 variants, 0 txns) are pure orphans.
