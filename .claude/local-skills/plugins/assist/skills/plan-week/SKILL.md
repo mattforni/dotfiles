@@ -180,17 +180,13 @@ Google Calendar is still used directly for non task events: meetings, transition
 
 ### Phase 8: Present Week
 
-The finished board. Present the planned week at a glance, day by day. For each day show:
+The finished board is the Google Calendar week view. Present a link to it (`https://calendar.google.com/calendar/u/0/r/week/YYYY/M/D`). Todoist sync already renders slotted tasks there alongside training, meetings, and events, so do not rebuild the week as prose day lists or summary tables (see the Learned Rules entry).
 
-- Training, transitions, and recovery from the calendar
-- Meetings and Reclaim blocks
-- One off events (social plans, appointments)
-- Slotted tasks
+Supplement the link only with what the calendar cannot show:
 
-Close with:
-
-- Any tasks that could not be slotted (no available time)
+- The deferred ledger: any tasks that could not be slotted (no available time)
 - Remaining open slots for spontaneous work
+- The week's theme
 
 ## Mode: week
 
