@@ -109,3 +109,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
 ## Reference Library
 
 - **Settled research lives in `reference/` beside this skill; consult it before re researching.** `reference/tapering.md` (2026-07-19) covers taper duration, the last big effort window, the repeated bout effect, race week, and altitude. Extend the library rather than re deriving answers. The `coach` agent (`~/.claude/agents/coach.md`) reads the same plan and references; delegate load analysis, retro reads, and route vetting to it.
+
+## Weekly Summary
+
+- **Every training pass ends with the one look weekly summary before anything else gets discussed:** total miles, total vert, the type of week in one sentence, then the day by day table. Surfaced 2026-07-19: after a full planning pass Forni still had to ask "how many miles am I supposed to run this week?" The summary is the deliverable; the mechanics are supporting detail. Write the same summary into the week banner body.
