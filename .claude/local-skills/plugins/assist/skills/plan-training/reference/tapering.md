@@ -12,7 +12,7 @@ Settled knowledge; consult before re researching taper questions. Applies to mar
 ## The Last Big Effort
 
 - Coaching consensus: final long or big effort **10 to 14 days out**; a moderate long run is acceptable **7 to 10 days out**.
-- **Repeated bout effect**: one hard downhill bout reduces subsequent eccentric damage 50 to 80% for 2 to 6 weeks and can attenuate fatigue in a later run (Sci Reports 2020, MDPI 2024). A big descent day two weeks out is protective, not just tolerable.
+- **Repeated bout effect**: one hard downhill bout reduces subsequent eccentric damage 50 to 80% for 2 to 6 weeks and attenuated fatigue in a later run in lab settings (Sci Reports 2020, MDPI 2024). A big descent day two weeks out is likely protective, not just tolerable.
 - A moderate social trail day with real vert seven days out is tolerable and arguably useful IF: genuinely conversational, descents not raced, weekly volume near half of normal, and it is the last meaningful vert. **The tell: quads still sore 3 to 4 days after means it was run too hard, not scheduled too close.**
 
 ## Race Week
@@ -22,7 +22,7 @@ Settled knowledge; consult before re researching taper questions. Applies to mar
 
 ## Altitude (Denver Resident, 10,000+ ft Race)
 
-- Denver living plus recent 14er exposure gives meaningful partial acclimatization; full red cell adaptation takes weeks. Practical levers: arrive a day or more early and sleep high, deliberately easy first hours, roughly double fluids with elevated calories (metabolic cost and dehydration both rise at elevation).
+- Denver living plus recent 14er exposure gives meaningful partial acclimatization; full red cell adaptation takes weeks. Practical levers: arrive a day or more early and sleep high, deliberately easy first hours, elevated calories, and more fluids sized to sweat rate and conditions rather than a fixed multiplier (fluid needs rise at elevation, but forced overdrinking risks hyponatremia; drink to thirst plus a modest planned baseline).
 
 ## Sources
 

@@ -39,7 +39,7 @@ When there is a conflict between the template and the calendar, the calendar is 
 
 These constraints exist for real physiological and practical reasons. They are not suggestions.
 
-**Transitions**: Every movement between locations gets a 30 minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back to back without a transition unless they are at the same location. Transitions are placeholders — when a scheduled meeting claims part of a transition's time slot, shrink the transition to fit the remaining gap rather than flagging it as a conflict.
+**Transitions**: Every movement between locations gets a 30 minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back to back without a transition unless they are at the same location. Transitions are placeholders: when a one off meeting claims part of a transition's time slot that week, shrink that week's instance to fit the remaining gap rather than flagging it as a conflict. This applies only to the single affected instance; the standing transition series is always 30 minutes and is never resized (see `assist:plan-training` learned rules).
 
 **Work hours**: No W2 as of 2026-06-29 and the weekly skeleton is being rebuilt. Treat `~/Eudaimonia/schedule.md` as the source of truth for anchors and do not assume office days.
 
