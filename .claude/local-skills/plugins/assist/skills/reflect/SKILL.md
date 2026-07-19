@@ -24,7 +24,7 @@ Help Forni look back at a boundary he cares about and see the month (or week, qu
 
 1. Read this skill's [learned-rules.md](learned-rules.md) for accumulated corrections.
 2. Read the plugin-level [learned-rules.md](../../learned-rules.md) for cross-skill corrections.
-3. Read the current V2MOM (the frame you reflect against). Discover it dynamically rather than hardcoding the year, so this never needs an annual edit: `ls ~/Eudaimonia/Goals/*-v2mom.md` and read the most recent (currently `2026-v2mom.md`).
+3. Read the current V2MOM (the frame you reflect against). Discover it dynamically rather than hardcoding the year, so this never needs an annual edit: `ls ~/Eudaimonia/Life-Design/Goals/*-v2mom.md` and read the most recent (currently `2026-v2mom.md`).
 4. Determine the period and Forni's shifted quarter (below).
 
 ## The Shifted Year
@@ -38,14 +38,14 @@ Forni's year starts in **February**, so the quarters are offset by one month:
 | Q3 | Aug, Sep, Oct |
 | Q4 | Nov, Dec, Jan |
 
-Compute the current quarter from today's date using this table, not the calendar quarter. (`Goals/eval-method.md` notes the same +1 month shift.)
+Compute the current quarter from today's date using this table, not the calendar quarter. (`Life-Design/Goals/eval-method.md` notes the same +1 month shift.)
 
 ## Monthly vs Quarterly: A Hard Distinction
 
 This is the load-bearing distinction of the whole skill.
 
 - **Monthly reflection (and weekly) looks at how the period was *lived against* the existing frame.** It does not edit the V2MOM. It surfaces lived experience, measure performance, what to capture, and what needs focus. Light touch.
-- **Quarterly reflection *edits the frame itself*** (reframe, sharpen, drop methods and measures). That is the `Goals/eval-method.md` walk, and it is a different, heavier instrument.
+- **Quarterly reflection *edits the frame itself*** (reframe, sharpen, drop methods and measures). That is the `Life-Design/Goals/eval-method.md` walk, and it is a different, heavier instrument.
 
 Never restructure the V2MOM during a monthly reflect. If a monthly surfaces a possible frame change, note it as a carry-forward for the next quarterly walk; do not act on it.
 
@@ -134,7 +134,7 @@ The quarterly look back **edits the frame**, so it hands off rather than duplica
 
 1. Read the three monthly reflections for the quarter from `~/Eudaimonia/Contemplation/Reflections/` to surface the throughline.
 2. Reflect briefly on the quarter as a whole (felt sense, the throughline across the three months).
-3. Then hand off to `~/Eudaimonia/Goals/eval-method.md` for the actual V2MOM walk (Vision → Mantra → Values → Methods → Obstacles → Measures → Questions, deciding keep/sharpen/soften/evolve/drop for each). That walk produces the updated `YYYY-v2mom.md`, Streaks updates, and a commit.
+3. Then hand off to `~/Eudaimonia/Life-Design/Goals/eval-method.md` for the actual V2MOM walk (Vision → Mantra → Values → Methods → Obstacles → Measures → Questions, deciding keep/sharpen/soften/evolve/drop for each). That walk produces the updated `YYYY-v2mom.md`, Streaks updates, and a commit.
 
 Do not reinvent the eval walk here. This mode's job is to feed it the monthly throughline and then defer.
 

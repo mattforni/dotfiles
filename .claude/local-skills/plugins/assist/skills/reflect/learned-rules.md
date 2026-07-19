@@ -20,5 +20,5 @@ Corrections and calibrations for `assist:reflect`, accumulated as Forni reflects
 
 ## Cadence
 
-- **Monthly reflects against the frame; quarterly edits the frame.** Never restructure the V2MOM in a monthly. Frame changes are the `Goals/eval-method.md` walk at quarter boundaries. (Forni surfaced this distinction himself during the build.)
+- **Monthly reflects against the frame; quarterly edits the frame.** Never restructure the V2MOM in a monthly. Frame changes are the `Life-Design/Goals/eval-method.md` walk at quarter boundaries. (Forni surfaced this distinction himself during the build.)
 - Forni's year is shifted +1 month: Q1 Feb–Apr, Q2 May–Jul, Q3 Aug–Oct, Q4 Nov–Jan. May is early Q2.
