@@ -47,12 +47,12 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Calendar Event Conventions
 
-Color coding, transition / travel, and title formats live in GC `Calendar Preferences`. Calendar reads and writes go through the `gws` CLI; see `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax (`calendarId` in `--params`, event body in `--json`). Training specific use:
+The named label table and title formats live in `~/Eudaimonia/Admin/tools/google-calendar.md`; the behavioral rule lives in GC `Calendar Preferences`. Calendar reads and writes go through the `gws` CLI; see `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax (`calendarId` in `--params`, event body in `--json`, `eventLabelVersion: 1` in `--params` on every event write). Events are colored via named labels (`eventLabelId`), never the legacy `colorId`. Training specific use:
 
-- Training events use Sage (colorId 2): runs, lifts, yoga, body care, recovery
+- Training events use the 🍏 Constitution label: runs, lifts, yoga, body care, recovery
 - Long runs: `🏃 <MILES> mi Long Run`
-- Travel to trailheads: `🚙 <LOCATION>` with the destination in the title (Basil, colorId 10)
-- Drive home: `🚙 Home` (Basil, colorId 10)
+- Travel to trailheads: `🚙 <LOCATION>` with the destination in the title (🚙 Travel label)
+- Drive home: `🚙 Home` (🚙 Travel label)
 - Travel events use 30 minute increments aligned to 30 minute blocks (e.g., 06:30 to 07:00, not 06:15 to 07:00)
 - Every change of location needs flanking transition or travel events. A long run is incomplete without its drive flanks.
 
@@ -98,7 +98,7 @@ Shape the week to the phase:
 - **Cutback or taper**: everything short and easy, weekday runs well under the build shape.
 - **Travel or recovery**: time on feet only, easy, no prescribed distances. Do not force a shape onto a week meant to be unstructured (the LA deload is the archetype).
 
-Present the shape to Forni as one small table. It is a default he can deviate from freely, never a leash. Then write it into the **week banner body** alongside the training block (see the Week theme banner convention in `assist:plan-week`), so the whole week's runs are visible in one place when he taps the banner. Do not rewrite the individual recurring DRC / SPRC events. The shape lives in the banner; the recurring blocks stay put so a run can move days without the calendar fighting it.
+Present the shape to Forni as one small table. It is a default he can deviate from freely, never a leash. Then write it into the **week banner body** alongside the training block (see the Week banner convention in `assist:plan-week`), so the whole week's runs are visible in one place when he taps the banner. The banner itself (an all day event spanning Monday through Sunday, 🧭 Theme label) is created by `assist:plan-week` during Set Intention: this skill writes the training block into its body and never creates, retitles, or relabels it. If the banner does not exist yet, flag it back to `assist:plan-week` rather than creating one here. Do not rewrite the individual recurring DRC / SPRC events. The shape lives in the banner; the recurring blocks stay put so a run can move days without the calendar fighting it.
 
 The Friday long run (next phase) is the anchor of this shape; its distance and vert come straight from the block row.
 
@@ -127,10 +127,10 @@ Standalone Friday long run workflow. Use when the user wants to plan or replan j
 3. Confirm the route with the user via `AskUserQuestion` before creating events.
 4. Default start time is **07:00**. Front Range trailheads are ~30 min from Denver; altitude weeks (9, 10) are longer drives.
 5. Long run duration: budget ~15 to 16 min/mi for moderate trail pace with vert (e.g., 8 mi @ 1,500 ft is ~2 hr).
-6. Create three Fri events per GC Calendar Preferences:
-   - `🚙 <Trailhead Name>` — Basil (colorId 10) — drive out. Location = trailhead address. 30 min block aligned to 30 min increments (e.g., 06:30 to 07:00).
-   - `🏃 <MILES> mi Long Run` — Sage (colorId 2) — location = AllTrails URL.
-   - `🚙 Home` — Basil (colorId 10) — drive back. Same 30 min alignment.
+6. Create three Fri events per the calendar conventions:
+   - `🚙 <Trailhead Name>` — 🚙 Travel label — drive out. Location = trailhead address. 30 min block aligned to 30 min increments (e.g., 06:30 to 07:00).
+   - `🏃 <MILES> mi Long Run` — 🍏 Constitution label — location = AllTrails URL.
+   - `🚙 Home` — 🚙 Travel label — drive back. Same 30 min alignment.
 
 ## Mode: move
 

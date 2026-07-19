@@ -12,7 +12,7 @@
     {
       "name": "assist",
       "source": "./plugins/assist",
-      "version": "4.0.3",
+      "version": "4.1.0",
       "license": "MIT",
       "description": "Personal productivity skills: email triage, weekly planning, knowledge capture, BD outreach, and job applications.",
       "author": {
@@ -20,7 +20,17 @@
         "url": "https://github.com/mattforni"
       },
       "category": "productivity",
-      "keywords": ["assist", "email", "planning", "reflect", "learn", "bd", "job-apply", "present", "productivity"],
+      "keywords": [
+        "assist",
+        "email",
+        "planning",
+        "reflect",
+        "learn",
+        "bd",
+        "job-apply",
+        "present",
+        "productivity"
+      ],
       "strict": false,
       "skills": [
         "./skills/triage-inbox",
@@ -37,7 +47,8 @@
         "./skills/permissions",
         "./skills/present",
         "./skills/sharpen",
-        "./skills/wrap"
+        "./skills/wrap",
+        "./skills/refine-process"
       ]
     }
   ]

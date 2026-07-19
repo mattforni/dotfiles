@@ -27,9 +27,11 @@ Help Forni plan his week: review the calendar, slot Todoist tasks into open time
 
 **Calendar access:** reads and writes go through the `gws` CLI via Bash, not a Google Calendar MCP. The personal calendar is `🌱 Life` (`mattforni@gmail.com`); find IDs with `gws calendar calendarList list`. Pull with `gws calendar events list`, patch a recurring series with `gws calendar events patch` (only the fields you change), create with `events insert`, delete a whole series by its `recurringEventId`. The `gws` output is prefixed with a `Using keyring backend` line, so strip it before parsing JSON. See `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax: `calendarId` goes inside `--params`, the event body (and any array fields) go in `--json`.
 
+**Event coloring goes through named labels, never `colorId`.** Every event write sets `eventLabelId` with `eventLabelVersion: 1` in `--params`. The label table (names, hexes, IDs) lives in `~/Eudaimonia/Admin/tools/google-calendar.md`. The legacy `colorId` field is a backward compat synthesis that returns different values from different endpoints; never read it, never write it.
+
 ## Source of Truth
 
-The weekly template lives at `~/Eudaimonia/schedule.md`. It defines the recurring skeleton: work hours, training sessions, transitions, recovery, and community commitments. The Google Calendar holds the live reality, including one-off events and Reclaim work blocks.
+The weekly template lives at `~/Eudaimonia/schedule.md`. It defines the recurring skeleton: work hours, training sessions, transitions, recovery, and community commitments. The Google Calendar holds the live reality, including one off events and Reclaim work blocks.
 
 When there is a conflict between the template and the calendar, the calendar is the current truth. The template describes what a "normal" week should look like.
 
@@ -37,7 +39,7 @@ When there is a conflict between the template and the calendar, the calendar is 
 
 These constraints exist for real physiological and practical reasons. They are not suggestions.
 
-**Transitions**: Every movement between locations gets a 30-minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back-to-back without a transition unless they are at the same location. Transitions are placeholders — when a scheduled meeting claims part of a transition's time slot, shrink the transition to fit the remaining gap rather than flagging it as a conflict.
+**Transitions**: Every movement between locations gets a 30 minute buffer. This is not travel time alone; it includes the mental shift between contexts. Do not schedule events back to back without a transition unless they are at the same location. Transitions are placeholders — when a scheduled meeting claims part of a transition's time slot, shrink the transition to fit the remaining gap rather than flagging it as a conflict.
 
 **Work hours**: No W2 as of 2026-06-29 and the weekly skeleton is being rebuilt. Treat `~/Eudaimonia/schedule.md` as the source of truth for anchors and do not assume office days.
 
@@ -47,9 +49,18 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Mode: plan (default)
 
-The Monday morning planning session. This is the primary use case. It runs isolated in a worktree, looks back, looks forward, then plans the week ahead.
+The Monday morning planning session. This is the primary use case. It runs isolated in a worktree and moves through eight phases: gather, then clean, then place, then show. Every phase that generates work runs before the phase that places work.
 
-### Phase 1: Retrospective
+1. **Review Week** — look back
+2. **Set Intention** — theme and banner
+3. **Sweep Inbox** — email becomes tasks
+4. **Sweep Calendar** — make the calendar true
+5. **Plan Training** — every training event placed
+6. **Plan Meals** — food plus its calendar footprint
+7. **Plan Tasks** — prioritize, then slot
+8. **Present Week** — the finished board
+
+### Phase 1: Review Week
 
 Look back at the week that is ending, read as a **compass, not a verdict**. Bring both quantitative spines first, then the felt sense.
 
@@ -59,66 +70,24 @@ Look back at the week that is ending, read as a **compass, not a verdict**. Brin
 
 Read it all gently. In the current frame the retro course corrects, it does not grade. Surface anything that should become a planning input (a task, a guardrail, a measure to watch) and carry it into the phases below.
 
-### Phase 2: Prospective
+### Phase 2: Set Intention
 
-The look forward, the mirror of the Retrospective. Holding the retro's carry forward as the lens, name **one to three focuses** for the week ahead, and convert each into a concrete planning input:
+The look forward, the mirror of Review Week. Holding the retro's carry forward as the lens, name **one to three focuses** for the week ahead, and convert each into a concrete planning input:
 
 - An **anchor to protect** (a held block, a wind down ritual)
 - A **block to confirm or create** on the calendar
 - A **measure to watch** through the week
 
-The Prospective sets the week's intention before the mechanical planning begins. Its outputs flow into Load and Rectify and into Slotting.
+**Name the week's theme, and write it onto the calendar.** Set Intention produces a short theme for the week, a word or a brief phrase (for example "Presence", or "Point the Energy at the Forge"). The theme is the compass, not a task. Confirm the theme with Forni, then **create the week banner**: an all day event spanning Monday through Sunday, transparency `"free"`, carrying the 🧭 Theme label.
 
-**Name the week's theme, and write it onto the calendar.** The Prospective produces a short theme for the week, a word or a brief phrase (for example "Presence", or "Point the Energy at the Forge"). The theme is the compass, not a task. Codify it onto the week opening banner, the all day training week event that sits at the start of the week (created by `assist:plan-training`, for example "Wk 10: Deload (LA)"):
+- **Title** is the theme, led by an emoji chosen to match it (for example `🪷 Presence`). The theme owns the title; nothing else sits there.
+- **Body** opens with a one sentence theme framing. The training block (week label and phase, mileage and vert, run shape, guardrails) is appended to the body by `assist:plan-training` when Plan Training runs; every training detail lives in the body, never the title.
 
-- **Title** becomes the theme, led by an emoji chosen to match the theme (for example `🪷 Presence`). The theme owns the title; nothing else sits there.
-- **Body** carries a one sentence theme framing, then the full training block: the week label and phase, the mileage and vert numbers, the week's run shape, and the guardrails. Every training detail moves off the title and into the body. The run shape is produced by `assist:plan-training` (its Phase 3, Week Run Shape) and written into this block when training scheduling runs in Phase 4, so a plan-week pass writes the theme and framing first, and the run shape joins the block once training runs.
+This skill owns the banner. `assist:plan-training` writes into its body but never creates or retitles it.
 
-Confirm the theme with Forni first. Present the title and the body shape, then patch the banner via `gws` (summary and description only). If the banner does not exist yet this week, let `assist:plan-training` create it first, then set the theme.
+### Phase 3: Sweep Inbox
 
-### Phase 3: Load and Rectify
-
-1. Fetch this week's calendar events (Monday through Sunday) via `gws` (the `🌱 Life` calendar)
-2. Fetch Todoist tasks using the **Schedule filter**. The MCP cannot resolve the saved filter by ID, so pass its raw query to `find-tasks`: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday` — overdue tasks, non-recurring non-scheduled tasks due before next Monday, plus Scheduled-labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
-3. Read the weekly template to know the recurring skeleton
-
-**Free vs Busy events**: Check the `transparency` field on each calendar event. Events with `transparency: "transparent"` are "free" (informational only, no action required). Filter them out of the working set. Do not treat free events as conflicts or as consuming time slots. Only `opaque` (busy) events block time.
-
-**Rectify against the calendar and the frame**: Compare the live calendar against the template and against itself, and also reconcile the template against the current V2MOM frame, since a frame rebuild leaves the skeleton stale. Identify:
-
-- Overlapping busy events (two events claiming the same time)
-- One-off events that displace recurring template activities (e.g., a party during sauna time)
-- Constraint violations (missing transitions, fasting window breaches, training adjacent issues per `assist:plan-training`)
-- Stale skeleton: recurring blocks the frame has retired (a closed venue, a dropped commitment) still sitting on the template or calendar
-
-Present all conflicts to the user, one at a time or in small batches. For each conflict, propose a resolution:
-
-- **Keep one, cut the other** (delete or decline)
-- **Move one** to an open slot (check constraints before suggesting)
-- **Accept the displacement** (skip the recurring activity this week, or reschedule it to another day)
-
-**Never modify existing events without explicit permission.** Always present the conflict and proposed resolution, then wait for approval before taking any action. This is especially critical for events with other attendees or events booked via Reclaim.ai scheduling links (those were scheduled by other people). Be aware that deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect.
-
-Execute only the agreed changes before moving on. The calendar should be clean and conflict-free before the overview.
-
-### Phase 4: Training Scheduling
-
-Before the week overview and triage, ensure the week's training events are scheduled. Invoke the `assist:plan-training` skill in `week` mode via the Skill tool. It will detect existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surface what's missing, lay out the week's run shape (days, rough distance, purpose, adapted to the block phase), and create the variable one offs (Friday long run + paired drive blocks) following its own constraint logic. Return here once training scheduling is complete.
-
-### Phase 5: Week Overview
-
-Present the rectified week at a glance, day by day. For each day show:
-
-- Training, transitions, and recovery from the calendar (post-rectification)
-- Work meetings and Reclaim blocks
-- One-off events (social plans, appointments)
-- Open slots where tasks could be scheduled
-
-This is a clean view of what the week actually looks like after conflicts are resolved.
-
-### Phase 6: Email Sweep
-
-Turn the inbox into tasks before triage, so email follow ups ride the same triage and slotting pass as everything else instead of living only in Gmail.
+Turn the inbox into tasks before the task list is loaded, so email follow ups ride the same prioritization and slotting pass as everything else instead of living only in Gmail.
 
 1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
@@ -126,20 +95,57 @@ Turn the inbox into tasks before triage, so email follow ups ride the same triag
    - **Needs an actual reply**: leave it in the inbox for a proper `assist:triage-inbox` session. Note that it exists; do not draft or send replies during this phase.
    - **No action**: skip it.
 3. Confirm each task creation with Forni before writing, one at a time, consistent with the ask before acting posture.
-4. When nothing actionable surfaces, say so in one line and continue to Triage.
+4. When nothing actionable surfaces, say so in one line and continue.
 
-### Phase 7: Triage
+### Phase 4: Sweep Calendar
 
-Before slotting, triage the Todoist tasks from the Schedule filter. Prune hard: the filter routinely surfaces far too many items, so default to aggressively deleting notes, deferring the non-critical, and combining duplicates rather than slotting everything. This is a collaborative pass through all tasks to:
+Make the calendar true. Fetch this week's events (Monday through Sunday) via `gws` on the `🌱 Life` calendar, with `eventLabelVersion: 1` so labels come back, and read the weekly template for the recurring skeleton.
+
+**Free vs busy events**: Check the `transparency` field on each event. Events with `transparency: "transparent"` are "free" (informational only, no action required). Filter them out of the working set. Do not treat free events as conflicts or as consuming time slots. Only `opaque` (busy) events block time.
+
+**Rectify against the template and the frame**: Compare the live calendar against the template and against itself, and also reconcile the template against the current V2MOM frame, since a frame rebuild leaves the skeleton stale. Identify:
+
+- Overlapping busy events (two events claiming the same time)
+- One off events that displace recurring template activities (e.g., a party during sauna time)
+- Constraint violations (missing transitions, fasting window breaches, training adjacent issues per `assist:plan-training`)
+- Stale skeleton: recurring blocks the frame has retired (a closed venue, a dropped commitment) still sitting on the template or calendar
+
+**Label the unlabeled**: any event in the week without an `eventLabelId`, or sitting on a label that no longer fits its meaning, gets its label proposed per the table in `~/Eudaimonia/Admin/tools/google-calendar.md`. Present in small batches, confirm, patch.
+
+Present all conflicts to the user, one at a time or in small batches. For each conflict, propose a resolution:
+
+- **Keep one, cut the other** (delete or decline)
+- **Move one** to an open slot (check constraints before suggesting)
+- **Accept the displacement** (skip the recurring activity this week, or reschedule it to another day)
+
+**Never modify existing events without explicit permission.** Always present the conflict and proposed resolution, then wait for approval before taking any action. This is especially critical for events with other attendees or events booked via Reclaim.ai scheduling links (those were scheduled by other people). Be aware that deleting or moving adjacent events can cause Reclaim to auto reschedule nearby flexible events as a side effect.
+
+Execute only the agreed changes before moving on. The calendar should be clean and conflict free before anything new is placed on it.
+
+### Phase 5: Plan Training
+
+Invoke the `assist:plan-training` skill in `week` mode via the Skill tool. It runs its own retro gate, detects existing recurring placeholders (Mon yoga, Tue lift, Thu SPRC, Wed climb, etc.), surfaces what's missing, lays out the week's run shape, writes the training block into the week banner body, and **places every training event for the week**, including the variable one offs (Friday long run plus paired drive blocks), following its own constraint logic. The week leaves this phase with training fully on the calendar, not just shaped. Return here once training scheduling is complete.
+
+### Phase 6: Plan Meals
+
+Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed).
+
+Meal planning generates schedulable work: the grocery run, and any prep or cook time beyond the recurring Batch Prep and Cook Night blocks. Capture those as tasks (or confirm the recurring blocks cover them) so they enter the Plan Tasks queue and compete for calendar time like everything else. Return here once meal planning is complete.
+
+### Phase 7: Plan Tasks
+
+Prioritize the task list, then place the survivors.
+
+**Load.** Fetch Todoist tasks using the **Schedule filter**. The MCP cannot resolve the saved filter by ID, so pass its raw query to `find-tasks`: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday` — overdue tasks, non recurring non scheduled tasks due before next Monday, plus Scheduled labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
+
+**Prioritize.** Prune hard: the filter routinely surfaces far too many items, so default to aggressively deleting notes, deferring the non critical, and combining duplicates rather than slotting everything. This is a collaborative pass through all tasks to:
 
 1. **Identify notes vs tasks**: Forni uses Todoist as a quick notepad. Items that are bookmarks, quotes, links, or ideas get moved to their proper home (Notion, Eudaimonia koans, etc.) and **deleted** from Todoist (not completed, since they were never real tasks). Use Notion MCP for pages like AI Research, and write files to Eudaimonia for things like koans.
 2. **Combine related tasks**: When multiple tasks are clearly part of the same effort (e.g., "Rebalance Portfolio" and "Update 1% Donation" both being financial), suggest merging them into a single task with details in a comment. Always confirm with the user before merging.
 3. **Reprioritize**: Review priorities and flag anything that looks off. Use best judgment, then confirm with the user.
 4. **Clear p4**: All p4 tasks either get bumped to a real priority or punted to the following Monday. p4 items do not get slotted into the current week.
 
-### Phase 8: Task Slotting
-
-Present the remaining tasks that need scheduling. For each task, suggest a time slot based on:
+**Slot.** Present the remaining tasks that need scheduling. For each task, suggest a time slot based on:
 
 - The task's priority and due date
 - Available open slots in the calendar
@@ -157,30 +163,32 @@ Present suggestions via AskUserQuestion, one at a time or in small batches. The 
 
 1. Use `reschedule-tasks` to set the date and time (e.g., `2026-03-31T07:00:00`)
 2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`) and add the `⏰ Scheduled` label
-3. The `⏰ Scheduled` label removes the task from the Schedule filter so it does not resurface during triage
+3. The `⏰ Scheduled` label removes the task from the Schedule filter so it does not resurface during prioritization
 4. Todoist's calendar integration automatically shows scheduled tasks on Google Calendar
 
-Google Calendar is still used directly for non-task events: meetings, transitions, sauna sessions, social events, etc.
+Google Calendar is still used directly for non task events: meetings, transitions, sauna sessions, social events, etc.
 
-**Recurring catch-up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
+**Recurring catch up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
 
-1. Create a new one-off Todoist task with the specific date/time, duration, and `⏰ Scheduled` label
-2. Complete the recurring task so the next occurrence auto-generates on its cycle
-3. The one-off task is the reminder for this week; the recurrence handles the next one
+1. Create a new one off Todoist task with the specific date/time, duration, and `⏰ Scheduled` label
+2. Complete the recurring task so the next occurrence auto generates on its cycle
+3. The one off task is the reminder for this week; the recurrence handles the next one
 
-**Email outreach as slotting**: For some recurring catch-ups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs. Always confirm with the user before executing the send command.
+**Email outreach as slotting**: For some recurring catch ups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs. Always confirm with the user before executing the send command.
 
 **Deferred tasks land on Monday**: When deferring tasks to next week or further out, always schedule them for the Monday of the target week. Monday is the landing zone where tasks get triaged during the planning session.
 
-### Phase 9: Meal Planning
+### Phase 8: Present Week
 
-With the week's events and tasks set, plan the week's food around the finalized calendar. Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch-prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed). Return here once meal planning is complete.
+The finished board. Present the planned week at a glance, day by day. For each day show:
 
-### Phase 10: Summary
+- Training, transitions, and recovery from the calendar
+- Meetings and Reclaim blocks
+- One off events (social plans, appointments)
+- Slotted tasks
 
-After slotting is complete, present:
+Close with:
 
-- The final week view with all new events
 - Any tasks that could not be slotted (no available time)
 - Remaining open slots for spontaneous work
 
@@ -189,7 +197,7 @@ After slotting is complete, present:
 Quick view of the current or upcoming week. No task slotting, just a clean overview.
 
 1. Fetch calendar events for the requested week
-2. Present day-by-day with times, event names, and locations
+2. Present day by day with times, event names, and locations
 3. Highlight open slots
 4. Flag any conflicts or constraint violations
 
@@ -203,7 +211,7 @@ Slot a specific task or event into the week.
 4. Present options via AskUserQuestion
 5. Slot into the chosen time:
    - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration` and add the `⏰ Scheduled` label. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
-   - **If it is a non-task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
+   - **If it is a non task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move
 
@@ -212,7 +220,7 @@ Move or swap an existing event.
 1. User describes what to move (e.g., "Move my Wednesday sauna to Thursday")
 2. Fetch the relevant events
 3. Check constraints (transitions, conflicts). Defer to `assist:plan-training` move mode when any of these apply:
-   - the target event is training (Sage color, training emoji, or session type like sauna / contrast / lift / run / climb)
+   - the target event is training (🍏 Constitution label, training emoji, or session type like sauna / contrast / lift / run / climb)
    - the proposed destination lands in Thursday morning (SPRC window is protected regardless of what is being moved)
    - the move could affect training adjacent sequencing (e.g., a sauna or contrast block landing on a strength day, an event displacing a recurring training session)
 
@@ -224,19 +232,18 @@ When moving recurring events for just one week, modify only that occurrence, not
 
 ## Calendar Event Conventions
 
-Color coding, transition / travel, and title formats live in GC `Calendar Preferences`. The conventions below are skill specific additions.
+The named label table (names, hexes, label IDs) and the transition / travel / title conventions live in `~/Eudaimonia/Admin/tools/google-calendar.md`; the behavioral rule lives in GC `Calendar Preferences`. The conventions below are skill specific additions.
 
 - **Emoji prefix**: All personal events use an emoji prefix (e.g., "🏋️ Strength", "✍️ Writing")
-- **Contemplation events**: Use colorId "4" (Flamingo) for recovery meetings
-- **Craft events**: Use colorId "6" (Tangerine) for writing, personal projects
-- **Heads Down (deep work)**: Use "🙈 Heads Down" with colorId "8" (Graphite). Protected focus blocks, created as one-offs when a particular day needs a protected window. No transitions needed (block stays at current location). The recurring Tue/Wed container retired with the Zero separation (2026-06-29).
-- **Week theme banner**: The all day event that opens the week (the training week banner created by `assist:plan-training`) carries the week's theme as its title, led by a theme matched emoji (for example "🪷 Presence"). Every training detail (week label, phase, mileage and vert, guardrails) lives in the body, never the title. Set during Phase 2 (Prospective).
+- **Labels, not colors**: every created event carries the `eventLabelId` matching its meaning (🍏 Constitution, 🧠 Contemplation, 🤝 Community, 🛠️ Craft, and the rest of the table)
+- **Heads Down (deep work)**: Use "🙈 Heads Down" with the 🙈 Heads Down label. Protected focus blocks, created as one offs when a particular day needs a protected window. No transitions needed (block stays at current location).
+- **Week banner**: the all day event spanning Monday through Sunday that carries the week's theme, created by Set Intention with the 🧭 Theme label, transparency `"free"`. Title is emoji + theme only; training detail lives in the body, written there by `assist:plan-training`.
 
 Include the location when the event is at a specific place.
 
 ## Training Plan Scheduling
 
-Training event creation lives in the `assist:plan-training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Phase 4 above invokes it during Monday planning.
+Training event creation lives in the `assist:plan-training` skill. See that skill for the recurring placeholder table, Friday long run workflow, special weeks (cutback, altitude, race), Mon flex, and training adjacent constraints. Plan Training (Phase 5) invokes it during Monday planning. The week banner is the one exception: this skill creates it during Set Intention; plan-training only writes the training block into its body.
 
 ## Key Locations
 
@@ -254,13 +261,13 @@ Training event creation lives in the `assist:plan-training` skill. See that skil
 
 Use the Todoist MCP tools to read and reschedule tasks. Key operations:
 
-- `find-tasks` with `filter`: Pull tasks using the raw Todoist filter string. The saved-filter lookup by ID (`filterIdOrName`) is not supported by this MCP, so pass the Schedule filter's raw query directly (see Phase 3).
+- `find-tasks` with `filter`: Pull tasks using the raw Todoist filter string. The saved filter lookup by ID (`filterIdOrName`) is not supported by this MCP, so pass the Schedule filter's raw query directly (see Phase 7).
 - `find-tasks-by-date`: Get tasks due in a date range
 - `reschedule-tasks`: Move task due dates (always use this instead of update-tasks for date changes, to preserve recurrence)
 - `update-tasks`: Modify task properties (but NOT dates). Use to set duration and labels.
 - `complete-tasks`: Complete recurring tasks to fire the next occurrence
 - `delete-object`: Delete notes/bookmarks that were never real tasks. Never complete these.
-- `add-tasks`: Create one-off tasks (e.g., a scheduled call from a recurring catch-up)
+- `add-tasks`: Create one off tasks (e.g., a scheduled call from a recurring catch up)
 - `add-comments`: Add detail to tasks when combining or enriching them
 
 When slotting tasks, respect Todoist priorities:
@@ -271,7 +278,7 @@ When slotting tasks, respect Todoist priorities:
 
 ## Gmail Integration
 
-Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catch-ups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting. Confirm with the user before executing send commands.
+Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catch ups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting. Confirm with the user before executing send commands.
 
 ## Learned Rules
 
@@ -279,15 +286,14 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - Always include "Delete it" as a triage option. Not everything deserves to be relocated.
 - Add an appropriate emoji prefix to tasks that lack one. Shorten task names to fit well on a calendar.
 - When slotting a task, always set: date/time via reschedule-tasks, then duration + Scheduled label via update-tasks.
-- Todoist deadlineDate is Premium-only. Note deadlines in the task description instead.
-- Transition and travel conventions are in GC `Calendar Preferences`. Both Basil. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title).
+- Todoist deadlineDate is Premium only. Note deadlines in the task description instead.
+- Transition and travel conventions are in `~/Eudaimonia/Admin/tools/google-calendar.md`. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title). They carry separate labels (↔️ Transition, 🚙 Travel).
 - When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `~/Eudaimonia/Life-Design/Koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
 - Worktree mechanics for planning live in Before Every Invocation and the worktree rule below. Cut and enter the `wk-<ISO week>` worktree before any Eudaimonia or homebase edits, never mid session.
-- Do not skip Phase 4 (invoke `assist:plan-training` in week mode), even when training decisions feel already made inline during rectify. The training skill carries its own gate, the previous week's retro, which has no other place to live. Surfaced 2026-05-25 when I rationalized skipping it because strength moves had been discussed during conflict resolution; Forni caught it. The retro turned up real signal (PAH as transit, PT miss, weigh-in trend) that would otherwise have stayed invisible until next Monday.
-- **Walk slotting one task at a time; never bulk-date the Schedule filter.** Phase 8 means presenting each task's proposed slot via AskUserQuestion (accept / move / defer / skip) and waiting for Forni before touching it. Do NOT batch-reschedule the whole filter onto dates in one shot and summarize after. The collaborative per-task pass *is* the process; bulk-dating erases his input and forces him to re-read and unwind it. Surfaced 2026-05-31: I rescheduled 17 filter tasks at once. Forni: "you just created a bunch of tasks and put them onto dates. That's not really how we go through the scheduling process," and "you took a lot of action without asking me. Now I've got to go back and read through your summary and readjust it."
-- **Default to asking before acting throughout planning, not just slotting.** Bias toward confirming each change with Forni rather than executing a batch and reporting. Calendar moves, task reschedules, deferrals — present, then wait. Same-session feedback as above.
-- **Do not place training sessions before the training readjustment is done.** The Friday long run distance depends on the week's retro and any special-week adjustment, so run the training readjustment (Phase 4 / `assist:plan-training`) first, then schedule the run. Surfaced 2026-05-31: I placed an 8 mi long run before the Wk 4 retro; the readjusted number was 6 mi off the calf restart.
-- **Plan in a `wk-<ISO week>` worktree, not a shared branch.** Each planning pass runs in its own worktree (see Before Every Invocation), cut in every repo it touches: Eudaimonia for planning artifacts (schedule.md, training plan, koans) and homebase for skill or config edits. A plain shared branch is not enough. On 2026-06-14 a branch switch in another terminal moved HEAD under the session mid-plan and scattered commits onto an unrelated branch. A worktree gives the session its own working directory, so concurrent terminal activity cannot collide. All planning edits must target the worktree copy, not the main checkout. **Foot-gun: an absolute path like `~/Eudaimonia/...` resolves to the main checkout even when the session cwd is the worktree, so edits silently land on the wrong tree.** Target the worktree path (`.claude/worktrees/wk-<ISO week>/...`). If a slip happens, move it with `git -C <main> diff -- <file>` piped to `git -C <worktree> apply`, then restore main. Surfaced 2026-06-22. Supersedes the older shared branch and date stamped approaches.
-- **Green stars are walked, not auto-skipped, during the Email Sweep.** A green star means "waiting on someone else" as of the moment it was set, but the ball can quietly return: a vendor quote thread that is actually awaiting Forni's decision, or a tracker thread hiding a scheduling action. In Phase 6, present every starred thread for disposition rather than unilaterally classifying green stars as no-action. Surfaced 2026-07-13 on the first live sweep: the skylight quote (green) was waiting on Forni's decision, and the new-servicer thread (green) contained a launch call to schedule. Both were initially skipped and had to be corrected into tasks.
-
-- **The ⏰ Scheduled label requires a specific time; label-without-time is an anti-pattern.** Slotting means both a datetime and the label (Phase 8 steps 1 and 2 together); a task carrying the label with a date-only due hides from the Schedule filter indefinitely while looking handled. The filter's `(@⏰ Scheduled & no time)` branch (added 2026-07-13) drags offenders back into triage: when one surfaces, either give it a real time or strip the label (or swap to ⏲️ Recurring for genuinely recurring reminders). Surfaced 2026-07-13: two tasks due that very day (Connect for Health enrollment, a site review) were invisible during planning, and one had already spawned an accidental duplicate.
+- Do not skip Plan Training (invoke `assist:plan-training` in week mode), even when training decisions feel already made inline during Sweep Calendar. The training skill carries its own gate, the previous week's retro, which has no other place to live. Surfaced 2026-05-25 when I rationalized skipping it because strength moves had been discussed during conflict resolution; Forni caught it. The retro turned up real signal (PAH as transit, PT miss, weigh-in trend) that would otherwise have stayed invisible until next Monday.
+- **Walk slotting one task at a time; never bulk date the Schedule filter.** The Slot step of Plan Tasks means presenting each task's proposed slot via AskUserQuestion (accept / move / defer / skip) and waiting for Forni before touching it. Do NOT batch reschedule the whole filter onto dates in one shot and summarize after. The collaborative per task pass *is* the process; bulk dating erases his input and forces him to re-read and unwind it. Surfaced 2026-05-31: I rescheduled 17 filter tasks at once. Forni: "you just created a bunch of tasks and put them onto dates. That's not really how we go through the scheduling process," and "you took a lot of action without asking me. Now I've got to go back and read through your summary and readjust it."
+- **Default to asking before acting throughout planning, not just slotting.** Bias toward confirming each change with Forni rather than executing a batch and reporting. Calendar moves, task reschedules, deferrals — present, then wait. Same session feedback as above.
+- **Do not place training sessions before the training readjustment is done.** The Friday long run distance depends on the week's retro and any special week adjustment, so run Plan Training (`assist:plan-training`) before scheduling the run. Surfaced 2026-05-31: I placed an 8 mi long run before the Wk 4 retro; the readjusted number was 6 mi off the calf restart.
+- **Plan in a `wk-<ISO week>` worktree, not a shared branch.** Each planning pass runs in its own worktree (see Before Every Invocation), cut in every repo it touches: Eudaimonia for planning artifacts (schedule.md, training plan, koans) and homebase for skill or config edits. A plain shared branch is not enough. On 2026-06-14 a branch switch in another terminal moved HEAD under the session mid plan and scattered commits onto an unrelated branch. A worktree gives the session its own working directory, so concurrent terminal activity cannot collide. All planning edits must target the worktree copy, not the main checkout. **Foot gun: an absolute path like `~/Eudaimonia/...` resolves to the main checkout even when the session cwd is the worktree, so edits silently land on the wrong tree.** Target the worktree path (`.claude/worktrees/wk-<ISO week>/...`). If a slip happens, move it with `git -C <main> diff -- <file>` piped to `git -C <worktree> apply`, then restore main. Surfaced 2026-06-22. Supersedes the older shared branch and date stamped approaches.
+- **Green stars are walked, not auto skipped, during Sweep Inbox.** A green star means "waiting on someone else" as of the moment it was set, but the ball can quietly return: a vendor quote thread that is actually awaiting Forni's decision, or a tracker thread hiding a scheduling action. Present every starred thread for disposition rather than unilaterally classifying green stars as no action. Surfaced 2026-07-13 on the first live sweep: the skylight quote (green) was waiting on Forni's decision, and the new servicer thread (green) contained a launch call to schedule. Both were initially skipped and had to be corrected into tasks.
+- **The ⏰ Scheduled label requires a specific time; label without time is an anti pattern.** Slotting means both a datetime and the label (the two Slot steps together); a task carrying the label with a date only due hides from the Schedule filter indefinitely while looking handled. The filter's `(@⏰ Scheduled & no time)` branch (added 2026-07-13) drags offenders back into triage: when one surfaces, either give it a real time or strip the label (or swap to ⏲️ Recurring for genuinely recurring reminders). Surfaced 2026-07-13: two tasks due that very day (Connect for Health enrollment, a site review) were invisible during planning, and one had already spawned an accidental duplicate.
