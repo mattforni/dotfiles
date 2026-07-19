@@ -78,6 +78,14 @@ Follows Anthropic's published division of labor (adopted 2026-07-04, reversing t
 
 `assist:codify-context` is the deliberate write-in path for the repo-file layers when Forni says "codify."
 
+**Routing a durable thing: GC vs Life Design vs Admin vs Pillar.** GC is how *I* work (preferences, conventions, workflow rules). Everything else is *the life*, and lives in Eudy under one of three bands, picked by a single test each:
+
+- **Steering the whole life** (a standing question, a Designing-Your-Life evaluation, the annual plan) goes to `~/Eudaimonia/Life-Design/`. It decides *what life to live*.
+- **Operational machinery** (a tool's mechanics, an account or credential convention, a naming or categorization scheme like `Admin/TAXONOMY.md`) goes to `~/Eudaimonia/Admin/`. It *runs the systems* that support the life.
+- **One domain of the life** (a training block, a finance model, a trip, a writing draft) goes to its Pillar: Constitution, Contemplation, Community, or Craft.
+
+Each band's own CLAUDE.md holds the full test; this is just the one-line router.
+
 **Keep GC lean — it loads on every session, everywhere.** Anthropic's guidance targets under 200 lines per CLAUDE.md; longer files reduce adherence. GC holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics belong in that tool's `~/Eudaimonia/Admin/tools/<tool>.md` one-pager. Progressive disclosure: pointers here, depth one hop away.
 
 ### Context Architecture
