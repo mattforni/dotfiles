@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# Worktree gate: nudge sessions toward worktrees when a git command mutates a
-# repo's primary checkout. Non blocking; injects context, never denies.
+# Worktree gate: BLOCK mutating git on a repo's primary checkout, forcing all
+# session work into a dedicated worktree so concurrent sessions never collide.
+# Denies via the PreToolUse permissionDecision. Two deliberate carve-outs:
+#   1. `merge` is allowed on primary (landing a branch into main is a landing step).
+#   2. Prefix a command with WT_GATE_BYPASS=1 to override for genuine primary work
+#      (a landing step, or committing symlinked homebase config like GC itself).
+# Fails OPEN: any resolution error exits 0, never worse than an ungated command.
 set -uo pipefail
 unset CDPATH
 
@@ -8,16 +13,16 @@ input=$(cat)
 cmd=$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)
 [[ -z "$cmd" ]] && exit 0
 
+# Explicit escape hatch. Prefix the command with WT_GATE_BYPASS=1 to allow a
+# genuine primary-checkout mutation (landing step, symlinked-config commit).
+grep -qE '(^|[[:space:]])WT_GATE_BYPASS=1([[:space:]]|$)' <<<"$cmd" && exit 0
+
 # Only mutating git operations (working tree or branch state changers).
-# Tolerates global options between git and the subcommand: single token
-# flags (--no-pager, --git-dir=x) and separate argument forms of -c/-C,
-# including quoted paths with spaces. Bare words are deliberately not
-# allowed there so "git log | grep commit" cannot false positive.
-# Read only stash invocations (list/show) are stripped first so plain
-# "stash" can stay in the mutating list; this keeps redirected forms
-# like "git stash > /dev/null" caught without a fragile stash regex.
+# `merge` is intentionally EXCLUDED from the blocked set: it is the landing step
+# that runs on the primary checkout. Tolerates global options between git and
+# the subcommand. Read only stash invocations (list/show) are stripped first.
 filtered_cmd=$(sed -E "s/(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+stash[[:space:]]+(list|show)([^;&|]*)/ /g" <<<"$cmd")
-if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+(commit|checkout|switch|merge|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$filtered_cmd"; then
+if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+(commit|checkout|switch|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$filtered_cmd"; then
   exit 0
 fi
 
@@ -34,10 +39,11 @@ git_dir=$(git -C "$dir" rev-parse --absolute-git-dir 2>/dev/null) || exit 0
 common_dir=$(git -C "$dir" rev-parse --git-common-dir 2>/dev/null) || exit 0
 common_dir=$(cd "$dir" 2>/dev/null && cd "$common_dir" 2>/dev/null && pwd) || common_dir="$common_dir"
 
-# Linked worktrees have git-dir != git-common-dir; a primary checkout matches
+# Linked worktrees have git-dir != git-common-dir; a primary checkout matches.
 if [[ "$git_dir" == "$common_dir" ]]; then
   cat <<'JSON'
-{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"Worktree gate: this git command mutates a repo primary checkout. Forni's convention is that session work happens in a dedicated worktree (EnterWorktree) so concurrent sessions never collide. If this is not a deliberate landing step (merging, pulling main, deleting a merged branch), move to a worktree before continuing."}}
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Worktree gate: this mutating git command targets a repo PRIMARY checkout. Per GC, session work must run in a dedicated worktree (EnterWorktree) so concurrent sessions never collide. Cut a worktree and rerun there. For a genuine landing step or a symlinked-config commit that must run on primary, prefix the command with WT_GATE_BYPASS=1."}}
 JSON
+  exit 0
 fi
 exit 0
