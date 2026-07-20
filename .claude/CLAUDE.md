@@ -33,6 +33,7 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
 
 - When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
 - Do not overstate or exaggerate the quality of results. If something looks like it works but has not been thoroughly validated, say so. Let the user judge quality.
+- **A permission classifier block on an outward action (email send, publish, post) is a hard stop.** Come back with what was attempted and why, and let Forni decide. Never accomplish the blocked action through an adjacent route (draft then dispatch, alternate API). Codified 2026-07-20.
 - **Verify transformed outputs before publishing them.** When the work involves a transform (cropping, rotating, OCR, merging, format conversion) and the destination is shared (Drive upload, email attachment, content replacement), spot check the result before pushing it out. Read the produced file or render a preview. A 5 second visual check catches mistakes that are awkward to undo once published.
 
 ## Agent Fan Out Defaults
@@ -158,6 +159,7 @@ When creating new Linear tickets:
 
 ## Email Preferences
 
+- **Outbound email to a prospective or current client requires explicit approval of the final email, every time.** Before sending, show the exact artifact (to, subject, full body) and get a yes on that artifact in that moment. Conversational phrasing like "send it," "go ahead," or "fire away" is not approval of an unseen send, and can mean "schedule it"; when wording and context disagree (a plan date says Tuesday, a draft says gated), stop and ask. Codified 2026-07-20 after the DCTC send went out on misread wording.
 - **Two sender identities, routed by audience.** Email to another human (outreach, replies, correspondence) goes through gws as Forni. Email whose recipient is Forni himself (agent reports, review docs, session artifacts, notifications) sends from `Claude <claude@atelic.me>` via Resend, so the inbox shows who it came from instead of a from me / to me self-send. Mechanics and the shared library live in `~/Eudaimonia/Admin/tools/resend.md`.
 - Subject lines should use Title Case (see Writing Style)
 - Never explicitly sign emails (Gmail handles signatures automatically)
