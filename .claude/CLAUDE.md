@@ -47,11 +47,11 @@ Delegate matching work to the user level agent roster in `~/.claude/agents/` pro
   - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
   - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
 - Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
-- **Wrapper script escape hatch when `cd` is genuinely required.** Some commands need the project root as cwd to function (rbenv resolving the Ruby from the nearest `.ruby-version`, bundler reading `Gemfile` from cwd, Rails config paths resolved relative to project root, Vite/Bun resolving `package.json`). Setting `BUNDLE_GEMFILE` alone is insufficient — Rails resolves `Rails.root` from cwd, rbenv picks the version from the cwd's `.ruby-version`, etc. The escape hatch: write a small shell script that does the `cd` internally, then invoke the script from the Bash tool. The `cd` lives inside the script, not in the Bash call. Example for atelic-api:
+- **Wrapper script escape hatch when `cd` is genuinely required.** Some commands need the project root as cwd to function (rbenv resolving the Ruby from the nearest `.ruby-version`, bundler reading `Gemfile` from cwd, Rails config paths resolved relative to project root, Vite/Bun resolving `package.json`). Setting `BUNDLE_GEMFILE` alone is insufficient — Rails resolves `Rails.root` from cwd, rbenv picks the version from the cwd's `.ruby-version`, etc. The escape hatch: write a small shell script that does the `cd` internally, then invoke the script from the Bash tool. The `cd` lives inside the script, not in the Bash call. Example for pinole-api:
   ```bash
   #!/usr/bin/env bash
   set -euo pipefail
-  cd "$HOME/Eudaimonia/Craft/atelic/api"
+  cd "$HOME/Eudaimonia/Craft/Vocation/Atelic/pinole/api"
   # Shims on PATH is all rbenv needs; they read .ruby-version from cwd.
   export PATH="$HOME/.rbenv/shims:$PATH"
   exec "$@"
@@ -215,7 +215,7 @@ Todoist conventions (Monday scheduling, follow-ups always land on a Monday, shor
 
 ## Growth Engineering
 
-For any SEO, GEO, or growth engineering work (RYLLC clients or personal), the canonical playbook is `~/Eudaimonia/Craft/Vocation/RYLLC/Growth/README.md`. It is built on two vectors: **The Funnel** (the map of where a site leaks) and **The Loop** (the repeatable measure, find the constraint, ship, measure again motion). Apply it and extend it there.
+For any SEO, GEO, or growth engineering work (Atelic clients or personal), the canonical playbook is `~/Eudaimonia/Craft/Vocation/Atelic/Growth/README.md`. It is built on two vectors: **The Funnel** (the map of where a site leaks) and **The Loop** (the repeatable measure, find the constraint, ship, measure again motion). Apply it and extend it there.
 
 ## Problem Solving Approach
 

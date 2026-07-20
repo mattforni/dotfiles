@@ -77,6 +77,9 @@ Rules added from triage corrections. Read on every invocation. These override de
 
 ## Created Filters
 
+- `from:prime@amazon.com` -> label `📑 Admin/🛒 Purchases` (Label_36), skip inbox, mark read. Covers Prime membership change confirmations (renewal, cancellation). Created 2026-07-19 (filter id `ANe1BmgLdzmPdmLA1kKHrY5Ce3ATguMnHizDC8hwO5SrnA`). Supersedes the `prime@amazon.com` sender rule for future mail.
+- `from:invoice+statements+acct_1KZOA5IV1bWPnvOA@stripe.com` -> label `📑 Admin/🛒 Purchases` (Label_36), skip inbox, mark read. Mill Industries receipts (sent via Stripe; keyed on Mill's Stripe account id so other merchants' Stripe receipts are unaffected). Created 2026-07-19 (filter id `ANe1BmhzwjKUgvTRe6iUswZbobYCISVCcr2Tq6e5GQur1g`).
+
 ## Spend Categorization
 
 Rules for `assist:handle-budget`. The payee map is [reference/payee-map.md](reference/payee-map.md); these corrections override it.

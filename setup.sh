@@ -567,7 +567,7 @@ install_mcp_servers() {
   #   stdio: name|stdio|command_and_args
   #   http:  name|http|url|optional_header  (single header, eg. "Authorization: Bearer $TOKEN")
   # First time auth on a new machine: each MCP may require its own credentials
-  # (e.g., atelic needs ATELIC_API_TOKEN exported in the shell before this script
+  # (e.g., pinole needs ATELIC_API_TOKEN exported in the shell before this script
   # runs so the Bearer header registers populated). Subsequent runs are idempotent.
   # Strava is connected via the native claude.ai Strava connector (account level,
   # managed in claude.ai Settings > Connectors), so it needs no entry here. The
@@ -581,7 +581,7 @@ install_mcp_servers() {
 
   # Self-heal: when the env var is empty (headless runs do not source ~/.zshrc),
   # fall back to the token stashed in the macOS Keychain so a fresh machine can
-  # re-register atelic without a manual export. The empty-token guard below still
+  # re-register pinole without a manual export. The empty-token guard below still
   # protects us if neither source has it.
   if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
     ATELIC_API_TOKEN="$(security find-generic-password -s atelic-api-token -w)" || ATELIC_API_TOKEN=""
@@ -589,7 +589,7 @@ install_mcp_servers() {
 
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
-    "atelic|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
+    "pinole|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
     "ynab|stdio|deno run --allow-net=api.ynab.com --allow-env=YNAB_ACCESS_TOKEN,YNAB_READ_ONLY,YNAB_DEFAULT_PLAN_ID,YNAB_CACHE_PATH,PORT jsr:@jsclayton/ynab-mcp"
   )
 
@@ -599,11 +599,12 @@ install_mcp_servers() {
     local transport="${rest%%|*}"
     local target_and_extra="${rest#*|}"
 
-    # Skip atelic when its bearer token is missing. Registering with an empty
+    # Skip pinole when its bearer token is missing. Registering with an empty
     # token bakes a broken entry that the `Already registered` short circuit
-    # below would silently preserve on future runs.
-    if [[ "$name" == "atelic" && -z "${ATELIC_API_TOKEN:-}" ]]; then
-      warn "Skipping atelic: ATELIC_API_TOKEN not set in environment"
+    # below would silently preserve on future runs. (The server name was atelic
+    # until 2026-07-20; the Keychain entry keeps the atelic-api-token name.)
+    if [[ "$name" == "pinole" && -z "${ATELIC_API_TOKEN:-}" ]]; then
+      warn "Skipping pinole: ATELIC_API_TOKEN not set in environment"
       continue
     fi
 
