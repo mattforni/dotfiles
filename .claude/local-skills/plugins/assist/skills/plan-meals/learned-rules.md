@@ -33,9 +33,9 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: Forni said on 2026-04-17 "I LOVE their bulk section."
   - How to apply: when generating a shopping list, put dried beans, rice, lentils, quinoa, and related bulk staples under Sprouts. Costco is for jarred/packaged items (kimchi, hummus, olives, artichokes, pickled onions, yogurt, nuts, coffee, vanilla extract).
 
-- **The primary shopping list goes into Atelic via `mcp__atelic__add_shopping_item`.** One call per item, with `store` set and quantity/brand hints in `notes`; it surfaces in the Atelic app for the run.
-  - Why: superseded Apple Reminders in ATE-353 (2026-06-16) when meal plans moved into Atelic; the shopping plan now lives alongside the pantry rather than in a separate app.
-  - How to apply: See the "Shopping List in Atelic" section of SKILL.md. Only push items for the store being shopped that day; other stores can be added with their own `store`.
+- **The primary shopping list goes into Pinole via `mcp__pinole__add_shopping_item`.** One call per item, with `store` set and quantity/brand hints in `notes`; it surfaces in the Pinole app for the run. (The system was named Atelic until 2026-07-20.)
+  - Why: superseded Apple Reminders in ATE-353 (2026-06-16) when meal plans moved into the app; the shopping plan now lives alongside the pantry rather than in a separate app.
+  - How to apply: See the "Shopping List in Pinole" section of SKILL.md. Only push items for the store being shopped that day; other stores can be added with their own `store`.
 
 - **Quantities in lb, oz, fl oz, or grams. No "1 bag", "1 carton", "1 bunch", "1 container", "1 loaf".** Packaging sizes vary by store and brand; actual weight or volume is what gets Forni the right amount.
   - Why: Forni corrected this on 2026-04-17. Container units are ambiguous.

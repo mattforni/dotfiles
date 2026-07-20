@@ -1,11 +1,11 @@
 ---
 name: assist:plan-meals
-description: Weekly meal planning, shopping list generation, and pantry aware grocery runs. Produces a plant based, seasonal, batch prep friendly meal plan for the week, authored into the Atelic app, plus a consolidated shopping list grouped by store. Use this skill whenever the user mentions meal planning, wants to plan the week's food, asks for a shopping list, wants help figuring out what to cook, mentions batch prep, macros, recipes, a grocery run, a Sprouts or Costco trip, or says things like "back on the healthy eating train" or "kick the takeout habit." Also trigger for "/assist:plan-meals", "meals for the week", or "what should I cook". Prefer invoking this skill even when the user's ask is oblique (e.g., "I want to stop eating out" or "I need to hit my macros this week") since meal planning is usually the underlying need.
+description: Weekly meal planning, shopping list generation, and pantry aware grocery runs. Produces a plant based, seasonal, batch prep friendly meal plan for the week, authored into the Pinole app, plus a consolidated shopping list grouped by store. Use this skill whenever the user mentions meal planning, wants to plan the week's food, asks for a shopping list, wants help figuring out what to cook, mentions batch prep, macros, recipes, a grocery run, a Sprouts or Costco trip, or says things like "back on the healthy eating train" or "kick the takeout habit." Also trigger for "/assist:plan-meals", "meals for the week", or "what should I cook". Prefer invoking this skill even when the user's ask is oblique (e.g., "I want to stop eating out" or "I need to hit my macros this week") since meal planning is usually the underlying need.
 argument-hint: "[optional week, e.g. 2026-W17]"
 allowed-tools:
   - Bash
   - mcp__claude_ai_Google_Calendar__*
-  - mcp__atelic__*
+  - mcp__pinole__*
   - WebFetch
   - WebSearch
   - Read
@@ -17,31 +17,31 @@ allowed-tools:
 
 # Plan Meals Assist
 
-Help Forni plan a week of plant based, seasonal, batch prep friendly meals, author it into the Atelic app, and produce a single primary shopping list. The goal is less decision fatigue mid week and more momentum on the healthy eating front.
+Help Forni plan a week of plant based, seasonal, batch prep friendly meals, author it into the Pinole app, and produce a single primary shopping list. The goal is less decision fatigue mid week and more momentum on the healthy eating front.
 
 ## Why This Matters
 
 Forni's 2026 growth edge is eliminating overconsumption. The most visible form is defaulting to takeout when the week gets tired. A good meal plan removes the decision and the cravings compound. A bad plan (boring, unrealistic, mismatched to his week) is worse than no plan; it generates friction and a story to push against. Aim for plans he wants to eat, sized to his actual week, using ingredients he actually has or can easily get.
 
-The meal plan now lives in the Atelic app, where Forni can actually look at it through the week and work the Sunday prep checklist; that presence is what makes the plan change behavior instead of dying in a file. The shopping list is still the action artifact for the grocery run.
+The meal plan now lives in the Pinole app, where Forni can actually look at it through the week and work the Sunday prep checklist; that presence is what makes the plan change behavior instead of dying in a file. The shopping list is still the action artifact for the grocery run.
 
 ## Before Every Invocation
 
 1. Read [learned-rules.md](learned-rules.md) in this directory
 2. Read the canonical nutrition context:
    - `~/Eudaimonia/Constitution/Nutrition/README.md` — daily macro targets, meal budgets, supplement stack
-   - **Pantry inventory and staples live in the Atelic api db** (migrated from `pantry.md` and `staples.md` on 2026-05-15 in ATE-141), reached through the Atelic MCP tools (`mcp__atelic__list_pantry`, etc.) — see the Pantry Access section below.
-3. Read the most recent plan(s) from Atelic with `mcp__atelic__list_meal_plans` (and `mcp__atelic__get_meal_plan` for a week's detail) to see what we just ate and avoid repeating it
+   - **Pantry inventory and staples live in the Pinole api db** (migrated from `pantry.md` and `staples.md` on 2026-05-15 in ATE-141), reached through the Pinole MCP tools (`mcp__pinole__list_pantry`, etc.) — see the Pantry Access section below.
+3. Read the most recent plan(s) from Pinole with `mcp__pinole__list_meal_plans` (and `mcp__pinole__get_meal_plan` for a week's detail) to see what we just ate and avoid repeating it
 4. Read [references/recipe-sources.md](references/recipe-sources.md) for the preferred recipe sites and what's worked in the past
 5. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
 
 ## Pantry Access
 
-Pantry and staples live in the Atelic api db, reached through the Atelic MCP tools (no `rails runner`, no SQL). Each tool is typed and routes writes through the model, so store normalization and restock bookkeeping happen automatically.
+Pantry and staples live in the Pinole api db, reached through the Pinole MCP tools (no `rails runner`, no SQL). Each tool is typed and routes writes through the model, so store normalization and restock bookkeeping happen automatically.
 
-- **`mcp__atelic__list_pantry`** — read the pantry. Optional filters: `staple` (only staples), `needs_restock` (only items at or below their restock threshold), `store`. Returns a `collection` of items plus `distinct_stores`. Each item carries per-user state (`staple`, `level` 0 to 4, `restock_at`, `needs_restock`, `store`, `notes`) and delegated product fields (`name`, `brand`, `variant`, `organic`). Stock is quantitative: an item needs restocking when `needs_restock` is true (i.e. `level <= restock_at`), not a boolean in/out.
-- **`mcp__atelic__add_pantry_item`** — add something new to the pantry. Identify the product by `name` (plus optional `brand`/`variant`/`organic`); the consumable is created in the catalog if it does not exist. Optional `staple`, `level` (0 to 4, default 4), `restock_at`, `store`, `notes`. Errors if the item is already in the pantry; use update for that.
-- **`mcp__atelic__update_pantry_item`** — change `staple`, `level`, `restock_at`, `store`, or `notes` on an existing item. Locate it by `name` (plus optional `brand`/`variant`/`organic` to disambiguate) or by `id`. If a name matches more than one item, the error lists the candidates with ids; retry with an id or a disambiguator. Only the fields you pass change.
+- **`mcp__pinole__list_pantry`** — read the pantry. Optional filters: `staple` (only staples), `needs_restock` (only items at or below their restock threshold), `store`. Returns a `collection` of items plus `distinct_stores`. Each item carries per-user state (`staple`, `level` 0 to 4, `restock_at`, `needs_restock`, `store`, `notes`) and delegated product fields (`name`, `brand`, `variant`, `organic`). Stock is quantitative: an item needs restocking when `needs_restock` is true (i.e. `level <= restock_at`), not a boolean in/out.
+- **`mcp__pinole__add_pantry_item`** — add something new to the pantry. Identify the product by `name` (plus optional `brand`/`variant`/`organic`); the consumable is created in the catalog if it does not exist. Optional `staple`, `level` (0 to 4, default 4), `restock_at`, `store`, `notes`. Errors if the item is already in the pantry; use update for that.
+- **`mcp__pinole__update_pantry_item`** — change `staple`, `level`, `restock_at`, `store`, or `notes` on an existing item. Locate it by `name` (plus optional `brand`/`variant`/`organic` to disambiguate) or by `id`. If a name matches more than one item, the error lists the candidates with ids; retry with an id or a disambiguator. Only the fields you pass change.
 
 A storeless item (no `store` set) surfaces under any `store` filter, so staples with no fixed store are never hidden by a store-filtered read.
 
@@ -50,13 +50,13 @@ A storeless item (no `store` set) surfaces under any `store` filter, so staples 
 | Source | Purpose |
 |--------|---------|
 | `Constitution/Nutrition/README.md` | Daily macros and meal slot budgets |
-| Atelic api db (`PantryItem`, `Consumable`) via MCP | What is already on hand + brand preferences. Read with `mcp__atelic__list_pantry`. See Pantry Access above |
-| Atelic api db (`MealPlan`) via MCP | Prior weekly plans. Read with `mcp__atelic__list_meal_plans` / `get_meal_plan`; author with `create_meal_plan` / `update_meal_plan` |
-| Atelic api db (`Recipe`) via MCP | Recipes meals link against. Discover with `mcp__atelic__list_recipes`; create new ones (import from a URL or author from scratch) with `mcp__atelic__create_recipe` |
+| Pinole api db (`PantryItem`, `Consumable`) via MCP | What is already on hand + brand preferences. Read with `mcp__pinole__list_pantry`. See Pantry Access above |
+| Pinole api db (`MealPlan`) via MCP | Prior weekly plans. Read with `mcp__pinole__list_meal_plans` / `get_meal_plan`; author with `create_meal_plan` / `update_meal_plan` |
+| Pinole api db (`Recipe`) via MCP | Recipes meals link against. Discover with `mcp__pinole__list_recipes`; create new ones (import from a URL or author from scratch) with `mcp__pinole__create_recipe` |
 | `references/recipe-sources.md` | Approved recipe sites and historical ratings |
 | `learned-rules.md` | Corrections learned through use |
 
-Meal plans live in Atelic, not in markdown. Author them through the MCP tools (see Phase 5 and the Meal Plan Shape section); do not write plan files.
+Meal plans live in Pinole, not in markdown. Author them through the MCP tools (see Phase 5 and the Meal Plan Shape section); do not write plan files.
 
 ## Principles
 
@@ -86,9 +86,9 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 
 **The pantry data drifts and must be reconciled against reality before drafting. Do not trust stock levels at face value, especially after a travel week.** Planning against a stale pantry means building meals around produce that is no longer there and buying duplicates of what is already on hand. This reconcile is the first real move of every weekly plan.
 
-1. Pull the full pantry with `mcp__atelic__list_pantry` (see Pantry Access above)
+1. Pull the full pantry with `mcp__pinole__list_pantry` (see Pantry Access above)
 2. **Reconcile the perishables first.** Produce, dairy, and fresh proteins are where the data rots. Present what is currently shown in stock (group hardy vs delicate so it is fast to answer) and have Forni confirm what actually survived; knock everything else to level 0. After a travel week, assume most fresh stock is gone unless he says otherwise. For a full reconcile, present the list and let him name the survivors rather than asking thirty one-at-a-time questions (that scales badly on a phone); reserve the one-at-a-time pattern (see Pantry Rules in learned-rules.md) for the smaller set of genuinely ambiguous staples.
-3. Write the reconciliation back immediately with `mcp__atelic__update_pantry_item` (level up survivors, 0 for gone), `mcp__atelic__add_pantry_item` for new items, and `mcp__atelic__remove_pantry_item` for ones no longer tracked, so the rest of the flow reads accurate data. When zeroing, route each out item to its store (or remove it); a storeless `needs_restock` item pollutes every store's shopping view (see Pantry Rules).
+3. Write the reconciliation back immediately with `mcp__pinole__update_pantry_item` (level up survivors, 0 for gone), `mcp__pinole__add_pantry_item` for new items, and `mcp__pinole__remove_pantry_item` for ones no longer tracked, so the rest of the flow reads accurate data. When zeroing, route each out item to its store (or remove it); a storeless `needs_restock` item pollutes every store's shopping view (see Pantry Rules).
 4. Then surface restock candidates (staple + `needs_restock`, anything "low" in `notes`) for items used heavily week to week (tofu, soy milk, kimchi, hummus, greens, lentils, rice, oats) and confirm before adding to the shopping list
 
 ### Phase 3: Choose the Menu Together
@@ -96,45 +96,45 @@ Present the week back as a simple list of planned vs skipped meal slots. Ask For
 **The menu is a conversation, not a deliverable.** Never compose a finished week and present it for a yes or no; the walking of options IS the value. Work in rounds, one question at a time:
 
 1. **Start from the season.** Read `Constitution/Nutrition/seasons.md` and present the month's board (minus standing dislikes from learned-rules.md) as pickable anchors. Ask which appeal.
-2. **Source candidates on the picked anchors.** Check the library first with `mcp__atelic__list_recipes` (prefer rated repeats), then find 2 or 3 candidates per anchor on the preferred sites (WebSearch scoped to those domains). Verify each with WebFetch against the house rules (plant based, no alcohol, no corn, no pasta, no soups, everything in Food Preferences) before showing it; report casualties ("SVB's version has corn, it's out") so the vetting is visible.
+2. **Source candidates on the picked anchors.** Check the library first with `mcp__pinole__list_recipes` (prefer rated repeats), then find 2 or 3 candidates per anchor on the preferred sites (WebSearch scoped to those domains). Verify each with WebFetch against the house rules (plant based, no alcohol, no corn, no pasta, no soups, everything in Food Preferences) before showing it; report casualties ("SVB's version has corn, it's out") so the vetting is visible.
 3. **Present the board with links** (hyperlink the recipe names) and let Forni pick the centerpieces. One or two centerpieces per week; the rest is batch variations and leftovers.
 4. **Audit the picks.** Protein and macro math on the chosen menu against the daily targets, with concrete boosts offered (extra lentils, TVP in the taco beans) rather than silently applied.
 5. **Slot the picks into the framed week.** Repeat lunches up to twice; breakfast mostly constant; social days get a freeform "Social" slot rather than being left out. Batch prep steps carry amounts (e.g. "Cook 1.5 cups dry quinoa", never "a big batch"). When Forni states a new like, dislike, avoid food, or allergy at any point, append it to Food Preferences in learned-rules.md with the Why / How to apply structure so the next plan inherits it.
 
 ### Phase 4: Present the Full Plan in Plan Mode
 
-**No plan artifact writes to Atelic before this gate.** (The Phase 2 pantry reconcile is the deliberate exception: it records reality, not plan decisions.) Enter plan mode and write the complete plan in the three section format. The plan's one job is decision elimination: the tired mid week moment ("Wednesday 17:30, what happens next") must get its answer in one glance, already cooked.
+**No plan artifact writes to Pinole before this gate.** (The Phase 2 pantry reconcile is the deliberate exception: it records reality, not plan decisions.) Enter plan mode and write the complete plan in the three section format. The plan's one job is decision elimination: the tired mid week moment ("Wednesday 17:30, what happens next") must get its answer in one glance, already cooked.
 
 1. **The Meals.** Every meal and snack named, with Cal / P / C / F per serving. Clean numbers, no tildes or hedge marks (he knows they are estimates). A couple of meal kinds per week, period; snacks are one or two standing items, never per day engineering.
 2. **The Plan.** Every slot of every day explicit (breakfast, lunch, snacks, dinner; no "mornings are all the same" shorthand), each day totaled as actual / target for all four macros. Dinners out get an asterisk on the day and the event with a single footnote under the table; those days' totals count home food only.
 3. **The Prep.** Numbered cook sessions with exact amounts, times, and temperatures. Fresh proteins and grains cook no more than 2 days ahead, so the back half of the week gets a midweek refresh session. Prep beyond the current week belongs to next week's planning session.
 
-After the three sections: every Atelic write to be made (recipes to create or reuse, authoring the plan, shopping list changes item by item) and the shopping day when there is one. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
+After the three sections: every Pinole write to be made (recipes to create or reuse, authoring the plan, shopping list changes item by item) and the shopping day when there is one. Exit plan mode for approval and execute only on the green light. An AskUserQuestion answer about one slot is not plan approval; the approved plan document is.
 
 ### Phase 5: Execute the Writes
 
 1. **Back every real meal with a recipe** so the plan links by `recipe_name` (not freeform text with guessed macros). For each cooked meal and anchor:
    - **Reuse if it exists.** If `list_recipes` already has a good match, link by name; nothing to create.
-   - **Import a real dish from a trusted source** by calling `mcp__atelic__create_recipe` with the vetted `url` from Phase 3; the API reads the page's recipe data. When the plan adapts the dish (feta swapped out, protein bumped), author from scratch instead with the adaptations baked in, crediting the site, so the computed macros match what actually gets cooked.
+   - **Import a real dish from a trusted source** by calling `mcp__pinole__create_recipe` with the vetted `url` from Phase 3; the API reads the page's recipe data. When the plan adapts the dish (feta swapped out, protein bumped), author from scratch instead with the adaptations baked in, crediting the site, so the computed macros match what actually gets cooked.
    - **Author simple assembly meals from scratch** with `name`, short `directions`, `servings`, and free-text `ingredients` lines with amounts (one per line, e.g. "2 cups cooked quinoa").
    - **Set `servings` honestly** to what the batch yields, so per-serving macros land right.
    - **Anchors are recipes too.** The breakfast bowl and shake get light recipes once, reused by link in later weeks.
    - `create_recipe` errors if the name exists. Before linking the existing record, confirm it is actually the same dish (check its ingredients via `list_recipes`); if a different recipe wears the name, use a distinguishing name rather than linking blind. New ingredients get USDA macros backfilled automatically; if nutrition comes back incomplete, tell Forni and give a hand-math estimate rather than papering over it.
-2. **Author the plan** with `mcp__atelic__create_meal_plan` (or `update_meal_plan` if the week exists; create errors and points you at update). `unmatched_recipes` must come back empty for cooked meals; a name landing there means the recipe was not created, so create it rather than leaving the meal freeform.
+2. **Author the plan** with `mcp__pinole__create_meal_plan` (or `update_meal_plan` if the week exists; create errors and points you at update). `unmatched_recipes` must come back empty for cooked meals; a name landing there means the recipe was not created, so create it rather than leaving the meal freeform.
 3. **Record the recipes** in `references/recipe-sources.md` under "Recipes Used": week, site (or "Claude drafted"), rating left blank.
-4. **Push the shopping list** for the store being shopped, one `mcp__atelic__add_shopping_item` per item, `store` set, quantities in the item name (lb, oz, fl oz; never "1 bag"), brand and recipe hints in `notes`. Only `needs_restock` items belong on it; flag low staples and include only what Forni confirmed. Mark single-recipe items in `notes` so they are easy to skip if a meal gets cut. Print the list in chat as the backup copy.
+4. **Push the shopping list** for the store being shopped, one `mcp__pinole__add_shopping_item` per item, `store` set, quantities in the item name (lb, oz, fl oz; never "1 bag"), brand and recipe hints in `notes`. Only `needs_restock` items belong on it; flag low staples and include only what Forni confirmed. Mark single-recipe items in `notes` so they are easy to skip if a meal gets cut. Print the list in chat as the backup copy.
 
 ### Phase 6: Close the Loop After the Shop
 
 When Forni reports the shop is done (same session or later), write reality back so next week's Phase 2 reconcile starts nearly true:
 
 1. Ask whether everything made it into the cart or there were misses and substitutions.
-2. Check off the bought items with `mcp__atelic__update_shopping_item` (`checked_off: true`).
-3. Restore pantry levels for restocked tracked items with `mcp__atelic__update_pantry_item`; add newly tracked items with `mcp__atelic__add_pantry_item` (set `category` and `store`; a consumable born from a recipe import defaults the category to `other`, so fix it). Skip one-shot ingredients that will be consumed within a day or two.
+2. Check off the bought items with `mcp__pinole__update_shopping_item` (`checked_off: true`).
+3. Restore pantry levels for restocked tracked items with `mcp__pinole__update_pantry_item`; add newly tracked items with `mcp__pinole__add_pantry_item` (set `category` and `store`; a consumable born from a recipe import defaults the category to `other`, so fix it). Skip one-shot ingredients that will be consumed within a day or two.
 
-## Shopping List in Atelic
+## Shopping List in Pinole
 
-The shopping list is pushed into Atelic's shopping plan with `mcp__atelic__add_shopping_item` (one call per item), so it shows up wherever Forni views the app during the run. `created_via` is set to `mcp` automatically.
+The shopping list is pushed into Pinole's shopping plan with `mcp__pinole__add_shopping_item` (one call per item), so it shows up wherever Forni views the app during the run. `created_via` is set to `mcp` automatically.
 
 - Keep item names concise but include quantity, e.g. `"Sweet potatoes, 4 large"`. Quantities help the checkout/counting moment.
 - Put brand hints and recipe associations in `notes`, e.g. `notes: "Bob's Red Mill tri color"`.
@@ -168,7 +168,7 @@ Feel free to suggest new sites similar in vibe (plant based, seasonal, approacha
 
 ## Pantry Update Pattern
 
-When Forni mentions outside this skill that he bought or finished something (e.g., "grabbed two blocks of tofu at Sprouts"), update the pantry with `mcp__atelic__update_pantry_item` (set `level` back up when restocked, down when used up), or `mcp__atelic__add_pantry_item` if it is not tracked yet. This keeps the inventory accurate without needing a formal mode. When running the plan, always re query fresh rather than trusting cached state.
+When Forni mentions outside this skill that he bought or finished something (e.g., "grabbed two blocks of tofu at Sprouts"), update the pantry with `mcp__pinole__update_pantry_item` (set `level` back up when restocked, down when used up), or `mcp__pinole__add_pantry_item` if it is not tracked yet. This keeps the inventory accurate without needing a formal mode. When running the plan, always re query fresh rather than trusting cached state.
 
 ## Constraints and Defaults
 
