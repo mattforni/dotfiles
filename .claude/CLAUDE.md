@@ -147,6 +147,8 @@ Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Adm
 
 **Linear is the tracker for engineering and development work; Todoist is for personal and operational tasks.** Anything code (bugs, tech debt, features, follow-ups from a build session) goes to Linear, never Todoist. Route the personal/operational side to Todoist (see Todoist Preferences). Do not offer Todoist for dev follow-ups.
 
+**Linear issues that need real calendar time are scheduled through Reclaim** (the `Reclaim` label plus a due date and estimate), never hand-placed calendar holds. Mechanics in `~/Eudaimonia/Admin/tools/reclaim.md`.
+
 **When to create a ticket at all.** A ticket tracks work that needs doing: queued for later, spanning sessions, needing prioritization, or handed off. For work that is decided and executed in one sitting, the PR is the tracking unit, so do not mint a ticket for it. Ask before ticketing in-session work. If a ticket is created, actually use it: move it through states and let it close on merge, never leave it orphaned in Todo while its PR is already open.
 
 When creating new Linear tickets:
