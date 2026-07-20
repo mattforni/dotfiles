@@ -23,7 +23,7 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: On 2026-07-16 the first W29 draft was composed, authored, and pushed to Atelic in one motion. Forni pulled it back: "can we discuss the menu before you just make decisions on my behalf." The walking of options IS the value, not overhead.
   - How to apply: Phase 3 is a dialogue: seasonal anchors first, then sourced options with links, then his picks, then protein and macro audit on the picks. Only then does a full plan exist to present.
 
-- **Plan mode gate: present the complete plan and get approval before ANY plan artifact write to Atelic.** No recipe creation, no meal plan authoring, no shopping list push until Forni has approved the full picture (menu, prep with amounts, every Atelic write, shopping list changes) through plan mode. The Phase 2 pantry reconcile is the one deliberate exception; it records reality, not plan decisions.
+- **Plan mode gate: present the complete plan and get approval before ANY plan artifact write to Pinole.** No recipe creation, no meal plan authoring, no shopping list push until Forni has approved the full picture (menu, prep with amounts, every Pinole write, shopping list changes) through plan mode. The Phase 2 pantry reconcile is the one deliberate exception; it records reality, not plan decisions.
   - Why: Forni asked for this explicitly on 2026-07-16 ("switch into planning mode and present it") after the first draft went to Atelic without a review gate. An AskUserQuestion answer about one slot is not plan approval.
   - How to apply: after the menu conversation lands, enter plan mode, write the full plan (readable prose, amounts everywhere), and exit plan mode for approval. Execute only after the green light.
 
@@ -69,7 +69,7 @@ Corrections and preferences specific to meal planning. Read on every invocation.
 
 ## Food Preferences
 
-Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-check the draft against this list, and append here whenever Forni states a new preference during planning. New entries follow the same Why / How to apply structure as the rules above. A durable product home for preferences and allergies is tracked as an Atelic ticket; until it ships, this section is the source of truth.
+Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-check the draft against this list, and append here whenever Forni states a new preference during planning. New entries follow the same Why / How to apply structure as the rules above. A durable product home for preferences and allergies is tracked as a Pinole ticket; until it ships, this section is the source of truth.
 
 **Dislikes / avoid:**
 
