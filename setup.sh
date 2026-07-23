@@ -584,7 +584,7 @@ install_mcp_servers() {
   # re-register pinole without a manual export. The empty-token guard below still
   # protects us if neither source has it.
   if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
-    ATELIC_API_TOKEN="$(security find-generic-password -s atelic-api-token -w)" || ATELIC_API_TOKEN=""
+    ATELIC_API_TOKEN="$(security find-generic-password -s atelic-token -w)" || ATELIC_API_TOKEN=""
   fi
 
   local desired=(
@@ -601,8 +601,8 @@ install_mcp_servers() {
 
     # Skip pinole when its bearer token is missing. Registering with an empty
     # token bakes a broken entry that the `Already registered` short circuit
-    # below would silently preserve on future runs. (The server name was atelic
-    # until 2026-07-20; the Keychain entry keeps the atelic-api-token name.)
+    # below would silently preserve on future runs. (Keychain service:
+    # atelic-token, per the vault naming convention.)
     if [[ "$name" == "pinole" && -z "${ATELIC_API_TOKEN:-}" ]]; then
       warn "Skipping pinole: ATELIC_API_TOKEN not set in environment"
       continue
@@ -726,9 +726,9 @@ setup_auth() {
 
   # Google Workspace CLI (multi-profile)
   if command -v gws &>/dev/null; then
-    # Migrate legacy single-profile layout. Detect which profile the legacy
-    # config belongs to by peeking at the authenticated account; map
-    # @zerohomes.io domain to "zero" and anything else to "home".
+    # Migrate legacy single-profile layout. Detect whether the legacy config
+    # has an authenticated account; any detected account maps to "home" (the
+    # zero profile retired with the Zero W2, 2026-06-29).
     local migrated_profile=""
     if [[ -d "$HOME/.config/gws" ]]; then
       local legacy_user=""
@@ -738,7 +738,6 @@ setup_auth() {
 
       local legacy_profile=""
       case "${legacy_user,,}" in
-        *@zerohomes.io) legacy_profile=zero ;;
         "") legacy_profile="" ;;
         *) legacy_profile=home ;;
       esac
@@ -746,7 +745,7 @@ setup_auth() {
       if [[ -z "$legacy_profile" ]]; then
         warn "Could not detect account in ~/.config/gws (no auth state to inspect)."
         warn "Rename it manually before re-running setup:"
-        warn "  mv ~/.config/gws ~/.config/gws-<zero|home>"
+        warn "  mv ~/.config/gws ~/.config/gws-home"
       else
         local migration_target="$HOME/.config/gws-$legacy_profile"
         if [[ -e "$migration_target" ]]; then
@@ -766,7 +765,15 @@ setup_auth() {
     # returns).
     [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-home}" > "$HOME/.config/gws-current"
 
-    local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-gws-forni}"
+    # Migrate a stale zero pointer to home (the zero profile is retired and
+    # its config dirs are deleted; a leftover pointer would break resolution).
+    if [[ -r "$HOME/.config/gws-current" ]] \
+        && [[ "$(tr -d '[:space:]' < "$HOME/.config/gws-current")" == "zero" ]]; then
+      info "Rewriting retired zero profile pointer to home in ~/.config/gws-current"
+      printf '%s\n' "home" > "$HOME/.config/gws-current"
+    fi
+
+    local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-atelic}"
     local gws_profile gws_dir
     for gws_profile in home; do
       gws_dir="$HOME/.config/gws-$gws_profile"
@@ -782,7 +789,7 @@ setup_auth() {
         if command -v gcloud &>/dev/null; then
           info "Fetching $gws_profile client_secret from Secret Manager (project: $gws_bootstrap_project)"
           if gcloud secrets versions access latest \
-              --secret="gws-client-secret-$gws_profile" \
+              --secret="gws-oauth-client-$gws_profile" \
               --project="$gws_bootstrap_project" \
               > "$gws_dir/client_secret.json" 2>/dev/null; then
             chmod 600 "$gws_dir/client_secret.json"
@@ -816,7 +823,7 @@ setup_auth() {
 
   # Claude Code (multi-profile)
   if command -v claude &>/dev/null; then
-    if [[ ! -d "$HOME/.claude-zero" ]] || [[ ! -d "$HOME/.claude-home" ]]; then
+    if [[ ! -d "$HOME/.claude-home" ]]; then
       info "Bootstrapping Claude Code profile dirs..."
       if bash "$DIR/bin/claude-profiles-init.sh"; then
         SUMMARY+=("Claude Code profile dirs bootstrapped")
@@ -824,7 +831,7 @@ setup_auth() {
         warn "claude-profiles-init.sh failed"
       fi
     else
-      info "Claude Code profile dirs already present (~/.claude-zero, ~/.claude-home)"
+      info "Claude Code profile dirs already present (~/.claude-home)"
     fi
     info "Per-profile auth: cd into each profile's territory and run \`claude\` once."
     info "Claude Code stores credentials per CLAUDE_CONFIG_DIR natively (Keychain"
@@ -833,16 +840,17 @@ setup_auth() {
 
   # YNAB personal access token, Keychain-backed for the ynab MCP server. The
   # canonical copy lives in the BitWarden "YNAB" entry (PAT field); the login
-  # Keychain is the operational store the bin/claude wrapper reads at launch and
-  # injects as YNAB_ACCESS_TOKEN, which Claude Code expands into the ynab MCP
+  # Keychain is the operational store (service ynab-token, per the vault naming
+  # convention) that the bin/claude wrapper reads at launch and injects as
+  # YNAB_ACCESS_TOKEN, which Claude Code expands into the ynab MCP
   # placeholder. -s read keeps the pasted token off the terminal.
-  if security find-generic-password -a "$USER" -s YNAB_ACCESS_TOKEN -w &>/dev/null && [[ "$FORCE" != true ]]; then
+  if security find-generic-password -a "$USER" -s ynab-token -w &>/dev/null && [[ "$FORCE" != true ]]; then
     info "YNAB token already in Keychain"
   else
     read -rsp "  ${BOLD}Paste YNAB personal access token (from BitWarden, blank to skip):${NC} " ynab_pat
     echo
     if [[ -n "$ynab_pat" ]]; then
-      if security add-generic-password -U -a "$USER" -s YNAB_ACCESS_TOKEN -w "$ynab_pat"; then
+      if security add-generic-password -U -a "$USER" -s ynab-token -w "$ynab_pat"; then
         SUMMARY+=("YNAB token stored in Keychain")
       else
         warn "Failed to store YNAB token in Keychain"

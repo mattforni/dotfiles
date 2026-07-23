@@ -1,14 +1,14 @@
 # Learned Rules
 
-## Branch naming
+## Branch Naming
 
-Sharpen sessions are branched as `sharpen-YYYY-MM-DD` in every repo touched by the session (currently Eudy and homebase). Same branch name across repos so a given session's work correlates at a glance.
+Sharpen sessions are branched as `YYYY-MM-DD-sharpen-saws` in every repo touched by the session (currently Eudy and homebase). Date first so branches sort chronologically; same branch name across repos so a given session's work correlates at a glance. (Reversed from the earlier `sharpen-YYYY-MM-DD` form on 2026-07-23 at Forni's direction.)
 
-**Why:** Forni wants a consistent way to find any sharpen session's work across both repos without hunting commit messages.
+**Why:** Forni wants a consistent way to find any sharpen session's work across both repos without hunting commit messages, with the date leading so listings sort by session.
 
-**How to apply:** At the start of the implementation step of a sharpen session, create the branch in each touched repo (`git -C <repo> checkout -b sharpen-YYYY-MM-DD`). If the branch already exists (rerun or continuation), check it out instead.
+**How to apply:** At the start of the implementation step of a sharpen session, cut a worktree on the branch in each touched repo (`git -C <repo> worktree add <path> -b YYYY-MM-DD-sharpen-saws`), per the work-in-worktrees rule. If the branch already exists (rerun or continuation), enter its existing worktree instead.
 
-## CronCreate is not a Level 7 primitive
+## CronCreate Is Not a Level 7 Primitive
 
 `CronCreate` (and by extension the `/loop` and `/schedule` skills that wrap it) only fires while a Claude REPL is live and idle. `durable: true` persists the job across Claude restarts but still requires a live session at fire time. Auto expires after 7 days either way.
 
@@ -16,7 +16,7 @@ Sharpen sessions are branched as `sharpen-YYYY-MM-DD` in every repo touched by t
 
 **How to apply:** When proposing a "schedule X to run in the background" sharpen move, do not default to CronCreate. For true OS-level scheduling on macOS, the right primitive is launchd (plist in `~/Library/LaunchAgents/`) invoking `claude -p "<slash command>"`. That is usually plan sized, not session sized. CronCreate is still useful for in-session reminders ("nudge me in 20 minutes") but not for daily morning routines.
 
-## Audit existing feedback channels before scaling background agents
+## Audit Existing Feedback Channels Before Scaling Background Agents
 
 Before proposing a new headless routine, audit the feedback channels on existing ones. If notifications are the only path for success/failure, that is a gap and the next move should harden it, not add another agent.
 

@@ -12,7 +12,7 @@ Claude Code-credentials-<hash>
 
 The `<hash>` is derived from the `CLAUDE_CONFIG_DIR` path. Different config dirs get different hashed entries. There is also an unhashed `Claude Code-credentials` entry that newer Claude Code versions populate as a default; treat it as version-dependent and do not depend on it.
 
-**There is no longer a single `claude-code-oauth` Keychain entry.** Older binaries and `~/.claude/references/headless-claude.md` mention that service name; on current builds it is not used by interactive logins. The `bin/run-mise` headless flow still references it for its own reasons (launchd-managed periodic runs read a token from there); that is independent of the interactive flow.
+**There is no longer a single `claude-code-oauth` Keychain entry.** Older binaries and `~/.claude/references/headless-claude.md` mention that service name; on current builds it is not used by interactive logins. The retired `bin/run-mise` headless flow (pruned 2026-07-23, in git history) read a long lived token from that service; that path was independent of the interactive flow.
 
 ## Implications for Per-Account Isolation
 
@@ -44,7 +44,7 @@ No `security add-generic-password` step is needed.
 - `~/Eudaimonia/Craft/Development/personal/homebase/bin/claude` — the wrapper
 - `~/Eudaimonia/Craft/Development/personal/homebase/bin/claude-profiles-init.sh` — profile dir bootstrap (no auth)
 - `~/Eudaimonia/Craft/Development/personal/homebase/setup.sh` — Claude Code phase that calls the bootstrap
-- `~/Eudaimonia/Craft/Development/personal/homebase/bin/run-mise` — headless launchd-managed Claude (separate auth path via `claude-code-oauth` service)
+- `bin/run-mise` (homebase git history; pruned 2026-07-23) — headless launchd-managed Claude (separate auth path via the `claude-code-oauth` service)
 
 ## When This Note Goes Stale
 

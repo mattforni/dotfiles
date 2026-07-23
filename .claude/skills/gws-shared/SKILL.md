@@ -32,7 +32,6 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 
 | Profile | Config dir | Account |
 |---------|-----------|---------|
-| `zero` | `~/.config/gws-zero/` | `mattf@zerohomes.io` (Zero Homes) |
 | `home` | `~/.config/gws-home/` | personal Gmail |
 
 The active profile is layered:
@@ -56,11 +55,11 @@ When writing tooling that should always run against a specific account, prefer t
 
 ### Cross-Machine Secret Sync
 
-`client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager. The bootstrap project defaults to `gws-forni`; override via `GWS_BOOTSTRAP_PROJECT`.
+`client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager under `gws-oauth-client-<profile>`. The vault project defaults to `atelic`; override via `GWS_BOOTSTRAP_PROJECT`. Full vault conventions: `~/Eudaimonia/Admin/tools/secret-manager.md`.
 
 | Action | How |
 |--------|-----|
-| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/gws-secrets-push.sh` |
+| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/gws/push-secrets` |
 | Pull on a fresh machine | `./setup.sh` (auto fetches via `gcloud secrets versions access`) |
 
 Tokens (`credentials.enc`, `token_cache.json`) are NOT synced. They are keyring encrypted and bound to the originating machine. Re run `gws auth login` per profile per machine, which the setup.sh per profile loop handles.

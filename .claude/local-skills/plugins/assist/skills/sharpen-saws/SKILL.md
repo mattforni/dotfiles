@@ -1,5 +1,5 @@
 ---
-name: assist:sharpen
+name: assist:sharpen-saws
 description: Run a sharpen session to move collaboration one small step toward Levels 7 and 8 of the agentic engineering hierarchy. Evaluate recent activity (git, memory, plans) against LEVELS.md, propose one or two concrete small moves toward background autonomy or agent teams, help implement the chosen move, and append a dated log entry. Use this skill whenever the user says "sharpen", "sharpen saws", asks to "sharpen our process", or explicitly starts a sharpen session. Paired with the weekly Sharpen Saws block on Wednesdays.
 argument-hint: "[optional focus area, e.g., 'zero code review' or 'email triage']"
 allowed-tools:
@@ -22,6 +22,7 @@ Move our collaboration one rung at a time toward Level 7 (background agents) and
 1. Read [learned-rules.md](../../learned-rules.md) for any prior corrections about how Forni wants sharpen to run.
 2. Read [LEVELS.md](../../../../../../Eudaimonia/LEVELS.md) (absolute path: `~/Eudaimonia/LEVELS.md`) to anchor on current state and recent log entries.
 3. Check this skill's directory for a local `learned-rules.md` and read it if present.
+4. When the session will write to a repo, cut its worktree branch named `YYYY-MM-DD-sharpen-saws` (date first so branches sort chronologically). One branch per repo touched (homebase, Eudy).
 
 ## Principles
 

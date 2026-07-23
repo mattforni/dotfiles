@@ -19,7 +19,7 @@ Pull uncategorized YNAB transactions, file them into the right category, tag tri
 2. Confirm API access (token in Keychain):
 
    ```bash
-   tok=$(security find-generic-password -a "$USER" -s YNAB_ACCESS_TOKEN -w)
+   tok=$(security find-generic-password -a "$USER" -s ynab-token -w)
    ```
 
 3. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, RYLLC `e0d471f0-bf90-452c-8232-b1153b7411be`. Default to Personal unless asked.
