@@ -2,9 +2,12 @@
 
 Build recurring `claude -p` automations that run on launchd, survive sleep, auth
 from Keychain, and fail visibly. Based on the 2026-04-23 implementation of
-L7 mise; see Eudy's `LEVELS.md` and homebase's `bin/run-mise` for the reference
-implementation. (The scheduled mise plist was retired 2026-07-16; `run-mise`
-remains for manual runs and as the template for new routines.)
+L7 mise; see Eudy's `LEVELS.md` for the story. The reference implementation,
+`bin/run-mise`, was pruned 2026-07-23 along with the rest of the mise
+automation (the plist went 2026-07-16); recover it from homebase git history
+if a local headless routine returns. The current direction for recurring
+routines is cloud scheduling drawing credentials from the Secret Manager
+vault (`~/Eudaimonia/Admin/tools/secret-manager.md`).
 
 ## When to use this pattern
 
@@ -152,7 +155,8 @@ Where `<expected>` is the distinctive success string the skill emits.
   a single retry on a transient signature (`socket connection was closed|API
   Error|overloaded|Connection error`); a clean skill-level abort (e.g. a merge
   conflict) should not match and should report immediately. Idempotent routines
-  are safe to retry. Reference impl: `bin/run-mise` (PR #109, 2026-06-09).
+  are safe to retry. Reference impl: `bin/run-mise` in git history (PR #109,
+  2026-06-09; pruned 2026-07-23).
 
 ## Email reporting via Resend
 
@@ -202,15 +206,16 @@ Wrapper sourcing trick: `BASH_SOURCE != $0` short circuits the main block
 in each wrapper, so `source ~/bin/run-<routine>` exposes the lib helpers
 for ad hoc testing without firing the routine.
 
-Adding a new headless routine: copy `bin/run-mise`, swap `ROUTINE`,
-`LOG`, the slash command, the `--allowedTools` set, and the success
-predicate. Email path is reused unchanged.
+Adding a new headless routine: recover `bin/run-mise` from git history as
+the starting template, swap `ROUTINE`, `LOG`, the slash command, the
+`--allowedTools` set, and the success predicate. Email path is reused
+unchanged.
 
 ## Reference
 
 - `claude --help` for current flag list
 - `launchd.plist(5)` and `security(1)` man pages
-- L7 mise source: `homebase/bin/run-mise`, `homebase/setup.sh`'s
-  `install_launchagents` phase (no plists are tracked today; the mise
-  plist was retired 2026-07-16)
+- L7 mise source: homebase git history (`bin/run-mise` pruned 2026-07-23;
+  the mise plist retired 2026-07-16). The generic `install_launchagents`
+  phase remains in `setup.sh` for future plists.
 - Resend API: https://resend.com/docs/api-reference/emails/send-email

@@ -180,4 +180,4 @@ The `git cob` alias uses `bin/checkout-branch.sh` to checkout branches by their 
 
 ## bin/ Script Conventions
 
-New scripts live in a namespace folder named for their tool or domain, with verb noun filenames: `bin/vault/push-secrets`, `bin/gws/push-secrets`. Because `$HOME/bin` is a single symlink to the repo's `bin/`, nested folders deploy with no extra plumbing. Legacy flat scripts (`run-mise`, `checkout-branch.sh`) migrate into namespaces opportunistically when next touched.
+New scripts live in a namespace folder named for their tool or domain, with verb noun filenames: `bin/vault/push-secrets`, `bin/gws/push-secrets`. Because `$HOME/bin` is a single symlink to the repo's `bin/`, nested folders deploy with no extra plumbing. Legacy flat scripts (`checkout-branch.sh`, `sync-marketplaces`) migrate into namespaces opportunistically when next touched.
