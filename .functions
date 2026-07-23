@@ -449,7 +449,7 @@ __gws_resolve_profile() {
     if [[ -z "$target" ]]; then
         target="$(cat "$HOME/.config/gws-current" 2>/dev/null)"
         target="${target//[$'\t\r\n ']/}"
-        [[ -z "$target" ]] && target="zero"
+        [[ -z "$target" ]] && target="home"
     fi
 
     # Skip re-export when nothing has changed. The dir-existence check makes

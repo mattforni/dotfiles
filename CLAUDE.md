@@ -99,7 +99,7 @@ Both the `gws` CLI and Claude Code switch identity per directory subtree via a s
 
 **Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and exec's the real binary. Claude Code stores OAuth credentials per CLAUDE_CONFIG_DIR natively in a `Claude Code-credentials-<hash>` Keychain entry, so the wrapper doesn't need to inject a token; setting the config dir is enough. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh); each profile needs a one time `claude` login from inside its directory to seed its Keychain credential.
 
-OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager (bootstrap project: `gws-forni`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws-secrets-push.sh` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design.
+OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>` (vault project: `atelic`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws/push-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/tools/secret-manager.md`.
 
 ## Project Structure
 
@@ -177,3 +177,7 @@ The sync function handles both files and directories automatically and includes:
 ## Custom Git Branch Checkout
 
 The `git cob` alias uses `bin/checkout-branch.sh` to checkout branches by their numerical position from `git branch` output. Usage: `git cob <number>`
+
+## bin/ Script Conventions
+
+New scripts live in a namespace folder named for their tool or domain, with verb noun filenames: `bin/vault/push-secrets`, `bin/gws/push-secrets`. Because `$HOME/bin` is a single symlink to the repo's `bin/`, nested folders deploy with no extra plumbing. Legacy flat scripts (`run-mise`, `checkout-branch.sh`) migrate into namespaces opportunistically when next touched.

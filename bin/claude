@@ -11,7 +11,7 @@
 # derived from the config dir path). Setting CLAUDE_CONFIG_DIR is enough to
 # pick the right account; no token injection needed.
 #
-# Profile dirs at ~/.claude-zero/ and ~/.claude-home/ are populated by
+# Profile dirs like ~/.claude-home/ are populated by
 # bin/claude-profiles-init.sh (invoked from setup.sh). The first time you
 # launch into a freshly-bootstrapped profile dir, Claude Code triggers an
 # OAuth browser flow and stores the resulting credential under the hashed
@@ -34,7 +34,7 @@ resolve_profile() {
         if [[ -f "$HOME/.config/gws-current" ]]; then
             target="$(cat "$HOME/.config/gws-current" | tr -d '[:space:]')"
         fi
-        [[ -z "$target" ]] && target="zero"
+        [[ -z "$target" ]] && target="home"
     fi
     printf '%s' "$target"
 }
@@ -68,7 +68,7 @@ fi
 # setup.sh. A missing entry leaves the var unset, so non-YNAB sessions are
 # untouched. ${arr[@]+...} guards the empty-array case under bash 3.2 + set -u.
 ynab_env=()
-ynab_token="$(security find-generic-password -a "$USER" -s YNAB_ACCESS_TOKEN -w 2>/dev/null || true)"
+ynab_token="$(security find-generic-password -a "$USER" -s ynab-token -w 2>/dev/null || true)"
 [[ -n "$ynab_token" ]] && ynab_env+=("YNAB_ACCESS_TOKEN=$ynab_token")
 
 # Fall back to default config root if the profile dir does not exist.

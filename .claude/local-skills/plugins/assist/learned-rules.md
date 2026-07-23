@@ -91,7 +91,7 @@ Rules for `assist:handle-budget`. The payee map is [reference/payee-map.md](refe
 
 Mechanics (hard-won, do not rediscover):
 
-- Write through the YNAB REST API directly (`curl` plus Keychain `YNAB_ACCESS_TOKEN`), never the `ynab` MCP. The MCP read output hides the transaction and category IDs needed to write.
+- Write through the YNAB REST API directly (`curl` plus Keychain service `ynab-token`), never the `ynab` MCP. The MCP read output hides the transaction and category IDs needed to write.
 - Imported transactions land **unapproved**, and categorizing does NOT approve them. Approve as the final step (`approved: true`) or the changes never flow into budget views. This is the usual cause of "my changes aren't showing up."
 - YNAB clients use delta sync. After API writes, an open app or web session needs a hard refresh to display them.
 - Payee names carry HTML entities (`&amp;`). Decode before matching.
