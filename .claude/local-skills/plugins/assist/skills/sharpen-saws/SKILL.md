@@ -22,6 +22,7 @@ Move our collaboration one rung at a time toward Level 7 (background agents) and
 1. Read [learned-rules.md](../../learned-rules.md) for any prior corrections about how Forni wants sharpen to run.
 2. Read [LEVELS.md](../../../../../../Eudaimonia/LEVELS.md) (absolute path: `~/Eudaimonia/LEVELS.md`) to anchor on current state and recent log entries.
 3. Check this skill's directory for a local `learned-rules.md` and read it if present.
+4. When the session will write to a repo, cut its worktree branch named `YYYY-MM-DD-sharpen-saws` (date first so branches sort chronologically). One branch per repo touched (homebase, Eudy).
 
 ## Principles
 
