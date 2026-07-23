@@ -9,7 +9,8 @@ const cfg = typeof args === 'string' ? { problem: args } : (args || {})
 const problem = cfg.problem
 if (!problem) throw new Error('chatroom needs a problem: pass args as a string or {problem, context?, roles?, rounds?}')
 const context = cfg.context || 'none provided'
-const R = cfg.rounds || 3
+const R = cfg.rounds === undefined ? 3 : cfg.rounds
+if (!Number.isInteger(R) || R < 1 || R > 10) throw new Error('chatroom rounds must be an integer between 1 and 10')
 
 // Default software roles; caller overrides with domain sets, e.g. product
 // (user advocate / business strategist / engineer) or strategy
@@ -19,6 +20,9 @@ const roles = cfg.roles || [
   { name: 'Pragmatist', framing: 'optimizes for shipping fast with minimal complexity and good enough solutions' },
   { name: 'Critic', framing: 'hunts edge cases, failure modes, security holes, and unstated assumptions' },
 ]
+if (!Array.isArray(roles) || roles.length === 0 || roles.some(r => !r || typeof r.name !== 'string' || typeof r.framing !== 'string')) {
+  throw new Error('chatroom roles must be a non empty array of {name, framing} strings')
+}
 
 const RESPONSE = {
   type: 'object',
