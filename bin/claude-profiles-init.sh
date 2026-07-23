@@ -58,10 +58,11 @@ if [[ -d "$LEGACY/projects" ]]; then
     done
 fi
 
-# Sessions: copy to the home profile. Mark migrated only on a successful
-# copy so a failed run retries instead of silently losing sessions.
+# Sessions: copy to the home profile. No-clobber so a retry never overwrites
+# entries already in the profile; mark migrated only on a successful copy so
+# a failed run retries instead of silently losing sessions.
 if [[ -d "$LEGACY/sessions" ]] && [[ ! -e "$HOME_PROFILE/sessions/.migrated" ]]; then
-    if cp -a "$LEGACY/sessions"/. "$HOME_PROFILE/sessions/"; then
+    if cp -an "$LEGACY/sessions"/. "$HOME_PROFILE/sessions/"; then
         touch "$HOME_PROFILE/sessions/.migrated"
     else
         echo "warn: session copy failed; will retry on next run" >&2

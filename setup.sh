@@ -767,7 +767,8 @@ setup_auth() {
 
     # Migrate a stale zero pointer to home (the zero profile is retired and
     # its config dirs are deleted; a leftover pointer would break resolution).
-    if [[ "$(tr -d '[:space:]' < "$HOME/.config/gws-current" 2>/dev/null)" == "zero" ]]; then
+    if [[ -r "$HOME/.config/gws-current" ]] \
+        && [[ "$(tr -d '[:space:]' < "$HOME/.config/gws-current")" == "zero" ]]; then
       info "Rewriting retired zero profile pointer to home in ~/.config/gws-current"
       printf '%s\n' "home" > "$HOME/.config/gws-current"
     fi
