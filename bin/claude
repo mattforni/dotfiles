@@ -36,6 +36,9 @@ resolve_profile() {
         fi
         [[ -z "$target" ]] && target="home"
     fi
+    # Normalize the retired zero profile (stale .account markers or a stale
+    # gws-current pointer) to home so resolution never lands on a deleted dir.
+    [[ "$target" == "zero" ]] && target="home"
     printf '%s' "$target"
 }
 

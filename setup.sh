@@ -765,6 +765,13 @@ setup_auth() {
     # returns).
     [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-home}" > "$HOME/.config/gws-current"
 
+    # Migrate a stale zero pointer to home (the zero profile is retired and
+    # its config dirs are deleted; a leftover pointer would break resolution).
+    if [[ "$(tr -d '[:space:]' < "$HOME/.config/gws-current" 2>/dev/null)" == "zero" ]]; then
+      info "Rewriting retired zero profile pointer to home in ~/.config/gws-current"
+      printf '%s\n' "home" > "$HOME/.config/gws-current"
+    fi
+
     local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-atelic}"
     local gws_profile gws_dir
     for gws_profile in home; do

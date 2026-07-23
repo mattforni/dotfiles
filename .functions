@@ -452,6 +452,9 @@ __gws_resolve_profile() {
         [[ -z "$target" ]] && target="home"
     fi
 
+    # Normalize the retired zero profile to home (stale markers or pointer).
+    [[ "$target" == "zero" ]] && target="home"
+
     # Skip re-export when nothing has changed. The dir-existence check makes
     # this self-healing: if a parent shell exported a stale config dir (e.g.,
     # left over from a since-renamed profile), the env survives until the dir

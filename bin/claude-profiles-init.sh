@@ -58,10 +58,14 @@ if [[ -d "$LEGACY/projects" ]]; then
     done
 fi
 
-# Sessions: copy to the home profile.
+# Sessions: copy to the home profile. Mark migrated only on a successful
+# copy so a failed run retries instead of silently losing sessions.
 if [[ -d "$LEGACY/sessions" ]] && [[ ! -e "$HOME_PROFILE/sessions/.migrated" ]]; then
-    cp -a "$LEGACY/sessions"/. "$HOME_PROFILE/sessions/" 2>/dev/null || true
-    touch "$HOME_PROFILE/sessions/.migrated"
+    if cp -a "$LEGACY/sessions"/. "$HOME_PROFILE/sessions/"; then
+        touch "$HOME_PROFILE/sessions/.migrated"
+    else
+        echo "warn: session copy failed; will retry on next run" >&2
+    fi
 fi
 
 echo "Done. ~/.claude-home/ ready."
