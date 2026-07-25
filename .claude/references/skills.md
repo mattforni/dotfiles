@@ -1,10 +1,14 @@
-# Skill Authoring Conventions
+# Skill and Agent Authoring Conventions
 
-Guidance for authoring and maintaining Claude Code skills. Load when working on a SKILL.md, a learned-rules.md, or when invoking /skill-creator.
+Guidance for authoring and maintaining Claude Code skills and agents. Load when working on a SKILL.md, a learned-rules.md, an agent definition, or when invoking /skill-creator.
+
+Entries here follow the context library's three tiers of fidelity: a short TLDR, how we use it, and a link out to the authoritative web docs. We hold only our delta (conventions, gotchas, the date last checked); the web owns the full spec. **When authoring a new surface type (agent, hook, MCP config, output style), check the linked official docs before building from house patterns**, and recheck when behavior seems harness version dependent.
 
 ## Naming
 
 Skill names lead with a verb. Add an object when it sharpens the meaning (`plan-week`, `triage-email`); a bare verb is fine when it already reads unambiguously (`reflect`, `sharpen`, `wrap`). New skills follow this. Rename an existing skill only when its name actively misleads, not for conformity's sake.
+
+**Agent names are one word role nouns.** A skill names the work (verb noun: `audit-prospect`, `plan-week`); an agent names the worker (`auditor`, `lander`, `skeptic`, `runner`, `migrator`). The split keeps the two surfaces distinguishable at a glance: what is being done versus who is doing it. When a skill and its background agent counterpart coexist (the lead plugin's `audit-prospect` skill and `auditor` agent), the agent stays a thin dispatch contract whose first action is reading the skill for method, never a parallel reimplementation. Applies to user roster agents in `~/.claude/agents/` and plugin agents in `plugins/<plugin>/agents/` alike. Settled 2026-07-25 while creating `lead:auditor`.
 
 **Plugin skill frontmatter names are bare.** The loader namespaces every plugin skill as `<plugin>:<name>`, so the `name:` field in SKILL.md must be the bare skill name (`triage-inbox`, `land`), never the namespaced form. Writing `assist:triage-inbox` there double namespaces the invocation surface into `assist:assist:triage-inbox`. Caught 2026-07-24 across all 18 assist and 8 sdlc skills; linear-lifecycle, whose name was bare, was unaffected.
 
@@ -23,3 +27,16 @@ Periodically audit learned-rules.md. Graduate rules that have stabilized to SKIL
 ## When to use learned-rules.md
 
 Every skill that makes decisions on behalf of the user should include a `learned-rules.md` file. When the user corrects a decision, append the correction. Read learned rules at the start of every invocation. This applies to all skills, whether created via /skill-creator or manually.
+
+## Agent Authoring
+
+**TLDR (official docs, checked 2026-07-25).** An agent definition is a markdown file whose frontmatter needs only `name` and `description`; the body becomes the agent's entire system prompt, and subagents inherit no conversation history from the parent. The `description` drives automatic delegation, so name the trigger scenarios, not just the role. Useful optional fields: `tools` (an allowlist; least privilege is the documented gold standard, e.g. `Read, Grep, Glob` for analysis), `model` (default `inherit`), `skills` (preloads full skill content at agent startup), `memory` (cross session learning), and `color`. Plugin agents live in `plugins/<plugin>/agents/*.md`, dispatch as `<plugin>:<name>`, and ignore `hooks`, `mcpServers`, and `permissionMode` frontmatter.
+
+**How we use it.**
+
+- Agents are one word role nouns; skills are verb noun (see Naming above). The skill names the work, the agent names the worker.
+- A paired agent (one that backgrounds an existing skill's method) preloads the skill via the `skills` field, keeps a fallback "read the SKILL.md" instruction, and defers to the skill on any disagreement. It is a dispatch contract, never a parallel reimplementation.
+- Default to a read only contract: the agent returns evidence, scores, and rows; the main session owns writes to tracked files and external systems.
+- Worked example: `plugins/lead/agents/auditor.md` in the atelic repo, paired with the `audit-prospect` skill.
+
+**Link out.** Subagents: <https://code.claude.com/docs/en/sub-agents.md> · Plugins (agent layout and namespacing): <https://code.claude.com/docs/en/plugins.md>
