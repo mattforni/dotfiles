@@ -17,24 +17,26 @@ files.
 
 ## Applying a Standard to a Repo
 
-Two ways, pick per repo:
+**Copy the chosen config in.** Drop it at the repo root as `.coderabbit.yaml`.
+This is how every wired repo is set up: the `atelic-action` client repos carry
+the chill config, and atelic / pinole-api / pinole-app carry the assertive config.
+The config travels with the repo, which also suits client deliverables that may
+leave the org.
 
-1. **Copy in (portable).** Drop the chosen config at the repo root as
-   `.coderabbit.yaml`. Best for client deliverables that may leave the org, since
-   the config travels with the repo. This is how the `atelic-action` client repos
-   are set up.
-2. **Reference (edit-once).** Point the repo's `.coderabbit.yaml` at the canonical
-   file here via `remote_config`, so a change here propagates everywhere:
+The cost is drift: changing a standard means updating each copy by hand (this
+folder's canonical files plus every repo that copied them). There is no automatic
+propagation on the Free tier (see below).
 
-   ```yaml
-   remote_config:
-     repository: "mattforni/homebase"
-     ref: "main"
-     path: "coderabbit/chill.yaml"   # or ".coderabbit.yaml" for assertive
-   ```
+### remote_config does not work on Free (do not retry)
 
-   A per-repo file can also override individual fields on top of the referenced
-   config. Prefer this for your own code repos.
+`remote_config` (pointing a repo's `.coderabbit.yaml` at a shared file in another
+repo) is the obvious edit-once mechanism, and it does not work here. Tried
+2026-07-25: even with homebase public, CodeRabbit could not fetch the referenced
+file and posted `Could not fetch remote config from
+mattforni/homebase/.coderabbit.yaml@main: HttpError: Not Found` on the PR. The
+cross-repo content fetch fails on Free regardless of the source repo being public.
+So copy the config in; do not burn time re-attempting `remote_config` unless on a
+paid tier where cross-repo access behaves differently.
 
 ## Tier Notes (Free)
 
