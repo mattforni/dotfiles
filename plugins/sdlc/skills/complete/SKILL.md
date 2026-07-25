@@ -1,5 +1,5 @@
 ---
-name: sdlc:complete
+name: complete
 description: Finish work and reset local environment for next task. Use this when the user is done with a feature branch, wants to clean up after a merged PR, or needs to reset their workspace.
 allowed-tools:
   - Bash(git *)

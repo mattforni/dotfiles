@@ -31,7 +31,7 @@
     {
       "name": "sdlc",
       "source": "./plugins/sdlc",
-      "version": "2.2.11",
+      "version": "3.0.0",
       "license": "MIT",
       "description": "Software development lifecycle skills for planning, designing, implementing, reviewing, and completing work.",
       "homepage": "https://github.com/mattforni/homebase",

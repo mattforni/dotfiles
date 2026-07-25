@@ -1,5 +1,5 @@
 ---
-name: assist:refine-process
+name: refine-process
 description: Refine a recurring process (a skill's workflow, a checklist, a pipeline of phases) through a structured, iterative pass with the user. Use this skill whenever Forni says "refine this process", "take a pass at this workflow", "the phases feel off", "let's rework how we do X", or asks for a watchful or deliberate redesign of any multi step process. Also trigger when a process refinement emerges mid session (directives like "move phase X before Y" or "merge these steps") and the user wants it done properly rather than ad hoc. The refinement counterpart to `assist:codify-context` (which writes knowledge) and `assist:groom-context` (which prunes it); this skill reshapes workflows.
 argument-hint: "[process or skill to refine]"
 ---

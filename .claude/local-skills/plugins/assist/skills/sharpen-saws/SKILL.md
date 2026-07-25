@@ -1,5 +1,5 @@
 ---
-name: assist:sharpen-saws
+name: sharpen-saws
 description: Run a sharpen session to move collaboration one small step toward Levels 7 and 8 of the agentic engineering hierarchy. Evaluate recent activity (git, memory, plans) against LEVELS.md, propose one or two concrete small moves toward background autonomy or agent teams, help implement the chosen move, and append a dated log entry. Use this skill whenever the user says "sharpen", "sharpen saws", asks to "sharpen our process", or explicitly starts a sharpen session. Paired with the weekly Sharpen Saws block on Wednesdays.
 argument-hint: "[optional focus area, e.g., 'zero code review' or 'email triage']"
 allowed-tools:

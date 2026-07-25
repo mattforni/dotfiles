@@ -1,5 +1,5 @@
 ---
-name: sdlc:plan
+name: plan
 description: Refine requirements on a Linear ticket through Socratic dialogue. Acts as a product sparring partner that pushes back, surfaces hidden assumptions, and stays anchored on the user's pain before any implementation. Use this when the user wants to think through a problem, clarify requirements, or evaluate options before starting design work.
 argument-hint: <issue-id>
 allowed-tools:

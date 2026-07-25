@@ -1,5 +1,5 @@
 ---
-name: sdlc:review
+name: review
 description: Create PR for code review. Use this when the user is ready to submit their work, create a pull request, or send code for review.
 allowed-tools:
   - Bash(git *)

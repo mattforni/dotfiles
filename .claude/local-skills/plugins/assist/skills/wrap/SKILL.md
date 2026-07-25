@@ -1,5 +1,5 @@
 ---
-name: assist:wrap
+name: wrap
 description: Session wrap. Don't lose the thread, clean everything up, don't leave loose ends in your head. Scans every git repo touched this session for uncommitted or unpushed state, surfaces external commitments (pending replies, calendar holds, contract deadlines) from the recent conversation, prompts for codification of durable learnings, logs anything not handled into Todoist (today if pressing, next Monday otherwise), summarizes the session, and leaves the user ready to /exit cleanly. Use this skill whenever the user says "wrap", "wrap up", "wrap the session", "wrap this up", "wrapping up", "clean up before I exit", "signing off", "done for the day", or invokes /assist:wrap. Pairs with /assist:mise as the bookend. Mise opens the kitchen for service. Wrap closes it cleanly after.
 allowed-tools:
   - Bash

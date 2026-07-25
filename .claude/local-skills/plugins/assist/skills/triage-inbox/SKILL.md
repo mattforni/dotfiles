@@ -1,5 +1,5 @@
 ---
-name: assist:triage-inbox
+name: triage-inbox
 description: Triage the Gmail inbox to a settled state. Classify every email, draft a reply for anything needing a response, and turn action-without-response into a Todoist follow-up, then review and execute one email at a time. Handles unsubscribes, recurring-sender filters, and per-sender side actions inline as they come up. Use whenever the user mentions email triage, inbox cleanup, processing the inbox, clearing email, or getting to inbox zero.
 argument-hint: ""
 allowed-tools:

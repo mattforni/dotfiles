@@ -1,5 +1,5 @@
 ---
-name: assist:bd-email
+name: bd-email
 description: Craft Business Development emails for RYLLC fractional CTO consultancy. Handles warm reconnects, job posting outreach, rejection follow-ups, VC intros, and custom BD scenarios. Uses established templates and project voice.
 ---
 

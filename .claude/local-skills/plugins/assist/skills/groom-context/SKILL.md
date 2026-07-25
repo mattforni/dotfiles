@@ -1,5 +1,5 @@
 ---
-name: assist:groom-context
+name: groom-context
 description: Audit and redesign the context architecture (every CLAUDE.md, learned-rules.md, and tool doc that loads into Claude Code sessions) so load-bearing rules are surfaced and enforced at the point of use rather than scattered, duplicated, or buried. Use this skill whenever Forni says "groom context", "groom-context", "we forgot a basic again", "the context is sprawling", "the rules keep getting lost", "clean up the context", or invokes "/assist:groom-context". Also invoked as a closing step by the monthly path of assist:reflect. This is the cleanup counterpart to assist:codify-context, which writes knowledge into the same architecture.
 argument-hint: "[optional starting topic, e.g. 'code review' or 'a layer to start from']"
 allowed-tools:

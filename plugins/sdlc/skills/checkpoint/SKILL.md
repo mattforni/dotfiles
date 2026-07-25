@@ -1,5 +1,5 @@
 ---
-name: sdlc:checkpoint
+name: checkpoint
 description: Save work in progress with commit and push (no PR). Use this when the user wants to save progress, push a checkpoint, or back up current work without creating a pull request.
 argument-hint: [optional commit message]
 allowed-tools:

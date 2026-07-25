@@ -1,5 +1,5 @@
 ---
-name: assist:plan-training
+name: plan-training
 description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
 argument-hint: "[week | long-run | move | retro]"
 allowed-tools:

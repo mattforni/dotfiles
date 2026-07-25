@@ -1,5 +1,5 @@
 ---
-name: assist:reflect
+name: reflect
 description: Guided reflection at the boundaries Forni looks back on (weekly, monthly, quarterly, yearly). A dialogue-driven retrospective, not a journal reader. Brings the quantitative spine the paper journal misses (movement, overconsumption tally), then reflects by conversation against the V2MOM frame. Use this skill whenever Forni says "reflect", "let's reflect", "reflect on the month", "monthly reflection", "look back on May/the month/the week", "end of month", "retrospective", "retro", "weekly reflection", or invokes "/assist:reflect". Also trigger at quarter or year boundaries when Forni wants to look back. Monthly is the default. Weekly retro is also called by `assist:plan-week` before planning the next week. Quarterly hands off to the V2MOM eval walk.
 argument-hint: "[week | month | quarter | year]"
 allowed-tools:

@@ -1,5 +1,5 @@
 ---
-name: assist:handle-budget
+name: handle-budget
 description: Categorize and approve YNAB transactions, building a payee rules engine that gets smarter each run. Use whenever Forni mentions YNAB, categorizing spend, cleaning up the budget, approving transactions, the unapproved queue, payee cleanup, or wants a clean read on where money is going. Also trigger for "/assist:handle-budget", "tidy the budget", or "categorize my spending".
 allowed-tools:
   - Bash

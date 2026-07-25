@@ -1,5 +1,5 @@
 ---
-name: sdlc:design
+name: design
 description: Start work on an issue with branch setup and implementation design. Use this whenever the user wants to begin a new task, start on a ticket, or set up a feature branch for development work.
 argument-hint: <issue-id>
 allowed-tools:

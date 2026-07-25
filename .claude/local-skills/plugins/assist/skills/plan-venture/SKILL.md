@@ -1,5 +1,5 @@
 ---
-name: assist:plan-venture
+name: plan-venture
 description: Direction-setting session for a venture. First-principles positioning (Dunford), adversarial critique walked one finding at a time, brand and naming decisions, a multi-fidelity roadmap, and full artifact true-up (docs, Linear, calendar, Todoist). Use this skill whenever Forni wants to plan a business's direction, asks "what is this business", wants to work through positioning or strategy from scratch, questions whether the ladder is against the right wall, wants a brand or naming workshop, or invokes "/assist:plan-venture". Also trigger for a Monday planning block that turns strategic ("direct the energy before scheduling more work"). Weekly slotting stays in assist:plan-week; this is the deeper, occasional session that decides what the weeks are for.
 argument-hint: "[venture, e.g. atelic]"
 allowed-tools:

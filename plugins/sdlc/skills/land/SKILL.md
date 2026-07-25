@@ -1,5 +1,5 @@
 ---
-name: sdlc:land
+name: land
 description: Drive the back half of SDLC autonomously — open the PR if needed, iterate with the bot reviewer until feedback is addressed, merge (squash), then clean up. The agent (not GitHub) judges when feedback is addressed. Bails to the user on human review, hard CI failure, merge conflict, or time budget exceeded. Default next step after implementation; use when the user says "land it", "ship this", "merge when ready", or invokes /sdlc:land.
 argument-hint: "[PR number - auto-detected if on feature branch]"
 allowed-tools:

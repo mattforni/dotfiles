@@ -1,5 +1,5 @@
 ---
-name: assist:plan-trip
+name: plan-trip
 description: Group trip and getaway planning. Scope the trip, pull live lodging availability, present options with per head cost, verify before booking, research the constraint that actually drives the trip (weather windows, permit and reservation release dates, access rules), hand off the booking, then capture a trip doc and schedule the time sensitive follow ups. Use this skill whenever Forni mentions planning a trip, a getaway, a group house, a cabin or Airbnb or VRBO for a crew, a basecamp for a race or hike or backpacking objective, finding lodging for friends, splitting a house, acclimation lodging, or asks "where should we stay", "find us a place", or "book the house" for an upcoming adventure. Also trigger for "/assist:plan-trip", "plan the Aspen trip", "find a house for the boys", or "we need a place for the loop weekend". Trip records live under `~/Eudaimonia/Craft/Adventure/`; this skill is the workflow counterpart to the Adventure planning conventions documented there.
 argument-hint: "[scope | search | present | verify | book | doc]"
 allowed-tools:

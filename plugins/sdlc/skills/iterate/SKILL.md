@@ -1,5 +1,5 @@
 ---
-name: sdlc:iterate
+name: iterate
 description: Address PR review feedback and request re-review. Use this when the user needs to handle PR comments, respond to code review, or iterate on feedback from reviewers.
 argument-hint: [PR number - auto-detected if on feature branch]
 allowed-tools:

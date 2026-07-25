@@ -1,5 +1,5 @@
 ---
-name: assist:present
+name: present
 description: Build a polished reveal.js presentation deck for an internal demo, talk, or share-out. Generates a single-file HTML deck with RYLLC brand styling, served locally via `npm run preso`. Use this skill whenever Forni says "build a presentation", "make a deck", "let's prep a demo", "create a preso", references an upcoming demo or talk that needs slides, or invokes `/assist:present`. Also trigger when Forni wants to walk through work to an audience and asks how to assemble it. Decks live under `preso/YYYY-MM-DD_<slug>/` in whichever repo the work was done.
 argument-hint: "[optional context, e.g., 'six weeks of growth eng' or 'mtm pilot pitch']"
 allowed-tools:
