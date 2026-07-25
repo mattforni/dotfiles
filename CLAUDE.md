@@ -151,6 +151,8 @@ The desired array supports both stdio and http transports. For http entries that
 
 **Do not wait on CodeRabbit when it is in its rate-limit cooldown.** CodeRabbit enforces a per-developer PR review limit; when hit, it posts a "Review limit reached" comment with a cooldown (often ~30 to 40 minutes) in place of a real review, and its `CodeRabbit` commit status can still read "Review completed" even though no review ran. Treat a cooldown as no review available, not as pending feedback. When landing (`sdlc:land`), bypass it: proceed on CI, any other available review, and your own read rather than blocking on the cooldown window. Paying for usage-based reviews to skip the wait is the user's call, never assumed.
 
+**Two CodeRabbit house standards live in [`coderabbit/`](coderabbit/README.md).** Chill (low noise) for client-facing sites like the `atelic-action` repos, assertive (thorough) for your own code and tooling. homebase is public, so those canonical files can be referenced from any repo via `remote_config`, or copied in for portability. homebase's own root `.coderabbit.yaml` is the assertive canonical. The CLI (`coderabbit`, Brewfile cask) runs local reviews before a PR. See the folder README for the apply methods, Free-tier notes, and the biome pre-commit-hook gotcha.
+
 ## Development Workflow
 
 1. Edit files in this repository

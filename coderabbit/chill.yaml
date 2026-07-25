@@ -1,0 +1,31 @@
+# CodeRabbit house standard — chill (client marketing sites)
+# Canonical copy. See coderabbit/README.md for when to use this vs the assertive
+# standard, and how to apply it (copy in, or reference via remote_config).
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+
+reviews:
+  profile: chill            # balanced signal; low noise for client-facing PRs
+  high_level_summary: true  # PR summary at the top
+  poem: false               # skip the closing poem
+  review_status: true
+
+  auto_review:
+    enabled: true
+    drafts: false           # don't review draft PRs
+
+  # Keep reviews on real source; skip generated / vendored files.
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/.next/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/out/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**/package-lock.json"
+    - "!**/pnpm-lock.yaml"
+    - "!**/yarn.lock"
+
+chat:
+  auto_reply: true
