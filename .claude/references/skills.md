@@ -6,6 +6,8 @@ Guidance for authoring and maintaining Claude Code skills. Load when working on 
 
 Skill names lead with a verb. Add an object when it sharpens the meaning (`plan-week`, `triage-email`); a bare verb is fine when it already reads unambiguously (`reflect`, `sharpen`, `wrap`). New skills follow this. Rename an existing skill only when its name actively misleads, not for conformity's sake.
 
+**Plugin skill frontmatter names are bare.** The loader namespaces every plugin skill as `<plugin>:<name>`, so the `name:` field in SKILL.md must be the bare skill name (`triage-inbox`, `land`), never the namespaced form. Writing `assist:triage-inbox` there double namespaces the invocation surface into `assist:assist:triage-inbox`. Caught 2026-07-24 across all 18 assist and 8 sdlc skills; linear-lifecycle, whose name was bare, was unaffected.
+
 ## SKILL.md vs learned-rules.md
 
 The two files have distinct jobs. Keeping them clean takes discipline.
