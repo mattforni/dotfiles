@@ -20,10 +20,8 @@ alias sls="screen -ls"
 alias sra="screen -d -RR"
 alias sw="screen -wipe"
 
-# Cargo Aliases
-alias cb="cargo build"
-alias cr="cargo run"
-alias ct="cargo test -- --nocapture"
+# CodeRabbit
+alias cr="coderabbit"
 
 # Docker Aliases
 alias docker-clean='docker rm $(docker ps -a -q -f status=exited)'
