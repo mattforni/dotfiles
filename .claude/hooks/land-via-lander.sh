@@ -33,6 +33,12 @@ if [[ -z "$CMD" ]]; then
   exit 0
 fi
 
+# Monitor scripts (and multiline Bash) arrive as one string with embedded
+# newlines, but grep -E is line oriented, so a gh invocation split across
+# physical lines would slip the guard. Flatten newlines to spaces first; the
+# pipe/semicolon/ampersand boundaries the signatures exclude are preserved.
+CMD=$(printf '%s' "$CMD" | tr '\n' ' ')
+
 # PR-landing / PR-polling command signatures (scope: polling + merge, per the
 # 2026-07-26 codification decision):
 #   - gh pr merge                          (the merge itself)
