@@ -218,8 +218,21 @@
           },
           {
             "type": "command",
+            "command": "$HOME/.claude/hooks/land-via-lander.sh"
+          },
+          {
+            "type": "command",
             "command": "$HOME/.claude/hooks/worktree-gate.sh",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Monitor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/land-via-lander.sh"
           }
         ]
       }
