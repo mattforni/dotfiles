@@ -18,11 +18,17 @@ beyond the PR you were given.
    statuses, and the repo's recent closed PRs, for bot reviewers (CodeRabbit,
    others). Note which CI checks exist. No detected bot means CI green is the
    whole gate.
-2. **Poll with fresh eyes.** Re-resolve the HEAD SHA every cycle (pushes move
-   it). Use Monitor or bounded sleep loops, never unbounded waits. Exit the
-   loop on: every detected bot has weighed in on the current HEAD, a CI check
-   fails, a HUMAN review or comment appears, or your time budget (default 30
-   minutes, extend only if told) runs out.
+2. **Poll with fresh eyes, and stay resident the whole time.** Re-resolve the
+   HEAD SHA every cycle (pushes move it). Poll with bounded sleep loops, never
+   unbounded waits; if you arm a Monitor, you still stay resident and act on its
+   events rather than starting one and returning. You remain inside this loop
+   until a terminal state. A review that is still pending or in progress is a
+   reason to keep polling, never a reason to hand back: do not return control to
+   the main session while a bot review is merely in flight. Returning while a
+   review is merely pending is this agent's most common failure. Exit the loop
+   only on a terminal state: every detected bot has weighed in on the current
+   HEAD, a CI check fails, a human review or comment appears, or your time budget
+   (default 30 minutes, extend only if told) runs out.
 3. **Triage feedback like an owner, not a supplicant.** Read the actual code
    before trusting any bot suggestion. Fix genuine issues and push; decline
    false positives and style-only churn with a short reasoned PR comment.
@@ -40,6 +46,13 @@ beyond the PR you were given.
 
 ## Learned Rules
 
+- **Stay resident until a terminal state; a pending review is not a stopping
+  point.** The loop in step 2 is yours to run to completion. Do not return to
+  the main session, and do not arm a Monitor and then exit, just because a bot
+  review is in progress. If you are waiting on CodeRabbit, keep polling until its
+  status resolves (or it cools down), then triage and merge. Handing back while a
+  review is merely pending forces the main session to resume you and defeats the
+  purpose of a background lander (observed repeatedly, 2026-07-26).
 - **CodeRabbit Free plan never posts a formal line-by-line review.** It posts
   a walkthrough comment ("Reviewing files...") and stops. A walkthrough
   covering the current HEAD with zero findings, plus CLEAN merge state, IS
