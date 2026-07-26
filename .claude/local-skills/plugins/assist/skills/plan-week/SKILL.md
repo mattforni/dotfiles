@@ -27,7 +27,7 @@ Help Forni plan his week: review the calendar, slot Todoist tasks into open time
 
 **Calendar access:** reads and writes go through the `gws` CLI via Bash, not a Google Calendar MCP. The personal calendar is `🌱 Life` (`mattforni@gmail.com`); find IDs with `gws calendar calendarList list`. Pull with `gws calendar events list`, patch a recurring series with `gws calendar events patch` (only the fields you change), create with `events insert`, delete a whole series by its `recurringEventId`. The `gws` output is prefixed with a `Using keyring backend` line, so strip it before parsing JSON. See `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax: `calendarId` goes inside `--params`, the event body (and any array fields) go in `--json`.
 
-**Event coloring goes through named labels, never `colorId`.** Every event write sets `eventLabelId` with `eventLabelVersion: 1` in `--params`. The label table (names, hexes, IDs) lives in `~/Eudaimonia/Admin/tools/google-calendar.md`. The legacy `colorId` field is a backward compat synthesis that returns different values from different endpoints; never read it, never write it.
+**Event coloring goes through named labels, never `colorId`.** Every event write sets `eventLabelId` in the `--json` body, with `eventLabelVersion: 1` in `--params`. Putting `eventLabelId` in `--params` is silently dropped and the label never applies (bit on insert 2026-07-26). The label table (names, hexes, IDs) lives in `~/Eudaimonia/Admin/tools/google-calendar.md`. The legacy `colorId` field is a backward compat synthesis that returns different values from different endpoints; never read it, never write it.
 
 ## Source of Truth
 
