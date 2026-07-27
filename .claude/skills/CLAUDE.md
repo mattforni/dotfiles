@@ -24,4 +24,4 @@ Skills here use the flat `<name>/SKILL.md` discovery pattern. They do not requir
 
 ## Assist Namespace (Plugin)
 
-The `assist:*` skills (emails, schedule, learn, bd-email, job-apply) live in the `local-skills` marketplace at `.claude/local-skills/plugins/assist/`. They are installed via `claude plugin install assist@local-skills`. See that directory for details.
+The `assist:*` skills (emails, schedule, learn, job-apply) live in the `local-skills` marketplace at `.claude/local-skills/plugins/assist/`. They are installed via `claude plugin install assist@local-skills`. See that directory for details.
