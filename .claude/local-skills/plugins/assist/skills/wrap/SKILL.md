@@ -65,6 +65,7 @@ Categorize per repo:
 - **Open PR awaiting the user.** Blocks exit (see Step 9). Surface review comments and chain to `/sdlc:iterate`.
 - **Open PR awaiting reviewer.** Blocks exit (see Step 9). Watch for review to land, then chain to `/sdlc:iterate` or `/sdlc:complete` as appropriate.
 - **Merged PR with the branch still local.** Chain to `/sdlc:complete` via the Skill tool.
+- **Leftover worktree from a merged branch.** Destroy it: `git worktree remove <path>` then `git branch -D <branch>`. Do this for every session worktree whose PR has merged. The one exception is the current session's own working directory and any `locked` worktree; leave those, they get cleaned when the session ends.
 
 When the session already ran `/sdlc:complete`, this step is usually fast and returns clean for the main repo.
 
