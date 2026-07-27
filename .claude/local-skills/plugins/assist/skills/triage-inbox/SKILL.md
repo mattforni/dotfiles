@@ -67,7 +67,7 @@ gws gmail users messages get --params '{"userId":"me","id":"<ID>","format":"full
 Cross-reference each sender/subject against triage-rules.md and learned-rules.md, assign a verb, and prepare the artifact:
 
 - **Needs a quick response** → compose the reply now so it is ready for the review pass. Check the clock (`date`) before any time-of-day greeting. Draft, never auto-send, when the recipient is a person. Family replies get no sign-off.
-- **Needs a substantive or high-stakes response** (BD, negotiation, pricing, anything sensitive) → do not dash off an inline draft. Park it (yellow star, right label, keep in inbox) and hand to `assist:bd-email` or a focused drafting pass after triage. The Do verb is for quick replies only.
+- **Needs a substantive or high-stakes response** (BD, negotiation, pricing, anything sensitive) → do not dash off an inline draft. Park it (yellow star, right label, keep in inbox) and hand to a focused drafting pass after triage. The Do verb is for quick replies only.
 - **Needs action, no response** → read the body for any deadline, then prepare a Todoist follow-up (see Follow-ups below).
 - **Reference or noise** → note the target label and disposition. Unsubscribe is orthogonal to disposition and is only sent when the user wants off that list (or a sender rule requires it), never as a default for wanted senders: a pure marketing promo is unsubscribe + trash; a list the user wants off but wants this message kept is unsubscribe + label + archive; a wanted sender is just label + archive (no unsubscribe); a receipt (even one titled "Thank you!") is label to Purchases + archive.
 - **Waiting on someone** → note a green star, keep in inbox.
