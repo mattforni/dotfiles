@@ -1,55 +1,55 @@
 {
-  "name": "local-skills",
-  "owner": {
+ "name": "local-skills",
+ "owner": {
+  "name": "Matthew Fornaciari",
+  "url": "https://github.com/mattforni"
+ },
+ "metadata": {
+  "version": "1.0.0",
+  "description": "Local skills managed via homebase dotfiles"
+ },
+ "plugins": [
+  {
+   "name": "assist",
+   "source": "./plugins/assist",
+   "version": "8.0.0",
+   "license": "MIT",
+   "description": "Personal productivity skills: email triage, weekly planning, knowledge capture, BD outreach, and job applications.",
+   "author": {
     "name": "Matthew Fornaciari",
     "url": "https://github.com/mattforni"
-  },
-  "metadata": {
-    "version": "1.0.0",
-    "description": "Local skills managed via homebase dotfiles"
-  },
-  "plugins": [
-    {
-      "name": "assist",
-      "source": "./plugins/assist",
-      "version": "7.0.1",
-      "license": "MIT",
-      "description": "Personal productivity skills: email triage, weekly planning, knowledge capture, BD outreach, and job applications.",
-      "author": {
-        "name": "Matthew Fornaciari",
-        "url": "https://github.com/mattforni"
-      },
-      "category": "productivity",
-      "keywords": [
-        "assist",
-        "email",
-        "planning",
-        "reflect",
-        "learn",
-        "bd",
-        "job-apply",
-        "present",
-        "productivity"
-      ],
-      "strict": false,
-      "skills": [
-        "./skills/triage-inbox",
-        "./skills/plan-week",
-        "./skills/plan-training",
-        "./skills/reflect",
-        "./skills/codify-context",
-        "./skills/groom-context",
-        "./skills/job-apply",
-        "./skills/plan-meals",
-        "./skills/plan-trip",
-        "./skills/plan-venture",
-        "./skills/mise",
-        "./skills/permissions",
-        "./skills/present",
-        "./skills/sharpen-saws",
-        "./skills/wrap",
-        "./skills/refine-process"
-      ]
-    }
-  ]
+   },
+   "category": "productivity",
+   "keywords": [
+    "assist",
+    "email",
+    "planning",
+    "reflect",
+    "learn",
+    "bd",
+    "draft-applications",
+    "present",
+    "productivity"
+   ],
+   "strict": false,
+   "skills": [
+    "./skills/triage-inbox",
+    "./skills/plan-week",
+    "./skills/plan-training",
+    "./skills/reflect",
+    "./skills/codify-context",
+    "./skills/groom-context",
+    "./skills/draft-applications",
+    "./skills/plan-meals",
+    "./skills/plan-trip",
+    "./skills/plan-venture",
+    "./skills/mise",
+    "./skills/permissions",
+    "./skills/present",
+    "./skills/sharpen-saws",
+    "./skills/wrap",
+    "./skills/refine-process"
+   ]
+  }
+ ]
 }
