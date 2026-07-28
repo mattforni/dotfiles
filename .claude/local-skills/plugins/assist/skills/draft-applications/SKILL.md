@@ -28,7 +28,7 @@ Work a single role to a finished package before touching the next; Forni process
 4. **Draft the cover letter** (250 to 350 words, structure below).
 5. **Draft responses** to every application question the posting asks.
 6. **Find the hiring manager** (search order below).
-7. **Draft the follow-up email** from template 07 via the gws CLI as a Gmail draft with labels `Craft` and `RYLLC`. **Draft only, never send:** outbound email to any human requires Forni's explicit approval of the exact final artifact, every time.
+7. **Draft the follow-up email** from template 07 via the gws CLI as a Gmail draft with the label `🛠️ Craft/💼 Vocation` (the July 2026 taxonomy; the old Craft and RYLLC labels no longer exist). **Draft only, never send:** outbound email to any human requires Forni's explicit approval of the exact final artifact, every time.
 8. **Present the package** and stop. Forni reviews, submits in the portal, and says so.
 9. **On his confirmation only**, move the row to Applied with the date. A hiring manager becomes a HubSpot contact only when a real relationship forms.
 
