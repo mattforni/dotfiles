@@ -46,7 +46,9 @@ In order: LinkedIn (company plus engineering leadership titles), the posting its
 
 ## Follow-Up Email
 
-Template 07 shape, 150 to 170 words: reference the posting with a link, polite forward request ("If I'm reaching out to the wrong person..."), brief credentials focused on role and company rather than metrics, specific interest in their mission or stack, the "rather than (or alongside) a full-time hire" fractional framing where it fits, low pressure close with the Reclaim scheduling link. Title Case subject. No sign off; Gmail handles the signature.
+Policy (set 2026-07-29): follow up on every application where a real hiring manager is identifiable; skip when the only option is a generic inbox. Verify the person on LinkedIn before any send (current at the company, owns the team); only the email address may be guessed (firstname@, then firstname.lastname@; stop after a second bounce). One ask, the role. **No fractional pitch while the unemployment claim is active**; that framing belongs to Atelic cold outreach, not W2 follow-ups. Send only after the application is in. No automatic bump follow-ups for now.
+
+The note itself keeps template 07's bones, 150 to 170 words: reference the posting with a link, polite forward request ("If I'm reaching out to the wrong person..."), brief credentials focused on role and company rather than metrics, specific interest in their mission or stack, low pressure close with the Reclaim scheduling link. Title Case subject. No sign off; Gmail handles the signature.
 
 ## Guardrails
 
