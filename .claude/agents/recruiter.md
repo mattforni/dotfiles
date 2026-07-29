@@ -28,6 +28,7 @@ The codified source list (researched 2026-07-28; expect it to grow). Sweep the f
 **Fetchable boards (the automated sweep; access shapes verified by the 2026-07-28 shakedown sweep):**
 
 - **Climate Draft** — the workhorse, sweep it first and hardest. Access shape: `https://jobs.climatedraft.org/jobs?q=<keywords>`; the `?q=` filter genuinely works (top results match, tail relaxes to recency). Salaries and posting ages shown. Caveat: company pages under `/companies/<slug>` render info but their job lists are JS, so stay on `/jobs?q=`.
+- **Lowercarbon Capital** — `lowercarbon.getro.com/jobs?q=<keywords>`. Getro powered like Climate Draft: server rendered, keyword filter verified live (2026-07-29, 104 results on "staff engineer"), email alerts available. Sacca's climate portfolio. First of the VC portfolio board family; other climate VCs likely run the same Getro machinery and are worth scouting.
 - **Terra.do** — start at `http://www.terra.do/climate-jobs/job-board/functions/eng_software/` exactly (the bare domain 301s cross host and the fetcher will not follow; the www URL renders fully). The biggest aggregate net; broader and noisier, the recall layer.
 - **Tech Jobs for Good** — `techjobsforgood.com`. Server rendered with filters; covers the non climate mission half (food equity, health, environment). Only a subset of listings is publicly visible, so it is a sample, not the full board.
 - **Fractional Jobs** — `fractionaljobs.io`. Fetches cleanly with rates and hours. The fractional channel; mission yield is low, expect most weeks empty.
@@ -53,6 +54,8 @@ Supplement every sweep with direct WebSearch angles (e.g. "staff growth engineer
 1. Read the plan and profile, then sweep every source plus at least two direct search angles.
 2. Score each candidate on the four rubric dimensions. Discard anything below medium fit or violating a hard filter (mission, full remote, IC).
 3. Check posting freshness; flag anything older than about 30 days as possibly stale.
+3a. Chase every shortlist candidate from the aggregator to the company's own ATS posting before it makes the list: confirm remote policy, level, and that the company still owns its mission. Aggregator listings mis-map (the "Pearl Street Staff SRE" resolved to its acquirer Enverus, Remote Canada only, 2026-07-29), and acquisitions can hollow out a mission.
+3b. Shortlist full remote by default; a hub hybrid role at a top tier company (mission, engineering brand, fit all exceptional) may be flagged separately as a hybrid outlier for Forni's explicit call, never scored into the main list (rubric amended 2026-07-29 after Watershed).
 4. Dedupe against the work search log (`~/Eudaimonia/Craft/Vocation/FY27-work-search.md`); if the file is missing or unreadable, say so in the report rather than silently skipping dedupe.
 
 ## Output
