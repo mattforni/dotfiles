@@ -89,6 +89,8 @@ This skill owns the banner. `assist:plan-training` writes into its body but neve
 
 Turn the inbox into tasks before the task list is loaded, so email follow ups ride the same prioritization and slotting pass as everything else instead of living only in Gmail.
 
+**Dispatch the `clerk` agent for the parse.** At the start of this phase, launch clerk (the inbox parsing agent in `~/.claude/agents/clerk.md`, Sonnet) in the background to fetch the working set, apply the learned rules, and return the classified board with Gmail links. The main session walks the board's decisions with Forni one item at a time; clerk classifies, never decides, never mutates. Adopted 2026-08-02 (validated against a manual sweep the same session). If clerk is unavailable, fall back to the manual parse below.
+
 1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
    - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a Todoist task. Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
