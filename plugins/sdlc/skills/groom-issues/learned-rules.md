@@ -1,4 +1,4 @@
-# SDLC Groom: Learned Rules
+# Groom Issues: Learned Rules
 
 Session specific gotchas and calibration captured from real grooming runs. These override the generic guidance in SKILL.md and reference/ when they conflict.
 

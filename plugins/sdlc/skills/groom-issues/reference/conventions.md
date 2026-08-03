@@ -1,4 +1,4 @@
-# SDLC Groom Conventions
+# Groom Issues Conventions
 
 Classification heuristics, capacity math, and priority rules. SKILL.md is the workflow; this file is how to make the judgment calls inside that workflow.
 

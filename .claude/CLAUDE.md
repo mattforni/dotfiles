@@ -117,7 +117,7 @@ Building recurring headless Claude automations (launchd, Keychain auth, `--allow
 
 ### Manual First, Then Codify
 
-When building a workflow skill, do the work by hand once with real data before writing the skill. Skills written without a real first run are thin: the gotchas, shortcut candidates, and calibration numbers (capacity multipliers, typical bucket sizes, priority distributions) only surface under actual use. The pattern is: run the workflow manually, capture learnings inline as they come up, then write the skill as the last step. The Linear grooming skill (now `sdlc:groom`) gained ~10 Learned Rules and a recalibrated capacity multiplier only after one real grooming pass.
+When building a workflow skill, do the work by hand once with real data before writing the skill. Skills written without a real first run are thin: the gotchas, shortcut candidates, and calibration numbers (capacity multipliers, typical bucket sizes, priority distributions) only surface under actual use. The pattern is: run the workflow manually, capture learnings inline as they come up, then write the skill as the last step. The Linear grooming skill (now `sdlc:groom-issues`) gained ~10 Learned Rules and a recalibrated capacity multiplier only after one real grooming pass.
 
 ### Levels shorthand
 
