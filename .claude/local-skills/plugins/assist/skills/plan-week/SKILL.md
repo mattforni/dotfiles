@@ -89,11 +89,11 @@ This skill owns the banner. `assist:plan-training` writes into its body but neve
 
 Turn the inbox into tasks before the task list is loaded, so email follow ups ride the same prioritization and slotting pass as everything else instead of living only in Gmail.
 
-**Dispatch the `clerk` agent for the parse.** At the start of this phase, launch clerk (the inbox parsing agent in `~/.claude/agents/clerk.md`, Sonnet) in the background to fetch the working set, apply the learned rules, and return the classified board with Gmail links. The main session walks the board's decisions with Forni one item at a time; clerk classifies, never decides, never mutates. Adopted 2026-08-02 (validated against a manual sweep the same session). If clerk is unavailable, fall back to the manual parse below.
+**Dispatch the `clerk` agent for the parse.** At the start of this phase, launch clerk (the inbox parsing agent in `~/.claude/agents/clerk.md`, Sonnet) in the background to fetch the working set, apply the learned rules, and return the classified board with Gmail links. The main session walks the board's decisions with Forni one item at a time; clerk classifies, never decides, never mutates. Wait for clerk's completed board before walking any decisions; fall back to the manual parse below only after clerk has failed or returned nothing, never in parallel with it, and apply the same buckets and star semantics in either path. Adopted 2026-08-02 (validated against a manual sweep the same session).
 
 1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
-   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a Todoist task. Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
+   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a task in its landing system per GC conventions (Todoist for personal and operational, Linear for development and work search). Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
    - **Needs an actual reply**: leave it in the inbox for a proper `assist:triage-inbox` session. Note that it exists; do not draft or send replies during this phase.
    - **No action**: skip it.
 3. Confirm each task creation with Forni before writing, one at a time, consistent with the ask before acting posture.
@@ -164,7 +164,7 @@ Present suggestions via AskUserQuestion, one at a time or in small batches. The 
 **Todoist tasks are scheduled via Todoist, not by creating Google Calendar events.** To slot a Todoist task:
 
 1. Use `reschedule-tasks` to set the date and time (e.g., `2026-03-31T07:00:00`)
-2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`) and add the `⏰ Scheduled` label
+2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`), add the `⏰ Scheduled` label, set exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and move the task out of Inbox into its pillar project (see Slotting Rules in the plugin learned-rules.md)
 3. The `⏰ Scheduled` label removes the task from the Schedule filter so it does not resurface during prioritization
 4. Todoist's calendar integration automatically shows scheduled tasks on Google Calendar
 

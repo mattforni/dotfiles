@@ -127,13 +127,13 @@ Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-
 
 - **Reconcile the pantry against reality FIRST, before drafting the plan.** Treat the stored stock levels as a stale draft, not truth, especially after a travel week. Knock down what is gone and confirm survivors before planning anything.
   - Why: On 2026-06-27 the pantry claimed a full summer produce drawer (4 tomato entries, 3 bell peppers, broccoli, kale, etc.) after a week in a rental kitchen. Planning against it would have built meals around food that did not exist and bought duplicates. Forni called for reconciliation to be step one of every weekly plan.
-  - How to apply: this is Phase 2 of the flow. Present perishables grouped hardy vs delicate, let Forni name the survivors, zero the rest, write it back, then plan against the corrected pantry.
+  - How to apply: this is Phase 2 of the flow. Present perishables grouped hardy vs quick to expire, let Forni name the survivors, zero the rest, write it back, then plan against the corrected pantry.
 
 - **Say "quick to expire," not "delicates."** Group the reconcile as quick to expire vs hardy; Forni found "delicates" an odd word for produce (2026-08-02).
 
 - **A full reconcile is a "name the survivors" pass, not thirty one-at-a-time questions.** The one-at-a-time rule below is for the smaller set of genuinely ambiguous staples, not for a whole-fridge audit.
   - Why: After travel, most fresh stock is gone, so it is faster for Forni to list the few survivors than to tap through every item. He is often mobile (e.g. shopping) when this happens and dislikes tedious phone input.
-  - How to apply: present the in-stock perishables grouped hardy vs delicate and ask him to name what is still good; zero everything he does not name.
+  - How to apply: present the in-stock perishables grouped hardy vs quick to expire and ask him to name what is still good; zero everything he does not name.
 
 - **Zeroing a non-staple still flags it `needs_restock`, and storeless items show under every store filter.** A bulk reconcile that zeros lots of produce floods every store's shopping view unless each out item carries a store.
   - Why: On 2026-06-27, zeroing about 30 produce items buried the Costco shopping view under out-of-stock produce, because storeless `needs_restock` rows match all store filters.

@@ -49,9 +49,12 @@ other system.
 
 ## Output
 
-A board, one line per message: Gmail link
-(`https://mail.google.com/mail/u/0/#all/<message id>`), sender, subject, date,
-star state, bucket, and the proposed action in a few words. Group by bucket,
+A board, one line per message: an account-safe Gmail link
+(`https://mail.google.com/mail/?authuser=<account>#search/rfc822msgid%3A<url-encoded-Message-ID>`,
+per the learned rules), sender, subject, date,
+star state, bucket, and the proposed action in a few words. When the
+classification leaned on body content, carry the one line of evidence, or flag
+the message for the main session to open before asking Forni. Group by bucket,
 follow ups first. Close with a one line count. Return raw data for the main
 session; no prose padding, no recommendations beyond the per message proposal,
 and never any mutation of anything.

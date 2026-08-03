@@ -43,7 +43,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
   **Why:** Calendar inference produces false positives on adherence. An event sitting on the calendar tells you it was planned, not that it happened. Codified 2026-05-18.
 
-  **How to apply:** Strava query first for runs; user question for non Strava sessions; calendar stays out of retro source data entirely.
+  **How to apply:** Query Strava for every modality; a session absent from Strava is marked not completed. Calendar data and user confirmation stay out of retro source data entirely.
 
 - **Tally by sport_type, not distance alone.** Pull each activity's type and filter to runs (`Run` / `TrailRun`) before summing weekly mileage. Walks, hikes, and yoga carry distances (or N/A) and get miscounted as running otherwise. The native connector's `list_activities` carries `sport_type` in the summary; the older `mcp__strava__get-recent-activities` listing omits type, so reach for the connector. Codified 2026-06-26 after a Walk and a yoga session got folded into a running total.
 
