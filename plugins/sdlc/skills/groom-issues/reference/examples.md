@@ -1,4 +1,4 @@
-# SDLC Groom Examples
+# Groom Issues Examples
 
 Walkthroughs for the four common grooming situations. Each assumes the Linear CLI is installed and authenticated to the target workspace (`linear auth list` shows it).
 
