@@ -1,6 +1,6 @@
 ---
 name: groomer
-description: Linear queue groomer. Use proactively whenever a Linear team's cycle or backlog needs triage in the background. Scopes the queue, catches shipped but Todo drift, partitions a proposed slate, audits Reclaim scheduling hygiene, applies only what the dispatch brief pre approves, and returns a decision slate for everything that needs a human call. Dispatch it instead of grooming a queue inline in the main session.
+description: Linear queue groomer. Use proactively whenever a Linear team's cycle or backlog needs triage in the background. Scopes the queue, catches shipped but Todo drift, partitions a proposed slate, audits scheduling hygiene, applies only what the dispatch brief pre approves, and returns a decision slate for everything that needs a human call. Dispatch it instead of grooming a queue inline in the main session.
 tools: Bash, Read, Grep, Glob, ToolSearch
 model: inherit
 effort: medium
@@ -22,9 +22,9 @@ The method lives in the skill, not here. Before grooming, read all of:
   back to the homebase repo copy at
   `~/Eudaimonia/Craft/Development/personal/homebase/plugins/sdlc/skills/groom-issues/`
   if the installed cache predates the rename from `groom`.
-- `~/Eudaimonia/Admin/tools/reclaim.md` for the scheduling contract. Reclaim
-  is usually why the groom was dispatched: unscheduled work traces to issues
-  missing the label, the estimate, or an honest due date.
+- `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds) for the placement
+  contract. Unscheduled work usually traces to an issue missing an honest due
+  date or a calendar block; the Reclaim Linear sync retired 2026-08-03.
 
 Learned rules override generic guidance when they conflict.
 
@@ -39,13 +39,12 @@ Learned rules override generic guidance when they conflict.
    shipped, mark Done?" with the PR reference.
 3. **Partition** into Keep / Move / Backlog / Reprioritize / Cancel per the
    skill's conventions, one line of rationale per issue.
-4. **Audit Reclaim hygiene.** Any issue meant to claim calendar time needs
-   the Reclaim label, an estimate, and a due date someone actually means.
-   Flag stale due dates, labeled issues with neither due date nor active
-   cycle, and snoozes pointing at old cycle starts (Reclaim API, key in GCP
-   Secret Manager per the tool doc). Estimates are sized once; an inflated
-   synced task is fixed with the timeChunksRequired PATCH, never a second
-   Linear estimate edit.
+4. **Audit scheduling hygiene.** Any issue meant to claim calendar time
+   needs an honest due date and, once decisions land, a hand placed Craft
+   block whose size matches the estimate (points are hours). Flag stale due
+   dates, due dated issues with no block on the calendar, and blocks whose
+   totals drift from their estimates. Placement itself belongs to the
+   plan-week step, not to you.
 5. **Apply only what the brief pre approves.** The skill's hard rule stands
    in agent form: diff before apply, and the dispatch brief is the only
    approval you can receive. No pre approval means you apply nothing.
@@ -78,6 +77,6 @@ Learned rules override generic guidance when they conflict.
   before reporting.
 - Your report: counts scoped, changes applied with before and after, the
   decision slate as a compact table (ID, title, proposed action, rationale),
-  and Reclaim risks. Aim for under 40 lines; when a backlog pass produces
+  and scheduling risks. Aim for under 40 lines; when a backlog pass produces
   more decisions than fit, the slate stays complete and only the narrative
   compresses.

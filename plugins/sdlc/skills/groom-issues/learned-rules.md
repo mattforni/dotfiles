@@ -83,3 +83,11 @@ The following rules came from real Growth team groom runs and are likely to appl
 - **Effort matters in classification.** A title that sounds campaign shaped might be a 30 minute audit. Ask about effort when the cycle plan match is fuzzy. A low effort high value ticket can stay even if it does not perfectly match.
 - **Capacity multiplier starts at 0.9.** First C3 run predicted 10 Keep but reality was 16; multiplier was too conservative at 0.6. Recalibrate per team.
 - **Project deletion needs `--force`.** `linear project delete <id>` errors with "Interactive confirmation required." Issue delete uses `--confirm` instead. Different flag names for similar gates.
+
+### The Reclaim Linear Sync Is Retired (2026-08-03); Grooming Feeds Hand Placement
+
+Reclaim no longer schedules Linear work. The groom's scheduling output is honest due dates plus hand placed Craft calendar blocks (the plan-week placement step; conventions in `~/Eudaimonia/Admin/tools/google-calendar.md` Work Holds).
+
+**Why:** A full Monday (2026-08-03) went to fighting the sync's undocumented behavior: a fixed scale aware estimate mapping with nothing between 1h and 4h, increases only estimate sync, block sizes frozen at import, and a priority gate on incremental sync. Forni chose manual control. The post mortem lives in `~/Eudaimonia/Admin/tools/reclaim.md`.
+
+**How to apply:** Skip any Reclaim audit. During scope, check due dates against the real calendar; unscheduled work traces to an issue missing an honest due date or a calendar block. Estimates read as plain hours (ATE linear extended scale). If a Reclaim task for a Linear issue ever resurfaces, it is a zombie from before the retirement; flag it for deletion, and delete it only when the dispatch brief pre approves that action (the diff before apply gate still governs).
