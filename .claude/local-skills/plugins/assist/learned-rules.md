@@ -98,6 +98,8 @@ Rules added from triage corrections. Read on every invocation. These override de
 
 - `from:mcinfo@ups.com` -> label `📑 Admin/🛒 Purchases` (Label_36), skip inbox, **leave unread** (Forni wants them unread in the label so he can still notice deliveries). Created 2026-07-22 (filter id `ANe1BmhcvGLrUpeRN2yfGNvcjBy7tSEwy2Y4b8MJOg3icg`).
 
+- `from:climatebase.org` -> label `🛠️ Craft/🌦️ Climate` (Label_3939245566499170881), skip inbox, leave unread. Covers all Climatebase mail on the domain (newsletter via `climateweeknetwork@`, account mail via `alerts@`, any job alerts), per Forni's "everything from Climatebase" directive. Created 2026-08-03 (filter id `ANe1BmgW_Dr0M3-yRaocBulO8kS8ira5qkrjpZrK27V7vw`).
+
 ## Spend Categorization
 
 Rules for `assist:handle-budget`. The payee map is [reference/payee-map.md](reference/payee-map.md); these corrections override it.
