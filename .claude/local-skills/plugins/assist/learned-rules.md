@@ -67,14 +67,19 @@ Rules added from triage corrections. Read on every invocation. These override de
 - Never move, reschedule, or delete existing calendar events without explicit permission. Always present the proposed change and wait for approval.
 - Events booked via Reclaim.ai scheduling links were scheduled by other people. Extra caution required.
 - Deleting or moving adjacent events can cause Reclaim to auto-reschedule nearby flexible events as a side effect. Warn about this.
+- **Never schedule an event over a transition block.** Transitions exist to hold that space; placing an errand or event on top of one defeats the point. Find the next clear slot after the transition instead. Codified 2026-08-02 after a Sprouts run was placed over the post High Noon transition.
 
 ## Slotting Rules
 
-- **Personal admin tasks slot to morning windows, not afternoon.** Default to slotting Todoist personal tasks (admin, errands, paperwork, follow ups, calls) into morning slots. Use afternoon slots only when the task explicitly requires business hours (e.g., calling an office that opens at 09:00) or when no morning slot exists.
+- **Mornings are for deep work only; lighter cognitive tasks slot to afternoons.** The 07:30 to 11:00 morning window (anchors shortened 2026-08-02: routine 06:00 to 07:00, transition 07:00 to 07:30) holds anything that needs hard thinking or unbroken time. Admin, errands, follow ups, calls, and easier financial chores go to afternoons.
 
-  **Why:** Codified 2026-05-18 (Wk 3 planning session). Forni redirected afternoon admin slots: "I just don't tend to have time later in the day with work. It just doesn't really work that way."
+  **Why:** Codified 2026-08-02 (W32 planning). Forni: "let's try to do everything that's like deep work, things that require me to think hard or to have uninterrupted time, into the morning slots." This REVERSES the 2026-05-18 morning admin rule, which belonged to the Zero W2 era; do not resurrect it.
 
-  **How to apply:** This rule predates the Zero separation (W2 ended 2026-06-29); re-derive the specific morning windows from the rebuilt schedule.md once the post-Zero week is designed.
+  **How to apply:** During slotting, classify each task by cognitive load (the 1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy labels are the signal): Tough goes to mornings, Easy to afternoons, Middlest by judgment. Reclaim work blocks follow the same shape via due dates and block moves.
+
+- **Every slotted task carries an effort label and a pillar project.** When slotting, set one of 1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy by effort, and move the task out of Inbox into its pillar project (🍏 Constitution, 🧠 Contemplation, 🤝 Community, 🛠️ Craft). Codified 2026-08-02 after a slotting pass left both off.
+
+- **Never destroy contact info when retitling a task.** A bare email address or phone number as a task title IS the payload; a rename must carry it into the description or a mailto link in the title. Codified 2026-08-02 after a retitle stripped an email address and left the task unactionable.
 
 ## Codification Rules
 

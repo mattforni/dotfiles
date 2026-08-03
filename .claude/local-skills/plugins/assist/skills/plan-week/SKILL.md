@@ -89,9 +89,11 @@ This skill owns the banner. `assist:plan-training` writes into its body but neve
 
 Turn the inbox into tasks before the task list is loaded, so email follow ups ride the same prioritization and slotting pass as everything else instead of living only in Gmail.
 
+**Dispatch the `clerk` agent for the parse.** At the start of this phase, launch clerk (the inbox parsing agent in `~/.claude/agents/clerk.md`, Sonnet) in the background to fetch the working set, apply the learned rules, and return the classified board with Gmail links. The main session walks the board's decisions with Forni one item at a time; clerk classifies, never decides, never mutates. Wait for clerk's completed board before walking any decisions; fall back to the manual parse below only after clerk has failed or returned nothing, never in parallel with it, and apply the same buckets and star semantics in either path. Adopted 2026-08-02 (validated against a manual sweep the same session).
+
 1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
-   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a Todoist task. Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
+   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a task in its landing system per GC conventions (Todoist for personal and operational, Linear for development and work search). Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
    - **Needs an actual reply**: leave it in the inbox for a proper `assist:triage-inbox` session. Note that it exists; do not draft or send replies during this phase.
    - **No action**: skip it.
 3. Confirm each task creation with Forni before writing, one at a time, consistent with the ask before acting posture.
@@ -162,7 +164,7 @@ Present suggestions via AskUserQuestion, one at a time or in small batches. The 
 **Todoist tasks are scheduled via Todoist, not by creating Google Calendar events.** To slot a Todoist task:
 
 1. Use `reschedule-tasks` to set the date and time (e.g., `2026-03-31T07:00:00`)
-2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`) and add the `⏰ Scheduled` label
+2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`), add the `⏰ Scheduled` label, set exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and move the task out of Inbox into its pillar project (see Slotting Rules in the plugin learned-rules.md)
 3. The `⏰ Scheduled` label removes the task from the Schedule filter so it does not resurface during prioritization
 4. Todoist's calendar integration automatically shows scheduled tasks on Google Calendar
 
@@ -170,7 +172,7 @@ Google Calendar is still used directly for non task events: meetings, transition
 
 **Recurring catch up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
 
-1. Create a new one off Todoist task with the specific date/time, duration, and `⏰ Scheduled` label
+1. Create a new one off Todoist task with the specific date/time, duration, the `⏰ Scheduled` label, exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and its pillar project
 2. Complete the recurring task so the next occurrence auto generates on its cycle
 3. The one off task is the reminder for this week; the recurrence handles the next one
 
@@ -206,7 +208,7 @@ Slot a specific task or event into the week.
 3. Identify available slots that fit the duration
 4. Present options via AskUserQuestion
 5. Slot into the chosen time:
-   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration` and add the `⏰ Scheduled` label. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
+   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration`, add the `⏰ Scheduled` label, set exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and move the task out of Inbox into its pillar project. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
    - **If it is a non task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move
@@ -294,7 +296,7 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - **Green stars are walked, not auto skipped, during Sweep Inbox.** A green star means "waiting on someone else" as of the moment it was set, but the ball can quietly return: a vendor quote thread that is actually awaiting Forni's decision, or a tracker thread hiding a scheduling action. Present every starred thread for disposition rather than unilaterally classifying green stars as no action. Surfaced 2026-07-13 on the first live sweep: the skylight quote (green) was waiting on Forni's decision, and the new servicer thread (green) contained a launch call to schedule. Both were initially skipped and had to be corrected into tasks.
 - **The ⏰ Scheduled label requires a specific time; label without time is an anti pattern.** Slotting means both a datetime and the label (the two Slot steps together); a task carrying the label with a date only due hides from the Schedule filter indefinitely while looking handled. The filter's `(@⏰ Scheduled & no time)` branch (added 2026-07-13) drags offenders back into triage: when one surfaces, either give it a real time or strip the label (or swap to ⏲️ Recurring for genuinely recurring reminders). Surfaced 2026-07-13: two tasks due that very day (Connect for Health enrollment, a site review) were invisible during planning, and one had already spawned an accidental duplicate.
 - **Review Week presents movement as a table.** One row per activity (day, name, type, distance, vert, moving time, effort), totals as a bold summary line underneath. Requested 2026-07-19.
-- **Sweep Inbox links every email to its Gmail thread.** Use `https://mail.google.com/mail/u/0/#all/<message id>` in the presented board and in every question that references a message. Forni cannot act on an email he cannot open. Surfaced 2026-07-19.
+- **Sweep Inbox links every email to its Gmail thread.** Use the account-safe form `https://mail.google.com/mail/?authuser=<account>#search/rfc822msgid%3A<url-encoded-Message-ID>` (per the plugin learned-rules) in the presented board and in every question that references a message. Forni cannot act on an email he cannot open. Surfaced 2026-07-19.
 - **Estimate durations honestly during slotting; 30 minutes is a floor, not a default.** After proposing slots, walk the 30 minute tasks and ask which actually need more, then reflow the day around the answers. Surfaced 2026-07-19: several 30 minute slots were clearly hour long work.
 - **Present Week is a link to the Google Calendar week view** (`https://calendar.google.com/calendar/u/0/r/week/YYYY/M/D`). Todoist sync already renders scheduled tasks there, so the calendar IS the at a glance board. Do not rebuild it as prose day lists, packed summary tables, or rendered board artifacts; all three were rejected in one sitting on 2026-07-19. Supplement the link only with what the calendar cannot show: the deferred ledger, the open air summary, the week's theme.
 - **Never pack multiple items into one table cell, anywhere.** One line per item, times first. Packed cells were rejected twice on 2026-07-19 (a meal grid cell carrying commentary, a week summary cramming whole days into single cells).

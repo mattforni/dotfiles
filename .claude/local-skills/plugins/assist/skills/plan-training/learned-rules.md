@@ -39,11 +39,11 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
   **How to apply:** Always run retro before scheduling, even when the user invokes the skill mid week or for an ad hoc pass.
 
-- **Strava is the source of truth for completion, not the calendar.** Calendar events represent scheduled intent, not evidence anything happened. For Strava tracked sessions (runs), the activity is the proof. For non Strava sessions (yoga, lifts, sauna, contrast), ask the user directly via `AskUserQuestion`. Do not pull calendar data into retro coverage tables.
+- **Strava is the source of truth for completion, not the calendar.** Calendar events represent scheduled intent, not evidence anything happened. The Strava activity is the proof for every modality — runs, lifts, yoga, swims, all of it (see the all movement rule below). Do not pull calendar data into retro coverage tables.
 
   **Why:** Calendar inference produces false positives on adherence. An event sitting on the calendar tells you it was planned, not that it happened. Codified 2026-05-18.
 
-  **How to apply:** Strava query first for runs; user question for non Strava sessions; calendar stays out of retro source data entirely.
+  **How to apply:** Query Strava for every modality; a session absent from Strava is marked not completed. Calendar data and user confirmation stay out of retro source data entirely.
 
 - **Tally by sport_type, not distance alone.** Pull each activity's type and filter to runs (`Run` / `TrailRun`) before summing weekly mileage. Walks, hikes, and yoga carry distances (or N/A) and get miscounted as running otherwise. The native connector's `list_activities` carries `sport_type` in the summary; the older `mcp__strava__get-recent-activities` listing omits type, so reach for the connector. Codified 2026-06-26 after a Walk and a yoga session got folded into a running total.
 
@@ -66,7 +66,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
   **How to apply:** Run Phase 5 every retro. Compare actuals against the week's MAX, since back-half plan rows are ceilings, not floors. Flag a Saturday 14er sitting on the back of a Friday long. Pull `get_activity_performance` on easy days to confirm they stayed in Z2. Any flag, or any calf, heel, or foot signal, drops the next week to the current week's numbers.
 
 - **Vert is co-equal with mileage.** The training plan tracks both Long mi and Vert ft per week. A retro that only evaluates mileage misses half the point. Always pull elevation gain from Strava activity details and total against the plan's Vert ft target.
-- **Lifts at Movement RiNo do not show in Strava.** When a lift is missing from Strava, the status is **open**, not missed. Confirm with the user before logging it as a miss in the retro. Same applies to climbing at Movement.
+- **Strava is the source of record for ALL movement, lifts and yoga included; never ask the user to confirm sessions.** A session absent from Strava did not happen, for retro purposes. Forni, 2026-08-02: "Strava will tell you if lifts or yoga happened. It is the source of record for all things movement. You do not need to ask me again." SUPERSEDES the earlier rule that Movement RiNo lifts and climbs were invisible to Strava; they are logged now.
 - **Strava run elevation in meters; convert to feet.** `meters * 3.28084`. Worth doing per activity then summing, since the plan's vert target is in feet.
 
 - **PAH is transit, not training.** Wed 13:00 to 15:00 PAH (Project Angel Heart Kitchen Assistant) is service, not a training session. The bike ride to and from PAH shows up in Strava as a commute but does not count as a training anchor.

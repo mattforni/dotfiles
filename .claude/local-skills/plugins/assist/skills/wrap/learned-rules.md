@@ -15,3 +15,18 @@ Skill-specific corrections that override SKILL.md. Populate as Forni corrects wr
 ## Work search sessions
 
 - **Close the weekly Linear ticket when the cadence is complete.** When a session finishes the week's work search slate (applications and supporting activities logged in `Craft/Vocation/FY27-work-search.md`), wrap also: (1) posts the week's record as a comment on the open "Weekly Work Search" issue in the ATE Unemployment project and marks it Done, and (2) mints the next week's instance (Todo, assigned Forni, High priority, 3 points, `Reclaim` label, due the following Wednesday), carrying held listings and open calibration questions forward in its description. Codified 2026-07-30 while closing ATE-428 and minting ATE-435 at Forni's prompting.
+
+- **Business follow-ups go to Linear, never Todoist.** Anything in service of
+  Atelic (prospect follow-ups, walk-ins, client work, template fixes) is
+  tracked as an ATE issue, even when it is an errand rather than code. Todoist
+  is for personal and operational tasks only. When the follow-up needs real
+  calendar time, apply the Reclaim convention (label + due date + estimate).
+  Corrected 2026-07-30 while wrapping the Platform Strength send: the walk-in
+  follow-up was offered as a Todoist task and Forni redirected it to Linear.
+  Re-corrected the same day when wrap offered Todoist options for a client
+  discovery email; Forni: "Nothing related to Atelic goes in Todoist." That is
+  the phrasing to hold, now also codified at the point of use in the Atelic
+  repo's CLAUDE.md (Execution tracks in Linear bullet). Triage options for any
+  Atelic item must offer Linear, not Todoist. The miss happened because this
+  file was not read before triage; the SKILL.md body's inline "Learned Rules"
+  section is a stale placeholder, so always read this file itself.
