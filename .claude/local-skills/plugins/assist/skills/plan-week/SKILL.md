@@ -172,7 +172,7 @@ Google Calendar is still used directly for non task events: meetings, transition
 
 **Recurring catch up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
 
-1. Create a new one off Todoist task with the specific date/time, duration, and `⏰ Scheduled` label
+1. Create a new one off Todoist task with the specific date/time, duration, the `⏰ Scheduled` label, exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and its pillar project
 2. Complete the recurring task so the next occurrence auto generates on its cycle
 3. The one off task is the reminder for this week; the recurrence handles the next one
 
@@ -208,7 +208,7 @@ Slot a specific task or event into the week.
 3. Identify available slots that fit the duration
 4. Present options via AskUserQuestion
 5. Slot into the chosen time:
-   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration` and add the `⏰ Scheduled` label. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
+   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration`, add the `⏰ Scheduled` label, set exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and move the task out of Inbox into its pillar project. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
    - **If it is a non task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move
@@ -296,7 +296,7 @@ Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common u
 - **Green stars are walked, not auto skipped, during Sweep Inbox.** A green star means "waiting on someone else" as of the moment it was set, but the ball can quietly return: a vendor quote thread that is actually awaiting Forni's decision, or a tracker thread hiding a scheduling action. Present every starred thread for disposition rather than unilaterally classifying green stars as no action. Surfaced 2026-07-13 on the first live sweep: the skylight quote (green) was waiting on Forni's decision, and the new servicer thread (green) contained a launch call to schedule. Both were initially skipped and had to be corrected into tasks.
 - **The ⏰ Scheduled label requires a specific time; label without time is an anti pattern.** Slotting means both a datetime and the label (the two Slot steps together); a task carrying the label with a date only due hides from the Schedule filter indefinitely while looking handled. The filter's `(@⏰ Scheduled & no time)` branch (added 2026-07-13) drags offenders back into triage: when one surfaces, either give it a real time or strip the label (or swap to ⏲️ Recurring for genuinely recurring reminders). Surfaced 2026-07-13: two tasks due that very day (Connect for Health enrollment, a site review) were invisible during planning, and one had already spawned an accidental duplicate.
 - **Review Week presents movement as a table.** One row per activity (day, name, type, distance, vert, moving time, effort), totals as a bold summary line underneath. Requested 2026-07-19.
-- **Sweep Inbox links every email to its Gmail thread.** Use `https://mail.google.com/mail/u/0/#all/<message id>` in the presented board and in every question that references a message. Forni cannot act on an email he cannot open. Surfaced 2026-07-19.
+- **Sweep Inbox links every email to its Gmail thread.** Use the account-safe form `https://mail.google.com/mail/?authuser=<account>#search/rfc822msgid%3A<url-encoded-Message-ID>` (per the plugin learned-rules) in the presented board and in every question that references a message. Forni cannot act on an email he cannot open. Surfaced 2026-07-19.
 - **Estimate durations honestly during slotting; 30 minutes is a floor, not a default.** After proposing slots, walk the 30 minute tasks and ask which actually need more, then reflow the day around the answers. Surfaced 2026-07-19: several 30 minute slots were clearly hour long work.
 - **Present Week is a link to the Google Calendar week view** (`https://calendar.google.com/calendar/u/0/r/week/YYYY/M/D`). Todoist sync already renders scheduled tasks there, so the calendar IS the at a glance board. Do not rebuild it as prose day lists, packed summary tables, or rendered board artifacts; all three were rejected in one sitting on 2026-07-19. Supplement the link only with what the calendar cannot show: the deferred ledger, the open air summary, the week's theme.
 - **Never pack multiple items into one table cell, anywhere.** One line per item, times first. Packed cells were rejected twice on 2026-07-19 (a meal grid cell carrying commentary, a week summary cramming whole days into single cells).
