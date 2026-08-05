@@ -89,7 +89,7 @@ Run the weekly half of Mode: program. This week's per lift targets ride along in
 
 ### Phase 5: Special Week Handling
 
-- **Template refresh weeks** (~Sep 1, early Oct): run the refresh half of Mode: program.
+- **Template refresh weeks** (~Sep 14, mid Oct): run the refresh half of Mode: program.
 - **September seam (W37, week of Sep 7)**: outdoor pools close at Labor Day. Walk the swim decision with Forni: indoor laps (Carla Madison, 20th Street) or reallocate the slots.
 - **Travel weeks**: swap in the travel variant from the block doc; skeleton sessions become opportunistic, not graded.
 - **Block close (W45, week of Nov 8)**: composition read plus the winter shape conversation.
@@ -120,7 +120,7 @@ Look back on a completed week. Compare planned vs actual coverage and the weight
 
 ### Phase 1: Determine the Target Week
 
-Default: the most recently completed ISO week. Natural cadence is Monday morning, after Sunday's weigh-in. Heading format: `### Wk N: ISO YYYY-WNN (Mon Date to Sun Date)`, numbering from the block start (2026-W32 = Wk 1).
+Default: the most recently completed ISO week. Natural cadence is Monday morning, after Sunday's weigh-in. Heading format: `### Wk N: ISO YYYY-WNN (Mon Date to Sun Date)`, numbering from the block start (2026-W33 = Wk 1).
 
 ### Phase 2: Gather Data
 
