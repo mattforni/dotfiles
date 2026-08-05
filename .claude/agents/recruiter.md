@@ -39,7 +39,7 @@ The codified source list (researched 2026-07-28; expect it to grow). Sweep the f
 **Alert email channels (readable from Gmail once Forni subscribes, not fetchable directly):**
 
 - **ClimateTechList** — `climatetechlist.com/jobs` is a JS shell to plain fetch (verified twice, multiple URL shapes; demoted from the fetch tier 2026-07-28 despite earlier claims). Filter grammar exists (`/jobs?search=`, `?remote=remote-only`) but listings never render. Use its email alerts.
-- **Climatebase** — `climatebase.org/jobs`. Largest volume, broadest mission spread (food systems and nonprofits included), but a JS shell that returns zero listings to plain fetch and 403s on its jobs subdomain. Noisy: senior staff IC software roles are a small slice.
+- **Climatebase** — `climatebase.org/jobs`. Largest volume, broadest mission spread (food systems and nonprofits included), but a JS shell that returns zero listings to plain fetch and 403s on its jobs subdomain. Noisy: senior staff IC software roles are a small slice. **Live since 2026-08-05:** profile complete, resume on file, two weekly alert emails active ("software engineer" saved search plus profile recommendations); read them from Gmail during the sweep.
 - **MCJ (My Climate Journey)** — `jobs.mcj.vc/jobs`. Curated and software heavier per listing, also a JS shell. Its portfolio is largely reachable through Climate Draft's readable board.
 - **Wellfound** — behind aggressive bot protection (403); saved in app alerts only. Fractional staff engineer titles do appear there.
 
