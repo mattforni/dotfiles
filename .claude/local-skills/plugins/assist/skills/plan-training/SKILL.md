@@ -75,7 +75,7 @@ Fetch the week's calendar events (Monday through Sunday). Do not overwrite or du
 |---------|-------|--------|
 | Recurring (assumed on calendar) | Mon lift 11:30, Wed lift 11:30, Tue swim 10:30, Thu swim 10:30, Tue DRC eve, Thu SPRC 06:00, Thu Alignment 16:30 | Skip if present; surface if missing (may be intentional) |
 | Alternating (check which week) | 4K Friday (every other week) + drive flanks | Create on 4K weeks |
-| Opportunistic / optional | Sun Hatha 09:30 (in town only), Fri lap window 11:15 (deep work Fridays), Sun Yin 16:15 | Surface as options, never auto create |
+| Opportunistic / optional | Sun Hatha 09:30 (in town only), Tue Align and Flow 16:30 (open Tuesday evenings), Fri lap window 11:15 (deep work Fridays), Sun Yin 16:15 | Surface as options, never auto create |
 
 ### Phase 3: Week Shape
 
