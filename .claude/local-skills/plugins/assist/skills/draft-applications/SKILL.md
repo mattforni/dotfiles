@@ -38,7 +38,7 @@ Four paragraphs: mission resonance and why this company; the one or two most rel
 
 ## Application Question Responses
 
-Structure per question type: "Why here" gets mission resonance, then technical excitement, then experience alignment, two sentences each. "Proud achievement" gets context, action, impact, with the reliability scoring system at Gremlin as the standing example. "Salary expectations" reads the README's compensation section and states a range with flexibility framing. Keep every answer concrete, technical, and free of therapy speak.
+Structure per question type: "Why here" gets mission resonance, then technical excitement, then experience alignment, two sentences each. "Recent accomplishment" questions get the Zero Homes funnel story (instrumented and automated the acquisition funnel, speed to lead from days to hours, $1M in the first 90 days); "hardest technical challenge" questions get the Gremlin reliability scoring system. Recency questions never get answered with Gremlin; it is four years back. "Salary expectations" reads the README's compensation section and states a range with flexibility framing. Keep every answer concrete, technical, and free of therapy speak.
 
 ## Hiring Manager Search
 
