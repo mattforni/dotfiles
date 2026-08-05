@@ -23,6 +23,8 @@ Use semver:
 
 **Renaming a skill is always a major bump.** A rename removes the old invocation surface (`assist:oldname` stops resolving), so it is a breaking change by definition regardless of how much the body changed. Renaming also has a blast radius beyond the version fields: the skill directory, its `name:` frontmatter, the `skills` array entry in `marketplace.json`, and every cross-reference in other skills or docs (`grep` for the old `assist:<name>`) must all move together in the same change.
 
+**Bump against origin/main, never against the local checkout.** A stale checkout carries an old version, and a bump computed from it silently regresses the marketplace: users on the newer version see nothing to update, and skill changes stop propagating with no error anywhere. (Observed 2026-08-04: a commit from a stale checkout took assist from 8.0.11 back to 8.0.7; the regression rode main until the next merge restored the lineage.) Before choosing the next version, fetch and read the current one from origin/main (`git show origin/main:<path to plugin.json>`), and treat any version that moves backward in a diff as a review red flag.
+
 Top-level repo files (`CLAUDE.md`, `README.md`, `.gitconfig`, `.aliases`, etc.) do **not** trigger a plugin version bump because they live outside any plugin directory.
 
 ## Installation
