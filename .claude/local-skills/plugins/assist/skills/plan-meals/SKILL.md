@@ -122,7 +122,7 @@ After the three sections: every Pinole write to be made (recipes to create or re
    - `create_recipe` errors if the name exists. Before linking the existing record, confirm it is actually the same dish (check its ingredients via `list_recipes`); if a different recipe wears the name, use a distinguishing name rather than linking blind. New ingredients get USDA macros backfilled automatically; if nutrition comes back incomplete, tell Forni and give a hand-math estimate rather than papering over it.
 2. **Author the plan** with `mcp__pinole__create_meal_plan` (or `update_meal_plan` if the week exists; create errors and points you at update). `unmatched_recipes` must come back empty for cooked meals; a name landing there means the recipe was not created, so create it rather than leaving the meal freeform.
 3. **Record the recipes** in `references/recipe-sources.md` under "Recipes Used": week, site (or "Claude drafted"), rating left blank.
-4. **Push the shopping list** for the store being shopped, one `mcp__pinole__add_shopping_item` per item, `store` set, quantities in the item name (lb, oz, fl oz; never "1 bag"), brand and recipe hints in `notes`. Only `needs_restock` items belong on it; flag low staples and include only what Forni confirmed. Mark single-recipe items in `notes` so they are easy to skip if a meal gets cut. Print the list in chat as the backup copy.
+4. **Build the shopping list as the merged view.** Tracked foods get on the list through their pantry row (`update_pantry_item`: level 0, `store` routed, quantity guidance in `notes`); `mcp__pinole__add_shopping_item` is only for genuinely untracked one offs, quantities in the item name (lb, oz, fl oz; never "1 bag"), brand and recipe hints in `notes`. Never add a shopping item for a food the pantry already tracks; that prints it twice. Dropping a food means clearing its pantry flag, not saying so in chat. Final step: read back `list_shopping` for the store, reconcile it line by line against the intended basket, and print the reconciled list in chat as the backup copy. See the Shopping Rules in learned-rules.md for the 2026-08-04 duplicate incident behind all three rules.
 
 ### Phase 6: Close the Loop After the Shop
 
@@ -134,12 +134,12 @@ When Forni reports the shop is done (same session or later), write reality back 
 
 ## Shopping List in Pinole
 
-The shopping list is pushed into Pinole's shopping plan with `mcp__pinole__add_shopping_item` (one call per item), so it shows up wherever Forni views the app during the run. `created_via` is set to `mcp` automatically.
+**The list Forni sees in the app is a merged view**: `list_shopping` unions pantry rows flagged `needs_restock` with open ShoppingItems. Both surfaces feed one list, so each food must live on exactly one of them:
 
-- Keep item names concise but include quantity, e.g. `"Sweet potatoes, 4 large"`. Quantities help the checkout/counting moment.
-- Put brand hints and recipe associations in `notes`, e.g. `notes: "Bob's Red Mill tri color"`.
-- Set `store` to the store being shopped (e.g. `"Sprouts"`); a storeless item surfaces under any store filter.
-- Only items that need buying go on the list. From `list_pantry`, that is items with `needs_restock` true; already-stocked items stay off it.
+- **Tracked foods ride their pantry row.** A tracked food that is out is already on the list. Set its `level` to 0, route its `store`, and put quantity guidance in `notes` via `update_pantry_item`. Never also add a shopping item for it.
+- **`add_shopping_item` is for untracked one offs only** (a single bake's bread flour, a specialty ingredient). Keep item names concise but include quantity, e.g. `"Bread Flour, 5 Lb"` (lb, oz, fl oz; never "1 bag"). Brand hints and recipe associations go in `notes`. Set `store`; a storeless item surfaces under every store filter.
+- **Dropping a food from the list means clearing its flag** (raise `level`, reroute `store`, or `remove_pantry_item`), never just saying so in chat. A checked off ShoppingItem drops a one off.
+- **Always read back `list_shopping` for the store as the final step** and reconcile line by line against the intended basket before handing the list over. The authoring calls each look fine alone; only the merged read shows duplicates.
 
 ## Meal Plan Shape
 
