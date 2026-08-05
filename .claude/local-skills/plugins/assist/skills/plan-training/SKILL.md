@@ -1,7 +1,7 @@
 ---
 name: plan-training
-description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, climbs, the Friday long run, sauna timing, cold plunge timing, recovery days, cutback weeks, altitude weeks, race week, training restructure, Fitbod, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my long run", "what does training look like this week", "how did last week go", "training retro", or any request that touches the training plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
-argument-hint: "[week | long-run | move | retro]"
+description: Training plan scheduling, weekly retrospectives, strength programming, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, strength programming, runs, swims, the 4K Friday, yoga placement, recovery days, the fall block, the September seam, Fitbod (retired), asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my training", "what does training look like this week", "how did last week go", "training retro", "this week's lifts", or any request that touches the block plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
+argument-hint: "[week | program | move | retro]"
 allowed-tools:
   - Bash
   - mcp__claude_ai_Google_Calendar__*
@@ -16,277 +16,168 @@ allowed-tools:
 
 # Plan Training Assist
 
-Help Forni schedule the week's training events from the active block plan, validate training adjacent constraints, and move training sessions safely. The skill is independently invocable, and also gets called by `/assist:plan-week` during Monday planning before triage and slotting.
+Help Forni schedule the week's training from the active block plan, run the weekly retro, manage strength programming, and move sessions safely with constraint validation. The skill is independently invocable, and also gets called by `/assist:plan-week` during Monday planning before triage and slotting.
 
 ## Before Every Invocation
 
 1. Read [learned-rules.md](learned-rules.md) in this directory
 2. Read the canonical training context:
-   - `~/Eudaimonia/Constitution/Fitness/2026-training-plan.md` — current block plan with weekly Long mi, Vert ft, Fri shape
+   - `~/Eudaimonia/Constitution/Fitness/2026-fall-block.md` — active block (target, weekly shape, strength template, guardrails, checkpoints, weigh-in log)
    - `~/Eudaimonia/Constitution/Fitness/CLAUDE.md` — training conventions
-   - `~/Eudaimonia/schedule.md` — recurring weekly anchors (yoga, lifts, climbs, SPRC, sauna)
+   - `~/Eudaimonia/schedule.md` — weekly skeleton (held loosely by design)
 3. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
+
+The FPL block (`2026-training-plan.md`) is closed and read only for history.
 
 ## Source of Truth
 
-The training plan lives at `Constitution/Fitness/2026-training-plan.md`. The weekly skeleton (recurring anchors) lives at `schedule.md`. Google Calendar holds the live scheduled reality, including one off events (Friday long run + paired drives, race weekends, altitude trips).
+The block plan lives at `Constitution/Fitness/2026-fall-block.md`. The weekly skeleton lives at `schedule.md` and is a default, not a law. Google Calendar holds the live scheduled reality.
 
 **For scheduling decisions** (what's on the calendar this week, what conflicts with what): the calendar is truth.
 
-**For retrospective decisions** (what actually happened last week): Strava is truth for runs; the user is truth for everything else. Calendar events are not evidence of completion — they reflect scheduled intent, nothing more.
+**For retrospective decisions** (what actually happened last week): Strava is truth for all movement, lifts and yoga and swims included. Calendar events are scheduled intent, never evidence of completion.
+
+**For programming decisions** (what weights and reps this week): the template in the block doc plus last week's logged numbers.
 
 ## Training Constraints
 
 These constraints exist for real physiological and practical reasons. They are not suggestions.
 
-**Cold plunge timing**: No cold water immersion within 4 to 6 hours after strength training. Cold exposure blunts the inflammatory response needed for muscle adaptation. Sauna (heat only) is fine after strength. When moving sauna or contrast sessions, check whether strength training happened earlier that day.
+**Heel guardrail**: conversational pace is the default for every run. Hard efforts are rationed to at most one per week and skipped entirely the week after any flare. Any heel, calf, or foot signal drops the next hard or trail effort, no pushing through.
 
-**Thursday mornings**: No prayer, meditation, or journaling on Thursdays. That time is reserved for getting to SPRC at 6:00 AM, which rotates locations.
+**Cold plunge timing**: no cold water immersion within 4 to 6 hours after strength training. Sauna (heat only) is fine after strength. (Dormant while sauna is homeless; keep for its return.)
 
-**Fasting window adjacency**: Last meal at 19:30, first meal at 07:30. Long runs starting at 07:00 begin in the fasted state, ending close to or just after the first meal window. Plan fueling around this.
+**Thursday mornings**: no prayer, meditation, or journaling on Thursdays. That time is reserved for getting to SPRC at 06:00, which rotates locations.
+
+**Fasting window adjacency**: last meal 19:30, first meal 07:30. The 18:30 close is the named first lever if the weight trend stalls two consecutive weeks; propose it, never impose it.
 
 ## Calendar Event Conventions
 
-The named label table and title formats live in `~/Eudaimonia/Admin/tools/google-calendar.md`; the behavioral rule lives in GC `Calendar Preferences`. Calendar reads and writes go through the `gws` CLI; see `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax (`calendarId` in `--params`, event body in `--json`, `eventLabelVersion: 1` in `--params` on every event write). Events are colored via named labels (`eventLabelId`), never the legacy `colorId`. Training specific use:
+The named label table and title formats live in `~/Eudaimonia/Admin/tools/google-calendar.md`; calendar reads and writes go through the `gws` CLI (`~/Eudaimonia/Admin/tools/gws.md`) with `eventLabelVersion: 1` on every write. Events are colored via named labels (`eventLabelId`), never the legacy `colorId`. Training specific use:
 
-- Training events use the 🍏 Constitution label: runs, lifts, yoga, body care, recovery
-- Long runs: `🏃 <MILES> mi Long Run`
-- Travel to trailheads: `🚙 <LOCATION>` with the destination in the title (🚙 Travel label)
-- Drive home: `🚙 Home` (🚙 Travel label)
-- Travel events use 30 minute increments aligned to 30 minute blocks (e.g., 06:30 to 07:00, not 06:15 to 07:00)
-- Every change of location needs flanking transition or travel events. A long run is incomplete without its drive flanks.
+- Training events use the 🍏 Constitution label: runs, lifts, swims, yoga, body care
+- 4K Friday: `🏃 4K Friday` with paired `🚙 <Trailhead>` and `🚙 Home` drive flanks (🚙 Travel label), 30 minute increments aligned to 30 minute blocks
+- Every change of location needs flanking transition or travel events
 
 ## Mode: week (default)
 
-The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode (Phase 2), or standalone for ad hoc training planning.
-
-The pass has two stages: **retrospective** on the just-closed week, then **scheduling** the current week. Retro first is non-negotiable — scheduling without knowing what happened last week causes drift to compound.
+The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode (Phase 2), or standalone.
 
 ### Phase 1: Retrospective on the Previous Week
 
-Run the full retro workflow on the just-closed ISO week (see Mode: retro below). The retro produces:
-
-- A new `### Wk N` subsection appended to the training plan
-- An adherence read on what hit, what slipped
-- A plan adjustment check: do the current week's targets still hold, or do they step down?
-
-When the retro reveals drift (long run missed, weekly mileage 30%+ under plan, two consecutive weeks of misses, or weight off trajectory) or the load safety check fires a flag (ceiling breach, weekly ramp over ~15%, or two big days clustered within 48 hours), pause before scheduling. Propose adjustments to the current week's targets and get user confirmation before continuing to Phase 2.
-
-If a `### Wk N` subsection already exists in the plan for the just-closed week, skip Phase 1 and continue to Phase 2.
+Run the full retro workflow on the just-closed ISO week (see Mode: retro). Retro precedes scheduling, always; drift compounds otherwise. If a retro subsection already exists for the just-closed week, skip to Phase 2.
 
 ### Phase 2: Detect Existing Placeholders
 
-Fetch the week's calendar events (Monday through Sunday) and check for already existing recurring or one off events. Do not overwrite or duplicate. Only create what is missing for this specific week.
+Fetch the week's calendar events (Monday through Sunday). Do not overwrite or duplicate; only create what is missing for this specific week.
 
 | Cadence | Items | Action |
 |---------|-------|--------|
-| Recurring (assumed already on calendar) | Mon yoga 12:15, Tue lift 11:00, Tue DRC eve, Thu SPRC morning, Thu lift 11:00, Wed PAH / sauna | Skip if present |
-| One off (variable, per week) | Fri long run + paired drive blocks | Create fresh each week |
+| Recurring (assumed on calendar) | Mon lift 11:30, Wed lift 11:30, Tue swim 10:30, Thu swim 10:30, Tue DRC eve, Thu SPRC 06:00, Thu Alignment 16:30 | Skip if present; surface if missing (may be intentional) |
+| Alternating (check which week) | 4K Friday (every other week) + drive flanks | Create on 4K weeks |
+| Opportunistic / optional | Sun Hatha 09:30 (in town only), Fri lap window 11:15 (deep work Fridays), Sun Yin 16:15 | Surface as options, never auto create |
 
-If a recurring placeholder is missing, surface it to the user rather than silently creating it. The user may have skipped the session this week intentionally.
+### Phase 3: Week Shape
 
-### Phase 3: Week Run Shape
+Determine which Friday this is (4K or deep work) from the alternation, then lay out the week as one small table: day, session, purpose. Place yoga and swims against the actual Movement and pool schedules for the week (the skeleton is a default; studio schedules change). Verify the pool and studio still hold the assumed slots when in doubt.
 
-Lay out the week's runs as a light shape, not a prescription. This is the step that turns the static weekday skeleton into an intentional week. Read the block row for the current week (weekly mileage ceiling, long run distance and vert, phase), subtract the long run to get the weekday running budget, then distribute it across the run days as a small table of **day, rough distance, purpose**.
+**The one look weekly summary is the deliverable**: sessions by modality (3 lifts, 2 swims, runs, yoga), which Friday it is, and the weight trend in one line. Write it into the week banner body (the banner itself is created by `assist:plan-week` during Set Intention; this skill only writes the training block into its body, and flags back if the banner is missing).
 
-Keep purpose simple: **easy**, **pickups** (the Tue DRC sprint work), **long**, or **optional shakeout**. Do not prescribe tempo or interval workouts. The block posture is move with joy, not rigor.
+### Phase 4: Strength Targets
 
-Shape the week to the phase:
-
-- **Build**: Mon optional easy, Tue DRC with pickups, Thu SPRC easy, Fri long. The weekday runs fill the budget under the long.
-- **Peak**: protect the long, trim weekday volume so the marquee lands fresh.
-- **Cutback or taper**: everything short and easy, weekday runs well under the build shape.
-- **Travel or recovery**: time on feet only, easy, no prescribed distances. Do not force a shape onto a week meant to be unstructured (the LA deload is the archetype).
-
-Present the shape to Forni as one small table. It is a default he can deviate from freely, never a leash. Then write it into the **week banner body** alongside the training block (see the Week banner convention in `assist:plan-week`), so the whole week's runs are visible in one place when he taps the banner. The banner itself (an all day event spanning Monday through Sunday, 🧭 Theme label) is created by `assist:plan-week` during Set Intention: this skill writes the training block into its body and never creates, retitles, or relabels it. If the banner does not exist yet, flag it back to `assist:plan-week` rather than creating one here. Do not rewrite the individual recurring DRC / SPRC events. The shape lives in the banner; the recurring blocks stay put so a run can move days without the calendar fighting it.
-
-The Friday long run (next phase) is the anchor of this shape; its distance and vert come straight from the block row.
-
-### Phase 4: Friday Long Run
-
-Run the Friday long run workflow (see Mode: long-run below). This is the primary one off creation each week.
+Run the weekly half of Mode: program. This week's per lift targets ride along in the week banner body next to the shape.
 
 ### Phase 5: Special Week Handling
 
-Check the current week number against the training plan and apply special week logic:
+- **Template refresh weeks** (~Sep 1, early Oct): run the refresh half of Mode: program.
+- **September seam (W37, week of Sep 7)**: outdoor pools close at Labor Day. Walk the swim decision with Forni: indoor laps (Carla Madison, 20th Street) or reallocate the slots.
+- **Travel weeks**: swap in the travel variant from the block doc; skeleton sessions become opportunistic, not graded.
+- **Block close (W45, week of Nov 8)**: composition read plus the winter shape conversation.
 
-- **Cutback weeks (4, 8)**: Fri long is shorter and on lighter terrain. Same workflow, smaller numbers.
-- **Altitude weeks (9, 10)**: Front Range altitude (week 9) or Aspen recon (week 10). Week 10 includes a Thu drive out + overnight; surface logistics to the user before creating events.
-- **Race week (13)**: Fri 7/31 is the FPL race itself. Coordinate the race day plan as a separate workflow, not a training long run.
+## Mode: program
 
-### Phase 6: Mon Flex
+Strength programming, owned by Claude since 2026-08-05 (Fitbod retired, reversible). Forni owns form and in gym judgment; this skill owns the template, progression math, and adjustment.
 
-Optional easy ~4 mi run on Mon. Energy dependent. Do not auto schedule. Surface as an option, do not create without explicit user confirmation.
+**Weekly adjustment**: read last week's logged lifts from Strava (Garmin syncs through). Apply the progression rule: work within the rep range; when every set hits the top of the range, add about 5 lb upper body or 10 lb lower body and drop to the bottom of the range. Output this week's targets per lift per day. Two weeks with no progress on a lift is a stall: propose a swap or a back off set, do not silently press.
 
-## Mode: long-run
-
-Standalone Friday long run workflow. Use when the user wants to plan or replan just the long run without doing a full week pass.
-
-1. Look up the current week row in `2026-training-plan.md` for **Long mi**, **Vert ft**, and **Fri shape** (route candidate or terrain).
-2. Pick a specific route matching those numbers. Use `WebSearch` on alltrails.com to find the trail page when needed.
-3. Confirm the route with the user via `AskUserQuestion` before creating events.
-4. Default start time is **07:00**. Front Range trailheads are ~30 min from Denver; altitude weeks (9, 10) are longer drives.
-5. Long run duration: budget ~15 to 16 min/mi for moderate trail pace with vert (e.g., 8 mi @ 1,500 ft is ~2 hr).
-6. Create three Fri events per the calendar conventions:
-   - `🚙 <Trailhead Name>` — 🚙 Travel label — drive out. Location = trailhead address. 30 min block aligned to 30 min increments (e.g., 06:30 to 07:00).
-   - `🏃 <MILES> mi Long Run` — 🍏 Constitution label — location = AllTrails URL.
-   - `🚙 Home` — 🚙 Travel label — drive back. Same 30 min alignment.
+**Template refresh** (every 4 to 6 weeks, checkpoints in the block doc): rotate exercise variants while keeping the emphases (core every session, upper body, posterior chain; quads maintenance). Present the new template for review before writing it into the block doc.
 
 ## Mode: move
 
 Move or swap a training event with constraint validation.
 
-1. User describes what to move (e.g., "Move Tuesday's lift to Wednesday", "Reschedule sauna to Friday")
+1. User describes what to move
 2. Fetch the relevant events
-3. Validate against training constraints:
-   - Cold plunge sequencing: if moving a cold plunge or contrast session, check that no strength training happened in the prior 4 to 6 hours
-   - Thursday SPRC protection: do not propose moves that displace Thu 06:00 SPRC unless the user explicitly intends to skip
-   - Transition flanks: if the moved event involves a location change, ensure the destination day has the matching drive or transition blocks
-4. Present the proposed change with any downstream impacts
+3. Validate against training constraints: heel guardrail (no stacking hard efforts), Thu SPRC protection, held swim slots (moving one usually means losing the lap window, the pool schedule is specific), cold plunge sequencing when sauna returns, transition flanks on any location change
+4. Present the proposed change with downstream impacts
 5. Execute after confirmation
 
-When moving recurring events for just one week, modify only that occurrence, not the entire series. When the user wants a permanent change, update the series and flag that `schedule.md` and the training plan may need updating.
-
-**Never modify existing events without explicit permission.** Always present the proposed move and wait for approval. Reclaim auto reschedule effects can ripple through nearby flexible events; warn when they're at risk.
+When moving recurring events for one week, modify only that occurrence. Permanent changes update the series and flag that `schedule.md` and the block doc may need updating. **Never modify existing events without explicit permission.**
 
 ## Mode: retro
 
-Look back on a completed (or in progress) training week. Compare planned vs actual coverage, mileage, vert, and qualitative shape. Append the result as a new `### Wk N` subsection under the **Weekly Retrospectives** section of `2026-training-plan.md`, in chronological order, so adherence is tracked alongside the plan itself.
+Look back on a completed week. Compare planned vs actual coverage and the weight trend. Append the result as a new `### Wk N` subsection under a **Weekly Retrospectives** section of `2026-fall-block.md` (create the section on first use, immediately before References), chronological order, `####` inner headings.
 
 ### Phase 1: Determine the Target Week
 
-- Default: the most recently completed ISO week (`date -v-mon -v-7d +"%G-W%V"` style logic, or simply the prior Monday-to-Sunday window).
-- The natural cadence is Monday morning, when Sunday's weigh-in has been logged and the just-closed Mon-Sun week is the unambiguous target.
-- If invoked outside Monday, default to the most recently completed week. Confirm with the user when intent is ambiguous (e.g., mid-week ad hoc retros).
-- The subsection heading uses the ISO week identifier (e.g., `### Wk 1: ISO 2026-W19 (May 4 to May 10)`).
+Default: the most recently completed ISO week. Natural cadence is Monday morning, after Sunday's weigh-in. Heading format: `### Wk N: ISO YYYY-WNN (Mon Date to Sun Date)`, numbering from the block start (2026-W32 = Wk 1).
 
 ### Phase 2: Gather Data
 
-Pull from two sources in parallel:
-
-1. **Training plan**: read the row in `2026-training-plan.md` for the target week. Note **Long mi**, **Vert ft**, **Fri shape**, **Weight** target, **Nutrition focus**.
-2. **Strava**: pull the week's activities via `mcp__claude_ai_Strava__list_activities` with `range_start` and `range_end` (ISO LocalDateTime). Each activity's summary already includes **distance** and **elevation_gain**, both in meters (convert: miles = meters / 1609.34, feet = meters * 3.28084), so no per activity detail call is needed for the coverage table. Reach for `mcp__claude_ai_Strava__get_activity_performance` or `get_activity_streams` only when splits or stream data are needed.
-
-**Strava is the source of truth for what happened.** Do not pull calendar data for retro purposes. The calendar shows scheduled intent, not completion. A calendar event existing is not evidence the session happened.
+1. **Block doc**: the weekly shape and any week specific notes (which Friday, checkpoints).
+2. **Strava**: pull the week's activities via `mcp__claude_ai_Strava__list_activities` with `range_start`/`range_end`. Filter by `sport_type`. Strava is the sole source of record for all movement; never ask the user to confirm sessions, never infer from calendar.
 
 ### Phase 3: Build the Coverage Table
 
-For every planned session in the week, record actual status:
+One row per planned session: Mon lift A, Tue swim, Tue DRC, Wed lift B, Thu SPRC, Thu swim, Thu Alignment, Fri (4K or deep work + lift C), Sun Hatha. Mark `✅` (hit), `❌` (missed), `↪️` (shifted), `n/a` (not applicable). Opportunistic sessions (Hatha away from home, optional Fri lap, Yin) are `n/a` when skipped, never misses. A session that moved days but happened is a hit; the skeleton is a default.
 
-- **Runs (DRC, SPRC, long run, Mon flex)**: match Strava activities by date and approximate distance. No matching Strava activity = miss.
-- **Yoga, lifts, climbing, sauna, contrast therapy**: not captured in Strava. Ask the user explicitly via `AskUserQuestion` whether each happened. Batch the questions when there are several. Do not infer completion from calendar events existing.
+### Phase 4: The Numbers
 
-Mark each session as `✅` (hit), `❌` (missed), `↪️` (shifted), `❓` (open / status unknown), or `n/a` (not applicable this week).
-
-When the week had a planned run shape (Phase 3 of week mode, recorded in the week banner), compare actuals against that shape rather than the static skeleton. A run that landed on a different day but served its purpose is a hit, not a shift; the shape is a default, and honoring it loosely is the point.
-
-### Phase 4: Compute the Numbers
-
-| Metric | Sources |
+| Metric | Source |
 |---|---|
-| Total miles | Sum of Strava run distances (km * 0.621371) |
-| Long run miles | The longest run / trail run of the week |
-| Vert ft | Sum of Strava elevation gain across runs (m * 3.28084) |
-| Weight | Sunday morning weigh-in if available; otherwise note as `pending` |
+| Lifts | count vs 3, with progression notes per lift |
+| Swims | count vs 2 (season dependent) |
+| Runs | sessions + total miles (informational, no target) |
+| Yoga | anchor hit or not |
+| Weight | Sunday weigh-in, trend vs the 0.5 to 0.7 lb/wk arc |
 
-Compare each against the plan row. Express delta as percentage and direction.
+Run mileage carries no target and no ceiling; it is context, not a grade. Mileage and vert ceilings retired with the FPL block.
 
-**Vert is co-equal with mileage.** The plan tracks both; the retro evaluates against both. Hitting mileage and missing vert (e.g., long run on flat terrain instead of trail) is a partial hit, not a hit.
+### Phase 5: Load Check
 
-**From Wk 7 onward the plan numbers are ceilings, not floors** (see the Maximums recalibration note in `2026-training-plan.md`). A positive delta against a back-half row is a breach to flag in Phase 5, not an overachievement to celebrate.
+Reshaped for the fall block; run every retro:
 
-### Phase 5: Load Safety Check
-
-Run this every retro, right after the numbers and before interrogating deltas. The historical injury driver was not peak volume but ramp speed and the clustering of long and vertical days: the 2026-04 spike of 31 mi with three trail efforts in five days, and the 2026-06 stack of a high-effort Friday long onto a 14er the next morning. The under-performance triggers miss this entirely, so check the over-side explicitly. Four checks against the week's actuals:
-
-1. **Ceiling breach.** Compare actual weekly miles, weekly vert, and longest single day against the week's MAX in the plan row. Any value over its ceiling is a breach. State the amount over.
-2. **Ramp.** Compare this week's actual mileage to the prior week's actual (read the previous `### Wk N` retro's Numbers row). An increase over roughly 15% is a flag, stated as a percentage. Ramp off a low base (returning from a layoff) is the highest risk; call it out even when the absolute mileage looks modest.
-3. **Clustering.** Scan the week's Strava activities for two big days within 48 hours of each other, where a big day is any effort over 8 mi or over 1,000 ft. The specific pattern to catch is a Saturday 14er or trail day stacked on the back of the Friday long. One flag per cluster.
-4. **Recovery read (heart rate).** Pull `mcp__claude_ai_Strava__get_activity_performance` for the week's easy and recovery-labeled runs, and `get_athlete_zones` for the Z2 ceiling. Two signals: (a) easy days that are not actually easy, with average HR drifting above the Z2 ceiling; (b) HR at a comparable easy pace climbing across the week, which reads as accumulating fatigue. Note either; absence of both is worth one line of reassurance.
-
-If any flag fires, carry it into Phase 6 and Phase 8: a load safety flag is as much a reason to step the next week down as an under-performance miss is. Record the outcome in the retro's Load Check section. When all four are clean, say so in one line and move on.
+1. **Hard effort count.** More than one hard run effort in the week is a flag (heel guardrail). Any hard effort the week after a flare is a flag.
+2. **Clustering.** Two big days (over 8 mi or over 1,000 ft) within 48 hours is a flag; the pattern to catch is a Saturday adventure stacked on a 4K Friday.
+3. **Heel signal.** Any reported heel, calf, or foot signal drops the next week's hard and trail efforts.
+4. **Recovery read.** Only when runs look hot: check easy day HR vs the Z2 ceiling via `get_activity_performance`.
 
 ### Phase 6: Interrogate Significant Deltas
 
-When the numbers show significant divergence from plan — mileage 30%+ under, long run missed entirely, two consecutive weeks of misses, or weight off trajectory — interrogate the cause before writing the retro. Numbers alone are not the read; they are the symptom. The cause shapes the adjustment.
-
-Categories worth surfacing via `AskUserQuestion`:
-
-- **Injury or body**: pain, soreness, illness, recovery debt
-- **Schedule / life**: travel, work compression, family obligations, social
-- **Motivation / state**: low energy, emotional load, post hard week dip
-- **Conditions**: weather, gear, route or logistics
-
-Ask one focused question for category, then leave room for the user to fill in detail in chat. When the cause is medical (injury, illness), explicitly prompt for any provider notes, AI consults, or external feedback the user wants captured verbatim or summarized. Capture that context in the retro's "The Read" — it shapes adjustment more than the numbers do.
-
-Skip this phase only when the retro lands at or above plan with no meaningful gap.
+When coverage shows meaningful misses (a modality at zero, two consecutive weeks of the same miss, weight trend off arc), interrogate cause before writing: injury or body, schedule or life, motivation or state, conditions. One focused question, then room for detail. Medical causes prompt for provider notes worth capturing.
 
 ### Phase 7: Write the Retro Subsection
 
-Append a new subsection at the bottom of the **Weekly Retrospectives** section in `2026-training-plan.md`. Use this skeleton (note the heading levels: `###` for the week, `####` for the inner sections so the table of contents stays clean):
+Skeleton: Coverage, Numbers, Load Check, The Read (2 to 4 short paragraphs, direct, no effusive praise), Carry Forward, Open Items. Present the draft and confirm via one `AskUserQuestion` before saving.
 
-```markdown
-### Wk N: ISO YYYY-WNN (Mon Date to Sun Date)
+### Phase 8: Adjustment Check
 
-*Phase: <phase>.*
-
-#### Coverage
-
-| Session | Plan | Actual |
-|---|---|---|
-...
-
-#### Numbers
-
-| Metric | Plan | Actual | Delta |
-|---|---|---|---|
-| Total miles | ... | ... | ... |
-| Long run miles | ... | ... | ... |
-| Vert ft | ... | ... | ... |
-| Weight | ... | ... | ... |
-
-#### Load Check
-
-<One line each: ceiling (within, or breached by X), ramp (+X% vs last week), clustering (none, or Sat 14er on Fri long), recovery (easy days easy, no HR drift). State clean explicitly when clean.>
-
-#### The Read
-
-<2 to 4 short paragraphs on what hit, what slipped, what's open. Be specific and direct. Avoid effusive praise or hedging.>
-
-#### Carry Forward
-
-<Bullets for next week: structural fixes, defended slots, calibration adjustments.>
-
-#### Open Items
-
-<Things unresolved at retro time, e.g. lift status pending Strava upload or user confirmation.>
-```
-
-Before writing, present the draft inline and ask the user one question via `AskUserQuestion`: anything to add or correct? Save after they confirm or redirect. Use `Edit` to insert the new subsection at the end of the Weekly Retrospectives section, immediately before the `## References` heading.
-
-### Phase 8: Plan Adjustment Check
-
-Compare the just-written retro to the **current** week's plan row. When the retro shows under-coverage — long run missed, weekly mileage 30%+ under, two weeks in a row of misses, or weight off trajectory — the current week's targets likely need to step down rather than press forward. The same step-down applies when Phase 5 fired a load safety flag (ceiling breach, ramp over ~15%, or clustered big days): lower the ceiling and space the big days before continuing the build. Per the standing guardrail, any calf, heel, or foot signal drops the next week to the current week's numbers, no exceptions.
-
-Propose adjustment options to the user via `AskUserQuestion`. Typical levers:
-
-- **Long run target**: hold the plan number, drop to last week's actual, or drop further to rebuild rhythm
-- **Vert target**: same logic, often paired with the mileage call
-- **Phase shift**: if drift is severe, treat the current week as a recovery / rebuild rather than continuing the build progression
-
-After the user decides, update the row in `2026-training-plan.md` to reflect the adjusted targets. Annotate inline so both numbers stay visible — e.g., `20 (adjusted from 22)`. The original plan and the adjustment trace together.
-
-Skip this phase only when the retro shows the week landed at or above plan.
+Coverage misses drive schedule repair (move the slot, shrink the commitment), not target step downs; there is no volume ladder in this block. A weight trend stall of two consecutive weeks triggers the nutrition lever proposal (18:30 close). A load check flag tightens the next week's run shape. Skip only when the week landed clean.
 
 ### Phase 9: Surface Trends
 
-After saving, briefly scan the prior 1 to 2 retro subsections already in the plan file (if they exist). Surface any pattern: repeated misses, drifting metrics, growing or shrinking adherence. Keep this short — one or two sentences. Do not invent patterns when there is not enough data.
+Scan the prior 1 to 2 retros for patterns: repeated misses, weight trend drift, progression stalls. One or two sentences, only when the data is there.
+
+## Retired with the FPL Block
+
+The long-run mode (Friday mountain long run workflow, route selection, vert budgets, mileage ceilings) retired 2026-08-05 with the FPL block. Route taste and the vetted shortlist are archived in git history and `reference/`; a future mountain objective reopens them as adventure planning, not weekly training.
 
 ## Key Locations
 
 | Name | Address |
 |------|---------|
 | Movement RiNo | 3201 Walnut St #107, Denver, CO 80205 |
+| Congress Park Pool | 850 Josephine St, Denver, CO 80206 |
 
 ## Learned Rules
 
