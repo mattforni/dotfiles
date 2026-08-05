@@ -29,6 +29,18 @@ Corrections and preferences specific to meal planning. Read on every invocation.
 
 ## Shopping Rules
 
+- **The shopping list IS the merged view: pantry restock flags plus one off shopping items. Never add a shopping item for a food the pantry already tracks.** `list_shopping` unions pantry rows with `needs_restock` true and open ShoppingItems into one list. A tracked food that is out is therefore already on the list; adding a shopping item for it prints the food twice. Drive tracked foods entirely through the pantry row (`update_pantry_item`: set `level` 0, route `store`, put quantity guidance in `notes`). Reserve `add_shopping_item` for genuinely untracked one offs (bread flour for a single bake, a specialty ingredient) that have no pantry row and should not get one.
+  - Why: On 2026-08-04 the Sprouts list rendered roughly 43 lines for a 25 item shop. Ten tracked staples printed twice because a shopping item was added for each food whose pantry row already flagged it. Forni opened the app mid shop and hit a wall of duplicates.
+  - How to apply: before every `add_shopping_item`, check `list_pantry` for the food first. Tracked means update the pantry row instead. Untracked but recurring means add it to the pantry with level 0 rather than as a shopping item.
+
+- **Dropping an item from the list means clearing its pantry flag, not saying so in chat.** A food stays on the list until its pantry row stops flagging `needs_restock`. Prose has no effect on the rendered list.
+  - Why: Same 2026-08-04 shop: asparagus, arugula, super greens, and tzatziki were declared dropped in conversation but their rows still flagged, so all four printed anyway.
+  - How to apply: to drop a tracked food, either raise its `level` (it is actually stocked), route it to a different `store` (buy it elsewhere later), or `remove_pantry_item` (stop tracking it). To drop a one off, check the ShoppingItem off with a note saying why.
+
+- **Read back the merged `list_shopping` view for the store before declaring the list done.** The authoring surface is not the shopping surface; only the merged read shows what Forni will actually see in the app.
+  - Why: The 2026-08-04 duplicates were invisible at authoring time because each add looked reasonable alone. One read back of the merged view would have caught all of them before the store did.
+  - How to apply: final step of every list build: call `list_shopping` filtered to the store, compare it line by line against the intended basket, and reconcile every extra or missing line before handing the list over. Print the reconciled list in chat as the backup copy.
+
 - **All bulk dry goods come from Sprouts, not Costco.** Beans (black, kidney, adzuki), rice (white basmati, brown short grain), lentils (green, red), quinoa, and similar bulk items live in the Sprouts bulk bin section.
   - Why: Forni said on 2026-04-17 "I LOVE their bulk section."
   - How to apply: when generating a shopping list, put dried beans, rice, lentils, quinoa, and related bulk staples under Sprouts. Costco is for jarred/packaged items (kimchi, hummus, olives, artichokes, pickled onions, yogurt, nuts, coffee, vanilla extract).
