@@ -49,13 +49,15 @@ The `.account` marker is a cross-tool convention; the `~/bin/claude` wrapper rea
 | `gws-pin` | Lock to current profile in this shell (disables chpwd hook) |
 | `gws-unpin` | Resume chpwd hook |
 | `gws-whoami` | Show profile, config dir, and `gws auth status` |
-| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
+| `GWS_AUTO_SWITCH=0 GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
-When writing tooling that should always run against a specific account regardless of where it runs, prefer the per-command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
+When writing tooling that should always run against a specific account regardless of where it runs, prefer the per command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
 
 `~/bin/gws` is a PATH shim that re-resolves the nearest `.account` marker on every invocation, so a plain `gws` call from inside a marked subtree uses that subtree's account even in an agent shell, a launchd job, or CI. Do not assume the inherited `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` reflects reality; it frequently does not, and the shim is what corrects it. Full explanation in homebase `CLAUDE.md` under Account Profiles.
 
-### Cross-Machine Secret Sync
+The one shot override needs `GWS_AUTO_SWITCH=0` alongside it. Setting `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` on its own no longer survives, because the shim cannot tell a deliberate override from a stale inherited value and re-resolves over the top of it. `GWS_AUTO_SWITCH=0` is the signal that the caller means it, and it is the same pass through path `gws-pin` uses.
+
+### Cross Machine Secret Sync
 
 `client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager under `gws-oauth-client-<profile>`. The vault project defaults to `atelic`; override via `GWS_BOOTSTRAP_PROJECT`. Full vault conventions: `~/Eudaimonia/Admin/tools/secret-manager.md`.
 

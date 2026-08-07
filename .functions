@@ -445,10 +445,20 @@ __gws_resolve_profile() {
         dir="$(dirname "$dir")"
     done
 
+    # The name is joined into "$HOME/.config/gws-$target", so it must be a single
+    # path component; a slash or a dot could walk out of the config directory.
+    # Silent here rather than a warning, unlike the ~/bin/gws shim: this runs on
+    # every chpwd, and a broken marker would print on every prompt in the tree.
+    # A rejected value falls through to the ambient profile below.
+    if [[ -n "$target" && ! "$target" =~ ^[A-Za-z0-9_-]+$ ]]; then
+        target=""
+    fi
+
     # Fall back to the ambient profile from the state file.
     if [[ -z "$target" ]]; then
         target="$(cat "$HOME/.config/gws-current" 2>/dev/null)"
         target="${target//[$'\t\r\n ']/}"
+        [[ "$target" =~ ^[A-Za-z0-9_-]+$ ]] || target=""
         [[ -z "$target" ]] && target="home"
     fi
 

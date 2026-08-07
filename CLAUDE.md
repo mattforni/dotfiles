@@ -91,6 +91,8 @@ Both the `gws` CLI and Claude Code switch identity per directory subtree via a s
 3. **Invocation time shim (authoritative)**: `~/bin/gws` re-resolves the marker on every single call and exports the config dir before exec'ing the real binary. This is the layer that actually guarantees the right account, because it does not care how the process was started. `~/bin/claude` does the equivalent for `CLAUDE_CONFIG_DIR` at launch.
 4. **Pin**: `gws-pin` sets `GWS_AUTO_SWITCH=0`, honored by both the hook and the shim, which then pass through untouched.
 
+The one shot override needs `GWS_AUTO_SWITCH=0` alongside it. Setting `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` on its own no longer survives, because the shim cannot tell a deliberate override from a stale inherited value and re-resolves over the top of it. `GWS_AUTO_SWITCH=0` is the signal that the caller means it, and it is the same pass through path `gws-pin` uses.
+
 **Why the shim exists, and why layers 1 and 2 are not enough.** Both of the first two layers resolve at shell startup, and every non interactive caller skips that moment. Claude Code is the sharpest case: it captures a shell snapshot once per session and replays it for every tool call. The snapshot preserves function definitions but drops top level calls, so the `__gws_resolve_profile` invocation at the bottom of `.functions` never runs. `chpwd` never fires either, because the shell starts already sitting in the target directory instead of changing into it. Both fallbacks fail together, and the agent shell silently inherits whatever profile the launching terminal had while a perfectly good `.account` marker sits one directory away, unread. The same hole applies to launchd jobs, cron, CI, and any `sh -c` caller. Diagnosed 2026-08-07 after a session in the TPF subtree reported `mattforni@gmail.com` instead of `matt@theproductforge.com`. `gws` has no `--config-dir` flag, so the environment variable is the only lever, which is what makes a PATH shim the right shape.
 
 | Command | Effect |
@@ -100,7 +102,7 @@ Both the `gws` CLI and Claude Code switch identity per directory subtree via a s
 | `gws-pin` | Lock to current profile in this shell |
 | `gws-unpin` | Resume chpwd hook |
 | `gws-whoami` | Re-resolve from `$PWD`, then show profile, config dir, and `gws auth status` |
-| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
+| `GWS_AUTO_SWITCH=0 GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
 **Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and exec's the real binary. Claude Code stores OAuth credentials per CLAUDE_CONFIG_DIR natively in a `Claude Code-credentials-<hash>` Keychain entry, so the wrapper doesn't need to inject a token; setting the config dir is enough. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh); each profile needs a one time `claude` login from inside its directory to seed its Keychain credential.
 
