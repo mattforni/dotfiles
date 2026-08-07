@@ -84,7 +84,7 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 
 ### Account Profiles (gws + Claude Code)
 
-Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Only the `home` profile is active today; the `zero` profile retired with the Zero Homes W2 (2026-06-29), and the machinery below remains for future multi-account needs. Active profile is layered:
+Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Two profiles are active: `home` (personal, mattforni@gmail.com, the ambient default) and `tpf` (The Product Forge, matt@theproductforge.com, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
 
 1. **Ambient** — recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
 2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. The `~/bin/claude` wrapper reads the same marker at launch time to pick the Claude Code config dir.

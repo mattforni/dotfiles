@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Bootstrap ~/.claude-home/ from the legacy ~/.claude/.
+# Bootstrap the per-account Claude profile dirs from the legacy ~/.claude/.
 #
 # Moves ~/.claude/projects/ entries into the home profile, copies user-level
 # settings, and symlinks the shared homebase surface (skills, commands,
-# references, local-skills, statusline, project CLAUDE.md) into the profile.
-# (The zero profile retired with the Zero W2, 2026-06-29; add profiles back
-# to the PROFILES array if multi-account returns.)
+# references, local-skills, statusline, project CLAUDE.md) into each profile.
+# Active profiles: home (personal) and tpf (The Product Forge, added
+# 2026-08-06). The zero profile retired with the Zero W2, 2026-06-29.
 #
 # Idempotent: re-running on already-split dirs is a no-op for the parts that
 # survive (it never overwrites an existing entry).
@@ -14,7 +14,8 @@ set -euo pipefail
 
 LEGACY="$HOME/.claude"
 HOME_PROFILE="$HOME/.claude-home"
-PROFILES=("$HOME_PROFILE")
+TPF_PROFILE="$HOME/.claude-tpf"
+PROFILES=("$HOME_PROFILE" "$TPF_PROFILE")
 # Resolve HOMEBASE_CLAUDE from this script's physical location so the script
 # works whether invoked directly from homebase/bin or via the $HOME/bin
 # symlink. `cd -P` forces physical resolution, following the symlink.

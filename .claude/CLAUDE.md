@@ -135,7 +135,7 @@ Choose the highest available option. Native connectors are smoother and require 
 
 ### gws Profiles
 
-The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Only the `home` profile is active today (the `zero` profile retired with the Zero W2, 2026-06-29); the machinery remains for future multi-account needs. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/tools/gws.md`.
+The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, matt@theproductforge.com; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/tools/gws.md`.
 
 ### Google Workspace (reading links, Docs, Gmail)
 

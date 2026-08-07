@@ -775,7 +775,7 @@ setup_auth() {
 
     local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-atelic}"
     local gws_profile gws_dir
-    for gws_profile in home; do
+    for gws_profile in home tpf; do
       gws_dir="$HOME/.config/gws-$gws_profile"
       if [[ -f "$gws_dir/client_secret.json" ]] && [[ -f "$gws_dir/credentials.enc" ]] && [[ "$FORCE" != true ]]; then
         info "gws $gws_profile profile already configured ($gws_dir)"
