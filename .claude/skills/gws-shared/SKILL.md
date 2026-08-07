@@ -51,7 +51,9 @@ The `.account` marker is a cross-tool convention; the `~/bin/claude` wrapper rea
 | `gws-whoami` | Show profile, config dir, and `gws auth status` |
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
-When writing tooling that should always run against a specific account, prefer the per-command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
+When writing tooling that should always run against a specific account regardless of where it runs, prefer the per-command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
+
+`~/bin/gws` is a PATH shim that re-resolves the nearest `.account` marker on every invocation, so a plain `gws` call from inside a marked subtree uses that subtree's account even in an agent shell, a launchd job, or CI. Do not assume the inherited `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` reflects reality; it frequently does not, and the shim is what corrects it. Full explanation in homebase `CLAUDE.md` under Account Profiles.
 
 ### Cross-Machine Secret Sync
 
@@ -59,7 +61,7 @@ When writing tooling that should always run against a specific account, prefer t
 
 | Action | How |
 |--------|-----|
-| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/gws/push-secrets` |
+| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/vault/push-gws-secrets` |
 | Pull on a fresh machine | `./setup.sh` (auto fetches via `gcloud secrets versions access`) |
 
 Tokens (`credentials.enc`, `token_cache.json`) are NOT synced. They are keyring encrypted and bound to the originating machine. Re run `gws auth login` per profile per machine, which the setup.sh per profile loop handles.

@@ -516,6 +516,16 @@ gws-unpin() {
 }
 
 gws-whoami() {
+    # Resolve before reporting. GWS_PROFILE can be stale whenever the shell
+    # never ran the source time resolution or the chpwd hook: Claude Code and
+    # other agent runners replay a captured shell snapshot that keeps function
+    # definitions but drops top-level calls, and a shell that starts already
+    # inside the target directory never fires chpwd. Reporting the raw variable
+    # in that state confidently prints the wrong account, which is worse than
+    # printing nothing. ~/bin/gws resolves the same way at invocation time, so
+    # this keeps the readout honest and consistent with what gws will actually
+    # use.
+    __gws_resolve_profile
     echo "profile: ${GWS_PROFILE:-<none>}${GWS_AUTO_SWITCH:+ (pinned)}"
     echo "config:  ${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-<none>}"
     command gws auth status 2>/dev/null || echo "(not authenticated)"

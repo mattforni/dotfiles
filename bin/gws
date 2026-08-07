@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Per-profile PATH shim around the real `gws` binary.
+#
+# Walks up from $PWD finding the nearest .account marker (the same marker read
+# by ~/bin/claude and by __gws_resolve_profile in .functions), then exports
+# GOOGLE_WORKSPACE_CLI_CONFIG_DIR for the matching profile and exec's the real
+# binary. `gws` itself has no --config-dir flag, so the environment variable is
+# the only lever.
+#
+# Why a shim and not just the shell hook: .functions resolves the profile at
+# source time and on the zsh chpwd hook. Neither fires in an agent shell.
+# Claude Code captures a shell snapshot once per session and replays it for
+# every tool call; the snapshot preserves function definitions but drops
+# top-level calls, so the source time resolution is lost. chpwd never fires
+# either, because the shell starts already sitting in the target directory
+# rather than changing into it. The net effect was that every agent shell
+# inherited whatever profile the launching terminal happened to have, and a
+# .account marker one directory away was never read. The same hole exists for
+# launchd jobs, cron, CI, and any `sh -c` caller.
+#
+# Resolving here, at invocation time, is the one layer that holds for every
+# caller regardless of how the process was started.
+#
+# Honors gws-pin: GWS_AUTO_SWITCH=0 means the caller has deliberately locked a
+# profile, so pass through untouched.
+
+set -euo pipefail
+
+resolve_profile() {
+    local dir="$PWD"
+    local target=""
+    while :; do
+        if [[ -f "$dir/.account" ]]; then
+            target="$(cat "$dir/.account" 2>/dev/null | tr -d '[:space:]')"
+            break
+        fi
+        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
+        dir="$(dirname "$dir")"
+    done
+    if [[ -z "$target" ]]; then
+        if [[ -f "$HOME/.config/gws-current" ]]; then
+            target="$(cat "$HOME/.config/gws-current" | tr -d '[:space:]')"
+        fi
+        [[ -z "$target" ]] && target="home"
+    fi
+    # Normalize the retired zero profile (stale .account markers or a stale
+    # gws-current pointer) to home so resolution never lands on a deleted dir.
+    [[ "$target" == "zero" ]] && target="home"
+    printf '%s' "$target"
+}
+
+# Find the next `gws` on PATH that isn't this wrapper.
+# Bash's `-ef` test compares files by device+inode, so it correctly handles
+# this script being reached via a symlink in PATH (~/bin -> homebase/bin).
+# The -d guard matters because a directory is also -x, and bin/ holds tool
+# namespace folders alongside shims.
+real_gws=""
+IFS=':' read -ra path_parts <<< "$PATH"
+for p in "${path_parts[@]}"; do
+    candidate="$p/gws"
+    if [[ -x "$candidate" && ! -d "$candidate" && ! "$candidate" -ef "$0" ]]; then
+        real_gws="$candidate"
+        break
+    fi
+done
+if [[ -z "$real_gws" ]]; then
+    echo "gws shim: cannot find real gws binary on PATH" >&2
+    exit 127
+fi
+
+# gws-pin locks the profile for the current shell. Respect it and pass through.
+if [[ "${GWS_AUTO_SWITCH:-1}" == "0" ]]; then
+    exec "$real_gws" "$@"
+fi
+
+profile=$(resolve_profile)
+cfg_dir="$HOME/.config/gws-$profile"
+
+# Fall back to whatever the caller already had if the profile dir is missing,
+# rather than pointing gws at a nonexistent config.
+if [[ ! -d "$cfg_dir" ]]; then
+    echo "gws shim: $cfg_dir not found, using ambient config" >&2
+    exec "$real_gws" "$@"
+fi
+
+exec env \
+    GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$cfg_dir" \
+    GWS_PROFILE="$profile" \
+    "$real_gws" "$@"
