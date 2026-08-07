@@ -433,41 +433,23 @@ find_and_source_env() {
 # It works because every resolver stamps GWS_RESOLVED_DIR with the dir it set,
 # letting the shim tell an inherited config dir from a deliberate override.
 # The .account marker is shared across tools (also read by ~/bin/claude).
+#
+# Marker parsing lives in ~/bin/lib/account-profile.sh, the single copy shared
+# with both shims. ACCOUNT_QUIET is set because this runs on every chpwd and a
+# broken marker would otherwise warn on every prompt inside that tree; it is
+# deliberately not exported, so the shims stay loud. A missing library leaves
+# __gws_resolve_profile a no-op rather than breaking the shell, which is safe
+# because ~/bin/gws is the authoritative layer regardless.
+ACCOUNT_QUIET=1
+[[ -r "$HOME/bin/lib/account-profile.sh" ]] && . "$HOME/bin/lib/account-profile.sh"
+
 __gws_resolve_profile() {
     [[ "${GWS_AUTO_SWITCH:-1}" == "0" ]] && return 0
+    command -v account_resolve_profile >/dev/null 2>&1 || return 0
 
-    # Walk up from PWD looking for the nearest .account marker.
-    local dir="$PWD"
-    local target=""
-    while :; do
-        if [[ -f "$dir/.account" ]]; then
-            target="$(cat "$dir/.account" 2>/dev/null)"
-            target="${target//[$'\t\r\n ']/}"
-            break
-        fi
-        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
-        dir="$(dirname "$dir")"
-    done
-
-    # The name is joined into "$HOME/.config/gws-$target", so it must be a single
-    # path component; a slash or a dot could walk out of the config directory.
-    # Silent here rather than a warning, unlike the ~/bin/gws shim: this runs on
-    # every chpwd, and a broken marker would print on every prompt in the tree.
-    # A rejected value falls through to the ambient profile below.
-    if [[ -n "$target" && ! "$target" =~ ^[A-Za-z0-9_-]+$ ]]; then
-        target=""
-    fi
-
-    # Fall back to the ambient profile from the state file.
-    if [[ -z "$target" ]]; then
-        target="$(cat "$HOME/.config/gws-current" 2>/dev/null)"
-        target="${target//[$'\t\r\n ']/}"
-        [[ "$target" =~ ^[A-Za-z0-9_-]+$ ]] || target=""
-        [[ -z "$target" ]] && target="home"
-    fi
-
-    # Normalize the retired zero profile to home (stale markers or pointer).
-    [[ "$target" == "zero" ]] && target="home"
+    local target
+    target="$(account_resolve_profile)"
+    [[ -n "$target" ]] || return 0
 
     # Skip re-export when nothing has changed. The dir-existence check makes
     # this self-healing: if a parent shell exported a stale config dir (e.g.,

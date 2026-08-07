@@ -30,53 +30,18 @@
 
 set -euo pipefail
 
-# A profile name is joined straight into "$HOME/.config/gws-$profile", so it has
-# to be a single path component. Anything with a slash or a dot could walk out of
-# the config directory. Reject rather than sanitize, and say so, because a
-# malformed marker silently resolving to some other account is the exact failure
-# this shim exists to prevent.
-valid_profile() {
-    [[ "$1" =~ ^[A-Za-z0-9_-]+$ ]]
-}
-
-# Read a one line profile name from a file. Prints nothing when the file is
-# absent, empty, or holds a name that is not a single path component.
-read_profile_file() {
-    local path="$1" name=""
-    [[ -f "$path" ]] || return 0
-    name="$(tr -d '[:space:]' < "$path" 2>/dev/null)" || return 0
-    [[ -n "$name" ]] || return 0
-    if ! valid_profile "$name"; then
-        echo "gws shim: ignoring malformed profile name in $path" >&2
-        return 0
-    fi
-    # The zero profile retired with the Zero Homes W2 and its dir is gone.
-    # Normalize stale markers and pointers so resolution never lands on it.
-    [[ "$name" == "zero" ]] && name="home"
-    printf '%s' "$name"
-}
-
-# Nearest .account marker walking up from $PWD. A marker that exists but holds
-# an unusable name stops the walk rather than leaking resolution to a parent,
-# which would be a silent account switch.
-marker_profile() {
-    local dir="$PWD" name=""
-    while :; do
-        if [[ -f "$dir/.account" ]]; then
-            name="$(read_profile_file "$dir/.account")"
-            printf '%s' "$name"
-            return 0
-        fi
-        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && return 0
-        dir="$(dirname "$dir")"
-    done
-}
-
-ambient_profile() {
-    local name
-    name="$(read_profile_file "$HOME/.config/gws-current")"
-    printf '%s' "${name:-home}"
-}
+# Marker parsing and profile resolution are shared with ~/bin/claude and
+# .functions. $0 is the invoked path, so this resolves through the ~/bin symlink
+# as well as the real repo path.
+ACCOUNT_LOG_PREFIX="gws shim"
+account_lib="$(dirname "$0")/lib/account-profile.sh"
+if [[ -r "$account_lib" ]]; then
+    # shellcheck source=lib/account-profile.sh
+    . "$account_lib"
+else
+    account_lib_missing=1
+    echo "gws shim: cannot read $account_lib, leaving config untouched" >&2
+fi
 
 # Find the next `gws` on PATH that isn't this shim.
 # Bash's `-ef` test compares files by device+inode, so it correctly handles
@@ -120,9 +85,14 @@ if [[ -n "${GWS_RESOLVED_DIR:-}" \
     exec "$real_gws" "$@"
 fi
 
+# A broken install cannot resolve anything. Pass through rather than guessing at
+# an account, since guessing wrong is the failure this shim exists to prevent.
+if [[ -n "${account_lib_missing:-}" ]]; then
+    exec "$real_gws" "$@"
+fi
+
 # 3 and 4. Marker first, ambient second.
-profile="$(marker_profile)"
-[[ -z "$profile" ]] && profile="$(ambient_profile)"
+profile="$(account_resolve_profile)"
 cfg_dir="$HOME/.config/gws-$profile"
 
 # A marker can name a profile that has no config dir yet (a fresh machine, or a
@@ -130,7 +100,7 @@ cfg_dir="$HOME/.config/gws-$profile"
 # profile rather than letting gws quietly pick its own default, which is how a
 # non interactive caller ends up on the wrong account with no signal.
 if [[ ! -d "$cfg_dir" ]]; then
-    fallback="$(ambient_profile)"
+    fallback="$(account_ambient_profile)"
     if [[ "$fallback" != "$profile" && -d "$HOME/.config/gws-$fallback" ]]; then
         echo "gws shim: profile '$profile' has no config dir, falling back to ambient '$fallback'" >&2
         profile="$fallback"

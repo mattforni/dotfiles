@@ -19,51 +19,23 @@
 
 set -euo pipefail
 
-# A profile name is joined straight into "$HOME/.claude-$profile", so it has to
-# be a single path component. Anything holding a slash or a dot could walk out
-# of the home directory. Reject rather than sanitize, matching the ~/bin/gws
-# shim, because a malformed marker silently resolving to another config root is
-# the exact failure this wrapper exists to prevent.
-valid_profile() {
-    [[ "$1" =~ ^[A-Za-z0-9_-]+$ ]]
-}
-
-# Read a one line profile name from a file. Prints nothing when the file is
-# absent, empty, or holds a name that is not a single path component.
-read_profile_file() {
-    local path="$1" name=""
-    [[ -f "$path" ]] || return 0
-    name="$(tr -d '[:space:]' < "$path" 2>/dev/null)" || return 0
-    [[ -n "$name" ]] || return 0
-    if ! valid_profile "$name"; then
-        echo "claude wrapper: ignoring malformed profile name in $path" >&2
-        return 0
-    fi
-    printf '%s' "$name"
-}
-
-resolve_profile() {
-    local dir="$PWD"
-    local target=""
-    while :; do
-        if [[ -f "$dir/.account" ]]; then
-            target="$(read_profile_file "$dir/.account")"
-            break
-        fi
-        [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
-        dir="$(dirname "$dir")"
-    done
-    if [[ -z "$target" ]]; then
-        target="$(read_profile_file "$HOME/.config/gws-current")"
-        [[ -z "$target" ]] && target="home"
-    fi
-    # Normalize the retired zero profile (stale .account markers or a stale
-    # gws-current pointer) to home so resolution never lands on a deleted dir.
-    [[ "$target" == "zero" ]] && target="home"
-    printf '%s' "$target"
-}
-
-profile=$(resolve_profile)
+# Marker parsing and profile resolution are shared with ~/bin/gws and
+# .functions. $0 is the invoked path, so this resolves through the ~/bin symlink
+# as well as the real repo path.
+#
+# A missing library must never stop Claude Code from launching, so this degrades
+# to the home profile with a warning rather than exiting. That is the profile a
+# machine with no marker at all would land on anyway.
+ACCOUNT_LOG_PREFIX="claude wrapper"
+account_lib="$(dirname "$0")/lib/account-profile.sh"
+if [[ -r "$account_lib" ]]; then
+    # shellcheck source=lib/account-profile.sh
+    . "$account_lib"
+    profile="$(account_resolve_profile)"
+else
+    echo "claude wrapper: cannot read $account_lib, defaulting to the home profile" >&2
+    profile="home"
+fi
 cfg_dir="$HOME/.claude-$profile"
 
 # Find the next `claude` on PATH that isn't this wrapper.
