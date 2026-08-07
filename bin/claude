@@ -19,21 +19,42 @@
 
 set -euo pipefail
 
+# A profile name is joined straight into "$HOME/.claude-$profile", so it has to
+# be a single path component. Anything holding a slash or a dot could walk out
+# of the home directory. Reject rather than sanitize, matching the ~/bin/gws
+# shim, because a malformed marker silently resolving to another config root is
+# the exact failure this wrapper exists to prevent.
+valid_profile() {
+    [[ "$1" =~ ^[A-Za-z0-9_-]+$ ]]
+}
+
+# Read a one line profile name from a file. Prints nothing when the file is
+# absent, empty, or holds a name that is not a single path component.
+read_profile_file() {
+    local path="$1" name=""
+    [[ -f "$path" ]] || return 0
+    name="$(tr -d '[:space:]' < "$path" 2>/dev/null)" || return 0
+    [[ -n "$name" ]] || return 0
+    if ! valid_profile "$name"; then
+        echo "claude wrapper: ignoring malformed profile name in $path" >&2
+        return 0
+    fi
+    printf '%s' "$name"
+}
+
 resolve_profile() {
     local dir="$PWD"
     local target=""
     while :; do
         if [[ -f "$dir/.account" ]]; then
-            target="$(cat "$dir/.account" 2>/dev/null | tr -d '[:space:]')"
+            target="$(read_profile_file "$dir/.account")"
             break
         fi
         [[ "$dir" == "$HOME" || "$dir" == "/" ]] && break
         dir="$(dirname "$dir")"
     done
     if [[ -z "$target" ]]; then
-        if [[ -f "$HOME/.config/gws-current" ]]; then
-            target="$(cat "$HOME/.config/gws-current" | tr -d '[:space:]')"
-        fi
+        target="$(read_profile_file "$HOME/.config/gws-current")"
         [[ -z "$target" ]] && target="home"
     fi
     # Normalize the retired zero profile (stale .account markers or a stale
