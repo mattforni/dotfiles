@@ -36,7 +36,7 @@ Most inbox mail is Delete or Archive; lean toward getting things out. Stars enco
 
 ## Setup
 
-1. Read [learned-rules.md](../../learned-rules.md) (corrections override everything below), then [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification and routing.
+1. Read this skill's local [learned-rules.md](learned-rules.md), then the plugin-wide [learned-rules.md](../../learned-rules.md) (corrections override everything below), then [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification and routing.
 2. Resolve label name to ID mapping (needed for every modify call):
 
    ```bash
@@ -145,3 +145,7 @@ gws drive +upload "<local-file>" --parent "<FOLDER_ID>" --name "<YYYY-MM-DD - NN
 ## gws Notes
 
 All Gmail work goes through the `gws` CLI via Bash. Every call prints `Using keyring backend: keyring` to stderr, so pipe through `2>&1 | grep -v "^Using"` before any JSON parse. Use `gws gmail users messages list` (not `+triage`) for the canonical inbox set.
+
+## Learned Rules
+
+See [learned-rules.md](learned-rules.md).

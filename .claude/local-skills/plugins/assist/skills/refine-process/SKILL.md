@@ -55,4 +55,4 @@ Take a recurring process the user runs (usually codified as a skill, sometimes a
 
 ## Learned Rules
 
-- The skill was seeded 2026-07-19 from the plan-week refinement (9 phases to 8, spine reordered to gather/clean/place/show, calendar labels adopted). First live run of this skill should confirm the workflow ordering holds for a process that is not calendar shaped.
+See [learned-rules.md](learned-rules.md).

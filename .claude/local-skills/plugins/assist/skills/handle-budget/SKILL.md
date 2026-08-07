@@ -15,14 +15,15 @@ Pull uncategorized YNAB transactions, file them into the right category, tag tri
 
 ## Before Every Invocation
 
-1. Read [reference/payee-map.md](../../reference/payee-map.md) and the `## Spend Categorization` section of [learned-rules.md](../../learned-rules.md). Learned rules override the map.
-2. Confirm API access (token in Keychain):
+1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants the budget pass to run.
+2. Read [reference/payee-map.md](../../reference/payee-map.md) and the `## Spend Categorization` section of the plugin-wide [learned-rules.md](../../learned-rules.md). Learned rules override the map.
+3. Confirm API access (token in Keychain):
 
    ```bash
    tok=$(security find-generic-password -a "$USER" -s ynab-token -w)
    ```
 
-3. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, RYLLC `e0d471f0-bf90-452c-8232-b1153b7411be`. Default to Personal unless asked.
+4. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, RYLLC `e0d471f0-bf90-452c-8232-b1153b7411be`. Default to Personal unless asked.
 
 ## Why the API, Not the MCP
 
@@ -100,3 +101,7 @@ The Auto-Categorize and Always-Confirm lists are mined from history: group every
 
 - **Payee sprawl**: each Venmo note spawns a new payee, so the budget carries 1,000+ payees. Collapsing them is a separate hygiene pass (rename/merge via the API, or YNAB's native Renaming Rules). Native Renaming Rules and per-payee auto-categorize are app-only and not in the API.
 - **Housing line**: `Matthew Bigelow` was Rent; after the June 2026 home purchase the recurring housing line is a mortgage.
+
+## Learned Rules
+
+See [learned-rules.md](learned-rules.md).

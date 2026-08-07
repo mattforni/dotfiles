@@ -59,3 +59,7 @@ When uncertain whether a permission is general or project-specific, default to h
 - Sort is case-sensitive alphabetical
 - When collapsing, remove the narrower permissions from the final list if a wildcard covers them
 - Apply collapsing to both newly hoisted AND existing user-level permissions (clean up the user-level list too)
+
+## Learned Rules
+
+See [learned-rules.md](learned-rules.md).

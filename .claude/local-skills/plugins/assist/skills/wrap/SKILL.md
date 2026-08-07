@@ -217,4 +217,4 @@ Ready to /exit when you are.
 
 ## Learned Rules
 
-_(Empty. Populated as corrections accumulate over time.)_
+See [learned-rules.md](learned-rules.md).
