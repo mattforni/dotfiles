@@ -164,4 +164,4 @@ Resolve the merge and re-run /assist:mise.
 
 ## Learned Rules
 
-_(Empty. Populated as Forni corrects mise's judgment over time.)_
+See [learned-rules.md](learned-rules.md).

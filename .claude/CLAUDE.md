@@ -14,10 +14,7 @@ Open questions carried over time, revisited not resolved (full text in `~/Eudaim
 
 ## Communication
 
-- Ask interactive questions one at a time when clarification is needed
-- Please ask any clarifying questions one at a time so I can be thoughtful in responding?
 - I do not want you to use dashes of any kind, ever. This means hyphens (-), en dashes (–), and em dashes (—). No exceptions, including in emails, Slack, and documents. Restructure the sentence instead: split into two sentences, use a comma, or recast. An em dash is not a stylistic exception to the no hyphens rule, it is the same violation.
-- Always run tests in the foreground. When they run in the background too many threads get tied up and the machine grinds to a halt
 - Ask clarifying questions one at a time and present options to select from with an option to provide additional context. Each question states the default assumption I would otherwise make and why the answer changes the approach, so it is decidable at a glance. (Adopted from Greg's Reverse Prompting pattern, 2026-07-23.)
 - Only run tests in the foreground and do not leave tests running. There have been several instances where my computer has ground to a stop due to a bunch of long running, unfettered test processes that I have to go manually kill
 - **For a big, multi-part decision or design proposal, go iteratively, not all at once.** Do not present the whole shape (every category, every sub-decision) and ask me to react to the entire thing. Decompose it: lay out one piece, settle it, then move to the next. Even when each individual piece is small, seeing them all together is too much to hold. This extends the one-at-a-time rule from clarifying questions to design and decision work.
@@ -56,21 +53,12 @@ Delegate matching work to the user level agent roster in `~/.claude/agents/` pro
   - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
   - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
 - Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
-- **Wrapper script escape hatch when `cd` is genuinely required.** Some commands need the project root as cwd to function (rbenv resolving the Ruby from the nearest `.ruby-version`, bundler reading `Gemfile` from cwd, Rails config paths resolved relative to project root, Vite/Bun resolving `package.json`). Setting `BUNDLE_GEMFILE` alone is insufficient — Rails resolves `Rails.root` from cwd, rbenv picks the version from the cwd's `.ruby-version`, etc. The escape hatch: write a small shell script that does the `cd` internally, then invoke the script from the Bash tool. The `cd` lives inside the script, not in the Bash call. Example for pinole-api:
-  ```bash
-  #!/usr/bin/env bash
-  set -euo pipefail
-  cd "$HOME/Eudaimonia/Craft/Vocation/Atelic/pinole/api"
-  # Shims on PATH is all rbenv needs; they read .ruby-version from cwd.
-  export PATH="$HOME/.rbenv/shims:$PATH"
-  exec "$@"
-  ```
-  Then call `bash /tmp/in-api.sh bundle exec rspec ...`. **Do not run `rbenv init` in the wrapper:** its `rbenv rehash` step writes to the shims directory, which the sandbox denies, and under `set -e` the whole script dies with zero output (exit 1, nothing on stderr). Exporting the shims PATH directly does everything the wrapper needs. (Bit on 2026-07-16; the failure is silent and maddening to trace.) **Durable form:** project-local `bin/in-repo` scripts checked into the repo (preferred for long-lived projects). **Ephemeral form:** `/tmp/in-*.sh` written per session as the fallback when no project-local script exists yet.
+- **When `cd` is genuinely required, use a wrapper script** that does the `cd` internally, so the Bash call stays a single command. Some toolchains resolve config only from cwd (rbenv, bundler, Rails, Vite). The recipe, the durable versus ephemeral forms, and the silent `rbenv init` failure are in `~/Eudaimonia/Admin/tools/bash.md`.
 - **Use the Monitor tool for long waits, not Bash sleep.** For CI checks, deploy polling, and any "wait until state X" flow, use Monitor with an `until <check>; do sleep N; done` loop. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes instead of at poll interval granularity.
 
 ## Workflow Conventions
 
-- **Work in worktrees, not primary checkouts.** The first action in any session that will touch a tracked repo is to cut a dedicated worktree (EnterWorktree), before the first edit. This holds for every tracked repo, code or notes, Eudy included. Err on the side of safety: no exceptions for small, quick, or "just notes" edits, so concurrent sessions can never collide. The only work that happens on a primary checkout is a deliberate landing step (merging, pulling main, deleting a merged branch). The worktree gate hook (`~/.claude/hooks/worktree-gate.sh`) currently only *reminds* when a mutating git command hits a primary checkout; treat that reminder as a hard stop, not a nudge, until the hook is hardened to block. (Homebase GC edits are the one pragmatic carve-out: GC is symlinked from the homebase primary checkout, so editing it there is what makes the change live; a worktree copy would not update the symlink until merged.) Worktree mechanics and gotchas live in `~/Eudaimonia/Admin/tools/github.md`.
+- **Work in worktrees, not primary checkouts.** The first action in any session that will touch a tracked repo is to cut a dedicated worktree (EnterWorktree), before the first edit. This holds for every tracked repo, code or notes, Eudy included. Err on the side of safety: no exceptions for small, quick, or "just notes" edits, so concurrent sessions can never collide. The only work that happens on a primary checkout is a deliberate landing step (merging, pulling main, deleting a merged branch). The worktree gate hook (`~/.claude/hooks/worktree-gate.sh`) enforces this rather than merely advising it: a mutating git command targeting a primary checkout is denied outright. `merge` is deliberately allowed, since landing a branch is a primary checkout step. The hook's own header documents its carve-outs. (Homebase GC edits are the one pragmatic carve-out: GC is symlinked from the homebase primary checkout, so editing it there is what makes the change live; a worktree copy would not update the symlink until merged.) Worktree mechanics and gotchas live in `~/Eudaimonia/Admin/tools/github.md`.
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
 
@@ -169,11 +157,7 @@ When creating new Linear tickets:
 
 - **Outbound email to a prospective or current client requires explicit approval of the final email, every time.** Before sending, show the exact artifact (to, subject, full body) and get a yes on that artifact in that moment. Conversational phrasing like "send it," "go ahead," or "fire away" is not approval of an unseen send, and can mean "schedule it"; when wording and context disagree (a plan date says Tuesday, a draft says gated), stop and ask. Codified 2026-07-20 after the DCTC send went out on misread wording.
 - **Two sender identities, routed by audience.** Email to another human (outreach, replies, correspondence) goes through gws as Forni. Email whose recipient is Forni himself (agent reports, review docs, session artifacts, notifications) sends from `Claude <claude@atelic.me>` via Resend, so the inbox shows who it came from instead of a from me / to me self-send. Mechanics and the shared library live in `~/Eudaimonia/Admin/tools/resend.md`.
-- Subject lines should use Title Case (see Writing Style)
-- Never explicitly sign emails (Gmail handles signatures automatically)
-- End emails with "Cheers and chat soon!"
-- Reply to existing email threads instead of creating new ones when following up
-- When including a scheduling link, use `https://app.reclaim.ai/m/forni/chat`. Format as: "Here's [my scheduling link](https://app.reclaim.ai/m/forni/chat) if that's easier."
+- Tone, greetings, sign off, threading and attachment mechanics, scheduling links, what to avoid, and the draft grading rubric live in `~/Eudaimonia/Admin/tools/email.md`.
 
 ## Phone Contact
 
@@ -187,29 +171,7 @@ Default to the cell number on vendor forms unless context calls for the Google V
 
 ## Slack Announcements
 
-For meeting recaps, ecosystem updates, and similar share out posts to a channel, use this structure:
-
-1. 📣 + bold title naming what's being shared
-2. One line lede sentence framing what's covered
-3. Sectional body. Each topical section uses a thematic emoji + bold section name with colon, followed by 1-2 sentences of narrative context to set the stage, then bulleted specifics. Pick thematic emojis matching section content rather than reusing ✅ for every section.
-4. 🤔 *Open:* section for unresolved threads (narrative + bullets, same shape as topical sections)
-5. 📚 *Other Resources:* footer with standardized links:
-   - 📄 More info in `<doc name>` (the name itself is the link; no "Working doc:" prefix)
-   - 🎟️ Linear ticket reference
-   - 🎙️ Granola recording link (voice). Use 🎥 only for actual video recordings.
-6. 🖼️ *Photos in Thread* 🧵 closing line when photos will be added in thread
-
-**Forced section spacing via ZWSP.** Slack collapses consecutive newlines into a single line break, so to force visible air between sections, place a literal zero width space (U+200B, the invisible character itself) on its own line between blocks. Use tight single newlines on either side of the ZWSP. Do not bracket it with blank lines — bracketing compounds into 4 to 5 line breaks of vertical whitespace and reads as excessive padding. Example (⟨ZWSP⟩ stands in for the literal U+200B character):
-
-```
-First section.
-⟨ZWSP⟩
-Second section.
-```
-
-Apply every time a Slack post has section headers. Do not skip because the draft looks fine in the editor — Slack does not render the air until U+200B is there.
-
-**Workshop Slack posts in a DM to yourself.** Send the draft with the channel set to your own user ID. Real `<@USER_ID>` mentions render as the named user but don't ping — Slack only fires notifications when the tagged user is a member of the conversation. Iterate until the render is right (table widths, ZWSP spacing, emoji, mention rendering), then re-send the same content to the actual channel.
+Message formatting, announcement structure, the zero width space spacing rule, and the workshop in a DM first practice live in `~/Eudaimonia/Admin/tools/slack.md`. Two that bite hardest: never paste a bare URL (hyperlink the descriptive words themselves), and a post with section headers needs a literal U+200B between blocks or Slack renders no air at all.
 
 ## Calendar Preferences
 

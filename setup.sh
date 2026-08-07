@@ -36,6 +36,7 @@ INTERACTIVE=true
 LINKED_CONFIGS=(
   .aliases
   .functions
+  CLAUDE.md
   .claude/local-skills
   .claude/CLAUDE.md
   .claude/commands

@@ -122,4 +122,4 @@ Keep the session tight. If it starts to feel like an essay, it is too long. One 
 
 ## Learned Rules
 
-_(Empty. Populated as Forni corrects sharpen's judgment over time.)_
+See [learned-rules.md](learned-rules.md).

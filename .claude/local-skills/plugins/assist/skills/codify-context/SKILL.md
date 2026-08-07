@@ -22,9 +22,10 @@ Human-authored rules and conventions live in repo files: the CLAUDE.md chain, to
 
 ## Before Every Invocation
 
-1. Read [learned-rules.md](../../learned-rules.md) for any prior corrections about documentation style or placement
-2. Identify the **topic** from the user's input or the current conversation
-3. Identify the **target directory** where the knowledge belongs. If the user specifies a directory, use it. If not, infer from context (the directory most closely related to the topic). Ask if ambiguous.
+1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants codification to run
+2. Read the plugin-wide [learned-rules.md](../../learned-rules.md) for any prior corrections about documentation style or placement
+3. Identify the **topic** from the user's input or the current conversation
+4. Identify the **target directory** where the knowledge belongs. If the user specifies a directory, use it. If not, infer from context (the directory most closely related to the topic). Ask if ambiguous.
 
 ## Determining the Target Type
 
@@ -169,8 +170,4 @@ The principle is the same regardless of domain: essentials where they are always
 
 ## Learned Rules
 
-- **Tool / CLI operational reference goes in `~/Eudaimonia/Admin/tools/<tool>.md`, not GC, not project CLAUDE.md.** Anything tool-specific — gotchas, access mechanics, cost notes, version-specific quirks, the "why we picked it" rationale — follows the one-pager pattern in `~/Eudaimonia/Admin/tools/CLAUDE.md`. The pull will be to drop a tool gotcha into GC's existing tool section (e.g., the "Gmail (send, reply, forward, draft)" section) because that's where related behavioral guidance lives. **Resist.** GC is for always-loaded behavioral conventions; `Admin/tools/<tool>.md` is for reference material that loads on relevance. If the entry answers "use it like this" → GC. If it answers "here's what this tool is and what to know about it" → Admin/tools. Codified 2026-05-21 after the gws attachment-truncation gotcha almost landed in GC before getting redirected.
-
-- **GC is a single canonical file shared across all Claude Code profile dirs.** The source of truth lives in the homebase repo at `~/Eudaimonia/Craft/Development/personal/homebase/.claude/CLAUDE.md`. The profile dirs (`~/.claude-home/`, `~/.claude/`) symlink to it. Editing GC via any symlink all hits the same file — and therefore the same git history in homebase. Don't mentally model GC as living in `~/.claude-home/`; that's just a symlink to the homebase-tracked source.
-
-- **Present deltas in the stream, as the final text of the turn.** Text preceding a tool call can render as a collapsed "Thought for Xs" marker in some views, and the AskUserQuestion dialog truncates content. Print the full file-by-file deltas as the turn's last message, then let the user approve in plain chat. Never ask for approval in a message whose draft content lives only in mid-turn text. Codified 2026-07-20 after three consecutive invisible-draft rounds.
+See [learned-rules.md](learned-rules.md).
