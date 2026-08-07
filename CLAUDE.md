@@ -84,11 +84,16 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 
 ### Account Profiles (gws + Claude Code)
 
-Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Two profiles are active: `home` (personal, mattforni@gmail.com, the ambient default) and `tpf` (The Product Forge, matt@theproductforge.com, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
+Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Two profiles are active: `home` (personal, `mattforni@gmail.com`, the ambient default) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
 
-1. **Ambient** — recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
-2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. The `~/bin/claude` wrapper reads the same marker at launch time to pick the Claude Code config dir.
-3. **Pin** — `gws-pin` disables the chpwd hook in the current shell.
+1. **Ambient**: recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
+2. **Directory override**: a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. Convenience only; it fires solely in interactive zsh, and only on an actual directory change.
+3. **Invocation time shim (authoritative)**: `~/bin/gws` re-resolves the marker on every single call and exports the config dir before exec'ing the real binary. This is the layer that actually guarantees the right account, because it does not care how the process was started. `~/bin/claude` does the equivalent for `CLAUDE_CONFIG_DIR` at launch.
+4. **Pin**: `gws-pin` sets `GWS_AUTO_SWITCH=0`, honored by both the hook and the shim, which then pass through untouched.
+
+**How The One Shot Override Survives The Shim.** A shim that re-resolves on every call would normally stomp a deliberate `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=... gws ...`, since it cannot see the difference between a value you meant and one that leaked in from a parent process. Every resolver therefore stamps `GWS_RESOLVED_DIR` with the config dir it set. A config dir equal to the stamp was inherited, so the shim re-resolves it; one that differs was set on purpose, so the shim honors it and passes through. The stamp has to be present for that to apply: a shell that never ran a resolver has no stamp, which is exactly the case this shim exists to correct, so an unstamped config dir counts as inherited rather than intentional. In stamp free contexts (launchd, cron, a raw `sh -c`), `GWS_AUTO_SWITCH=0` is the way to force a specific account.
+
+**Why the shim exists, and why layers 1 and 2 are not enough.** Both of the first two layers resolve at shell startup, and every non interactive caller skips that moment. Claude Code is the sharpest case: it captures a shell snapshot once per session and replays it for every tool call. The snapshot preserves function definitions but drops top level calls, so the `__gws_resolve_profile` invocation at the bottom of `.functions` never runs. `chpwd` never fires either, because the shell starts already sitting in the target directory instead of changing into it. Both fallbacks fail together, and the agent shell silently inherits whatever profile the launching terminal had while a perfectly good `.account` marker sits one directory away, unread. The same hole applies to launchd jobs, cron, CI, and any `sh -c` caller. Diagnosed 2026-08-07 after a session in the TPF subtree reported `mattforni@gmail.com` instead of `matt@theproductforge.com`. `gws` has no `--config-dir` flag, so the environment variable is the only lever, which is what makes a PATH shim the right shape.
 
 | Command | Effect |
 |---------|--------|
@@ -96,12 +101,12 @@ Both the `gws` CLI and Claude Code switch identity per directory subtree via a s
 | `gws-use <profile>` | Set ambient profile (persists across shells; also unpins) |
 | `gws-pin` | Lock to current profile in this shell |
 | `gws-unpin` | Resume chpwd hook |
-| `gws-whoami` | Show profile, config dir, and `gws auth status` |
+| `gws-whoami` | Re-resolve from `$PWD`, then show profile, config dir, and `gws auth status` |
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
 **Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and exec's the real binary. Claude Code stores OAuth credentials per CLAUDE_CONFIG_DIR natively in a `Claude Code-credentials-<hash>` Keychain entry, so the wrapper doesn't need to inject a token; setting the config dir is enough. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh); each profile needs a one time `claude` login from inside its directory to seed its Keychain credential.
 
-OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>` (vault project: `atelic`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/gws/push-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/tools/secret-manager.md`.
+OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>` (vault project: `atelic`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/vault/push-gws-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/tools/secret-manager.md`.
 
 ## Project Structure
 
@@ -184,4 +189,6 @@ The `git cob` alias uses `bin/checkout-branch.sh` to checkout branches by their 
 
 ## bin/ Script Conventions
 
-New scripts live in a namespace folder named for their tool or domain, with verb noun filenames: `bin/vault/push-secrets`, `bin/gws/push-secrets`. Because `~/bin` is a single symlink to the repo's `bin/`, nested folders deploy with no extra plumbing. Legacy flat scripts (`checkout-branch.sh`, `sync-marketplaces`) migrate into namespaces opportunistically when next touched.
+New scripts live in a namespace folder named for their tool or domain, with verb noun filenames: `bin/vault/push-secrets`, `bin/vault/push-gws-secrets`. Because `~/bin` is a single symlink to the repo's `bin/`, nested folders deploy with no extra plumbing. Legacy flat scripts (`checkout-branch.sh`, `sync-marketplaces`) migrate into namespaces opportunistically when next touched.
+
+**Flat files are shims; directories are namespaces.** A shim shadows a real binary of the same name on PATH (`bin/claude`, `bin/gws`), so it has to be a flat executable sitting directly in `bin/` where PATH lookup finds it. Everything else goes in a namespace folder. The two collide the moment a tool needs both, and the shim wins the bare name: `bin/gws/push-secrets` moved to `bin/vault/push-gws-secrets` on 2026-08-07 to free `bin/gws` for the profile shim, which also consolidated the two secret pushers under one namespace. When adding a shim, check that `bin/<tool>` is not already a directory, and remember a directory is also `-x`, so any "find the real binary on PATH" loop needs a `! -d` guard or it will happily try to exec the folder.

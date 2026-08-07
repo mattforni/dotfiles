@@ -426,8 +426,12 @@ find_and_source_env() {
 # Layered model:
 #   1. Ambient profile from ~/.config/gws-current (persists across shells)
 #   2. Directory override via .account markers + chpwd hook (zsh)
-#   3. Pin via gws-pin to disable the hook in the current shell
+#   3. Invocation time resolution in the ~/bin/gws shim, which is what actually
+#      holds for non interactive callers; this hook is convenience on top
+#   4. Pin via gws-pin to disable both the hook and the shim's resolution
 # Per-command override stays available: GOOGLE_WORKSPACE_CLI_CONFIG_DIR=... gws ...
+# It works because every resolver stamps GWS_RESOLVED_DIR with the dir it set,
+# letting the shim tell an inherited config dir from a deliberate override.
 # The .account marker is shared across tools (also read by ~/bin/claude).
 __gws_resolve_profile() {
     [[ "${GWS_AUTO_SWITCH:-1}" == "0" ]] && return 0
@@ -445,10 +449,20 @@ __gws_resolve_profile() {
         dir="$(dirname "$dir")"
     done
 
+    # The name is joined into "$HOME/.config/gws-$target", so it must be a single
+    # path component; a slash or a dot could walk out of the config directory.
+    # Silent here rather than a warning, unlike the ~/bin/gws shim: this runs on
+    # every chpwd, and a broken marker would print on every prompt in the tree.
+    # A rejected value falls through to the ambient profile below.
+    if [[ -n "$target" && ! "$target" =~ ^[A-Za-z0-9_-]+$ ]]; then
+        target=""
+    fi
+
     # Fall back to the ambient profile from the state file.
     if [[ -z "$target" ]]; then
         target="$(cat "$HOME/.config/gws-current" 2>/dev/null)"
         target="${target//[$'\t\r\n ']/}"
+        [[ "$target" =~ ^[A-Za-z0-9_-]+$ ]] || target=""
         [[ -z "$target" ]] && target="home"
     fi
 
@@ -460,13 +474,23 @@ __gws_resolve_profile() {
     # left over from a since-renamed profile), the env survives until the dir
     # is missing on disk, at which point we drop through and re-export against
     # the current resolution.
-    if [[ "$target" == "${GWS_PROFILE:-}" && -d "${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-}" ]]; then
+    # The stamp comparison also forces a re-export in any shell that carries a
+    # config dir without a matching GWS_RESOLVED_DIR, so ~/bin/gws always has a
+    # stamp to compare an explicit override against.
+    if [[ "$target" == "${GWS_PROFILE:-}" \
+       && -d "${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-}" \
+       && "${GWS_RESOLVED_DIR:-}" == "${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-}" ]]; then
         return 0
     fi
 
     local target_dir="$HOME/.config/gws-$target"
     if [[ -d "$target_dir" ]]; then
         export GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$target_dir"
+        # Stamp what we set, so ~/bin/gws can tell an inherited config dir from
+        # a deliberate one shot override. A config dir equal to the stamp was
+        # inherited and is safe to re-resolve; one that differs was set on
+        # purpose and is honored. See the precedence block in bin/gws.
+        export GWS_RESOLVED_DIR="$target_dir"
         export GWS_PROFILE="$target"
     fi
 }
@@ -500,6 +524,7 @@ gws-use() {
     printf '%s\n' "$profile" > "$HOME/.config/gws-current"
     unset GWS_AUTO_SWITCH
     export GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$dir"
+    export GWS_RESOLVED_DIR="$dir"
     export GWS_PROFILE="$profile"
     echo "gws ambient profile -> $profile"
 }
@@ -516,6 +541,16 @@ gws-unpin() {
 }
 
 gws-whoami() {
+    # Resolve before reporting. GWS_PROFILE can be stale whenever the shell
+    # never ran the source time resolution or the chpwd hook: Claude Code and
+    # other agent runners replay a captured shell snapshot that keeps function
+    # definitions but drops top-level calls, and a shell that starts already
+    # inside the target directory never fires chpwd. Reporting the raw variable
+    # in that state confidently prints the wrong account, which is worse than
+    # printing nothing. ~/bin/gws resolves the same way at invocation time, so
+    # this keeps the readout honest and consistent with what gws will actually
+    # use.
+    __gws_resolve_profile
     echo "profile: ${GWS_PROFILE:-<none>}${GWS_AUTO_SWITCH:+ (pinned)}"
     echo "config:  ${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-<none>}"
     command gws auth status 2>/dev/null || echo "(not authenticated)"

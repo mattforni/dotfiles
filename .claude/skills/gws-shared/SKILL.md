@@ -36,9 +36,10 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 
 The active profile is layered:
 
-1. **Ambient** — recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup by `.functions`. Persists across shells.
-2. **Directory override** — a zsh `chpwd` hook walks up from `$PWD` on every `cd`, finds the nearest `.account` marker file (one line text containing the profile name), and silently swaps the env var. `cd` out, snap back to ambient.
-3. **Pin** — `gws-pin` disables the chpwd hook in the current shell.
+1. **Ambient**: recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup by `.functions`. Persists across shells.
+2. **Directory override**: a zsh `chpwd` hook walks up from `$PWD` on every `cd`, finds the nearest `.account` marker file (one line text containing the profile name), and silently swaps the env var. Convenience only; it fires solely in interactive zsh, and only on an actual directory change.
+3. **Invocation time shim (authoritative)**: `~/bin/gws` re-resolves the marker on every single call and exports the config dir before exec'ing the real binary. This is the layer that actually guarantees the right account, because it does not care how the process was started.
+4. **Pin**: `gws-pin` sets `GWS_AUTO_SWITCH=0`, honored by both the hook and the shim, which then pass through untouched.
 
 The `.account` marker is a cross-tool convention; the `~/bin/claude` wrapper reads the same file to pick the Claude Code profile.
 
@@ -46,20 +47,24 @@ The `.account` marker is a cross-tool convention; the `~/bin/claude` wrapper rea
 |---------|--------|
 | `gws-use` | List profiles; show current |
 | `gws-use home` | Set ambient profile (persists across shells; also unpins) |
-| `gws-pin` | Lock to current profile in this shell (disables chpwd hook) |
+| `gws-pin` | Lock to current profile in this shell (`GWS_AUTO_SWITCH=0`, honored by the hook and the shim) |
 | `gws-unpin` | Resume chpwd hook |
-| `gws-whoami` | Show profile, config dir, and `gws auth status` |
+| `gws-whoami` | Re-resolve from `$PWD`, then show profile, config dir, and `gws auth status` |
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
-When writing tooling that should always run against a specific account, prefer the per-command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
+When writing tooling that should always run against a specific account regardless of where it runs, prefer the per command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
 
-### Cross-Machine Secret Sync
+`~/bin/gws` is a PATH shim that re-resolves the nearest `.account` marker on every invocation, so a plain `gws` call from inside a marked subtree uses that subtree's account even in an agent shell, a launchd job, or CI. Do not assume the inherited `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` reflects reality; it frequently does not, and the shim is what corrects it. Full explanation in homebase `CLAUDE.md` under Account Profiles.
+
+The one shot override keeps working unchanged. Every resolver stamps `GWS_RESOLVED_DIR` with the config dir it set, so the shim can tell an inherited config dir (equal to the stamp, safe to re-resolve) from one you set on purpose (different from the stamp, honored). In a context with no stamp at all, such as launchd, cron, or a raw `sh -c`, the marker wins and `GWS_AUTO_SWITCH=0` is the way to force a specific account.
+
+### Cross Machine Secret Sync
 
 `client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager under `gws-oauth-client-<profile>`. The vault project defaults to `atelic`; override via `GWS_BOOTSTRAP_PROJECT`. Full vault conventions: `~/Eudaimonia/Admin/tools/secret-manager.md`.
 
 | Action | How |
 |--------|-----|
-| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/gws/push-secrets` |
+| Push local secrets up (one machine to seed) | `~/Eudaimonia/Craft/Development/personal/homebase/bin/vault/push-gws-secrets` |
 | Pull on a fresh machine | `./setup.sh` (auto fetches via `gcloud secrets versions access`) |
 
 Tokens (`credentials.enc`, `token_cache.json`) are NOT synced. They are keyring encrypted and bound to the originating machine. Re run `gws auth login` per profile per machine, which the setup.sh per profile loop handles.
