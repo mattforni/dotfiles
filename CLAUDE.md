@@ -174,6 +174,8 @@ The desired array supports both stdio and http transports. For http entries that
 
 **Do not unilaterally pick between direct-to-main and PR workflow on this repo.** Both patterns appear in the log (some commits land direct, some through PRs), and Forni prefers to make the call each time rather than have it picked for him. After staging a change, pause and ask which path to take — even for small changes. The friction of asking is low; the cost of an unwanted push to main is higher than it looks.
 
+**A direct merge runs no CI, so check `main` afterward.** GitHub Actions here fire on pull requests. A commit fast forwarded straight onto `main` is never gated, and a failure introduced that way stays invisible until the next PR inherits it and appears to have caused it. Observed 2026-08-07: `e2c36dcb` landed direct with two `MD034` bare URL errors, `main` sat red for hours, and the breakage surfaced on an unrelated PR whose own diff was clean. After any direct merge, run the relevant check locally (`npx markdownlint-cli2 "*.md"` for prose, the matching linter otherwise), or open the Actions tab and confirm `main` is green. When a PR reports a failure in a file it did not touch, suspect inherited breakage before debugging your own diff, and confirm with `git log` on the offending line.
+
 ### Syncing
 
 Use `sync-dots` to pull changes from your home directory back to this repository:
