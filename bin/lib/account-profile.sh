@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Shared .account profile resolution.
 #
 # Sourced by ~/bin/claude, ~/bin/gws, and .functions, which all read the same
@@ -38,15 +39,24 @@ account_warn() {
 #
 # The local is named `src`, not `path`, deliberately. In zsh `path` is a special
 # variable tied to $PATH as an array, so `local path=...` clobbers command
-# lookup for the rest of the function; `tr` then fails to resolve, the error is
-# swallowed by 2>/dev/null, and every marker silently reads as empty. Both shims
-# are bash and never saw it. This library is the first copy zsh sources, so the
-# trap is live here. Avoid zsh special names throughout: path, status, prompt,
-# cdpath, manpath, dirstack, argv.
+# lookup for the rest of the function; any external command then fails to
+# resolve and every marker silently reads as empty. Both shims are bash and
+# never saw it. This library is the first copy zsh sources, so the trap is live
+# here. Avoid zsh special names throughout: path, status, prompt, cdpath,
+# manpath, dirstack, argv.
+#
+# Only leading and trailing whitespace is trimmed, never internal. Stripping
+# every space would fold a marker reading "t pf" into the valid profile "tpf",
+# selecting an account the file never named; internal whitespace instead falls
+# through to the validator and is rejected loudly. Reading via $(<...) rather
+# than an external command keeps this free of PATH entirely and lets an
+# unreadable marker report its own error rather than vanishing into /dev/null.
 account_read_profile_file() {
     local src="$1" name=""
     [[ -f "$src" ]] || return 0
-    name="$(tr -d '[:space:]' < "$src" 2>/dev/null)" || return 0
+    name="$(<"$src")" || return 0
+    while [[ "$name" == [[:space:]]* ]]; do name="${name#?}"; done
+    while [[ "$name" == *[[:space:]] ]]; do name="${name%?}"; done
     [[ -n "$name" ]] || return 0
     if ! account_valid_profile "$name"; then
         account_warn "ignoring malformed profile name in $src"
