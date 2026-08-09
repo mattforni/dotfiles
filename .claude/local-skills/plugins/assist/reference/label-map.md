@@ -1,6 +1,6 @@
 # Label Map
 
-Full label taxonomy for routing emails. Label IDs are resolved at runtime via `list_email_labels`.
+Full label taxonomy for routing emails. Label IDs are resolved at runtime via `gws gmail users labels list`. Trued up against the live label list 2026-08-09.
 
 Always route to the most specific sublabel. Never label with just a parent pillar when a sublabel fits.
 
@@ -21,8 +21,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🍏 Constitution` (parent)
 - `🍏 Constitution/💰 Financial` -- banking, investments, financial planning
 - `🍏 Constitution/💰 Financial/💸 Taxes` -- tax documents, W2s, returns
-- `🍏 Constitution/💰 Financial/📜 Trust` -- trust, estate planning
-- `🍏 Constitution/💪 Athlete` -- gym, fitness, running, climbing, training
+- `🍏 Constitution/💪 Fitness` -- gym, fitness, running, climbing, training
 - `🍏 Constitution/🏥 Healthcare` -- medical, dental, vision, health insurance
 - `🍏 Constitution/🥕 Nutrition` -- supplements, diet, meal planning
 - `🍏 Constitution/🧖 Personal Care` -- grooming, skincare
@@ -34,46 +33,30 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🧠 Contemplation/📖 Reading` -- books, reading lists, Kindle, Audible
 - `🧠 Contemplation/🍿 Entertainment` -- streaming, TV, movies, music, podcasts
 - `🧠 Contemplation/🛋️ Therapy` -- therapy, counseling
-- `🧠 Contemplation/👨‍🎓 Education` -- courses, MOOCs, certifications, learning
+- `🧠 Contemplation/🧑‍🎓 Education` -- courses, MOOCs, certifications, learning
+- `🧠 Contemplation/🇮🇹 Italiano` -- Italian language learning (moved from Community)
 
 ### Community (🤝)
 
 - `🤝 Community` (parent)
-- `🤝 Community/😘 Jasmine` -- Jasmine
 - `🤝 Community/🤗 Friends` -- personal friends
-- `🤝 Community/👨‍👩‍👦‍👦 Family` -- family members (always surface for response)
+- `🤝 Community/🧬 Family` -- family members (always surface for response)
 - `🤝 Community/🏛 Brown` -- Brown University
 - `🤝 Community/🏛 Brown/👬 Phi Psi` -- Phi Psi fraternity
 - `🤝 Community/🏛 Brown/Interviews` -- Brown alumni interviews
-- `🤝 Community/📚 Book Club` -- book club
-- `🤝 Community/🌱 SCF` -- SCF
-- `🤝 Community/🇮🇹 Italiano` -- Italian language learning
+- `🤝 Community/🌇 Denver` -- Denver community, local events (sits directly under Community; the Cities parent retired)
 - `🤝 Community/🤲 Giving` -- charity, volunteering, donations
-- `🤝 Community/🏙️ Cities` -- city based contacts (parent)
-- `🤝 Community/🏙️ Cities/🌇 Denver` -- Denver community, local events
-- `🤝 Community/🏙️ Cities/⚓ Seattle` -- Seattle contacts and community
-- `🤝 Community/🏙️ Cities/🌆 Los Angeles` -- LA contacts and community
-- `🤝 Community/🏙️ Cities/🌉 San Francisco` -- SF contacts and community
 
 ### Craft (🛠️)
 
 - `🛠️ Craft` (parent)
 - `🛠️ Craft/💼 Vocation` -- job search, career
-- `🛠️ Craft/💼 Vocation/0️⃣ Zero` -- Zero Homes
-- `🛠️ Craft/💼 Vocation/😈 Gremlin` -- Gremlin
-- `🛠️ Craft/💼 Vocation/🏬 Salesforce` -- Salesforce
-- `🛠️ Craft/💼 Vocation/🚯 QuitCarbon` -- QuitCarbon
-- `🛠️ Craft/💼 Vocation/👨‍🏫 Mentorship` -- mentorship
-- `🛠️ Craft/💼 Vocation/🕸 Networking` -- networking, intros, conferences
-- `🛠️ Craft/💼 Vocation/💻 RYLLC` -- Reliably Yours LLC consulting
-- `🛠️ Craft/💼 Vocation/💻 RYLLC/🎯 Atelic` -- Atelic project
-- `🛠️ Craft/💼 Vocation/💻 TPF` -- The Product Forge, Titus
+- `🛠️ Craft/💼 Vocation/🤝 Atelic` -- Atelic, the practice
+- `🛠️ Craft/💼 Vocation/🤝 Atelic/🌽 Pinole` -- Pinole, the meal and training dojo
+- `🛠️ Craft/💼 Vocation/⚒️ TPF` -- The Product Forge, Titus
 - `🛠️ Craft/💻 Development` -- software, dev tools, GitHub, tech subscriptions
 - `🛠️ Craft/🌏 Adventure` -- travel, trips, flights, hotels
-- `🛠️ Craft/🌏 Adventure/🇦🇺 Australia` -- Australia
-- `🛠️ Craft/🌏 Adventure/🇦🇺 Australia/🦘 Tassie` -- Tasmania
-- `🛠️ Craft/🌏 Adventure/🚙 Vehicles` -- vehicles, auto
 - `🛠️ Craft/🌦️ Climate` -- climate tech
 - `🛠️ Craft/🎨 Leisure` -- leisure, hobbies, art, gaming
-- `🛠️ Craft/🎨 Leisure/📸 Photography` -- photography
+- `🛠️ Craft/🏡 Home Improvement` -- home projects, contractors, repairs
 - `🛠️ Craft/🌲 Outdoorsman` -- outdoor gear, REI, backcountry

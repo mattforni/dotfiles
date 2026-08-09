@@ -1,6 +1,6 @@
 ---
 name: wrap
-description: Session wrap. Don't lose the thread, clean everything up, don't leave loose ends in your head. Scans every git repo touched this session for uncommitted or unpushed state, surfaces external commitments (pending replies, calendar holds, contract deadlines) from the recent conversation, prompts for codification of durable learnings, logs anything not handled into Todoist (today if pressing, next Monday otherwise), summarizes the session, and leaves the user ready to /exit cleanly. Use this skill whenever the user says "wrap", "wrap up", "wrap the session", "wrap this up", "wrapping up", "clean up before I exit", "signing off", "done for the day", or invokes /assist:wrap. Pairs with /assist:mise as the bookend. Mise opens the kitchen for service. Wrap closes it cleanly after.
+description: Session wrap. Don't lose the thread, clean everything up, don't leave loose ends in your head. Scans every git repo touched this session for uncommitted or unpushed state, surfaces external commitments (pending replies, calendar holds, contract deadlines) from the recent conversation, prompts for codification of durable learnings, logs anything not handled into Todoist (today if pressing, next Sunday otherwise), summarizes the session, and leaves the user ready to /exit cleanly. Use this skill whenever the user says "wrap", "wrap up", "wrap the session", "wrap this up", "wrapping up", "clean up before I exit", "signing off", "done for the day", or invokes /assist:wrap. Pairs with /assist:mise as the bookend. Mise opens the kitchen for service. Wrap closes it cleanly after.
 allowed-tools:
   - Bash
   - Read
@@ -92,7 +92,7 @@ Before triaging anything, query Todoist for tasks that already cover the candida
 ```text
 mcp__claude_ai_Todoist__find-tasks-by-date(
   startDate: "today",
-  daysCount: 4,          # covers today through next Monday on a weekday wrap
+  daysCount: 8,          # covers today through next Sunday on a weekday wrap
   overdueOption: "include-overdue",
   limit: 50,
 )
@@ -111,7 +111,7 @@ For each ⚠️ and 🟡 item, ask the user via AskUserQuestion with these optio
 
 1. **Do now.** Handle in this session before exiting.
 2. **Todoist today.** Log a task due today with duration 30m.
-3. **Todoist Monday.** Log a task due next Monday for the Monday planning session, duration 30m.
+3. **Todoist Sunday.** Log a task due next Sunday for the Sunday planning session, duration 30m.
 4. **Drop.** Item is no longer relevant. Acknowledge and move on.
 
 One question per item. Bulk decisions hide bad triage. Stick to ⚠️ and 🟡; ✅ items are tracking-only and don't need triage.
@@ -128,10 +128,10 @@ If candidates exist, ask the user whether to invoke `/assist:codify-context` via
 
 ### Step 7: Todoist Logging
 
-For each loose end the user triaged to "today" or "Monday", create a Todoist task:
+For each loose end the user triaged to "today" or "Sunday", create a Todoist task:
 
 - **Today:** `dueString: "today"`, `duration: "30m"`
-- **Monday:** `dueString: "next Monday"`, `duration: "30m"`
+- **Sunday:** `dueString: "next Sunday"`, `duration: "30m"`
 
 For each 🔴 overdue item the user triaged to reschedule, use `mcp__claude_ai_Todoist__reschedule-tasks` rather than creating a new task. Preserves recurring patterns and existing context.
 
@@ -176,13 +176,13 @@ Do not invoke /exit automatically. The user controls the exit. The skill prepare
 - **Dedupe against Todoist before triage.** The user already runs Todoist as the system of record for follow-ups. Surfacing tasks that are already scheduled there is noise and forces them to triage the same thing twice. The Step 4 query is the cheapest check available and removes the noisiest failure mode.
 - **Triage one item at a time.** Bulk decisions hide bad triage. AskUserQuestion forces real choice per item.
 - **Codify is opt-in, never mandatory.** Most sessions have no new durable rules. Prompt only when candidates exist; skip cleanly otherwise.
-- **Todoist offload.** Anything not handled in-session goes to Todoist. Working memory should not carry loose ends across sessions. The Monday default channels non-urgent items into the existing Monday planning ritual.
+- **Todoist offload.** Anything not handled in-session goes to Todoist. Working memory should not carry loose ends across sessions. The Sunday default channels non-urgent items into the existing Sunday planning ritual.
 - **Don't auto-exit.** Wrap prepares the exit; the user triggers it. Auto-exit would risk closing a session that still needs attention.
 - **Open PRs block exit.** A PR sitting open after exit risks losing context for review-comment handling, drifts further from main, and breaks the rhythm of finishing what you start. Wrap is responsible for shepherding the PR through review and merge, not just opening it.
 
 ## Output Shape
 
-```
+```text
 Wrap complete ✓
 
 Git / PRs:
@@ -198,9 +198,9 @@ Codify: nothing new this session
 
 Logged to Todoist:
   📝 Sign LBP form (today, 30m)
-  📞 Call Jeff re RYLLC 2024 (next Monday, 30m)
+  📞 Call Jeff re RYLLC 2024 (next Sunday, 30m)
 
-Summary: Locked the NEO loan at 6.375%, filed HOA Status Letter and Loan Estimate, shipped PRs #43 and #44. Two follow-ups in Todoist for Monday planning.
+Summary: Locked the NEO loan at 6.375%, filed HOA Status Letter and Loan Estimate, shipped PRs #43 and #44. Two follow-ups in Todoist for Sunday planning.
 
 Ready to /exit when you are.
 ```
@@ -208,7 +208,7 @@ Ready to /exit when you are.
 ## Anti-patterns
 
 - Do not scan systems beyond git/PRs and recent-session implications. Slack, every inbox folder, Todoist contents, calendar week ahead, none of those. Comprehensive scans create noise that obscures real loose ends.
-- Do not log to Todoist without the user's explicit triage for that item. No automatic bulk-dump to Monday.
+- Do not log to Todoist without the user's explicit triage for that item. No automatic bulk-dump to Sunday.
 - Do not invoke /exit yourself. Wrap prepares; the user exits.
 - Do not skip the summary even when there is "nothing to summarize." It is the re-entry breadcrumb.
 - Do not force codify. If the session did not produce a durable rule, say so and move on.
