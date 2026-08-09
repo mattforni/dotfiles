@@ -36,7 +36,7 @@ Most inbox mail is Delete or Archive; lean toward getting things out. Stars enco
 
 ## Setup
 
-1. Read this skill's local [learned-rules.md](learned-rules.md), then the plugin-wide [learned-rules.md](../../learned-rules.md) (corrections override everything below), then [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification and routing.
+1. Read this skill's local [learned-rules.md](learned-rules.md), then the plugin-wide [learned-rules.md](../../learned-rules.md) and [email-rules.md](../../reference/email-rules.md) (corrections override everything below), then [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification and routing.
 2. Resolve label name to ID mapping (needed for every modify call):
 
    ```bash
@@ -64,7 +64,7 @@ gws gmail users messages get --params '{"userId":"me","id":"<ID>","format":"meta
 gws gmail users messages get --params '{"userId":"me","id":"<ID>","format":"full"}' --format json 2>&1 | grep -v "^Using"
 ```
 
-Cross-reference each sender/subject against triage-rules.md and learned-rules.md, assign a verb, and prepare the artifact:
+Cross-reference each sender/subject against triage-rules.md and email-rules.md, assign a verb, and prepare the artifact:
 
 - **Needs a quick response** → compose the reply now so it is ready for the review pass. Check the clock (`date`) before any time-of-day greeting. Draft, never auto-send, when the recipient is a person. Family replies get no sign-off.
 - **Needs a substantive or high-stakes response** (BD, negotiation, pricing, anything sensitive) → do not dash off an inline draft. Park it (yellow star, right label, keep in inbox) and hand to a focused drafting pass after triage. The Do verb is for quick replies only.
@@ -73,7 +73,7 @@ Cross-reference each sender/subject against triage-rules.md and learned-rules.md
 - **Waiting on someone** → note a green star, keep in inbox.
 - **Already triaged** (has user labels/stars from a prior pass, still in inbox) → set aside; do not re-process. But another message **in this same snapshot** may resolve a prior item (an appointment completed, a reply received, a filing confirmed); surface those during review and close them (clear the star, archive). A genuinely new post-snapshot arrival is not a closure trigger; it stays in the next batch. Recap the rest at the end.
 
-As they surface, also note two inline side actions to raise during review: a sender appearing 3+ times that is worth a **filter**, and any sender with a **Notion or Calendar** side action in learned-rules.md. If there is something to update, do it during review; if not, skip it.
+As they surface, also note two inline side actions to raise during review: a sender appearing 3+ times that is worth a **filter**, and any sender with a **Notion or Calendar** side action in email-rules.md. If there is something to update, do it during review; if not, skip it.
 
 Do not act or present a bulk plan in this phase. Prep only.
 
@@ -84,7 +84,7 @@ Do not act or present a bulk plan in this phase. Prep only.
 - **When in doubt, ask.** If classification is ambiguous or an email could take multiple labels, ask rather than guess. Route to the most specific sublabel; an email can take more than one (an Anthropic receipt is Purchases + Development).
 - **Sending replies**: only send to a person after explicit approval. Direct send is fine for automations, lists, and unsubscribe addresses. Never reference people or sources the user does not know.
 - **Scheduling**: if an email proposes a date/time, check the calendar; if it works, offer to accept and send an invite; if not, propose an alternative (prefer Fridays for in-person). Default to sharing the Reclaim link rather than proposing slots.
-- **Corrections**: when the user overrides a classification, append the rule to [learned-rules.md](../../learned-rules.md) under the right section with enough context to reuse.
+- **Corrections**: when the user overrides a classification, append the rule to [email-rules.md](../../reference/email-rules.md) (routing) or the plugin-wide [learned-rules.md](../../learned-rules.md) (behavior) under the right section with enough context to reuse.
 
 Execute label/star/archive changes with `modify` (pass the full star set in `removeLabelIds` when archiving, per the governing star rule):
 
@@ -119,7 +119,7 @@ gws gmail +send --to "<unsubscribe-address>" --subject "<decoded-encoded-subject
 
 ### Filters
 
-For a recurring sender worth a filter, propose it during review; on approval, create it and record it under `## Created Filters` in learned-rules.md to prevent duplicates. Default action: label, mark read, skip inbox.
+For a recurring sender worth a filter, propose it during review; on approval, create it and record it under `## Created Filters` in email-rules.md to prevent duplicates. Default action: label, mark read, skip inbox.
 
 ```bash
 gws gmail users settings filters create --params '{"userId":"me"}' --json '{"criteria":{"from":"<sender>"},"action":{"addLabelIds":["<LABEL_ID>"],"removeLabelIds":["INBOX"]}}' 2>&1 | grep -v "^Using"
@@ -127,7 +127,7 @@ gws gmail users settings filters create --params '{"userId":"me"}' --json '{"cri
 
 ### Side actions
 
-Some senders route content elsewhere (patterns in learned-rules.md), e.g. Claude Team emails get linked on the Notion AI Research page via `notion-fetch` then `notion-update-page`. Complete a side action before archiving its email.
+Some senders route content elsewhere (patterns in email-rules.md), e.g. Claude Team emails get linked on the Notion AI Research page via `notion-fetch` then `notion-update-page`. Complete a side action before archiving its email.
 
 **Keeper documents** (policies, legal docs, statements worth retaining) get filed to Google Drive, not just labeled. The doc is often a portal/download link in the body, not an attachment, so follow the link (confirm it resolves to the file, e.g. `application/pdf`). Find the matching project folder, read its existing filenames to learn the naming schema (e.g. `YYYY-MM-DD - NN - Description`), then upload with that schema, verify, and archive the email:
 
@@ -140,7 +140,7 @@ gws drive +upload "<local-file>" --parent "<FOLDER_ID>" --name "<YYYY-MM-DD - NN
 
 1. **Red-star digest**: list every email still carrying a red star (sender, subject, age, what it needs). This is the "respond to these" list.
 2. **Recap**: counts by verb (deleted, archived, replied, deferred to Todoist, waiting), plus filters created, side actions done, and any already-triaged mail left in place.
-3. **Learned rules**: confirm any corrections captured this session landed in learned-rules.md.
+3. **Learned rules**: confirm any corrections captured this session landed in email-rules.md (routing) or learned-rules.md (behavior).
 
 ## gws Notes
 

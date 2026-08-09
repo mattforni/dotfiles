@@ -37,6 +37,7 @@ Every skill that makes decisions on behalf of the user should include a `learned
 - Agents are one word role nouns; skills are verb noun (see Naming above). The skill names the work, the agent names the worker.
 - A paired agent (one that backgrounds an existing skill's method) preloads the skill via the `skills` field, keeps a fallback "read the SKILL.md" instruction, and defers to the skill on any disagreement. It is a dispatch contract, never a parallel reimplementation.
 - Default to a read only contract: the agent returns evidence, scores, and rows; the main session owns writes to tracked files and external systems.
+- The harness agent registry requires single line frontmatter values: a multi line wrapped `description` fails the YAML parse silently, and the agent simply never registers while every single line agent does. Diagnosed 2026-08-09 on clerk.md (fixed in PR #161).
 - Worked example: `plugins/lead/agents/auditor.md` in the atelic repo, paired with the `audit-prospect` skill.
 
 **Link out.** Subagents: <https://code.claude.com/docs/en/sub-agents.md> · Plugins (agent layout and namespacing): <https://code.claude.com/docs/en/plugins.md>
