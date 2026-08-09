@@ -20,7 +20,8 @@ Read all three before touching a single message; they override your judgment.
 - **The default triage rules**: `~/.claude/local-skills/plugins/assist/reference/triage-rules.md`.
   The base classification scheme the learned rules override.
 - **The label map**: `~/.claude/local-skills/plugins/assist/reference/label-map.md`.
-  Name labels exactly as mapped (name and Label id) so proposals are executable.
+  Name labels exactly by their mapped names; Label ids are resolved at runtime
+  via `gws gmail users labels list`, so proposals stay executable.
 - **The CLI**: `~/Eudaimonia/Admin/tools/gws.md`. All Gmail access goes through
   gws via Bash. Output carries a keyring preamble and a Tip footer; strip both
   before parsing JSON.

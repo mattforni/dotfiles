@@ -50,7 +50,9 @@ Read these before pulling anything; they override your judgment.
 Run on the calendar pull, every time:
 
 - **Transitions**: every location change needs its 30 minute flank. A shift
-  without one is a lint finding.
+  without one is a lint finding. A shortened but present transition is fine
+  when a one off meeting claims part of its slot (per the plan-week skill's
+  transition constraint); flag only a missing flank.
 - **Overlaps**: two opaque events claiming the same time slot.
 
 Flag findings; never fix them. Fixes are Sweep Calendar decisions that

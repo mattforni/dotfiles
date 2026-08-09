@@ -23,7 +23,7 @@ Help Forni plan his week: review the calendar, slot Todoist tasks into open time
 1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants planning to run
 2. Read the plugin-wide [learned-rules.md](../../learned-rules.md) for any schedule-specific corrections
 3. Read the weekly template: `~/Eudaimonia/schedule.md`
-4. Determine the ISO week being planned (Monday through Sunday) based on today's date
+4. Determine the ISO week being planned: the upcoming Monday through Sunday. The session runs on the Sunday before it, so the week closing today is the retro's subject (Review Week), never the planning target
 5. **Cut and enter a `wk-<ISO week>` worktree** in each repo the session will touch (Eudaimonia for planning artifacts, homebase for skill or config edits). Planning runs in an isolated worktree, never on a shared branch, so a branch switch in another terminal cannot move the ground under the session. All planning edits land in the worktree copy.
 
 **Calendar access:** reads and writes go through the `gws` CLI via Bash, not a Google Calendar MCP. The personal calendar is `🌱 Life` (`mattforni@gmail.com`); find IDs with `gws calendar calendarList list`. Pull with `gws calendar events list`, patch a recurring series with `gws calendar events patch` (only the fields you change), create with `events insert`, delete a whole series by its `recurringEventId`. The `gws` output is prefixed with a `Using keyring backend` line, so strip it before parsing JSON. See `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax: `calendarId` goes inside `--params`, the event body (and any array fields) go in `--json`.
@@ -78,10 +78,11 @@ Review Week runs solo: no background agents are dispatched until the retro dialo
 Every phase presents in the same shape, leading with judgment and compressing the rest:
 
 - **Decisions**: judgment calls only, one line each, ranked most consequential first, each carrying a proposed default so a nod is enough.
-- **Rollup overview**: the actions taken under rule cover after the phase nod, grouped with confidence bands:
+- **Handled**: the rollup of actions taken under rule cover after the phase nod, grouped with confidence bands:
   - **High**: an exact codified rule covers the action. Group by action type and cite the rule.
   - **Medium**: a rule family applied with interpretation. List each item individually for spot check.
   - **Below medium** is by definition a Decision, never an auto handled action.
+- **FYI**: counted one liners (event count, task count, mileage, order count). Detail on ask.
 
 Full boards (every thread, every task, every event) surface only on request. The brief leads with decisions, never inventories.
 
@@ -116,7 +117,7 @@ Turn the inbox into tasks before the task list is loaded, so email follow ups ri
 
 **Clerk was dispatched at the close of Review Week** (see Agent Fan Out); by this phase its board has usually landed inside the planner's brief. Clerk pulls EVERY thread in the inbox (not just unread and starred; read but never archived mail is most of the pile), applies the triage rules, and returns one fully specified proposed disposition per thread, marked ✓ (rule backed) or ? (judgment), with account safe Gmail links. Present per the Signal Contract: ? items and anything outbound are Decisions with proposed defaults; ✓ dispositions execute after the phase nod and report in the rollup grouped by disposition with the rule cited. The full board surfaces only on request. Clerk proposes, Forni corrects, and the corrected board is executed (clerk executes its own board on resume; see the agent file). Fall back to the manual parse below only after clerk has failed or returned nothing, never in parallel with it. Adopted 2026-08-02; widened to the full inbox with proposal dispositions the same day; folded into the post retro fan out 2026-08-09.
 
-1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
+1. Pull every thread in the inbox via `gws` (Bash), not just unread and starred; read but never archived mail is most of the pile. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
    - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a task in its landing system per GC conventions (Todoist for personal and operational, Linear for development and work search). Emoji prefix, short title linked to the Gmail thread, due the Sunday of this planning session so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
    - **Needs an actual reply**: leave it in the inbox for a proper `assist:triage-inbox` session. Note that it exists; do not draft or send replies during this phase.
