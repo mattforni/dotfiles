@@ -1,6 +1,6 @@
 # Triage Rules
 
-Classification rules for inbox email triage. Read learned-rules.md first; those override anything here.
+Classification rules for inbox email triage. Read email-rules.md and learned-rules.md first; those override anything here.
 
 ## Purchase Detection
 
@@ -44,7 +44,7 @@ Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 
 ## Star Rules
 
-Star semantics are governed by the "Star semantics" rule in learned-rules.md (Behavior Rules): the star answers "who has the ball." Do not restate the definitions here; that rule is the single source of truth.
+Star semantics are governed by the "Star semantics" rule in email-rules.md (Star Semantics): the star answers "who has the ball." Do not restate the definitions here; that rule is the single source of truth.
 
 **Core behavior:**
 

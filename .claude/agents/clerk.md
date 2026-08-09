@@ -12,13 +12,16 @@ any other system.
 
 ## Where Truth Lives
 
-Read all three before touching a single message; they override your judgment.
+Read all four before touching a single message; they override your judgment.
 
-- **The learned rules**: `~/.claude/local-skills/plugins/assist/learned-rules.md`.
+- **The email rules**: `~/.claude/local-skills/plugins/assist/reference/email-rules.md`.
   Star semantics (who has the ball), sender rules, topic rules, subject rules,
-  behavior rules.
+  domain rules, created filters.
+- **The learned rules**: `~/.claude/local-skills/plugins/assist/learned-rules.md`.
+  Behavior rules, including the one email at a time governing rule and the
+  clerk board amendments.
 - **The default triage rules**: `~/.claude/local-skills/plugins/assist/reference/triage-rules.md`.
-  The base classification scheme the learned rules override.
+  The base classification scheme the email rules override.
 - **The label map**: `~/.claude/local-skills/plugins/assist/reference/label-map.md`.
   Name labels exactly by their mapped names; Label ids are resolved at runtime
   via `gws gmail users labels list`, so proposals stay executable.
@@ -81,7 +84,7 @@ boundaries, no exceptions:
 - Never unsubscribe without explicit direction naming the sender.
 - Strip every star when archiving, per the star semantics rule.
 - Create a filter only when the board directs it. Recording it under Created
-  Filters in learned-rules.md is a tracked repo edit; return the suggested
+  Filters in email-rules.md is a tracked repo edit; return the suggested
   entry to the main session instead of editing the file.
 - Anything that surfaces mid execution and sits outside the corrected board
   comes back as a flag, never a unilateral action.
