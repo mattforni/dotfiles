@@ -1,6 +1,6 @@
 ---
 name: plan-week
-description: Weekly planning, calendar management, and Monday morning task slotting. Use this skill whenever the user mentions weekly planning, the Monday planning session, slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training` and meal planning in `assist:plan-meals`; this skill calls into both during Monday planning.
+description: Weekly planning, calendar management, and Sunday planning session task slotting. Use this skill whenever the user mentions weekly planning, the Sunday planning session (formerly the Monday planning session), slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training` and meal planning in `assist:plan-meals`; this skill calls into both during the weekly planning session.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
   - Skill
@@ -23,7 +23,7 @@ Help Forni plan his week: review the calendar, slot Todoist tasks into open time
 1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants planning to run
 2. Read the plugin-wide [learned-rules.md](../../learned-rules.md) for any schedule-specific corrections
 3. Read the weekly template: `~/Eudaimonia/schedule.md`
-4. Determine the ISO week being planned (Monday through Sunday) based on today's date
+4. Determine the ISO week being planned: the upcoming Monday through Sunday. The session runs on the Sunday before it, so the week closing today is the retro's subject (Review Week), never the planning target
 5. **Cut and enter a `wk-<ISO week>` worktree** in each repo the session will touch (Eudaimonia for planning artifacts, homebase for skill or config edits). Planning runs in an isolated worktree, never on a shared branch, so a branch switch in another terminal cannot move the ground under the session. All planning edits land in the worktree copy.
 
 **Calendar access:** reads and writes go through the `gws` CLI via Bash, not a Google Calendar MCP. The personal calendar is `🌱 Life` (`mattforni@gmail.com`); find IDs with `gws calendar calendarList list`. Pull with `gws calendar events list`, patch a recurring series with `gws calendar events patch` (only the fields you change), create with `events insert`, delete a whole series by its `recurringEventId`. The `gws` output is prefixed with a `Using keyring backend` line, so strip it before parsing JSON. See `~/Eudaimonia/Admin/tools/gws.md` for the exact invocation syntax: `calendarId` goes inside `--params`, the event body (and any array fields) go in `--json`.
@@ -50,26 +50,51 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Mode: plan (default)
 
-The Monday morning planning session. This is the primary use case. It runs isolated in a worktree and moves through eight phases: gather, then clean, then place, then show. Every phase that generates work runs before the phase that places work.
+The Sunday planning session. This is the primary use case. It runs isolated in a worktree and moves through eight phases: look back quietly, then gather, then clean, then place, then show. Every phase that generates work runs before the phase that places work, with one deliberate exception: Plan Meals runs after Plan Tasks and slots its own generated work inline (see Phase 7).
 
-1. **Review Week** — look back
+1. **Review Week** — look back, quietly, before any agents
 2. **Set Intention** — theme and banner
 3. **Sweep Inbox** — email becomes tasks
 4. **Sweep Calendar** — make the calendar true
 5. **Plan Training** — every training event placed
-6. **Plan Meals** — food plus its calendar footprint
-7. **Plan Tasks** — prioritize, then slot
+6. **Plan Tasks** — work slate first, then personal, then slot
+7. **Plan Meals** — food plus its calendar footprint, slotted inline
 8. **Present Week** — the finished board
+
+### Agent Fan Out (After the Retro, Never Before)
+
+Review Week runs solo: no background agents are dispatched until the retro dialogue closes. Boards landing mid felt sense question kept interrupting and flooding the session on 2026-08-09; the quiet comes first. The moment Review Week closes, dispatch the three background specialists in parallel:
+
+- **clerk** (`~/.claude/agents/clerk.md`): pulls the full inbox and returns the proposed disposition board consumed by Sweep Inbox.
+- **groomer** (`~/.claude/agents/groomer.md`): triages the Linear queue and returns the work decision slate consumed by Plan Tasks.
+- **planner** (`~/.claude/agents/planner.md`): makes the wide pulls (calendar week with labels, Todoist Schedule filter plus the Sunday drop date, Strava week, overconsumption count) and runs the transition and overlap lint on the calendar pull.
+
+**The planner assembles the unified brief.** When clerk's board and groomer's slate return, resume planner with both; it merges everything into one three tier brief (Decisions, Handled, FYI, per the Signal Contract below) that the rest of the session works from. Boards landing in the background never interrupt a dialogue in progress; fold each in at the phase that consumes it.
+
+**Dispatch briefs that authorize external writes must quote Forni's authorizing words verbatim, never a paraphrase.** The agent executing a write needs the exact words that granted it; a relayed authorization in the dispatcher's own words tripped the security layer on 2026-08-09.
+
+### Signal Contract
+
+Every phase presents in the same shape, leading with judgment and compressing the rest:
+
+- **Decisions**: judgment calls only, one line each, ranked most consequential first, each carrying a proposed default so a nod is enough.
+- **Handled**: the rollup of actions taken under rule cover after the phase nod, grouped with confidence bands:
+  - **High**: an exact codified rule covers the action. Group by action type and cite the rule.
+  - **Medium**: a rule family applied with interpretation. List each item individually for spot check.
+  - **Below medium** is by definition a Decision, never an auto handled action.
+- **FYI**: counted one liners (event count, task count, mileage, order count). Detail on ask.
+
+Full boards (every thread, every task, every event) surface only on request. The brief leads with decisions, never inventories.
 
 ### Phase 1: Review Week
 
-Look back at the week that is ending, read as a **compass, not a verdict**. Bring both quantitative spines first, then the felt sense.
+Look back at the week that is ending, read as a **compass, not a verdict**. This phase is a quiet dialogue: the agent fan out waits until it closes, so nothing lands mid question. The session makes its own two light pulls for the quantitative spines, then follows the felt sense.
 
 - **Movement (Strava):** pull the just closed ISO week with `mcp__claude_ai_Strava__list_activities` (`range_start` / `range_end`). Summarize the runs, lifts, hikes, and swims against the V2MOM frame. The connector returns metric, so convert (miles = m / 1609.344, feet = m * 3.28084). This is the broad life movement view; the training specific coverage retro runs later inside `assist:plan-training`.
 - **Overconsumption (Gmail):** the conscious consumption measure has no automatic log, so build one. Count the week's delivery confirmations via `gws gmail`, searching `(Domino OR "Illegal Pete" OR DoorDash OR Grubhub OR "Uber Eats" OR Postmates) after:YYYY/MM/DD before:YYYY/MM/DD` bounding the week. Gmail's `before:` is exclusive, so set it to the Monday after the week so Sunday's orders are not missed. Then confirm each hit is a real order.
 - **Felt sense:** present the two spines tightly, name the one or two things that stand out lightly, then ask the open felt sense question (a word or two for the week). Follow the live thread, and surface the one thing to carry forward. A deeper dialogue can invoke `assist:reflect` in `week` mode, but the planning retro carries the spines itself.
 
-Read it all gently. In the current frame the retro course corrects, it does not grade. Surface anything that should become a planning input (a task, a guardrail, a measure to watch) and carry it into the phases below.
+Read it all gently. In the current frame the retro course corrects, it does not grade. Surface anything that should become a planning input (a task, a guardrail, a measure to watch) and carry it into the phases below. When the dialogue closes, dispatch the fan out (see Agent Fan Out above) and move to Set Intention.
 
 ### Phase 2: Set Intention
 
@@ -90,19 +115,19 @@ This skill owns the banner. `assist:plan-training` writes into its body but neve
 
 Turn the inbox into tasks before the task list is loaded, so email follow ups ride the same prioritization and slotting pass as everything else instead of living only in Gmail.
 
-**Dispatch the `clerk` agent for the parse.** At the start of this phase, launch clerk (the inbox triage agent in `~/.claude/agents/clerk.md`, Sonnet) in the background to pull EVERY thread in the inbox (not just unread and starred; read but never archived mail is most of the pile), apply the triage rules, and return one fully specified proposed disposition per thread, marked ✓ (rule backed) or ? (judgment), with account safe Gmail links. Present the board to Forni for correction, then execute the corrected board; ? items and anything outbound get an explicit question each. Clerk proposes, Forni corrects, the main session executes; clerk never mutates. Wait for clerk's completed board before acting; fall back to the manual parse below only after clerk has failed or returned nothing, never in parallel with it. Adopted 2026-08-02; widened to the full inbox with proposal dispositions the same day.
+**Clerk was dispatched at the close of Review Week** (see Agent Fan Out); by this phase its board has usually landed inside the planner's brief. Clerk pulls EVERY thread in the inbox (not just unread and starred; read but never archived mail is most of the pile), applies the triage rules, and returns one fully specified proposed disposition per thread, marked ✓ (rule backed) or ? (judgment), with account safe Gmail links. Present per the Signal Contract: ? items and anything outbound are Decisions with proposed defaults; ✓ dispositions execute after the phase nod and report in the rollup grouped by disposition with the rule cited. The full board surfaces only on request. Clerk proposes, Forni corrects, and the corrected board is executed (clerk executes its own board on resume; see the agent file). Fall back to the manual parse below only after clerk has failed or returned nothing, never in parallel with it. Adopted 2026-08-02; widened to the full inbox with proposal dispositions the same day; folded into the post retro fan out 2026-08-09.
 
-1. Pull the actionable inbox via `gws` (Bash): unread messages plus starred ones. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
+1. Pull every thread in the inbox via `gws` (Bash), not just unread and starred; read but never archived mail is most of the pile. Yellow and red stars mean the next move is ours (see the star semantics in the assist plugin learned-rules.md).
 2. Classify each email by the action it implies:
-   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a task in its landing system per GC conventions (Todoist for personal and operational, Linear for development and work search). Emoji prefix, short title linked to the Gmail thread, due the Monday of the week being planned so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
+   - **Follow up, not a reply** (schedule something, pay something, chase a vendor, gather documents): create a task in its landing system per GC conventions (Todoist for personal and operational, Linear for development and work search). Emoji prefix, short title linked to the Gmail thread, due the Sunday of this planning session so it lands in this pass, priority by judgment, details in a comment per Todoist conventions.
    - **Needs an actual reply**: leave it in the inbox for a proper `assist:triage-inbox` session. Note that it exists; do not draft or send replies during this phase.
    - **No action**: skip it.
-3. Confirm each task creation with Forni before writing, one at a time, consistent with the ask before acting posture.
+3. Confirm task creations with Forni before writing, presented per the Signal Contract, consistent with the ask before acting posture.
 4. When nothing actionable surfaces, say so in one line and continue.
 
 ### Phase 4: Sweep Calendar
 
-Make the calendar true. Fetch this week's events (Monday through Sunday) via `gws` on the `🌱 Life` calendar, with `eventLabelVersion: 1` so labels come back, and read the weekly template for the recurring skeleton.
+Make the calendar true. Fetch this week's events (Monday through Sunday) via `gws` on the `🌱 Life` calendar, with `eventLabelVersion: 1` so labels come back, and read the weekly template for the recurring skeleton. The planner's calendar pull and lint results seed this phase; verify against them rather than re deriving.
 
 **Free vs busy events**: Check the `transparency` field on each event. Events with `transparency: "transparent"` are "free" (informational only, no action required). Filter them out of the working set. Do not treat free events as conflicts or as consuming time slots. Only `opaque` (busy) events block time.
 
@@ -113,9 +138,11 @@ Make the calendar true. Fetch this week's events (Monday through Sunday) via `gw
 - Constraint violations (missing transitions, fasting window breaches, training adjacent issues per `assist:plan-training`)
 - Stale skeleton: recurring blocks the frame has retired (a closed venue, a dropped commitment) still sitting on the template or calendar
 
+**Standing transition lint**: walk the week's location changes and confirm every one has its 30 minute flank per the transition conventions. A location shift without its flank is a lint finding to surface, never a silent fix. And **re pull the week after any batch of writes, before anything new is slotted**: proposing slots off a stale pull lands them on top of fresh reality (Reclaim backfill first bit 2026-07-26; reaffirmed 2026-08-09 when slots were proposed off a stale pull).
+
 **Label the unlabeled**: any event in the week without an `eventLabelId`, or sitting on a label that no longer fits its meaning, gets its label proposed per the table in `~/Eudaimonia/Admin/tools/google-calendar.md`. Present in small batches, confirm, patch.
 
-Present all conflicts to the user, one at a time or in small batches. For each conflict, propose a resolution:
+Present all conflicts per the Signal Contract. For each conflict, propose a resolution:
 
 - **Keep one, cut the other** (delete or decline)
 - **Move one** to an open slot (check constraints before suggesting)
@@ -129,37 +156,35 @@ Execute only the agreed changes before moving on. The calendar should be clean a
 
 Invoke the `assist:plan-training` skill in `week` mode via the Skill tool. It runs its own retro gate, detects existing recurring placeholders (Mon/Wed lifts, Tue/Thu swims, Tue DRC, Thu SPRC, Thu Alignment), surfaces what's missing, lays out the week's shape and strength targets, writes the training block into the week banner body, and **places every training event for the week**, including the alternating one offs (4K Friday plus paired drive blocks on 4K weeks), following its own constraint logic. The week leaves this phase with training fully on the calendar, not just shaped. Return here once training scheduling is complete.
 
-### Phase 6: Plan Meals
+### Phase 6: Plan Tasks
 
-Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed).
+Prioritize the full task slate, work first, then place the survivors.
 
-Meal planning generates schedulable work: the grocery run, and any prep or cook time beyond the recurring Batch Prep and Cook Night blocks. Capture those as tasks (or confirm the recurring blocks cover them) so they enter the Plan Tasks queue and compete for calendar time like everything else. Return here once meal planning is complete.
+**The work slate leads.** The groomer's decision slate (dispatched at the close of Review Week, carried in the planner's brief) is the first pass: walk its Decisions, settle the cycle, and carry the placeable issues into slotting. When groomer failed or returned nothing, pull the active cycle inline (`env -u LINEAR_API_KEY linear --workspace atelic issue query --team ATE --cycle active --json`) as the fallback.
 
-### Phase 7: Plan Tasks
+**Work maps INTO the standing deep work and work block calendar series**, not into freshly minted Craft block events (the skeleton series exist as of 2026-08-09). Assign each due dated issue to specific standing blocks sized by its estimate (points are hours), splitting an issue across blocks when no single one fits, and keep Linear due dates honest with where the work actually lands. Only when the week's work genuinely exceeds the standing series does a one off 🛠️ Craft block get proposed, through the same decision gate as everything else. Title and splitting conventions live in `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds). The Reclaim Linear sync retired 2026-08-03. Capacity overrides are Forni's to make: when he keeps an overcommitted slate, surface the arithmetic (estimate hours against standing block hours) rather than relitigating the cut (2026-08-09).
 
-Prioritize the task list, then place the survivors.
-
-**Load.** Fetch Todoist tasks using the **Schedule filter**. The MCP cannot resolve the saved filter by ID, so pass its raw query to `find-tasks`: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday` — overdue tasks, non recurring non scheduled tasks due before next Monday, plus Scheduled labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
+**Then Todoist.** Fetch tasks using the **Schedule filter**. The MCP cannot resolve the saved filter by ID, so pass its raw query to `find-tasks`: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday` — overdue tasks, non recurring non scheduled tasks due before next Monday, plus Scheduled labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
 
 **Prioritize.** Prune hard: the filter routinely surfaces far too many items, so default to aggressively deleting notes, deferring the non critical, and combining duplicates rather than slotting everything. This is a collaborative pass through all tasks to:
 
 1. **Identify notes vs tasks**: Forni uses Todoist as a quick notepad. Items that are bookmarks, quotes, links, or ideas get moved to their proper home (Notion, Eudaimonia koans, etc.) and **deleted** from Todoist (not completed, since they were never real tasks). Use Notion MCP for pages like AI Research, and write files to Eudaimonia for things like koans.
 2. **Combine related tasks**: When multiple tasks are clearly part of the same effort (e.g., "Rebalance Portfolio" and "Update 1% Donation" both being financial), suggest merging them into a single task with details in a comment. Always confirm with the user before merging.
 3. **Reprioritize**: Review priorities and flag anything that looks off. Use best judgment, then confirm with the user.
-4. **Clear p4**: All p4 tasks either get bumped to a real priority or punted to the following Monday. p4 items do not get slotted into the current week.
+4. **Clear p4**: All p4 tasks either get bumped to a real priority or punted to the following Sunday. p4 items do not get slotted into the current week.
 
-**Slot.** Present the remaining tasks that need scheduling. For each task, suggest a time slot based on:
+**Slot.** Present the remaining tasks that need scheduling per the Signal Contract. For each task, suggest a time slot based on:
 
 - The task's priority and due date
 - Available open slots in the calendar
 - Context: deep work tasks go in morning blocks, admin in smaller gaps
 - Location: if a task requires being somewhere specific, match it to the right day
 
-Present suggestions via AskUserQuestion, one at a time or in small batches. The user can:
+Present the proposed slots as a board with corrections invited (the board pattern supersedes the one at a time walk; see Learned Rules). Forni can, per task:
 
 - **Accept** the proposed slot
 - **Move** to a different slot
-- **Defer** to next week (reschedule in Todoist to the following Monday)
+- **Defer** to next week (reschedule in Todoist to the following Sunday)
 - **Skip** for now
 
 **Todoist tasks are scheduled via Todoist, not by creating Google Calendar events.** To slot a Todoist task:
@@ -171,17 +196,23 @@ Present suggestions via AskUserQuestion, one at a time or in small batches. The 
 
 Google Calendar is still used directly for non task events: meetings, transitions, sauna sessions, social events, etc.
 
-**Linear work is placed as Craft calendar blocks, not Todoist tasks.** Pull the active cycle's due dated issues (`env -u LINEAR_API_KEY linear --workspace atelic issue query --team ATE --cycle active --json`) and place each as a 🛠️ Craft labeled event sized by its estimate (points are hours), splitting a block across days when no single window fits. Title and splitting conventions live in `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds). Place against a calendar fetch made immediately before the writes, and keep Linear due dates honest with where the blocks actually land. Propose each placement (issue, date, time, duration) through the same AskUserQuestion gate as task slotting, and write or move only approved blocks. The Reclaim Linear sync retired 2026-08-03; work blocks are this skill's to place and move.
-
 **Recurring catch up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
 
 1. Create a new one off Todoist task with the specific date/time, duration, the `⏰ Scheduled` label, exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and its pillar project
 2. Complete the recurring task so the next occurrence auto generates on its cycle
 3. The one off task is the reminder for this week; the recurrence handles the next one
 
+A recurring catch up that gets deferred instead of slotted lands on the following Sunday, like every other deferral.
+
 **Email outreach as slotting**: For some recurring catch ups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs. Always confirm with the user before executing the send command.
 
-**Deferred tasks land on Monday**: When deferring tasks to next week or further out, always schedule them for the Monday of the target week. Monday is the landing zone where tasks get triaged during the planning session.
+**Deferred tasks land on Sunday**: When deferring tasks to next week or further out, always schedule them for the Sunday that plans the target week (the day before the target week's Monday). Sunday is the landing zone where tasks get triaged during the planning session. (Replaced the Monday landing zone 2026-08-09.)
+
+### Phase 7: Plan Meals
+
+Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed).
+
+Meal planning generates schedulable work, and this phase runs after Plan Tasks, so that work does not flow back into the task queue. The standing blocks (Sprouts run, Batch Prep, Cook Night) already hold their time; confirm they cover the plan. Anything the plan generates beyond them (an extra prep session, a second store run) is **slotted inline in this phase**, through the same decision gate as task slotting, against a fresh calendar pull. Return here once meal planning and its slotting are complete.
 
 ### Phase 8: Present Week
 
@@ -244,7 +275,7 @@ Include the location when the event is at a specific place.
 
 ## Training Plan Scheduling
 
-Training event creation lives in the `assist:plan-training` skill. See that skill for the recurring placeholder table, the 4K Friday alternation, strength programming, special weeks (template refresh, September seam, travel), and training adjacent constraints. Plan Training (Phase 5) invokes it during Monday planning. The week banner is the one exception: this skill creates it during Set Intention; plan-training only writes the training block into its body.
+Training event creation lives in the `assist:plan-training` skill. See that skill for the recurring placeholder table, the 4K Friday alternation, strength programming, special weeks (template refresh, September seam, travel), and training adjacent constraints. Plan Training (Phase 5) invokes it during weekly planning. The week banner is the one exception: this skill creates it during Set Intention; plan-training only writes the training block into its body.
 
 ## Key Locations
 
@@ -262,7 +293,7 @@ Training event creation lives in the `assist:plan-training` skill. See that skil
 
 Use the Todoist MCP tools to read and reschedule tasks. Key operations:
 
-- `find-tasks` with `filter`: Pull tasks using the raw Todoist filter string. The saved filter lookup by ID (`filterIdOrName`) is not supported by this MCP, so pass the Schedule filter's raw query directly (see Phase 7).
+- `find-tasks` with `filter`: Pull tasks using the raw Todoist filter string. The saved filter lookup by ID (`filterIdOrName`) is not supported by this MCP, so pass the Schedule filter's raw query directly (see Phase 6).
 - `find-tasks-by-date`: Get tasks due in a date range
 - `reschedule-tasks`: Move task due dates (always use this instead of update-tasks for date changes, to preserve recurrence)
 - `update-tasks`: Modify task properties (but NOT dates). Use to set duration and labels.
@@ -272,6 +303,7 @@ Use the Todoist MCP tools to read and reschedule tasks. Key operations:
 - `add-comments`: Add detail to tasks when combining or enriching them
 
 When slotting tasks, respect Todoist priorities:
+
 - p1 (highest): Slot these first, in prime time
 - p2: Important but flexible
 - p3: Can go in smaller gaps
