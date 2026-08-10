@@ -100,6 +100,8 @@ The Done archive is a separate pass. Linear's archive is UI-only as of CLI v2.0.
 
 ## Hard Rules
 
+- **Triage has a definition, and it is four fields.** An issue counts as triaged only when it carries exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), an hourly estimate (points are hours on the linear extended scale), tagging that actually describes the work, and a due date matching where the work will be done. Missing any one of the four makes it untriaged no matter what its state says, and untriaged is always a Decision, never a silent Keep.
+- **The cycle equals the week (cycle mode).** An active cycle should contain exactly the work intended for that week. Anything undated, unfittable, or unowned goes to Backlog so the board stays readable. Two drifts break this quietly; see learned-rules.md.
 - **Non destructive by default.** Prefer move, reprioritize, or backlog over cancel/delete. Never silently destroy.
 - **Diff before apply.** Always present the proposed slate as a table and wait for explicit approval. Auto apply is reserved for the Keep bucket (which by definition changes nothing).
 - **Preserve history.** Touch only `cycle`, `priority`, `state`, `project`, `parent`, `labels`. Do not edit descriptions, titles, comments, or assignees unless explicitly asked.
