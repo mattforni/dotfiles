@@ -53,7 +53,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Calendar Event Conventions
 
-The named label table and title formats live in `~/Eudaimonia/Admin/tools/google-calendar.md`; calendar reads and writes go through the `gws` CLI (`~/Eudaimonia/Admin/tools/gws.md`) with `eventLabelVersion: 1` on every write. Events are colored via named labels (`eventLabelId`), never the legacy `colorId`. Training specific use:
+The named label table and title formats live in `~/Eudaimonia/Admin/Tools/google-calendar.md`; calendar reads and writes go through the `gws` CLI (`~/Eudaimonia/Admin/Tools/gws.md`) with `eventLabelVersion: 1` on every write. Events are colored via named labels (`eventLabelId`), never the legacy `colorId`. Training specific use:
 
 - Training events use the 🍏 Constitution label: runs, lifts, swims, yoga, body care
 - 4K Friday: `🏃 4K Friday` with paired `🚙 <Trailhead>` and `🚙 Home` drive flanks (🚙 Travel label), 30 minute increments aligned to 30 minute blocks

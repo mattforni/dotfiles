@@ -22,7 +22,7 @@ The method lives in the skill, not here. Before grooming, read all of:
   back to the homebase repo copy at
   `~/Eudaimonia/Craft/Development/personal/homebase/plugins/sdlc/skills/groom-issues/`
   if the installed cache predates the rename from `groom`.
-- `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds) for the placement
+- `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds) for the placement
   contract. Unscheduled work usually traces to an issue missing an honest due
   date or a calendar block; the Reclaim Linear sync retired 2026-08-03.
 

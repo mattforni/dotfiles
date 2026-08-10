@@ -86,8 +86,21 @@ The following rules came from real Growth team groom runs and are likely to appl
 
 ### The Reclaim Linear Sync Is Retired (2026-08-03); Grooming Feeds Hand Placement
 
-Reclaim no longer schedules Linear work. The groom's scheduling output is honest due dates plus hand placed Craft calendar blocks (the plan-week placement step; conventions in `~/Eudaimonia/Admin/tools/google-calendar.md` Work Holds).
+Reclaim no longer schedules Linear work. The groom's scheduling output is honest due dates plus hand placed Craft calendar blocks (the plan-week placement step; conventions in `~/Eudaimonia/Admin/Tools/google-calendar.md` Work Holds).
 
-**Why:** A full Monday (2026-08-03) went to fighting the sync's undocumented behavior: a fixed scale aware estimate mapping with nothing between 1h and 4h, increases only estimate sync, block sizes frozen at import, and a priority gate on incremental sync. Forni chose manual control. The post mortem lives in `~/Eudaimonia/Admin/tools/reclaim.md`.
+**Why:** A full Monday (2026-08-03) went to fighting the sync's undocumented behavior: a fixed scale aware estimate mapping with nothing between 1h and 4h, increases only estimate sync, block sizes frozen at import, and a priority gate on incremental sync. Forni chose manual control. The post mortem lives in `~/Eudaimonia/Admin/Tools/reclaim.md`.
 
 **How to apply:** Skip any Reclaim audit. During scope, check due dates against the real calendar; unscheduled work traces to an issue missing an honest due date or a calendar block. Estimates read as plain hours (ATE linear extended scale). If a Reclaim task for a Linear issue ever resurfaces, it is a zombie from before the retirement; flag it for deletion, and delete it only when the dispatch brief pre approves that action (the diff before apply gate still governs).
+
+### Triage Means Four Fields, and the Cycle Means the Week
+
+A groom is not done when the buckets are applied. It is done when every issue carries all four of a cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), an hourly estimate, tagging that describes the work, and a due date matching where the work will actually be done, and when the cycle holds exactly the week's intended work with everything undated, unfittable, or unowned pushed to Backlog.
+
+**Why:** Forni's own definition, given during the 2026-08-10 planning session: "everything has a cognitive estimate. It has an hourly estimate. We've got good tagging on it that makes sense and we feel good about when the due dates are." That same session reported a groomed board that still held an untriaged issue, a 7 point item with no priority, and a due date past the cycle end. He caught all three.
+
+**How to apply:** Two drifts account for most of the damage, so check both on every run.
+
+- **Deadline day pileup.** Due dates collect on the cycle's last day instead of the day the work will happen. On 2026-08-10 five issues carrying 14 hours all sat on one Friday against roughly 5 hours of capacity. Spread them across the days that will actually hold the work, and surface the arithmetic (estimate hours against available hours) when they do not fit.
+- **Untriaged newcomers.** Issues created mid cycle arrive with no label, no estimate, and no date. The end of pass re query (see the rule above) is where they surface; treat every one as a Decision.
+
+Before reporting a queue groomed, re pull it and read what is there. Do not describe the board from your own earlier actions.

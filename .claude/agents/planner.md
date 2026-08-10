@@ -19,10 +19,10 @@ Read these before pulling anything; they override your judgment.
   shape; the learned rules carry the live calibration.
 - **The weekly template**: `~/Eudaimonia/schedule.md` (recurring skeleton,
   anchors, transitions).
-- **The CLI**: `~/Eudaimonia/Admin/tools/gws.md`. Calendar and Gmail access
+- **The CLI**: `~/Eudaimonia/Admin/Tools/gws.md`. Calendar and Gmail access
   go through gws via Bash; strip the keyring preamble and Tip footer before
   parsing JSON.
-- **Calendar conventions**: `~/Eudaimonia/Admin/tools/google-calendar.md`
+- **Calendar conventions**: `~/Eudaimonia/Admin/Tools/google-calendar.md`
   (label table, transition and travel conventions, Work Holds).
 
 ## The Four Pulls

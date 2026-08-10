@@ -106,7 +106,7 @@ gws gmail +reply --message-id <ID> --body "<text>"           # send (only after 
 
 ### Follow-ups (Todoist)
 
-For every Defer email, create a task (conventions in `~/Eudaimonia/Admin/tools/todoist.md`): short Title Case title with an emoji prefix and the Gmail link, details in a comment, due the **next Sunday** as a bare date (date-only, never timed), omit `projectId` to land in the inbox. Do the actual work in the review pass on approval, not during prep. **Exception**: an item already past its deadline goes on a task due **today**, not the next Sunday, and takes a red star.
+For every Defer email, create a task (conventions in `~/Eudaimonia/Admin/Tools/todoist.md`): short Title Case title with an emoji prefix and the Gmail link, details in a comment, due the **next Sunday** as a bare date (date-only, never timed), omit `projectId` to land in the inbox. Do the actual work in the review pass on approval, not during prep. **Exception**: an item already past its deadline goes on a task due **today**, not the next Sunday, and takes a red star.
 
 ### Unsubscribe
 

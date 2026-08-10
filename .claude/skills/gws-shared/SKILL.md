@@ -60,7 +60,7 @@ The one shot override keeps working unchanged. Every resolver stamps `GWS_RESOLV
 
 ### Cross Machine Secret Sync
 
-`client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager under `gws-oauth-client-<profile>`. The vault project defaults to `atelic`; override via `GWS_BOOTSTRAP_PROJECT`. Full vault conventions: `~/Eudaimonia/Admin/tools/secret-manager.md`.
+`client_secret.json` files (the OAuth client config per profile) sync between machines via GCP Secret Manager under `gws-oauth-client-<profile>`. The vault project defaults to `atelic`; override via `GWS_BOOTSTRAP_PROJECT`. Full vault conventions: `~/Eudaimonia/Admin/Tools/secret-manager.md`.
 
 | Action | How |
 |--------|-----|
