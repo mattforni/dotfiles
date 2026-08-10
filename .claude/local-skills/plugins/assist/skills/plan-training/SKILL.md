@@ -1,7 +1,7 @@
 ---
 name: plan-training
-description: Training plan scheduling, weekly retrospectives, strength programming, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, strength programming, runs, swims, the 4K Friday, yoga placement, recovery days, the fall block, the September seam, Fitbod (retired), asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my training", "what does training look like this week", "how did last week go", "training retro", "this week's lifts", or any request that touches the block plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
-argument-hint: "[week | program | move | retro]"
+description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, swims, the 4K Friday, yoga placement, recovery days, the fall block, the September seam, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my training", "what does training look like this week", "how did last week go", "training retro", "this week's lifts", or any request that touches the block plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
+argument-hint: "[week | move | retro]"
 allowed-tools:
   - Bash
   - mcp__claude_ai_Google_Calendar__*
@@ -16,13 +16,13 @@ allowed-tools:
 
 # Plan Training Assist
 
-Help Forni schedule the week's training from the active block plan, run the weekly retro, manage strength programming, and move sessions safely with constraint validation. The skill is independently invocable, and also gets called by `/assist:plan-week` during Monday planning before triage and slotting.
+Help Forni schedule the week's training from the active block plan, run the weekly retro, and move sessions safely with constraint validation. The skill is independently invocable, and also gets called by `/assist:plan-week` during Monday planning before triage and slotting.
 
 ## Before Every Invocation
 
 1. Read [learned-rules.md](learned-rules.md) in this directory
 2. Read the canonical training context:
-   - `~/Eudaimonia/Constitution/Fitness/2026-fall-block.md` — active block (target, weekly shape, strength template, guardrails, checkpoints, weigh-in log)
+   - `~/Eudaimonia/Constitution/Fitness/2026-fall-block.md` — active block (target, weekly shape, strength emphasis, guardrails, checkpoints, weigh-in log)
    - `~/Eudaimonia/Constitution/Fitness/CLAUDE.md` — training conventions
    - `~/Eudaimonia/schedule.md` — weekly skeleton (held loosely by design)
 3. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
@@ -37,7 +37,7 @@ The block plan lives at `Constitution/Fitness/2026-fall-block.md`. The weekly sk
 
 **For retrospective decisions** (what actually happened last week): Strava is truth for all movement, lifts and yoga and swims included. Calendar events are scheduled intent, never evidence of completion.
 
-**For programming decisions** (what weights and reps this week): the template in the block doc plus last week's logged numbers.
+**Strength programming is Fitbod's, not this skill's.** The block doc holds the emphasis and the session count; exercise selection, weights, and reps live in Fitbod and are not planned, targeted, or graded here.
 
 ## Training Constraints
 
@@ -83,24 +83,11 @@ Determine which Friday this is (4K or deep work) from the alternation, then lay 
 
 **The one look weekly summary is the deliverable**: sessions by modality (3 lifts, 2 swims, runs, yoga), which Friday it is, and the weight trend in one line. Write it into the week banner body (the banner itself is created by `assist:plan-week` during Set Intention; this skill only writes the training block into its body, and flags back if the banner is missing).
 
-### Phase 4: Strength Targets
+### Phase 4: Special Week Handling
 
-Run the weekly half of Mode: program. This week's per lift targets ride along in the week banner body next to the shape.
-
-### Phase 5: Special Week Handling
-
-- **Template refresh weeks** (~Sep 14, mid Oct): run the refresh half of Mode: program.
 - **September seam (W37, week of Sep 7)**: outdoor pools close at Labor Day. Walk the swim decision with Forni: indoor laps (Carla Madison, 20th Street) or reallocate the slots.
-- **Travel weeks**: swap in the travel variant from the block doc; skeleton sessions become opportunistic, not graded.
+- **Travel weeks**: skeleton sessions become opportunistic, not graded.
 - **Block close (W45, week of Nov 8)**: composition read plus the winter shape conversation.
-
-## Mode: program
-
-Strength programming, owned by Claude since 2026-08-05 (Fitbod retired, reversible). Forni owns form and in gym judgment; this skill owns the template, progression math, and adjustment.
-
-**Weekly adjustment**: read last week's logged lifts from Strava (Garmin syncs through). Apply the progression rule: work within the rep range; when every set hits the top of the range, add about 5 lb upper body or 10 lb lower body and drop to the bottom of the range. Output this week's targets per lift per day. Two weeks with no progress on a lift is a stall: propose a swap or a back off set, do not silently press.
-
-**Template refresh** (every 4 to 6 weeks, checkpoints in the block doc): rotate exercise variants while keeping the emphases (core every session, upper body, posterior chain; quads maintenance). Present the new template for review before writing it into the block doc.
 
 ## Mode: move
 
@@ -135,7 +122,7 @@ One row per planned session: Mon lift A, Tue swim, Tue DRC, Wed lift B, Thu SPRC
 
 | Metric | Source |
 |---|---|
-| Lifts | count vs 3, with progression notes per lift |
+| Lifts | count vs 3 |
 | Swims | count vs 2 (season dependent) |
 | Runs | sessions + total miles (informational, no target) |
 | Yoga | anchor hit or not |
@@ -166,7 +153,7 @@ Coverage misses drive schedule repair (move the slot, shrink the commitment), no
 
 ### Phase 9: Surface Trends
 
-Scan the prior 1 to 2 retros for patterns: repeated misses, weight trend drift, progression stalls. One or two sentences, only when the data is there.
+Scan the prior 1 to 2 retros for patterns: repeated misses, weight trend drift, a modality quietly fading. One or two sentences, only when the data is there.
 
 ## Retired with the FPL Block
 
