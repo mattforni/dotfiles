@@ -38,7 +38,7 @@ Keep the context architecture honest. The failure this skill exists to fix is **
 - **Eudaimonia CLAUDE.md chain**: root and nested (`Craft/`, `Craft/Development/`, `Admin/`, pillar dirs), loaded by location.
 - **Repo CLAUDE.md chain**: per-repo and nested (e.g. `zero/public-web/CLAUDE.md` and its `app/...` children), loaded when working in-repo.
 - **Skill files**: `SKILL.md` and `learned-rules.md` per skill in the `assist` plugin (`.claude/local-skills/plugins/assist/skills/*`) and the `skillset` plugins (`sdlc`, `linear-lifecycle`).
-- **Tool docs**: `~/Eudaimonia/Admin/tools/<tool>.md`, reference loaded on relevance.
+- **Tool docs**: `~/Eudaimonia/Admin/Tools/<tool>.md`, reference loaded on relevance.
 - **Auto memory**: the Claude Code per-project memory store (MEMORY.md index plus topic files). A first class layer since 2026-07-04: Claude-discovered learnings live there (per Anthropic's division of labor), so groom it for staleness and duplication against the repo-file layers, but do not treat its existence as a smell.
 
 ## Workflow
@@ -59,7 +59,7 @@ Find the same rule encoded in several places, and rules that conflict. Choose on
 
 ### Step 4: Relocate by Altitude
 
-Move each rule to the layer that owns it. In particular: tool-specific content goes to its `Admin/tools/<tool>.md`; cross-project behavior goes to GC; repo specifics go to that repo's CLAUDE.md; skill decisions go to the skill's learned-rules. Behavior in GC, depth one hop away.
+Move each rule to the layer that owns it. In particular: tool-specific content goes to its `Admin/Tools/<tool>.md`; cross-project behavior goes to GC; repo specifics go to that repo's CLAUDE.md; skill decisions go to the skill's learned-rules. Behavior in GC, depth one hop away.
 
 ### Step 5: Salience Check
 

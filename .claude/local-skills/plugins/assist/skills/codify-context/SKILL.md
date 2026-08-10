@@ -18,7 +18,7 @@ Codify knowledge from the current conversation into documentation that serves tw
 
 ## Placement Policy
 
-Human-authored rules and conventions live in repo files: the CLAUDE.md chain, tool docs (`~/Eudaimonia/Admin/tools/<tool>.md`), and skill files. Claude-discovered learnings, corrections, and preferences may live in the Claude Code auto-memory store. This skill is the deliberate write-in path for the repo-file layers, invoked when Forni explicitly asks to codify. The owning statement of this division lives in GC (Persistence: Rules in Files, Learnings in Memory).
+Human-authored rules and conventions live in repo files: the CLAUDE.md chain, tool docs (`~/Eudaimonia/Admin/Tools/<tool>.md`), and skill files. Claude-discovered learnings, corrections, and preferences may live in the Claude Code auto-memory store. This skill is the deliberate write-in path for the repo-file layers, invoked when Forni explicitly asks to codify. The owning statement of this division lives in GC (Persistence: Rules in Files, Learnings in Memory).
 
 ## Before Every Invocation
 

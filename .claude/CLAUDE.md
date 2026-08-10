@@ -53,12 +53,12 @@ Delegate matching work to the user level agent roster in `~/.claude/agents/` pro
   - Absolute paths for file operations: `grep X /abs/path/foo`, `wc -l /abs/path/*.md`
   - Pass paths explicitly to scripts and tools: `python3 /abs/path/script.py`
 - Compound commands with `cd` defeat the existing allowlist and slow everything down. The goal is to keep Bash calls to a single command that matches a single allowlist entry, so approvals stay auto.
-- **When `cd` is genuinely required, use a wrapper script** that does the `cd` internally, so the Bash call stays a single command. Some toolchains resolve config only from cwd (rbenv, bundler, Rails, Vite). The recipe, the durable versus ephemeral forms, and the silent `rbenv init` failure are in `~/Eudaimonia/Admin/tools/bash.md`.
+- **When `cd` is genuinely required, use a wrapper script** that does the `cd` internally, so the Bash call stays a single command. Some toolchains resolve config only from cwd (rbenv, bundler, Rails, Vite). The recipe, the durable versus ephemeral forms, and the silent `rbenv init` failure are in `~/Eudaimonia/Admin/Tools/bash.md`.
 - **Use the Monitor tool for long waits, not Bash sleep.** For CI checks, deploy polling, and any "wait until state X" flow, use Monitor with an `until <check>; do sleep N; done` loop. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes instead of at poll interval granularity.
 
 ## Workflow Conventions
 
-- **Work in worktrees, not primary checkouts.** The first action in any session that will touch a tracked repo is to cut a dedicated worktree (EnterWorktree), before the first edit. This holds for every tracked repo, code or notes, Eudy included. Err on the side of safety: no exceptions for small, quick, or "just notes" edits, so concurrent sessions can never collide. The only work that happens on a primary checkout is a deliberate landing step (merging, pulling main, deleting a merged branch). The worktree gate hook (`~/.claude/hooks/worktree-gate.sh`) enforces this rather than merely advising it: a mutating git command targeting a primary checkout is denied outright. `merge` is deliberately allowed, since landing a branch is a primary checkout step. The hook's own header documents its carve-outs. (Homebase GC edits are the one pragmatic carve-out: GC is symlinked from the homebase primary checkout, so editing it there is what makes the change live; a worktree copy would not update the symlink until merged.) Worktree mechanics and gotchas live in `~/Eudaimonia/Admin/tools/github.md`.
+- **Work in worktrees, not primary checkouts.** The first action in any session that will touch a tracked repo is to cut a dedicated worktree (EnterWorktree), before the first edit. This holds for every tracked repo, code or notes, Eudy included. Err on the side of safety: no exceptions for small, quick, or "just notes" edits, so concurrent sessions can never collide. The only work that happens on a primary checkout is a deliberate landing step (merging, pulling main, deleting a merged branch). The worktree gate hook (`~/.claude/hooks/worktree-gate.sh`) enforces this rather than merely advising it: a mutating git command targeting a primary checkout is denied outright. `merge` is deliberately allowed, since landing a branch is a primary checkout step. The hook's own header documents its carve-outs. (Homebase GC edits are the one pragmatic carve-out: GC is symlinked from the homebase primary checkout, so editing it there is what makes the change live; a worktree copy would not update the symlink until merged.) Worktree mechanics and gotchas live in `~/Eudaimonia/Admin/Tools/github.md`.
 - When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
 - When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
 
@@ -70,7 +70,7 @@ After a plan is accepted (ExitPlanMode), before starting implementation, take on
 
 Follows Anthropic's published division of labor (adopted 2026-07-04, reversing the earlier "codify, don't memorize" policy):
 
-- **Human-authored rules and conventions live in repo files.** Project CLAUDE.md for project conventions, homebase CLAUDE.md for environment and workflow, GC (`~/.claude/CLAUDE.md`) for cross-project behavior, tool docs (`~/Eudaimonia/Admin/tools/<tool>.md`) for tool reference, skill `learned-rules.md` for skill-specific patterns, Eudy markdown for personal context.
+- **Human-authored rules and conventions live in repo files.** Project CLAUDE.md for project conventions, homebase CLAUDE.md for environment and workflow, GC (`~/.claude/CLAUDE.md`) for cross-project behavior, tool docs (`~/Eudaimonia/Admin/Tools/<tool>.md`) for tool reference, skill `learned-rules.md` for skill-specific patterns, Eudy markdown for personal context.
 - **Claude-discovered learnings live in the auto-memory store.** Corrections, preferences, debugging insights, and patterns Claude notices belong in the per-project memory directory with its MEMORY.md index. Save there freely as the system prompt directs; prune stale entries when noticed. One caveat: memory is per repo and not synced across machines, so anything that must survive a machine swap belongs in a repo file.
 
 `assist:codify-context` is the deliberate write-in path for the repo-file layers when Forni says "codify."
@@ -83,7 +83,7 @@ Follows Anthropic's published division of labor (adopted 2026-07-04, reversing t
 
 Each band's own CLAUDE.md holds the full test; this is just the one-line router.
 
-**Keep GC lean — it loads on every session, everywhere.** Anthropic's guidance targets under 200 lines per CLAUDE.md; longer files reduce adherence. GC holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics belong in that tool's `~/Eudaimonia/Admin/tools/<tool>.md` one-pager. Progressive disclosure: pointers here, depth one hop away.
+**Keep GC lean — it loads on every session, everywhere.** Anthropic's guidance targets under 200 lines per CLAUDE.md; longer files reduce adherence. GC holds behavioral conventions ("do it like this") and **pointers**, not detail. Tool specifics belong in that tool's `~/Eudaimonia/Admin/Tools/<tool>.md` one-pager. Progressive disclosure: pointers here, depth one hop away.
 
 ### Context Architecture
 
@@ -97,7 +97,7 @@ When context sprawls or duplicates, run `assist:groom-context` (also run monthly
 
 ### Git, Worktrees, and PR Gotchas
 
-Deep git and GitHub reference (EnterWorktree branch renames and nested-repo trap, squash-merge branch cleanup, stacked PR rebases, branch auto-deletion settings) lives in `~/Eudaimonia/Admin/tools/github.md`. Read it before worktree cleanup, stacked PR landings, or deleting branches after squash merges.
+Deep git and GitHub reference (EnterWorktree branch renames and nested-repo trap, squash-merge branch cleanup, stacked PR rebases, branch auto-deletion settings) lives in `~/Eudaimonia/Admin/Tools/github.md`. Read it before worktree cleanup, stacked PR landings, or deleting branches after squash merges.
 
 ## Skills
 
@@ -125,11 +125,11 @@ Choose the highest available option. Native connectors are smoother and require 
 
 ### gws Profiles
 
-The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, matt@theproductforge.com; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/tools/gws.md`.
+The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, matt@theproductforge.com; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/Tools/gws.md`.
 
 ### Google Workspace (reading links, Docs, Gmail)
 
-Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/forward/draft Gmail through the `gws` CLI, never WebFetch or the Gmail MCP. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc-from-markdown recipe, reply targeting, self-reply handling, and the gotchas live in `~/Eudaimonia/Admin/tools/gws.md`.
+Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/forward/draft Gmail through the `gws` CLI, never WebFetch or the Gmail MCP. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc-from-markdown recipe, reply targeting, self-reply handling, and the gotchas live in `~/Eudaimonia/Admin/Tools/gws.md`.
 
 ## Code Review
 
@@ -138,15 +138,15 @@ Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/for
 
 ## MCP Servers
 
-Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Admin/tools/notion.md`.
+Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Admin/Tools/notion.md`.
 
 ## Linear Ticket Preferences
 
 **Linear is the tracker for engineering and development work; Todoist is for personal and operational tasks.** Anything code (bugs, tech debt, features, follow-ups from a build session) goes to Linear, never Todoist. Route the personal/operational side to Todoist (see Todoist Preferences). Do not offer Todoist for dev follow-ups.
 
-**Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale) and steered by honest due dates. The Reclaim Linear sync retired 2026-08-03. Conventions in `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds).
+**Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale) and steered by honest due dates. The Reclaim Linear sync retired 2026-08-03. Conventions in `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds).
 
-**Every scheduled item carries exactly one cognitive load label, in Linear and Todoist alike** (🧠 Sharp / ⚖️ Medium / 🍃 Light). It grades how sharp I have to be, not how long the work takes, and is deliberately independent of the estimate: the estimate sizes the block, the label picks the time of day (Sharp first thing, Medium midday, Light late afternoon). Scale, IDs, and the 2026-08-10 rename from the old effort labels live in `~/Eudaimonia/Admin/concepts/cognitive-load.md`, the shared home for schemes that span tools.
+**Every scheduled item carries exactly one cognitive load label, in Linear and Todoist alike** (🧠 Sharp / ⚖️ Medium / 🍃 Light). It grades how sharp I have to be, not how long the work takes, and is deliberately independent of the estimate: the estimate sizes the block, the label picks the time of day (Sharp first thing, Medium midday, Light late afternoon). Scale, IDs, and the 2026-08-10 rename from the old effort labels live in `~/Eudaimonia/Admin/Concepts/cognitive-load.md`, the shared home for schemes that span tools.
 
 **When to create a ticket at all.** A ticket tracks work that needs doing: queued for later, spanning sessions, needing prioritization, or handed off. For work that is decided and executed in one sitting, the PR is the tracking unit, so do not mint a ticket for it. Ask before ticketing in-session work. If a ticket is created, actually use it: move it through states and let it close on merge, never leave it orphaned in Todo while its PR is already open.
 
@@ -158,8 +158,8 @@ When creating new Linear tickets:
 ## Email Preferences
 
 - **Outbound email to a prospective or current client requires explicit approval of the final email, every time.** Before sending, show the exact artifact (to, subject, full body) and get a yes on that artifact in that moment. Conversational phrasing like "send it," "go ahead," or "fire away" is not approval of an unseen send, and can mean "schedule it"; when wording and context disagree (a plan date says Tuesday, a draft says gated), stop and ask. Codified 2026-07-20 after the DCTC send went out on misread wording.
-- **Two sender identities, routed by audience.** Email to another human (outreach, replies, correspondence) goes through gws as Forni. Email whose recipient is Forni himself (agent reports, review docs, session artifacts, notifications) sends from `Claude <claude@atelic.me>` via Resend, so the inbox shows who it came from instead of a from me / to me self-send. Mechanics and the shared library live in `~/Eudaimonia/Admin/tools/resend.md`.
-- Tone, greetings, sign off, threading and attachment mechanics, scheduling links, what to avoid, and the draft grading rubric live in `~/Eudaimonia/Admin/tools/email.md`.
+- **Two sender identities, routed by audience.** Email to another human (outreach, replies, correspondence) goes through gws as Forni. Email whose recipient is Forni himself (agent reports, review docs, session artifacts, notifications) sends from `Claude <claude@atelic.me>` via Resend, so the inbox shows who it came from instead of a from me / to me self-send. Mechanics and the shared library live in `~/Eudaimonia/Admin/Tools/resend.md`.
+- Tone, greetings, sign off, threading and attachment mechanics, scheduling links, what to avoid, and the draft grading rubric live in `~/Eudaimonia/Admin/Tools/email.md`.
 
 ## Phone Contact
 
@@ -173,15 +173,15 @@ Default to the cell number on vendor forms unless context calls for the Google V
 
 ## Slack Announcements
 
-Message formatting, announcement structure, the zero width space spacing rule, and the workshop in a DM first practice live in `~/Eudaimonia/Admin/tools/slack.md`. Two that bite hardest: never paste a bare URL (hyperlink the descriptive words themselves), and a post with section headers needs a literal U+200B between blocks or Slack renders no air at all.
+Message formatting, announcement structure, the zero width space spacing rule, and the workshop in a DM first practice live in `~/Eudaimonia/Admin/Tools/slack.md`. Two that bite hardest: never paste a bare URL (hyperlink the descriptive words themselves), and a post with section headers needs a literal U+200B between blocks or Slack renders no air at all.
 
 ## Calendar Preferences
 
-Google Calendar conventions (pillar color coding, transition vs travel, flanking on location shifts, title formats, time alignment) live in `~/Eudaimonia/Admin/tools/google-calendar.md`.
+Google Calendar conventions (pillar color coding, transition vs travel, flanking on location shifts, title formats, time alignment) live in `~/Eudaimonia/Admin/Tools/google-calendar.md`.
 
 ## Todoist Preferences
 
-Todoist conventions (Sunday scheduling, follow-ups always land on a Sunday, short Title Case task titles, details in a comment) live in `~/Eudaimonia/Admin/tools/todoist.md`.
+Todoist conventions (Sunday scheduling, follow-ups always land on a Sunday, short Title Case task titles, details in a comment) live in `~/Eudaimonia/Admin/Tools/todoist.md`.
 
 ## Code Project Conventions
 
@@ -206,4 +206,4 @@ For any SEO, GEO, or growth engineering work (Atelic clients or personal), the c
 - **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering. Note: macOS Screenshots filenames have a literal leading space character (e.g., ` 2026-05-16 at 09.48.15.png`). `Read` with the bare name fails. Use `ls -1 ~/Screenshots/` to discover the exact name and pass it to `Read` with the leading space included. `ls -la` makes the leading space ambiguous because of column spacing, so prefer `ls -1` or `od -c` to verify.
 - **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. Numbered files contain a literal space between `Scan` and the number, so the bare name must be quoted in shell commands (`"Scan 1.pdf"`). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
 
-The recipe for cropping scanned PDFs to their content (density-filter approach, calibrated parameters) lives in `~/Eudaimonia/Admin/tools/pdf-crop.md`.
+The recipe for cropping scanned PDFs to their content (density-filter approach, calibrated parameters) lives in `~/Eudaimonia/Admin/Tools/pdf-crop.md`.

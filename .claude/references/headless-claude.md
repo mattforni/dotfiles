@@ -7,7 +7,7 @@ L7 mise; see Eudy's `LEVELS.md` for the story. The reference implementation,
 automation (the plist went 2026-07-16); recover it from homebase git history
 if a local headless routine returns. The current direction for recurring
 routines is cloud scheduling drawing credentials from the Secret Manager
-vault (`~/Eudaimonia/Admin/tools/secret-manager.md`).
+vault (`~/Eudaimonia/Admin/Tools/secret-manager.md`).
 
 ## When to use this pattern
 
@@ -190,7 +190,7 @@ Output:
   (review asks, anything needing action) stays in the inbox. When adding a
   new routine, add its `[Tag]` to the archive filter's subject terms, and
   never give an interactive email a bracketed subject prefix. Full
-  convention: `~/Eudaimonia/Admin/tools/resend.md`.
+  convention: `~/Eudaimonia/Admin/Tools/resend.md`.
 - Body: status heading, optional reason note, `<pre>` block with the
   skill's `.result` text (HTML escaped), metadata table (duration, cost,
   turns, exit code, session id).
@@ -198,7 +198,7 @@ Output:
   non-2xx): sets `email_error` and returns non-zero. Wrapper falls back to
   osascript notification carrying the email error.
 
-Tool entry: `Eudy/Admin/tools/resend.md` for vendor context, alternatives
+Tool entry: `Eudy/Admin/Tools/resend.md` for vendor context, alternatives
 considered, and pricing. JSON payload assembled via `jq -n --arg ...` to
 dodge bash escaping pitfalls; HTML escaping via `sed`.
 

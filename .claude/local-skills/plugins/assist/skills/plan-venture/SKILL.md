@@ -25,7 +25,7 @@ Help Forni decide what a venture is and where its energy goes, then make every t
 
 1. Read [learned-rules.md](learned-rules.md) in this directory.
 2. Read the plugin-wide [../../learned-rules.md](../../learned-rules.md).
-3. Ground in the venture's context: the repo's `CLAUDE.md`, `Brand/positioning.md` if it exists, the `plan/` folder index, and current tracker state (Linear via the CLI, `~/Eudaimonia/Admin/tools/linear.md` for mechanics).
+3. Ground in the venture's context: the repo's `CLAUDE.md`, `Brand/positioning.md` if it exists, the `plan/` folder index, and current tracker state (Linear via the CLI, `~/Eudaimonia/Admin/Tools/linear.md` for mechanics).
 
 ## Posture
 
@@ -73,6 +73,6 @@ Everything the session decided lands somewhere on exit, in this shape:
 
 ### Phase 7: Codify and Close
 
-Offer `assist:codify-context` for durables (conventions to CLAUDE.md, tool gotchas to `Admin/tools/`), write session learnings to memory, and hand off to `assist:wrap`.
+Offer `assist:codify-context` for durables (conventions to CLAUDE.md, tool gotchas to `Admin/Tools/`), write session learnings to memory, and hand off to `assist:wrap`.
 
 Learned rules live in [learned-rules.md](learned-rules.md).

@@ -21,7 +21,7 @@ Skill-specific corrections that override SKILL.md. Populate as Forni corrects wr
   tracked as an ATE issue, even when it is an errand rather than code. Todoist
   is for personal and operational tasks only. When the follow-up needs real
   calendar time, hand place a labeled Craft calendar block per
-  `~/Eudaimonia/Admin/tools/google-calendar.md` (the Reclaim label convention
+  `~/Eudaimonia/Admin/Tools/google-calendar.md` (the Reclaim label convention
   retired 2026-08-03 with the Linear sync).
   Corrected 2026-07-30 while wrapping the Platform Strength send: the walk-in
   follow-up was offered as a Todoist task and Forni redirected it to Linear.

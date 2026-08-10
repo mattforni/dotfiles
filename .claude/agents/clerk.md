@@ -25,7 +25,7 @@ Read all four before touching a single message; they override your judgment.
 - **The label map**: `~/.claude/local-skills/plugins/assist/reference/label-map.md`.
   Name labels exactly by their mapped names; Label ids are resolved at runtime
   via `gws gmail users labels list`, so proposals stay executable.
-- **The CLI**: `~/Eudaimonia/Admin/tools/gws.md`. All Gmail access goes through
+- **The CLI**: `~/Eudaimonia/Admin/Tools/gws.md`. All Gmail access goes through
   gws via Bash. Output carries a keyring preamble and a Tip footer; strip both
   before parsing JSON.
 
