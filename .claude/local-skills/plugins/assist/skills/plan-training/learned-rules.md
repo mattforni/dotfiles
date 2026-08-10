@@ -10,12 +10,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
 - **Sun Hatha is opportunistic.** In town means go, traveling means skip without guilt; `n/a` in retros when away, never a miss. Week planning slides to 11:00 on Hatha mornings.
 - **Heel guardrail: intensity is the trigger, not volume.** The heel flares after hard efforts (the 6:27 DRC mile, 2026-08-04), not easy miles. Conversational is the default; at most one hard effort a week; skip hard efforts entirely the week after any flare; any heel signal drops the next hard or trail effort. PT is a named focus of the block, form is the fix.
 - **Scale trend is directional.** Sunday reads only for the log; single reads are noise. A 2 to 3 lb rebound through mid August is glycogen and water, not failure; the trend restarts from the first standard Sunday reads.
-
-## Strength Programming
-
-- **Claude programs the strength work; Fitbod retired 2026-08-05** (reversible). Template and progression rules live in the block doc. Forni owns form and the in gym call; the skill owns targets and adjustments. Core appears in every session, not just Friday.
-- **Progression is double progression.** Top of the rep range on all sets earns about 5 lb (upper) or 10 lb (lower) and a reset to the bottom of the range. Two stalled weeks on a lift proposes a swap or back off, never silent pressing.
-- **Template refreshes are presented, never imposed.** Every 4 to 6 weeks (block doc checkpoints), rotate variants inside the same emphases and show Forni before writing.
+- **Fitbod programs the strength work; do not program it here.** Three sessions a week, core every session, emphasis on upper body and core, lower body on maintenance after the run block. The block doc holds the emphasis and the session count, nothing more. A short lived experiment in Claude owned programming ran 2026-08-05 to 2026-08-10 and was retired as a distraction; do not propose reviving it, and do not offer to build tooling around lift delivery or logging.
 
 ## Calendar Mechanics
 
@@ -43,7 +38,7 @@ Training specific rules tied to current life shape. Read on every invocation. St
 
 ## Reference Library
 
-- **Settled research lives in `reference/` beside this skill; consult it before re researching.** `reference/tapering.md` (2026-07-19) is archived FPL material; still authoritative if a race block returns. The `coach` agent (`~/.claude/agents/coach.md`) reads the same block doc and references; delegate progression analysis, retro reads, and load questions to it.
+- **Settled research lives in `reference/` beside this skill; consult it before re researching.** `reference/tapering.md` (2026-07-19) is archived FPL material; still authoritative if a race block returns. The `coach` agent (`~/.claude/agents/coach.md`) reads the same block doc and references; delegate retro reads and load questions to it.
 
 ## Weekly Summary
 
