@@ -162,7 +162,7 @@ Prioritize the full task slate, work first, then place the survivors.
 
 **The work slate leads.** The groomer's decision slate (dispatched at the close of Review Week, carried in the planner's brief) is the first pass: walk its Decisions, settle the cycle, and carry the placeable issues into slotting. When groomer failed or returned nothing, pull the active cycle inline (`env -u LINEAR_API_KEY linear --workspace atelic issue query --team ATE --cycle active --json`) as the fallback.
 
-**Work maps INTO the standing deep work and work block calendar series**, not into freshly minted Craft block events (the skeleton series exist as of 2026-08-09). Assign each due dated issue to specific standing blocks sized by its estimate (points are hours), splitting an issue across blocks when no single one fits, and keep Linear due dates honest with where the work actually lands. Only when the week's work genuinely exceeds the standing series does a one off 🛠️ Craft block get proposed, through the same decision gate as everything else. Title and splitting conventions live in `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds). The Reclaim Linear sync retired 2026-08-03. Capacity overrides are Forni's to make: when he keeps an overcommitted slate, surface the arithmetic (estimate hours against standing block hours) rather than relitigating the cut (2026-08-09).
+**Work maps INTO the standing deep work and work block calendar series**, not into freshly minted Craft block events (the skeleton series exist as of 2026-08-09). Assign each due dated issue to specific standing blocks sized by its estimate (points are hours), splitting an issue across blocks when no single one fits, and keep Linear due dates honest with where the work actually lands. Only when the week's work genuinely exceeds the standing series does a one off 🛠️ Craft block get proposed, through the same decision gate as everything else. Title and splitting conventions live in `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds). Linear issues carry the same 🧠 Sharp / ⚖️ Medium / 🍃 Light cognitive load labels as Todoist tasks, so the estimate sizes the block and the label picks the time of day, exactly as it does on the personal side. The Reclaim Linear sync retired 2026-08-03. Capacity overrides are Forni's to make: when he keeps an overcommitted slate, surface the arithmetic (estimate hours against standing block hours) rather than relitigating the cut (2026-08-09).
 
 **Then Todoist.** Fetch tasks using the **Schedule filter**. The MCP cannot resolve the saved filter by ID, so pass its raw query to `find-tasks`: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday` — overdue tasks, non recurring non scheduled tasks due before next Monday, plus Scheduled labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
 
@@ -177,7 +177,7 @@ Prioritize the full task slate, work first, then place the survivors.
 
 - The task's priority and due date
 - Available open slots in the calendar
-- Context: deep work tasks go in morning blocks, admin in smaller gaps
+- **Cognitive load, which decides the time of day**: 🧠 Sharp lands first thing in a protected morning, ⚖️ Medium midday, 🍃 Light late afternoon on low fuel. The estimate decides how long the block is; the label decides when it sits (see Slotting Rules in the plugin learned-rules.md)
 - Location: if a task requires being somewhere specific, match it to the right day
 
 Present the proposed slots as a board with corrections invited (the board pattern supersedes the one at a time walk; see Learned Rules). Forni can, per task:
@@ -190,7 +190,7 @@ Present the proposed slots as a board with corrections invited (the board patter
 **Todoist tasks are scheduled via Todoist, not by creating Google Calendar events.** To slot a Todoist task:
 
 1. Use `reschedule-tasks` to set the date and time (e.g., `2026-03-31T07:00:00`)
-2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`), add the `⏰ Scheduled` label, set exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and move the task out of Inbox into its pillar project (see Slotting Rules in the plugin learned-rules.md)
+2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`), add the `⏰ Scheduled` label, set exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), and move the task out of Inbox into its pillar project (see Slotting Rules in the plugin learned-rules.md)
 3. The `⏰ Scheduled` label removes the task from the Schedule filter so it does not resurface during prioritization
 4. Todoist's calendar integration automatically shows scheduled tasks on Google Calendar
 
@@ -198,7 +198,7 @@ Google Calendar is still used directly for non task events: meetings, transition
 
 **Recurring catch up/call tasks**: When a recurring task (e.g., "📱 Ryan Bruno", every 2 months) gets slotted:
 
-1. Create a new one off Todoist task with the specific date/time, duration, the `⏰ Scheduled` label, exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and its pillar project
+1. Create a new one off Todoist task with the specific date/time, duration, the `⏰ Scheduled` label, exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), and its pillar project
 2. Complete the recurring task so the next occurrence auto generates on its cycle
 3. The one off task is the reminder for this week; the recurrence handles the next one
 
@@ -242,7 +242,7 @@ Slot a specific task or event into the week.
 3. Identify available slots that fit the duration
 4. Present options via AskUserQuestion
 5. Slot into the chosen time:
-   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration`, add the `⏰ Scheduled` label, set exactly one effort label (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy), and move the task out of Inbox into its pillar project. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
+   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration`, add the `⏰ Scheduled` label, set exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), and move the task out of Inbox into its pillar project. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
    - **If it is a non task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move

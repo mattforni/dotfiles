@@ -36,9 +36,13 @@ The email routing rule sets (Sender Rules, Topic Rules, Subject Rules, Star Sema
 
   **Why:** Codified 2026-08-02 (W32 planning). Forni: "let's try to do everything that's like deep work, things that require me to think hard or to have uninterrupted time, into the morning slots." This REVERSES the 2026-05-18 morning admin rule, which belonged to the Zero W2 era; do not resurrect it.
 
-  **How to apply:** During slotting, classify each task by cognitive load (the 1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy labels are the signal): Tough goes to mornings, Easy to afternoons, Middlest by judgment. Reclaim work blocks follow the same shape via due dates and block moves.
+  **How to apply:** During slotting, classify each task by cognitive load (the 🧠 Sharp / ⚖️ Medium / 🍃 Light labels are the signal): Sharp goes first thing into a protected morning, Medium to midday, Light to late afternoon. Reclaim work blocks follow the same shape via due dates and block moves.
 
-- **Every slotted task carries an effort label and a pillar project.** When slotting, set one of 1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy by effort, and move the task out of Inbox into its pillar project (🍏 Constitution, 🧠 Contemplation, 🤝 Community, 🛠️ Craft). Codified 2026-08-02 after a slotting pass left both off.
+- **Every slotted item carries a cognitive load label and a pillar project.** When slotting, set exactly one of 🧠 Sharp / ⚖️ Medium / 🍃 Light, and move the task out of Inbox into its pillar project (🍏 Constitution, 🧠 Contemplation, 🤝 Community, 🛠️ Craft). Codified 2026-08-02 after a slotting pass left both off.
+
+- **The cognitive load label grades how sharp Forni has to be, never how long the work takes.** 🧠 Sharp is novel thinking, design, writing that matters, anything with stakes. ⚖️ Medium is known work done with attention, no invention required. 🍃 Light is mechanical: admin, errands, follow ups. The label is deliberately independent of the estimate (Linear points stay a linear scale where one point is one hour; Todoist keeps its `duration` field), and the two decide placement together: the estimate says how long the block is, the label says when in the day it lands. The same three labels exist in Todoist and in Linear (team ATE, `atelic` workspace), so personal and work items share one vocabulary. Full scale in `~/Eudaimonia/Admin/tools/todoist.md`.
+
+  **Renamed 2026-08-10.** The old effort scale (1️⃣ Tough / 2️⃣ Middlest / 3️⃣ Easy) graded difficulty; the new scale grades cognitive load. Todoist labels were renamed in place so existing tasks carried automatically; Linear's three were created fresh at team level. The old names are historical and should not appear in new writing.
 
 - **Never destroy contact info when retitling a task.** A bare email address or phone number as a task title IS the payload; a rename must carry it into the description or a mailto link in the title. Codified 2026-08-02 after a retitle stripped an email address and left the task unactionable.
 
