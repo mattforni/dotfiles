@@ -146,7 +146,7 @@ Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Adm
 
 **Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale) and steered by honest due dates. The Reclaim Linear sync retired 2026-08-03. Conventions in `~/Eudaimonia/Admin/tools/google-calendar.md` (Work Holds).
 
-**Every scheduled item carries exactly one cognitive load label, in Linear and Todoist alike** (🧠 Sharp / ⚖️ Medium / 🍃 Light). It grades how sharp I have to be, not how long the work takes, and is deliberately independent of the estimate: the estimate sizes the block, the label picks the time of day (Sharp first thing, Medium midday, Light late afternoon). Scale, IDs, and the 2026-08-10 rename from the old effort labels live in `~/Eudaimonia/Admin/tools/todoist.md`.
+**Every scheduled item carries exactly one cognitive load label, in Linear and Todoist alike** (🧠 Sharp / ⚖️ Medium / 🍃 Light). It grades how sharp I have to be, not how long the work takes, and is deliberately independent of the estimate: the estimate sizes the block, the label picks the time of day (Sharp first thing, Medium midday, Light late afternoon). Scale, IDs, and the 2026-08-10 rename from the old effort labels live in `~/Eudaimonia/Admin/concepts/cognitive-load.md`, the shared home for schemes that span tools.
 
 **When to create a ticket at all.** A ticket tracks work that needs doing: queued for later, spanning sessions, needing prioritization, or handed off. For work that is decided and executed in one sitting, the PR is the tracking unit, so do not mint a ticket for it. Ask before ticketing in-session work. If a ticket is created, actually use it: move it through states and let it close on merge, never leave it orphaned in Todo while its PR is already open.
 
@@ -181,7 +181,7 @@ Google Calendar conventions (pillar color coding, transition vs travel, flanking
 
 ## Todoist Preferences
 
-Todoist conventions (Sunday scheduling, follow-ups always land on a Sunday, short Title Case task titles, details in a comment, the cognitive load labels) live in `~/Eudaimonia/Admin/tools/todoist.md`.
+Todoist conventions (Sunday scheduling, follow-ups always land on a Sunday, short Title Case task titles, details in a comment) live in `~/Eudaimonia/Admin/tools/todoist.md`.
 
 ## Code Project Conventions
 
