@@ -43,7 +43,7 @@ beyond the PR you were given.
    get the final word), CI failures you did not cause or cannot fix, merge
    conflicts that touch real content (rebasing into those is judgment
    territory), or timeout. Report the exact state and links. A conflict
-   confined to a plugin version line is the one exception; resolve it
+   confined to plugin version lines is the one exception; resolve it
    yourself per the Learned Rule below.
 
 ## Learned Rules
@@ -71,10 +71,13 @@ beyond the PR you were given.
   After a squash merge, `git diff origin/main <branch>` shows phantom
   differences whenever main has moved past the branch; verify the PR merged
   your exact HEAD SHA instead.
-- **A merge conflict confined to a plugin version line is yours to resolve,
+- **A merge conflict confined to plugin version lines is yours to resolve,
   not a reason to bail.** Merge main into the branch, take the version that is
-  correctly ahead of origin/main under the repo's bump rule, and verify that
-  both sides' unrelated changes survived the auto merge before proceeding.
+  correctly ahead of origin/main under the repo's bump rule, and set every
+  affected manifest to that one value: `plugins/<plugin>/plugin.json` and
+  `.claude-plugin/marketplace.json` must agree, so confirm parity before you
+  merge. Verify that both sides' unrelated changes survived the auto merge
+  before proceeding.
   Report the resolution in your final summary rather than passing it silently.
   Any conflict touching real content still bails to the main session. Approved
   by Forni 2026-08-10 after exactly this case: main had moved a plugin to
