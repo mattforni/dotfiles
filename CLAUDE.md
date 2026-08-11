@@ -40,13 +40,25 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 
 ### Primary Configuration Files
 
-- `.bashrc` - Main bash configuration (sources aliases and functions)
-- `.zshrc` - Zsh configuration
-- `.profile` - General shell profile
-- `.bash_profile` - Bash-specific profile
+- `.zshrc` - Zsh configuration, and the only shell rc file. It sources `.aliases` and `.functions`
 - `.aliases` - Command aliases
 - `.functions` - Shell functions
 - `.gitconfig` - Git configuration with extensive aliases
+
+**There is no bash configuration, deliberately.** The login shell is zsh, and
+`.bashrc`, `.bash_profile`, `.profile` and `.bashrc.go` were removed 2026-08-11.
+They were dead: `.bashrc` was a stock Debian skeleton whose Linux-specific body
+(`debian_chroot`, `lesspipe`, `dircolors`, `notify-send`, `/etc/bash_completion`)
+is inert on macOS, and it sourced `~/.bashrc.aliases`, `~/.bashrc.functions` and
+`~/.bashrc.local`, none of which have ever existed, so it would not have loaded
+your aliases or functions even if bash ran. `.profile` is not read by zsh at all,
+and its only unique content started postgres and redis, which already run as
+persistent brew services. `.bashrc.go` was sourced by nothing and pointed
+`GOROOT` at the Intel homebrew path.
+
+Headless and non-interactive shells are unaffected, since `.bashrc` returned
+early on a non-interactive prompt anyway. If bash config is ever wanted again,
+write it fresh for macOS rather than restoring the skeleton.
 
 ### Development Environment
 
@@ -115,8 +127,7 @@ OAuth `client_secret.json` files for gws sync across machines via GCP Secret Man
 .
 ├── .aliases          # Command aliases
 ├── .functions        # Shell functions
-├── .bashrc          # Main bash config
-├── .zshrc           # Zsh configuration
+├── .zshrc           # Zsh configuration (the only shell rc)
 ├── .gitconfig       # Git aliases and settings
 ├── .vimrc           # Vim configuration
 ├── ide/             # Antigravity settings + curated extension list

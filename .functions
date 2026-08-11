@@ -1,8 +1,10 @@
-## ~/.bashrc.functions: included by ~/.bashrc to make life easier
+## ~/.functions: sourced by ~/.zshrc to make life easier
 ## General functions
-
-## ~/.bashrc.functions: included by ~/.bashrc to make life easier
-## General functions
+##
+## Read by zsh only. It must be zsh clean, which is not the same as bash clean:
+## avoid the zsh special names (path, status, prompt, cdpath, manpath, dirstack,
+## argv), since `local path=...` silently clobbers command lookup. bin/lint/shell
+## runs `zsh -n` over this file for exactly that reason.
 
 # FINDG
 # Function to find files matching a particular pattern and then
@@ -326,11 +328,8 @@ sync-dots() {
   # edits already land in the repo without syncing.
   SYNC_FILES=(
     ".aliases"
-    ".bashrc"
-    ".bash_profile"
     ".functions"
     ".gitconfig"
-    ".profile"
     ".screenrc"
     ".vimrc"
     ".zshrc"
