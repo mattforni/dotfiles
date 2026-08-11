@@ -4,7 +4,6 @@ eamodio.gitlens
 esbenp.prettier-vscode
 github.vscode-github-actions
 golang.go
-hridoy.rails-snippets
 igoruam.linear-app-extension
 kaiwood.endwise
 karunamurti.haml
@@ -24,4 +23,3 @@ thadeu.vscode-run-rspec-file
 tomoki1207.pdf
 vortizhe.simple-ruby-erb
 vscodevim.vim
-wilfison.haml-boostrap
