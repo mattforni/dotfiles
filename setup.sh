@@ -412,11 +412,15 @@ deploy_merge() {
   local rc=0
 
   DRY_RUN="$DRY_RUN" python3 - "$src" "$dst" <<'PY' || rc=$?
-import json, os, sys
+import json, os, re, sys
 
 src, dst = sys.argv[1], sys.argv[2]
 dry = os.environ.get("DRY_RUN") == "true"
 home = os.environ["HOME"]
+
+# Only a $HOME that starts a path, so $HOMEBREW_PREFIX and friends survive
+# intact. Bare $HOME at the end of a string still counts; $HOMEish does not.
+HOME_TOKEN = re.compile(r"\$HOME(?![0-9A-Za-z_])")
 
 def expand(value):
     """Substitute $HOME the way install_launchagents substitutes {{HOME}}.
@@ -430,7 +434,7 @@ def expand(value):
     apples to apples while keeping the repo portable.
     """
     if isinstance(value, str):
-        return value.replace("$HOME", home)
+        return HOME_TOKEN.sub(home.replace("\\", "\\\\"), value)
     if isinstance(value, dict):
         return {k: expand(v) for k, v in value.items()}
     if isinstance(value, list):
