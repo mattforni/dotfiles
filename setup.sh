@@ -414,7 +414,7 @@ install_launchagents() {
 install_ide_extensions() {
   header "IDE extensions"
 
-  local extensions_file="$DIR/.vscode/extensions.txt"
+  local extensions_file="$DIR/ide/extensions.txt"
   [[ -f "$extensions_file" ]] || return 0
 
   for cli in code cursor; do

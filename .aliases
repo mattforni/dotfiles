@@ -29,8 +29,10 @@ alias docker-clean-all='docker-stop; docker-clean; docker-clean-images'
 alias docker-clean-images='docker rmi $(docker images -a -q)'
 alias docker-stop='docker stop $(docker ps -a -q)'
 
-# VSCode Aliases
-alias ed-vsc-settings='vim ~/.vscode/settings.json'
+# IDE Aliases
+# Antigravity is the only IDE; its user settings live under Application Support,
+# not in a dotfile. Deployed there from ide/settings.json by setup.sh.
+alias ed-ide-settings='vim "$HOME/Library/Application Support/Antigravity IDE/User/settings.json"'
 
 # Navigation Aliases
 alias atelic="cd ~/Eudaimonia/Craft/atelic"

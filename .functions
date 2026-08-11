@@ -334,8 +334,6 @@ sync-dots() {
     ".screenrc"
     ".vimrc"
     ".zshrc"
-    ".vscode/settings.json"
-    ".vscode/extensions.txt"
     ".claude/plugins"
     ".claude/skills"
     ".claude/settings.json"

@@ -52,7 +52,8 @@ Run `./setup.sh` to install homebase to the home directory. The script will:
 
 - `.vimrc` - Vim editor configuration
 - `.screenrc` - GNU Screen configuration
-- `.vscode/settings.json` - VS Code settings (Ruby-focused with Rubocop integration)
+- `ide/settings.json` - Antigravity user settings, deployed to `~/Library/Application Support/Antigravity IDE/User/settings.json`
+- `ide/extensions.txt` - Curated extension list, read out of the repo by `setup.sh` and never deployed to `$HOME`
 
 ## Common Commands and Aliases
 
@@ -118,7 +119,7 @@ OAuth `client_secret.json` files for gws sync across machines via GCP Secret Man
 ├── .zshrc           # Zsh configuration
 ├── .gitconfig       # Git aliases and settings
 ├── .vimrc           # Vim configuration
-├── .vscode/         # VS Code settings
+├── ide/             # Antigravity settings + curated extension list
 ├── .claude/         # Claude Code skills, commands, and settings
 ├── bin/             # Custom scripts
 │   └── checkout-branch.sh  # Git branch checkout by number
@@ -183,7 +184,7 @@ Use `sync-dots` to pull changes from your home directory back to this repository
 - `sync-dots` - Sync all tracked files from `$HOME` to repository
 - `sync-dots -d` - Dry run to see what would be synced without making changes
 
-The sync function handles both files and directories automatically and includes: .aliases, .bashrc, .functions, .gitconfig, .vimrc, .vscode/, .claude/, bin/, and more.
+The sync function handles both files and directories automatically. It deliberately omits anything symlinked into `$HOME`, since edits there already land in the repo.
 
 ## Custom Git Branch Checkout
 
