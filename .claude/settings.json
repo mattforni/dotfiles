@@ -56,7 +56,6 @@
       "Bash(pnpm:*)",
       "Bash(python3:*)",
       "Bash(railway:*)",
-      "Bash(rbenv:*)",
       "Bash(rf)",
       "Bash(rm:*)",
       "Bash(rsvg-convert:*)",

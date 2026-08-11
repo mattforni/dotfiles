@@ -176,38 +176,18 @@ install_brew_packages() {
   fi
 }
 
-setup_node() {
-  header "Node setup"
+# Node and Ruby, one manager. mise (jdx/mise) replaced fnm and rbenv on
+# 2026-08-11; versions are pinned in mise/config.toml, which the reconciler
+# deploys to ~/.config/mise/config.toml. mise reads the same per-project
+# .node-version and .ruby-version files the old pair did.
+#
+# Named for what it does rather than for the tool, because "mise" already means
+# the morning prep routine in this repo (bin/run-mise, the assist:mise skill).
+setup_runtimes() {
+  header "Runtimes"
 
-  if ! command -v fnm &>/dev/null; then
-    warn "fnm not found, skipping Node setup"
-    return 0
-  fi
-
-  eval "$(fnm env)"
-  local lts_installed
-  lts_installed=$(fnm ls | grep -c "lts" || true)
-
-  if [[ "$lts_installed" -gt 0 ]] && [[ "$FORCE" != true ]]; then
-    info "Node $(node --version) active"
-  else
-    info "Installing Node LTS via fnm..."
-    fnm install --lts || return 1
-    fnm default lts-latest || return 1
-    SUMMARY+=("Node LTS installed via fnm")
-    info "Node $(node --version) active"
-  fi
-}
-
-# Default Ruby. rbenv reads per-project .ruby-version files, so this is just the
-# global fallback; bump it when the projects you work in move forward.
-RUBY_DEFAULT_VERSION="3.4.7"
-
-setup_ruby() {
-  header "Ruby setup"
-
-  # RVM has been replaced by rbenv. Remove any lingering RVM install so its
-  # shims and PATH entries can't shadow rbenv. Idempotent: a no-op once gone.
+  # RVM was replaced by rbenv, and rbenv by mise. Remove any lingering RVM so
+  # its shims cannot shadow anything. Idempotent: a no-op once gone.
   if [[ -d "$HOME/.rvm" ]]; then
     info "Removing legacy RVM install (~/.rvm)..."
     rm -rf "$HOME/.rvm"
@@ -215,26 +195,41 @@ setup_ruby() {
   fi
   rm -f "$HOME/.rvmrc"
 
-  if ! command -v rbenv &>/dev/null; then
-    warn "rbenv not found, skipping Ruby setup"
+  if ! command -v mise &>/dev/null; then
+    warn "mise not found, skipping runtime setup"
     return 0
   fi
 
-  eval "$(rbenv init - bash)"
-
-  if rbenv versions --bare | grep -qx "$RUBY_DEFAULT_VERSION" && [[ "$FORCE" != true ]]; then
-    info "Ruby $RUBY_DEFAULT_VERSION already installed"
-  else
-    info "Installing Ruby $RUBY_DEFAULT_VERSION via rbenv (compiles from source, slow)..."
-    # --force recompiles even if present, so -f genuinely reinstalls (mirrors setup_node).
-    local install_opt="--skip-existing"
-    [[ "$FORCE" == true ]] && install_opt="--force"
-    rbenv install "$install_opt" "$RUBY_DEFAULT_VERSION" || return 1
-    SUMMARY+=("Ruby $RUBY_DEFAULT_VERSION installed via rbenv")
+  # ~/.rbenv/shims is prepended to PATH by anything that still sources an rbenv
+  # init, and its shims would win over mise's. Flag rather than delete: the
+  # directory holds compiled rubies that took a long time to build, and removing
+  # them is the user's call.
+  if [[ -d "$HOME/.rbenv/shims" ]]; then
+    warn "$HOME/.rbenv still present; its shims can shadow mise"
+    warn "  when you are satisfied mise works: brew uninstall rbenv ruby-build fnm && rm -rf \"\$HOME/.rbenv\""
   fi
 
-  rbenv global "$RUBY_DEFAULT_VERSION" || return 1
-  info "Ruby $(rbenv exec ruby --version | awk '{print $2}') is the global default"
+  local install_args=(install)
+  [[ "$FORCE" == true ]] && install_args+=(--force)
+
+  info "Installing runtimes declared in ~/.config/mise/config.toml..."
+  if ! mise "${install_args[@]}"; then
+    error "mise install failed"
+    return 1
+  fi
+
+  # Put the shims on PATH for the rest of this script. install_npm_globals needs
+  # npm, and setup.sh is not an interactive shell, so the `mise activate zsh` in
+  # .zshrc does not apply here. This is the counterpart of the
+  # `eval "$(fnm env)"` the old node phase did.
+  eval "$(mise activate bash --shims)"
+  hash -r
+
+  local node_version ruby_version
+  node_version=$(mise exec -- node --version 2>/dev/null || echo "unavailable")
+  ruby_version=$(mise exec -- ruby --version 2>/dev/null | awk '{print $2}' || echo "unavailable")
+  info "node $node_version, ruby $ruby_version"
+  SUMMARY+=("Runtimes: node $node_version, ruby $ruby_version")
 }
 
 install_npm_globals() {
@@ -1161,18 +1156,21 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   if [[ "$DRY_RUN" == true ]]; then
     # A dry run is about $HOME: show every create, replace and delete the
     # reconciler would make, and do nothing else. The install phases are skipped
-    # outright rather than simulated, because brew, npm and rbenv have no dry
+    # outright rather than simulated, because brew, npm and mise have no dry
     # run worth trusting and "touch nothing" has to mean it.
     warn "Dry run: installing nothing. Home changes only."
     run_phase reconcile_home
   else
     run_phase setup_prerequisites
     run_phase install_brew_packages
-    run_phase setup_node
-    run_phase setup_ruby
+    # Order matters from here. The reconciler deploys mise/config.toml, which
+    # setup_runtimes reads; setup_runtimes puts node on PATH, which npm globals
+    # need; and the reconciler deploys the .claude tree that install_claude_
+    # plugins and install_mcp_servers read out of $HOME.
+    run_phase reconcile_home
+    run_phase setup_runtimes
     run_phase install_npm_globals
     run_phase setup_agent_browser
-    run_phase reconcile_home
     run_phase install_launchagents
     run_phase install_ide_extensions
     run_phase install_claude_plugins

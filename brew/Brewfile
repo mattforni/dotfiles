@@ -29,12 +29,10 @@ brew "cmake"
 brew "make"
 brew "maven"
 brew "python@3.12"
-brew "rbenv"
-brew "ruby-build"
 
 # Runtime & package managers
+brew "mise" # Runtime version manager; replaced fnm and rbenv 2026-08-11
 brew "bun"
-brew "fnm"
 brew "pnpm"
 
 # Data & services

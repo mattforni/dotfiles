@@ -49,8 +49,12 @@ done
 export EDITOR=vim
 eval "$(fzf --zsh)"
 
-# rbenv: shims + auto-switch Ruby from .ruby-version files
-command -v rbenv &>/dev/null && eval "$(rbenv init - zsh)"
+# mise: shims and auto-switching for node and ruby, reading the same
+# .node-version and .ruby-version files fnm and rbenv did. Replaced both on
+# 2026-08-11. Global fallback versions live in ~/.config/mise/config.toml.
+#
+# This is the runtime version manager (jdx/mise), not the assist:mise skill.
+command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
 export PATH="$HOME/.local/bin:$PATH"
 

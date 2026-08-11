@@ -78,6 +78,10 @@ DEPLOY_TABLE=(
   # IDE. Antigravity keeps user settings under Application Support rather than
   # in a dotfile, and rewrites the file whenever a setting changes in the UI.
   "merge|ide/settings.json|$HOME/Library/Application Support/Antigravity IDE/User/settings.json"
+
+  # Runtime versions. mise reads this only when the current directory declares
+  # nothing of its own.
+  "link|mise/config.toml|$HOME/.config/mise/config.toml"
 )
 
 # One time cleanup. Older setup.sh runs rsynced the whole repo into $HOME with
