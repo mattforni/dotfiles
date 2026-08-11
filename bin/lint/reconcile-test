@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# End to end test for reconcile_home against a throwaway $HOME.
+#
+# The reconciler is the one part of setup.sh that can leave you without a
+# working shell, and it refuses to run from a worktree, so it cannot be
+# exercised for real before merging. This clones the repo to a scratch path
+# (a real clone, not a worktree, so the refusal does not fire), seeds a fake
+# $HOME with the exact conditions the reconciler has to handle, then sources
+# setup.sh and calls the phase directly.
+#
+# Checks: fresh link, stale-copy migration, refusal on a foreign file, legacy
+# prune, merge preserving app-owned keys, prune on drop-out, and idempotence.
+set -uo pipefail
+
+REPO=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) \
+  || { echo "not in a git repo"; exit 1; }
+
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+CLONE="$WORK/homebase"
+FAKE="$WORK/home"
+
+pass=0; fail=0
+ok()   { printf '  \033[0;32mok\033[0m   %s\n' "$1"; pass=$((pass+1)); }
+bad()  { printf '  \033[0;31mFAIL\033[0m %s\n' "$1"; fail=$((fail+1)); }
+check(){ if eval "$2"; then ok "$1"; else bad "$1"; fi; }
+
+echo "Cloning to a scratch path (a real clone, so the worktree guard stays quiet)"
+git clone --quiet --no-hardlinks "$REPO" "$CLONE" || exit 1
+git -C "$CLONE" checkout --quiet -B test HEAD || exit 1
+
+# A clone carries committed state only. Overlay the working tree so the test
+# exercises the setup.sh you are editing, not the last commit. Without this the
+# clone runs an older setup.sh, which dispatches every install phase for real.
+# No trailing slash on the exclude: in a linked worktree .git is a FILE, and a
+# '.git/' pattern matches directories only, so rsync would try to write that
+# file over the clone's .git directory.
+rsync -a --exclude '.git' "$REPO"/ "$CLONE"/ || exit 1
+
+mkdir -p "$FAKE"
+
+# --- seed the conditions ------------------------------------------------------
+# A stale copy of a tracked directory: right files, wrong content, one missing.
+mkdir -p "$FAKE/.claude/agents"
+echo "stale content" > "$FAKE/.claude/agents/runner.md"
+
+# A directory holding a file homebase has never tracked. Must be refused.
+mkdir -p "$FAKE/.claude/commands"
+echo "mine" > "$FAKE/.claude/commands/my-own-command.md"
+
+# A legacy path an older run rsynced in and never removed.
+mkdir -p "$FAKE/docs/plugins"
+echo "old" > "$FAKE/docs/plugins/sdlc.md"
+
+# An app-owned settings file carrying keys the repo does not declare.
+mkdir -p "$FAKE/.claude"
+cat > "$FAKE/.claude/settings.json" <<'JSON'
+{ "theme": "dark", "effortLevel": "high", "permissions": { "allow": ["Bash(ls:*)"] } }
+JSON
+
+# --- run ----------------------------------------------------------------------
+echo "Running reconcile_home against $FAKE"
+# Export rather than using a `VAR=x source ...` prefix. That form creates a
+# temporary binding which is torn down when source returns, taking setup.sh's
+# own DRY_RUN assignment with it and leaving the variable unbound.
+export HOME="$FAKE"
+# shellcheck source=/dev/null
+source "$CLONE/setup.sh" >"$WORK/run1.log" 2>&1
+reconcile_home >>"$WORK/run1.log" 2>&1
+rc1=$?
+
+echo
+echo "Assertions"
+check "fresh path is symlinked into the repo" \
+  '[[ -L "$FAKE/.zshrc" && "$(readlink "$FAKE/.zshrc")" == "$CLONE/.zshrc" ]]'
+check "stale copy was migrated to a symlink" \
+  '[[ -L "$FAKE/.claude/agents" ]]'
+check "migrated path now resolves to repo content" \
+  '[[ -f "$FAKE/.claude/agents/runner.md" ]] && ! grep -q "stale content" "$FAKE/.claude/agents/runner.md"'
+check "directory with an untracked file was REFUSED" \
+  '[[ ! -L "$FAKE/.claude/commands" ]] && [[ -f "$FAKE/.claude/commands/my-own-command.md" ]]'
+check "refusal made the phase fail" "[[ $rc1 -ne 0 ]]"
+check "legacy path was pruned" \
+  '[[ ! -e "$FAKE/docs" ]]'
+check "merge kept the app-owned keys" \
+  'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"theme\"]==\"dark\" and d[\"effortLevel\"]==\"high\""'
+check "merge replaced the repo-owned key" \
+  'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"permissions\"][\"allow\"]!=[\"Bash(ls:*)\"]"'
+check "manifest was written" \
+  '[[ -s "$FAKE/.local/state/homebase/manifest" ]]'
+check "\$HOME/.env.local is never touched" \
+  '[[ ! -e "$FAKE/.env.local" ]]'
+
+# --- idempotence --------------------------------------------------------------
+cp "$FAKE/.local/state/homebase/manifest" "$WORK/manifest.1"
+reconcile_home >"$WORK/run2.log" 2>&1
+check "second run makes no new changes" \
+  '! grep -qE "^.\[0;32m\[\+\].\[0m (linked|copied|merged|removed)" "$WORK/run2.log"'
+check "manifest is stable across runs" \
+  'diff -q "$WORK/manifest.1" "$FAKE/.local/state/homebase/manifest" >/dev/null'
+
+# --- prune on drop-out --------------------------------------------------------
+# Drop a path from the table and confirm the next run removes what it deployed.
+ln -sfn "$CLONE/.screenrc" "$FAKE/.screenrc"
+grep -v '"link|.screenrc"' "$CLONE/bin/lib/deploy-table.sh" > "$WORK/table-dropped.sh"
+cp "$WORK/table-dropped.sh" "$CLONE/bin/lib/deploy-table.sh"
+# shellcheck source=/dev/null
+source "$CLONE/setup.sh" >/dev/null 2>&1
+reconcile_home >"$WORK/run3.log" 2>&1
+check "a path dropped from the table is pruned from \$HOME" \
+  '[[ ! -e "$FAKE/.screenrc" ]]'
+
+echo
+printf 'pass %d, fail %d\n' "$pass" "$fail"
+[[ $fail -eq 0 ]]

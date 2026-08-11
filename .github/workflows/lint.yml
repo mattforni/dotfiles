@@ -35,3 +35,10 @@ jobs:
       # plus bash -n plus zsh -n, and is the same one .githooks/pre-commit calls.
       - name: Lint shell
         run: ./bin/lint/shell
+
+      # The reconciler is the one part of setup.sh that can leave you without a
+      # working shell, and it refuses to run from a worktree, so it cannot be
+      # exercised for real before merging. This clones to a scratch path and
+      # runs it against a throwaway $HOME.
+      - name: Test home reconciliation
+        run: ./bin/lint/reconcile-test

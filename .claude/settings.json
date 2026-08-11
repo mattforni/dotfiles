@@ -68,7 +68,6 @@
       "Bash(source:*)",
       "Bash(sqlite3:*)",
       "Bash(supabase:*)",
-      "Bash(sync-dots:*)",
       "Bash(tail:*)",
       "Bash(test:*)",
       "Bash(timeout:*)",

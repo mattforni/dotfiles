@@ -174,13 +174,13 @@ The desired array supports both stdio and http transports. For http entries that
 
 ## Development Workflow
 
-1. Edit files in this repository
+1. Edit files in this repository. Most configs are symlinked into `$HOME`, so the edit is already live
 2. Test changes locally
-3. Run `./setup.sh` to deploy to home directory
-4. Make changes in `$HOME` as needed
-5. Run `sync-dots` to pull changes back from `$HOME` to repository
-6. Use `git wip` for quick commits during development
-7. For Ruby projects: Rubocop integration is enabled in VS Code settings
+3. Run `./setup.sh` when the deploy table itself changed, or to pick up brew, node and plugin updates
+4. Use `git wip` for quick commits during development
+
+There is no step for copying changes back out of `$HOME`. That was `sync-dots`,
+and it retired when everything human-authored became a symlink.
 
 ### Landing Changes: Decide Together
 
@@ -188,14 +188,36 @@ The desired array supports both stdio and http transports. For http entries that
 
 **A direct merge is linted only after the fact, so check `main` afterward.** The lint workflow fires on pull requests and on pushes to `main` alike (it has since the workflow shipped in #40), but nothing gates a direct push: a failing commit lands anyway, `main` goes red, and the breakage stays invisible until someone looks at the Actions run or the next PR inherits it and appears to have caused it. Observed 2026-08-07: `e2c36dcb` landed direct with two `MD034` bare URL errors, `main` sat red for hours, and the breakage surfaced on an unrelated PR whose own diff was clean. After any direct merge, run the relevant check locally (`npx markdownlint-cli2 "*.md"` for prose, the matching linter otherwise), or open the Actions tab and confirm the push's own run went green. When a PR reports a failure in a file it did not touch, suspect inherited breakage before debugging your own diff, and confirm with `git log` on the offending line.
 
-### Syncing
+### How Homebase Reaches `$HOME`
 
-Use `sync-dots` to pull changes from your home directory back to this repository:
+`bin/lib/deploy-table.sh` is the single source of truth. `setup.sh` reconciles
+`$HOME` against it: it creates what is missing, fixes what is wrong, and removes
+what homebase used to deploy and no longer does. `bin/claude-profiles-init.sh`
+sources the same table so the per-profile config dirs cannot drift from it.
 
-- `sync-dots` - Sync all tracked files from `$HOME` to repository
-- `sync-dots -d` - Dry run to see what would be synced without making changes
+Three deploy modes, chosen per path:
 
-The sync function handles both files and directories automatically. It deliberately omits anything symlinked into `$HOME`, since edits there already land in the repo.
+- **link** — symlink into the repo, so a `git pull` is live with no deploy step. Only for paths nothing but a human or git ever writes. **A tool that saves by writing a temp file and renaming over the target replaces the symlink with a regular file**; Claude Code ([#40857](https://github.com/anthropics/claude-code/issues/40857), closed as not planned), VS Code and macOS `sed -i` all do this, with no error. Never link a directory that receives foreign writes, which is why `~/.claude` is listed child by child.
+- **copy** — a tracked file living inside a directory that receives foreign writes. Files only.
+- **merge** — JSON merge by top-level key. Keys the repo declares are replaced; keys it does not are left alone, so Claude Code's `theme` and `effortLevel` and Antigravity's UI toggles survive every run. Removing a key from the repo still removes it downstream.
+
+Removal is what the record at `~/.local/state/homebase/manifest` exists for.
+Without it the script cannot tell a path it placed from one it never touched,
+which is why the old rsync could only ever add. **Nothing is removed unless
+provenance checks out**: every file under the path must be one homebase has
+tracked at some point in git history. Staleness is expected and fine; a file
+homebase never tracked means something else owns the directory, so it is left
+alone with a warning. That guard matters because `setup_auth` writes SSH keys
+and gws credentials into `$HOME` that cannot be regenerated without a terminal.
+
+Inspect before committing to it:
+
+```bash
+./setup.sh --dry-run    # every create, replace and delete; installs nothing
+```
+
+`setup.sh` refuses to reconcile from a git worktree, since the symlinks would
+resolve into a checkout that disappears when the branch merges.
 
 ## Custom Git Branch Checkout
 

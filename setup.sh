@@ -19,10 +19,25 @@ fi
 
 # Parse flags
 FORCE=false
+DRY_RUN=false
+
+usage() {
+  cat <<'USAGE'
+Usage: ./setup.sh [-f|--force] [-n|--dry-run]
+
+  -f, --force     Reinstall or refresh even where something looks up to date
+  -n, --dry-run   Print every change the home reconciliation would make,
+                  removals included, and touch nothing
+  -h, --help      This message
+USAGE
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -f|--force) FORCE=true; shift ;;
-    *) echo "Usage: ./setup.sh [-f|--force]"; exit 1 ;;
+    -n|--dry-run) DRY_RUN=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 1 ;;
   esac
 done
 
@@ -30,20 +45,20 @@ done
 INTERACTIVE=true
 [[ ! -t 0 ]] && INTERACTIVE=false
 
-# Paths (relative to both $DIR and $HOME) that are symlinked instead of rsynced.
-# deploy_homebase excludes them from rsync so the symlinks survive; sync-dots
-# omits them because edits in $HOME already land in the repo.
-LINKED_CONFIGS=(
-  .aliases
-  .functions
-  CLAUDE.md
-  .claude/local-skills
-  .claude/CLAUDE.md
-  .claude/commands
-  .claude/references
-  .claude/statusline.sh
-  bin
-)
+# The deploy table, the legacy cleanup list and the manifest path live in
+# bin/lib/deploy-table.sh so bin/claude-profiles-init.sh can share them rather
+# than keeping its own copy, which is how the lists drifted apart before.
+#
+# Unlike bin/claude, which must still launch Claude Code if its library is
+# unreadable, setup.sh has nothing to do without this one: every phase that
+# touches $HOME reads from it. Failing loudly is the correct degraded behaviour.
+DEPLOY_TABLE_LIB="$DIR/bin/lib/deploy-table.sh"
+if [[ ! -r "$DEPLOY_TABLE_LIB" ]]; then
+  printf 'setup.sh: cannot read %s; there is nothing to deploy without it\n' "$DEPLOY_TABLE_LIB" >&2
+  exit 1
+fi
+# shellcheck source=bin/lib/deploy-table.sh
+. "$DEPLOY_TABLE_LIB"
 
 # Colors & helpers
 GREEN=$'\033[0;32m'
@@ -151,8 +166,12 @@ install_brew_packages() {
   # Re-exec under modern bash if we just installed it
   if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] && [[ -n "$BREW_BASH" ]]; then
     warn "Modern bash now available, re-launching setup..."
+    # Every flag has to be forwarded by hand here. A new flag that is not added
+    # to this list is silently dropped on the first run of a fresh machine,
+    # which is the run where it matters most.
     local reexec_args=("$0")
     [[ "$FORCE" == true ]] && reexec_args+=("--force")
+    [[ "$DRY_RUN" == true ]] && reexec_args+=("--dry-run")
     exec "$BREW_BASH" "${reexec_args[@]}"
   fi
 }
@@ -267,71 +286,284 @@ setup_agent_browser() {
   fi
 }
 
-deploy_homebase() {
-  header "Homebase"
+###############################################################################
+# Home reconciliation
+#
+# Converge $HOME on what DEPLOY_TABLE declares, and remove what homebase used to
+# deploy and no longer does. The record at $MANIFEST is what makes removal
+# possible at all: without it the script cannot tell a path it placed from one
+# it never touched, which is why the old rsync could only ever add.
+#
+# Nothing is removed unless provenance checks out. setup_auth writes SSH keys
+# and gws credentials into $HOME that cannot be regenerated without a terminal,
+# so "only touch what we put there" is load bearing rather than defensive.
+###############################################################################
 
-  # Paths in LINKED_CONFIGS are symlinked (see link_tracked_configs below) so
-  # edits in $HOME go live without re running setup.sh. Exclude them from rsync
-  # so we do not clobber the symlinks with copies.
-  local excluded=(setup.sh README.md .git .github .gitignore .markdownlint.jsonc .markdownlint-cli2.jsonc .coderabbit.yaml brew launchagents)
-  for item in "${LINKED_CONFIGS[@]}"; do
-    excluded+=("$item")
-  done
-  local rsync_opts=('-a' '--force')
-  for item in "${excluded[@]}"; do
-    rsync_opts+=(--exclude="$item")
-  done
-  rsync "${rsync_opts[@]}" "$DIR/" "$HOME/" || return 1
-  info "Homebase synced to \$HOME"
-  SUMMARY+=("Homebase deployed")
+dry() { printf "${YELLOW}[dry]${NC} %s\n" "$1"; }
+
+# Byte equality against the repo source. Used for the copy to symlink migration,
+# where the question is whether replacing a real file loses anything.
+same_content() {
+  if [[ -d "$1" ]]; then
+    diff -rq "$1" "$2" >/dev/null 2>&1
+  else
+    cmp -s "$1" "$2"
+  fi
 }
 
-link_tracked_configs() {
-  header "Tracked config symlinks"
+# Has homebase ever tracked this path? The right question for pruning, because
+# a copy left behind by an older run is expected to be STALE, not identical:
+# ~/plugins still carries sdlc/skills/groom, deleted when it became groom-issues.
+# Byte equality would refuse to clean exactly the paths most in need of it.
+# A file homebase never tracked means something else owns the directory, so
+# refuse. Consulting git history rather than the working tree is what lets this
+# recognise files the repo has since deleted.
+path_is_ours() {
+  local home_path="$1" repo_rel="$2"
+  local history
+  history=$(git -C "$DIR" log --all --pretty=format: --name-only -- "$repo_rel" 2>/dev/null | sed '/^$/d' | sort -u)
+  [[ -n "$history" ]] || return 1
+
+  if [[ -L "$home_path" || -f "$home_path" ]]; then
+    grep -qxF "$repo_rel" <<<"$history"
+    return
+  fi
+
+  local f
+  while IFS= read -r f; do
+    grep -qxF "$repo_rel/$f" <<<"$history" || return 1
+  done < <(cd "$home_path" && find . \( -type f -o -type l \) | sed 's|^\./||')
+  return 0
+}
+
+deploy_link() {
+  local src="$1" dst="$2" rel="$3"
+
+  if [[ -L "$dst" ]]; then
+    local current
+    current=$(readlink "$dst")
+    [[ "$current" == "$src" ]] && return 0
+    if [[ "$DRY_RUN" == true ]]; then dry "relink $rel (currently -> $current)"; return 0; fi
+    rm "$dst" || return 1
+  elif [[ -e "$dst" ]]; then
+    # Promoting a path from copy to symlink on a machine that already has the
+    # copy. Two ways to establish that replacing it loses nothing you authored.
+    #
+    # Byte equality is the obvious one, and the fast path. But it is too strict
+    # on its own: a copy left by an older run is expected to be STALE, and byte
+    # equality refuses exactly the paths most in need of promotion. ~/.claude/
+    # agents had three drifted files and was missing planner.md entirely.
+    #
+    # So fall back to provenance. If every file under the path is one homebase
+    # has tracked at some point, the copy is homebase's own stale output and
+    # only staleness is lost. A single file homebase never tracked means
+    # something else owns the directory, and then we refuse exactly as before.
+    if same_content "$src" "$dst"; then
+      if [[ "$DRY_RUN" == true ]]; then dry "migrate $rel from copy to symlink"; return 0; fi
+      rm -rf "$dst" || return 1
+    elif path_is_ours "$dst" "$rel"; then
+      if [[ "$DRY_RUN" == true ]]; then dry "migrate $rel from STALE copy to symlink"; return 0; fi
+      rm -rf "$dst" || return 1
+      warn "$rel was a stale copy; replaced with a symlink into the repo"
+    else
+      warn "$rel is a real file or directory at $dst holding files homebase never tracked"
+      warn "  refusing to replace it. Diff it, then move or delete it and re run setup.sh"
+      return 1
+    fi
+  else
+    if [[ "$DRY_RUN" == true ]]; then dry "link $rel"; return 0; fi
+  fi
+
+  mkdir -p "$(dirname "$dst")" || return 1
+  ln -s "$src" "$dst" || return 1
+  info "linked $rel"
+}
+
+deploy_copy() {
+  local src="$1" dst="$2" rel="$3"
+
+  if [[ -f "$dst" ]] && cmp -s "$src" "$dst"; then return 0; fi
+  if [[ "$DRY_RUN" == true ]]; then dry "copy $rel"; return 0; fi
+
+  mkdir -p "$(dirname "$dst")" || return 1
+  cp "$src" "$dst" || return 1
+  info "copied $rel"
+}
+
+# Merge the repo's top level keys into the destination, leaving keys the repo
+# does not declare untouched. Exit 3 means the destination already matches.
+deploy_merge() {
+  local src="$1" dst="$2" rel="$3"
+  local rc=0
+
+  DRY_RUN="$DRY_RUN" python3 - "$src" "$dst" <<'PY' || rc=$?
+import json, os, sys
+
+src, dst = sys.argv[1], sys.argv[2]
+dry = os.environ.get("DRY_RUN") == "true"
+
+with open(src) as f:
+    repo = json.load(f)
+
+current = {}
+if os.path.exists(dst):
+    with open(dst) as f:
+        text = f.read().strip()
+    if text:
+        try:
+            current = json.loads(text)
+        except json.JSONDecodeError as exc:
+            sys.stderr.write(f"destination is not valid JSON ({exc}); refusing to merge\n")
+            sys.exit(2)
+
+# Repo keys win; everything else the app wrote for itself survives.
+merged = dict(current)
+merged.update(repo)
+if merged == current:
+    sys.exit(3)
+
+if dry:
+    added = sorted(k for k in repo if k not in current)
+    changed = sorted(k for k in repo if k in current and current[k] != repo[k])
+    kept = sorted(k for k in current if k not in repo)
+    sys.stderr.write(f"add={added} update={changed} untouched={kept}\n")
+    sys.exit(4)
+
+os.makedirs(os.path.dirname(dst), exist_ok=True)
+with open(dst, "w") as f:
+    json.dump(merged, f, indent=2)
+    f.write("\n")
+PY
+
+  case "$rc" in
+    0) info "merged $rel" ;;
+    3) return 0 ;;
+    4) dry "merge $rel" ;;
+    *) error "failed to merge $rel into $dst"; return 1 ;;
+  esac
+}
+
+# Remove what a previous run deployed and this one does not, plus the one time
+# legacy list. Both go through path_is_ours; anything that fails it is left
+# alone with a warning rather than removed.
+prune_path() {
+  local dst="$1" repo_rel="$2" why="$3"
+
+  if [[ -L "$dst" ]]; then
+    local target
+    target=$(readlink "$dst")
+    if [[ "$target" != "$DIR"/* ]]; then
+      warn "$dst is a symlink to $target, outside homebase; leaving it alone"
+      return 0
+    fi
+  elif ! path_is_ours "$dst" "$repo_rel"; then
+    warn "$dst holds files homebase has never tracked; leaving it alone"
+    warn "  remove it by hand if you are sure"
+    return 0
+  fi
+
+  if [[ "$DRY_RUN" == true ]]; then dry "REMOVE $dst ($why)"; return 0; fi
+  rm -rf "$dst" || return 1
+  info "removed $dst ($why)"
+}
+
+reconcile_home() {
+  header "Home"
+
+  # Never point $HOME at a worktree. Symlinks would resolve into a checkout that
+  # disappears the moment the branch is merged and the worktree removed, leaving
+  # a dangling ~/.zshrc and no working shell. Deploy from the primary checkout.
+  local git_dir
+  git_dir=$(git -C "$DIR" rev-parse --git-dir 2>/dev/null || true)
+  if [[ "$git_dir" == *"/worktrees/"* ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+      warn "Running from a git worktree. A real run would refuse; showing the plan anyway."
+      warn "  Symlink sources below point at the worktree, not the primary checkout."
+    else
+      error "Refusing to reconcile \$HOME from a git worktree ($DIR)"
+      error "  Symlinks would break when the worktree is removed. Run from the primary checkout."
+      return 1
+    fi
+  fi
 
   local failed=0
-  local linked=0
-  for item in "${LINKED_CONFIGS[@]}"; do
-    local src="$DIR/$item"
-    local dst="$HOME/$item"
+  local -a current=()
+  local first_run=false
+  [[ -f "$MANIFEST" ]] || first_run=true
+
+  for entry in "${DEPLOY_TABLE[@]}"; do
+    local mode="${entry%%|*}"
+    local rest="${entry#*|}"
+    local rel="${rest%%|*}"
+    local dst
+    if [[ "$rest" == *"|"* ]]; then
+      dst="${rest#*|}"
+    else
+      dst="$HOME/$rel"
+    fi
+    local src="$DIR/$rel"
 
     if [[ ! -e "$src" ]]; then
-      warn "Source $src does not exist, skipping"
-      continue
-    fi
-
-    if [[ -L "$dst" ]]; then
-      local current
-      current=$(readlink "$dst")
-      if [[ "$current" == "$src" ]]; then
-        info "$item symlink already points at $src"
-        continue
-      fi
-      warn "Replacing $item symlink (was $current)"
-      rm "$dst"
-    elif [[ -e "$dst" ]]; then
-      warn "$item is a real file/directory at $dst; refusing to remove automatically"
-      warn "Move or delete it manually, then re run setup.sh"
+      warn "$rel is in the deploy table but missing from the repo, skipping"
       failed=1
       continue
     fi
 
-    mkdir -p "$(dirname "$dst")"
-    if ! ln -s "$src" "$dst"; then
-      error "Failed to link $dst -> $src"
-      failed=1
-      continue
-    fi
-    info "Linked $dst -> $src"
-    linked=$((linked + 1))
+    case "$mode" in
+      link)  deploy_link  "$src" "$dst" "$rel" || failed=1 ;;
+      copy)  deploy_copy  "$src" "$dst" "$rel" || failed=1 ;;
+      merge) deploy_merge "$src" "$dst" "$rel" || failed=1 ;;
+      *)     error "unknown deploy mode '$mode' for $rel"; failed=1; continue ;;
+    esac
+    current+=("$mode	$rel	$dst")
   done
 
-  if [[ $failed -ne 0 ]]; then
-    return 1
+  # Prune anything the last run deployed that this one does not.
+  if [[ "$first_run" == true ]]; then
+    info "No previous deployment record; seeding one. Nothing pruned from it this run."
+  else
+    local mode rel dst
+    while IFS=$'\t' read -r mode rel dst; do
+      [[ -n "$dst" ]] || continue
+      printf '%s\n' "${current[@]}" | grep -qxF "$mode	$rel	$dst" && continue
+      [[ -e "$dst" || -L "$dst" ]] || continue
+      if [[ "$mode" == "merge" ]]; then
+        warn "$dst is no longer managed; leaving it in place since the app owns the file"
+        continue
+      fi
+      prune_path "$dst" "$rel" "no longer deployed" || failed=1
+    done < "$MANIFEST"
   fi
-  if [[ $linked -gt 0 ]]; then
-    SUMMARY+=("$linked tracked configs linked")
+
+  prune_legacy || failed=1
+
+  # Record what this run deployed, so the next one can diff against it.
+  if [[ "$DRY_RUN" != true ]]; then
+    mkdir -p "$(dirname "$MANIFEST")" || return 1
+    printf '%s\n' "${current[@]}" > "$MANIFEST" || return 1
   fi
+
+  [[ $failed -eq 0 ]] || return 1
+  SUMMARY+=("Home reconciled (${#current[@]} paths)")
+}
+
+prune_legacy() {
+  local failed=0
+  local rel dst
+  for rel in "${LEGACY_PATHS[@]}"; do
+    dst="$HOME/$rel"
+    [[ -e "$dst" || -L "$dst" ]] || continue
+
+    # An empty directory carries no data and no provenance to check.
+    if [[ -d "$dst" && ! -L "$dst" && -z "$(ls -A "$dst")" ]]; then
+      if [[ "$DRY_RUN" == true ]]; then dry "REMOVE $dst (empty, left by an older run)"; continue; fi
+      rmdir "$dst" && info "removed $dst (empty)"
+      continue
+    fi
+
+    prune_path "$dst" "$rel" "rsynced by an older setup.sh, no longer deployed" || failed=1
+  done
+  return $failed
 }
 
 install_launchagents() {
@@ -896,18 +1128,31 @@ print_summary() {
 # Main
 ###############################################################################
 
-run_phase setup_prerequisites
-run_phase install_brew_packages
-run_phase setup_node
-run_phase setup_ruby
-run_phase install_npm_globals
-run_phase setup_agent_browser
-run_phase deploy_homebase
-run_phase link_tracked_configs
-run_phase install_launchagents
-run_phase install_ide_extensions
-run_phase install_claude_plugins
-run_phase install_mcp_servers
-run_phase configure_repo
-run_phase setup_auth
-print_summary
+# Only dispatch when executed. Sourcing the script defines the phases without
+# running them, which is how bin/lint/reconcile-test exercises reconcile_home
+# against a scratch $HOME.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  if [[ "$DRY_RUN" == true ]]; then
+    # A dry run is about $HOME: show every create, replace and delete the
+    # reconciler would make, and do nothing else. The install phases are skipped
+    # outright rather than simulated, because brew, npm and rbenv have no dry
+    # run worth trusting and "touch nothing" has to mean it.
+    warn "Dry run: installing nothing. Home changes only."
+    run_phase reconcile_home
+  else
+    run_phase setup_prerequisites
+    run_phase install_brew_packages
+    run_phase setup_node
+    run_phase setup_ruby
+    run_phase install_npm_globals
+    run_phase setup_agent_browser
+    run_phase reconcile_home
+    run_phase install_launchagents
+    run_phase install_ide_extensions
+    run_phase install_claude_plugins
+    run_phase install_mcp_servers
+    run_phase configure_repo
+    run_phase setup_auth
+  fi
+  print_summary
+fi
