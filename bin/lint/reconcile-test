@@ -88,6 +88,8 @@ check "directory with an untracked file was REFUSED" \
 check "refusal made the phase fail" "[[ $rc1 -ne 0 ]]"
 check "legacy path was pruned" \
   '[[ ! -e "$FAKE/docs" ]]'
+check "merge expanded \$HOME rather than writing the literal" \
+  '! grep -q "[\$]HOME" "$FAKE/.claude/settings.json"'
 check "merge kept the app-owned keys" \
   'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"theme\"]==\"dark\" and d[\"effortLevel\"]==\"high\""'
 check "merge replaced the repo-owned key" \

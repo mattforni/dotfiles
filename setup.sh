@@ -416,9 +416,29 @@ import json, os, sys
 
 src, dst = sys.argv[1], sys.argv[2]
 dry = os.environ.get("DRY_RUN") == "true"
+home = os.environ["HOME"]
+
+def expand(value):
+    """Substitute $HOME the way install_launchagents substitutes {{HOME}}.
+
+    The repo may not hard-code a username (see Path Conventions in CLAUDE.md),
+    so a path inside a tracked settings file is written as the literal string
+    "$HOME/...". The owning app writes it back expanded. Without this the two
+    sides can never agree: every run writes the literal, the app re-expands it,
+    and the next run sees a difference again, so the merge never converges and
+    a second run is never a no-op. Expanding at deploy time makes the comparison
+    apples to apples while keeping the repo portable.
+    """
+    if isinstance(value, str):
+        return value.replace("$HOME", home)
+    if isinstance(value, dict):
+        return {k: expand(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [expand(v) for v in value]
+    return value
 
 with open(src) as f:
-    repo = json.load(f)
+    repo = expand(json.load(f))
 
 current = {}
 if os.path.exists(dst):
