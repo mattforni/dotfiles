@@ -649,51 +649,77 @@ install_ide_extensions() {
   local extensions_file="$DIR/ide/extensions.txt"
   [[ -f "$extensions_file" ]] || return 0
 
-  for cli in code cursor; do
-    if ! command -v "$cli" &>/dev/null; then
-      warn "$cli not found, skipping"
-      continue
-    fi
-
-    local installed
-    installed=$("$cli" --list-extensions | tr '[:upper:]' '[:lower:]')
-
-    declare -A installed_set=()
-    while IFS= read -r ext; do
-      [[ -n "$ext" ]] && installed_set["$ext"]=1
-    done <<< "$installed"
-
-    local missing=()
-    local total=0
-    while IFS= read -r ext || [[ -n "$ext" ]]; do
-      [[ -z "$ext" ]] && continue
-      ((total++))
-      local lower="${ext,,}"
-      if [[ "$FORCE" == true ]] || [[ -z "${installed_set[$lower]+x}" ]]; then
-        missing+=("$ext")
-      fi
-    done < "$extensions_file"
-    unset installed_set
-
-    if [[ ${#missing[@]} -eq 0 ]]; then
-      info "$cli: all $total extensions installed"
-    else
-      local installed_count=0
-      for ext in "${missing[@]}"; do
-        local output
-        if output=$("$cli" --install-extension "$ext" --force 2>&1); then
-          ((installed_count++))
-        else
-          # Surface why. A silent "failed to install" gives you nothing to act
-          # on, and the usual causes (extension delisted, not available for this
-          # editor, network) are all distinguishable from the CLI's own output.
-          warn "$cli: failed to install $ext: ${output//$'\n'/ }"
-        fi
-      done
-      info "$cli: $installed_count/${#missing[@]} extensions installed"
-      SUMMARY+=("$cli: $installed_count/${#missing[@]} extensions installed")
+  # Antigravity is the only IDE. VS Code and Cursor were dropped 2026-08-11;
+  # their casks came out of the Brewfile and the applications were uninstalled
+  # by hand. The antigravity-ide cask puts the CLI on PATH under two names, and
+  # they are the same binary, so take the first that resolves rather than
+  # looping over both and installing everything twice.
+  local cli=""
+  local candidate
+  for candidate in antigravity-ide agy-ide; do
+    if command -v "$candidate" &>/dev/null; then
+      cli="$candidate"
+      break
     fi
   done
+
+  if [[ -z "$cli" ]]; then
+    warn "Antigravity CLI not on PATH, skipping extensions"
+    warn "  the antigravity-ide cask installs it; a hand-installed app does not"
+    return 0
+  fi
+
+  local installed
+  installed=$("$cli" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
+
+  declare -A installed_set=()
+  while IFS= read -r ext; do
+    [[ -n "$ext" ]] && installed_set["$ext"]=1
+  done <<< "$installed"
+
+  local missing=()
+  local total=0
+  while IFS= read -r ext || [[ -n "$ext" ]]; do
+    [[ -z "$ext" ]] && continue
+    ((total++))
+    local lower="${ext,,}"
+    if [[ "$FORCE" == true ]] || [[ -z "${installed_set[$lower]+x}" ]]; then
+      missing+=("$ext")
+    fi
+  done < "$extensions_file"
+  unset installed_set
+
+  # Anything installed that the curated list does not name. Reported rather than
+  # removed: an extension you added deliberately should get added to the list,
+  # and one you no longer want should be dropped from the editor.
+  local extra=()
+  while IFS= read -r ext; do
+    [[ -n "$ext" ]] || continue
+    grep -qix "$ext" "$extensions_file" || extra+=("$ext")
+  done <<< "$installed"
+  if [[ ${#extra[@]} -gt 0 ]]; then
+    warn "installed but not in ide/extensions.txt: ${extra[*]}"
+  fi
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    info "all $total extensions installed"
+    return 0
+  fi
+
+  local installed_count=0
+  for ext in "${missing[@]}"; do
+    local output
+    if output=$("$cli" --install-extension "$ext" --force 2>&1); then
+      ((installed_count++))
+    else
+      # Surface why. A silent "failed to install" gives you nothing to act on,
+      # and the usual causes (extension delisted, not available for this editor,
+      # network) are all distinguishable from the CLI's own output.
+      warn "failed to install $ext: ${output//$'\n'/ }"
+    fi
+  done
+  info "$installed_count/${#missing[@]} extensions installed"
+  SUMMARY+=("$installed_count/${#missing[@]} IDE extensions installed")
 }
 
 install_claude_plugins() {
