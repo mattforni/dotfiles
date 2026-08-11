@@ -21,8 +21,23 @@
 # notes in CLAUDE.md), which is why this gate exists.
 set -uo pipefail
 
-ROOT=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) || ROOT=""
-[[ -n "$ROOT" ]] || ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# GIT_DIR must be cleared first. Git exports it when running hooks, and with it
+# set, `git -C <dir> rev-parse --show-toplevel` returns <dir> itself rather than
+# the repo root. That silently made ROOT=bin/lint when called from pre-commit,
+# so no file resolved and every commit reported "nothing to check".
+ROOT=$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+  git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) || ROOT=""
+
+# Fall back to the script's own location, and use -P so that being invoked
+# through the ~/bin symlink resolves into the repo rather than to $HOME.
+if [[ -z "$ROOT" || ! -f "$ROOT/setup.sh" ]]; then
+  ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+fi
+
+if [[ ! -f "$ROOT/setup.sh" ]]; then
+  printf '%s\n' "lint/shell: cannot locate the homebase root (tried $ROOT)" >&2
+  exit 1
+fi
 
 RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; YELLOW=$'\033[1;33m'; NC=$'\033[0m'
 failed=0
