@@ -58,6 +58,17 @@ echo "old" > "$FAKE/docs/plugins/sdlc.md"
 # assertion that it "is never touched" proves nothing if the file never existed.
 printf 'export SOME_TOKEN=keepme\n' > "$FAKE/.env.local"
 
+# A repo-owned value holding both a real $HOME path and a longer variable that
+# merely starts with the same characters. Expansion has to rewrite the first and
+# leave the second alone, so seed it on the repo side of the merge.
+python3 - "$CLONE/.claude/settings.json" <<'SEED' || exit 1
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+d["testHomeExpansion"] = "$HOMEBREW_PREFIX/bin:$HOME/bin"
+json.dump(d, open(p, "w"), indent=2)
+SEED
+
 # An app-owned settings file carrying keys the repo does not declare.
 mkdir -p "$FAKE/.claude"
 cat > "$FAKE/.claude/settings.json" <<'JSON'
@@ -88,6 +99,12 @@ check "directory with an untracked file was REFUSED" \
 check "refusal made the phase fail" "[[ $rc1 -ne 0 ]]"
 check "legacy path was pruned" \
   '[[ ! -e "$FAKE/docs" ]]'
+check "merge expanded \$HOME rather than writing the literal" \
+  '! grep -qE "[\$]HOME[^0-9A-Za-z_]" "$FAKE/.claude/settings.json"'
+check "merge expanded \$HOME to the real home" \
+  'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"testHomeExpansion\"].endswith(\"$FAKE/bin\")"'
+check "merge left \$HOMEBREW_PREFIX alone" \
+  'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"testHomeExpansion\"].startswith(chr(36)+\"HOMEBREW_PREFIX/bin\")"'
 check "merge kept the app-owned keys" \
   'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"theme\"]==\"dark\" and d[\"effortLevel\"]==\"high\""'
 check "merge replaced the repo-owned key" \

@@ -412,13 +412,37 @@ deploy_merge() {
   local rc=0
 
   DRY_RUN="$DRY_RUN" python3 - "$src" "$dst" <<'PY' || rc=$?
-import json, os, sys
+import json, os, re, sys
 
 src, dst = sys.argv[1], sys.argv[2]
 dry = os.environ.get("DRY_RUN") == "true"
+home = os.environ["HOME"]
+
+# Only a $HOME that starts a path, so $HOMEBREW_PREFIX and friends survive
+# intact. Bare $HOME at the end of a string still counts; $HOMEish does not.
+HOME_TOKEN = re.compile(r"\$HOME(?![0-9A-Za-z_])")
+
+def expand(value):
+    """Substitute $HOME the way install_launchagents substitutes {{HOME}}.
+
+    The repo may not hard-code a username (see Path Conventions in CLAUDE.md),
+    so a path inside a tracked settings file is written as the literal string
+    "$HOME/...". The owning app writes it back expanded. Without this the two
+    sides can never agree: every run writes the literal, the app re-expands it,
+    and the next run sees a difference again, so the merge never converges and
+    a second run is never a no-op. Expanding at deploy time makes the comparison
+    apples to apples while keeping the repo portable.
+    """
+    if isinstance(value, str):
+        return HOME_TOKEN.sub(home.replace("\\", "\\\\"), value)
+    if isinstance(value, dict):
+        return {k: expand(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [expand(v) for v in value]
+    return value
 
 with open(src) as f:
-    repo = json.load(f)
+    repo = expand(json.load(f))
 
 current = {}
 if os.path.exists(dst):
