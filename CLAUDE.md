@@ -31,10 +31,12 @@ Top-level repo files (`CLAUDE.md`, `README.md`, `.gitconfig`, `.aliases`, etc.) 
 
 Run `./setup.sh` to install homebase to the home directory. The script will:
 
-- Copy all configuration files from this repository to `$HOME`
-- Exclude repo tooling (setup.sh, README.md, .git, .github, .gitignore, .markdownlint.jsonc, .markdownlint-cli2.jsonc, brew)
-- Install brew packages, Node, npm globals, IDE extensions, and Claude plugins
+- Reconcile `$HOME` against the deploy table, creating what is missing, fixing what is wrong, and removing what homebase used to deploy and no longer does. Repo tooling is never deployed. See [How Homebase Reaches `$HOME`](#how-homebase-reaches-home)
+- Install brew packages, runtimes via mise, npm globals, IDE extensions, and Claude plugins
 - Set up authentication (GitHub CLI, SSH, Google Cloud, gws)
+
+Run `./setup.sh --dry-run` first to see every change it would make to `$HOME`,
+removals included, without installing anything.
 
 ## Key Shell Configurations
 
@@ -131,9 +133,13 @@ OAuth `client_secret.json` files for gws sync across machines via GCP Secret Man
 ├── .gitconfig       # Git aliases and settings
 ├── .vimrc           # Vim configuration
 ├── ide/             # Antigravity settings + curated extension list
+├── mise/            # Runtime version pins (node, ruby)
 ├── .claude/         # Claude Code skills, commands, and settings
 ├── bin/             # Custom scripts
-│   └── checkout-branch.sh  # Git branch checkout by number
+│   ├── lib/         #   Shared, sourced rather than duplicated
+│   │   └── deploy-table.sh  # What gets deployed to $HOME, and how
+│   └── lint/        #   shell + reconciler checks, run by CI and pre-commit
+├── .githooks/       # Tracked git hooks; activate with core.hooksPath
 └── setup.sh         # Installation and setup script
 ```
 
@@ -145,7 +151,13 @@ Applies to: `.claude/settings.json` permissions and marketplace paths, skill SKI
 
 ## setup.sh Phase Conventions
 
-`setup.sh` is split into phases like `setup_prerequisites`, `install_brew_packages`, `deploy_homebase`, and `setup_auth`. The `setup_auth` phase short circuits early when `INTERACTIVE != true`, because OAuth flows and `read -rp` prompts require a TTY.
+`setup.sh` is split into phases like `setup_prerequisites`, `install_brew_packages`, `reconcile_home`, and `setup_auth`. The `setup_auth` phase short circuits early when `INTERACTIVE != true`, because OAuth flows and `read -rp` prompts require a TTY.
+
+**Phase order is load bearing in three places.** `reconcile_home` deploys
+`mise/config.toml`, which `setup_runtimes` reads. `setup_runtimes` puts node on
+`PATH`, which `install_npm_globals` needs. And `reconcile_home` deploys the
+`.claude` tree that `install_claude_plugins` and `install_mcp_servers` read back
+out of `$HOME`.
 
 **Bootstrap operations must NOT live inside `setup_auth`.** File moves, directory creation, marker file seeding, and other no-TTY-required scaffolding belong in their own phases that run regardless of interactivity. If they sit inside `setup_auth`, a non-interactive run (Claude Code background session, headless launchd, CI) will silently skip them along with the auth prompts.
 
@@ -187,6 +199,26 @@ and it retired when everything human-authored became a symlink.
 **Do not unilaterally pick between direct-to-main and PR workflow on this repo.** Both patterns appear in the log (some commits land direct, some through PRs), and Forni prefers to make the call each time rather than have it picked for him. After staging a change, pause and ask which path to take — even for small changes. The friction of asking is low; the cost of an unwanted push to main is higher than it looks.
 
 **A direct merge is linted only after the fact, so check `main` afterward.** The lint workflow fires on pull requests and on pushes to `main` alike (it has since the workflow shipped in #40), but nothing gates a direct push: a failing commit lands anyway, `main` goes red, and the breakage stays invisible until someone looks at the Actions run or the next PR inherits it and appears to have caused it. Observed 2026-08-07: `e2c36dcb` landed direct with two `MD034` bare URL errors, `main` sat red for hours, and the breakage surfaced on an unrelated PR whose own diff was clean. After any direct merge, run the relevant check locally (`npx markdownlint-cli2 "*.md"` for prose, the matching linter otherwise), or open the Actions tab and confirm the push's own run went green. When a PR reports a failure in a file it did not touch, suspect inherited breakage before debugging your own diff, and confirm with `git log` on the offending line.
+
+### Linting
+
+Two gates, both running the same scripts locally and in CI.
+
+- **Markdown** — `npx markdownlint-cli2`. Globs live in both `.markdownlint-cli2.jsonc` and the workflow's `globs:` input, kept in sync. **Do not remove the workflow's `globs:` input.** The action's default is a single-asterisk `*.{md,markdown}` that matches only the repo root; without an explicit glob this job linted exactly two files from the day it shipped until 2026-08-11, while 94 findings accumulated behind it.
+- **Shell** — `bin/lint/shell` runs shellcheck plus `bash -n` plus `zsh -n`, gated at warning severity so style noise does not train you into `--no-verify`. The `zsh -n` pass is the point: `.functions` must be zsh clean, and `bash -n` cannot see that class of bug.
+- **Reconciler** — `bin/lint/reconcile-test` clones to a scratch path and exercises `reconcile_home` against a throwaway `$HOME`, asserting migration, refusal, pruning, merge behaviour and idempotence.
+
+A tracked `.githooks/pre-commit` runs the first two on staged files. Activate it
+once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+**A comment whose first word is the analyzer's own name is parsed as a
+directive**, whitespace-insensitively, and errors as SC1072 or SC1124. Lead
+explanatory prose with something else. This bit three separate files while the
+gate was being written, including the linter itself.
 
 ### How Homebase Reaches `$HOME`
 
