@@ -6,9 +6,13 @@
 # checks only those paths, which is how the pre-commit hook passes staged files.
 #
 # Three checks, because no single one covers this repo:
-#   shellcheck   static analysis; bash/sh only, it has no zsh mode
-#   bash -n      syntax for anything bash reads
-#   zsh -n       syntax for anything zsh reads
+#   - static analysis (bash/sh only; there is no zsh mode)
+#   - bash -n, syntax for anything bash reads
+#   - zsh -n, syntax for anything zsh reads
+#
+# NB: a comment line whose first word is the linter's own name is parsed as a
+# directive, whitespace-insensitively, and errors as SC1072. Keep prose from
+# leading with it. This file tripped over that rule about itself.
 #
 # Files zsh reads get the zsh check specifically. `bash -n` cannot see
 # zsh-specific breakage: the sharpest case is `local path=...`, which is
@@ -46,8 +50,8 @@ is_bash_read() {
     bin/lib/*.sh) return 0 ;;
     .aliases|.functions|*.zsh|.zshrc) return 1 ;;
     # The character class matters: a bare `(bash|sh)$` also matches a zsh
-    # shebang, since "zsh" ends in "sh". That sent bin/checkout-branch.sh to
-    # shellcheck, which has no zsh mode and errors out on SC1071.
+    # shebang, since "zsh" ends in "sh". That sent bin/checkout-branch.sh into
+    # static analysis, which has no zsh mode and errors out on SC1071.
     *) head -n1 "$ROOT/$1" 2>/dev/null | grep -qE '^#!.*[ /](bash|sh)$' ;;
   esac
 }
@@ -87,7 +91,7 @@ for rel in "${targets[@]}"; do
   abs="$ROOT/$rel"
   checked=$((checked + 1))
 
-  # shellcheck is bash/sh only. Running it on a zsh-targeted file reports
+  # Static analysis is bash/sh only. Running it on a zsh-targeted file reports
   # noise about constructs zsh supports and bash does not.
   # Gate at warning. Style and info findings (legacy backticks, unquoted
   # expansions in simple paths, unresolvable `source` targets) are real but not
