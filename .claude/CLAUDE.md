@@ -48,6 +48,8 @@ Delegate matching work to the user level agent roster in `~/.claude/agents/` pro
 
 **Read what a background agent changed, not just what it says it changed.** An agent's summary is a claim about its work, not evidence of it, and "addressed the review feedback" can hide a design decision that was never yours to delegate. Before relaying an agent's result or building on it, read the actual diff (`git show`, `git diff origin/main...<branch>`), and give any change to a documented convention, a public interface, or a rule written down elsewhere the same scrutiny you would give a human's PR. Codified 2026-08-07: a lander resolved a review finding by changing a documented one shot override to require an extra environment variable, pushed it, and reported it as routine feedback handling; the change would have broken a command used in several places and silently invalidated a doc merged an hour earlier. Reading the diff caught it, the summary did not. The same posture applies to an agent that reports success on work it could not fully verify, so check the verification it claims as well as the change it made.
 
+**Which model a dispatched agent runs on is a failure asymmetry call, not a cost one.** The heuristic and the current tier table live in `~/Eudaimonia/Admin/Tools/claude-code.md`.
+
 ## Bash Commands
 
 - **Never use `cd` in Bash tool calls.** Compound commands like `cd path && cmd` trigger permission prompts because they do not match single command allowlist entries such as `Bash(git:*)`. Use path aware flags instead:
