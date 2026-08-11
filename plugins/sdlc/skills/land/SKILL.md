@@ -175,6 +175,8 @@ gh pr merge PR_NUMBER --squash --delete-branch
 
 If `BEHIND` or `DIRTY` (merge conflict against base): bail to user. Rebasing into a conflicting state is judgment-call territory and shouldn't happen silently.
 
+One carve out: a conflict confined entirely to a plugin version line is yours to resolve. Merge main into the branch, take the version that is correctly ahead of origin/main under the repo's bump rule, verify that both sides' unrelated changes survived the auto merge, and report the resolution in your summary rather than passing it silently. Any conflict touching real content still bails. (Approved by Forni 2026-08-10, after a stacked branch hit exactly this: main had moved a plugin to 10.0.0 while the branch went 9.0.8 to 10.0.1, so git saw competing edits on one line in two files.)
+
 After successful merge, invoke `sdlc:complete` to clean up the worktree/branch. `sdlc:complete` already handles the squash-merge gotcha where `git branch -d` fails the DAG ancestry check (uses `-D` after verifying content parity).
 
 ## Output
