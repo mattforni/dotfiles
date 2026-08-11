@@ -186,7 +186,7 @@ Output:
   and any failure reason live in the body so the inbox stays calm and date
   sortable; filter to a Gmail label by routine prefix.
 - **The bracketed routine tag is load bearing** (2026-07-17): Gmail filters
-  archive report mail by subject tag while interactive claude@atelic.me mail
+  archive report mail by subject tag while interactive <claude@atelic.me> mail
   (review asks, anything needing action) stays in the inbox. When adding a
   new routine, add its `[Tag]` to the archive filter's subject terms, and
   never give an interactive email a bracketed subject prefix. Full
@@ -218,4 +218,4 @@ unchanged.
 - L7 mise source: homebase git history (`bin/run-mise` pruned 2026-07-23;
   the mise plist retired 2026-07-16). The generic `install_launchagents`
   phase remains in `setup.sh` for future plists.
-- Resend API: https://resend.com/docs/api-reference/emails/send-email
+- Resend API: <https://resend.com/docs/api-reference/emails/send-email>

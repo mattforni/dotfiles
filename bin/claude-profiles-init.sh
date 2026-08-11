@@ -22,8 +22,23 @@ PROFILES=("$HOME_PROFILE" "$TPF_PROFILE")
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOMEBASE_CLAUDE="$(dirname "$SCRIPT_DIR")/.claude"
 
+# Which .claude entries to mirror comes from the shared deploy table rather than
+# a list kept here. The local copy had already drifted: it named skills,
+# commands, references, local-skills, statusline.sh and CLAUDE.md, and had never
+# gained agents, hooks or workflows.
+DEPLOY_TABLE_LIB="$SCRIPT_DIR/lib/deploy-table.sh"
+if [[ ! -r "$DEPLOY_TABLE_LIB" ]]; then
+  echo "claude-profiles-init: cannot read $DEPLOY_TABLE_LIB" >&2
+  exit 1
+fi
+# shellcheck source=lib/deploy-table.sh
+. "$DEPLOY_TABLE_LIB"
+
 for d in "${PROFILES[@]}"; do
-    mkdir -p "$d"/{projects,sessions,plugins,hooks}
+    # hooks is deliberately NOT created here. It is in the deploy table as a
+    # symlink into homebase, and the link loop below skips any path that already
+    # exists, so pre-creating the directory silently prevented the link.
+    mkdir -p "$d"/{projects,sessions,plugins}
 done
 
 # Per-profile settings: copy from legacy if not already present.
@@ -35,8 +50,9 @@ for d in "${PROFILES[@]}"; do
 done
 
 # Symlinks back to homebase (shared surface).
+mapfile -t CLAUDE_LINKS < <(deploy_table_claude_links)
 for d in "${PROFILES[@]}"; do
-    for item in skills commands references local-skills statusline.sh CLAUDE.md; do
+    for item in "${CLAUDE_LINKS[@]}"; do
         target="$HOMEBASE_CLAUDE/$item"
         link="$d/$item"
         if [[ -e "$target" ]] && [[ ! -e "$link" ]] && [[ ! -L "$link" ]]; then

@@ -92,7 +92,7 @@ Use the CLI: `linear issue delete <ID> --confirm`. The MCP cannot hard delete.
 
 ## Capacity Math
 
-```
+```text
 capacity = business_days_remaining × active_owners × multiplier
 ```
 

@@ -6,10 +6,10 @@ Preferred recipe sites for meal plan sourcing and a running log of what we've tr
 
 | Site | URL | Vibe | Notes |
 |------|-----|------|-------|
-| Cookie and Kate | https://cookieandkate.com/ | Vegetarian, seasonal, tested | Deep archive, searchable by ingredient |
-| Simple Vegan Blog | https://simpleveganblog.com/ | Plant based, approachable | Good for basics and sauces |
-| Half Baked Harvest | https://www.halfbakedharvest.com/ | Cozy, hearty, photogenic | Filter for plant based (many recipes are not) |
-| Budget Bytes | https://www.budgetbytes.com/ | Practical, cost aware | Good for pantry based meals |
+| Cookie and Kate | <https://cookieandkate.com/> | Vegetarian, seasonal, tested | Deep archive, searchable by ingredient |
+| Simple Vegan Blog | <https://simpleveganblog.com/> | Plant based, approachable | Good for basics and sauces |
+| Half Baked Harvest | <https://www.halfbakedharvest.com/> | Cozy, hearty, photogenic | Filter for plant based (many recipes are not) |
+| Budget Bytes | <https://www.budgetbytes.com/> | Practical, cost aware | Good for pantry based meals |
 
 ## Candidate Sites to Try
 

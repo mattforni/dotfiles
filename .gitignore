@@ -2,9 +2,6 @@
 *.log
 *.swp
 
-.vscode/extensions
-.vscode/cli
-.vscode/argv.json
 .claude/shell-snapshots
 .claude/statsig
 .claude/todos

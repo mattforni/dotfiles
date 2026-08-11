@@ -1,0 +1,16 @@
+{
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+    "files.trimTrailingWhitespace": true,
+    "[html.erb]": {
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 120
+    },
+    "[ruby]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "editor.defaultFormatter": "Shopify.ruby-lsp",
+        "editor.formatOnSave": true
+    }
+}

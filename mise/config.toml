@@ -1,0 +1,14 @@
+# Global runtime versions, deployed to ~/.config/mise/config.toml.
+#
+# mise replaced fnm (node) and rbenv (ruby) on 2026-08-11. It reads the same
+# per-project .ruby-version and .node-version files those did, so this is only
+# the fallback for a directory that declares nothing.
+#
+# Bump these when the projects you work in move forward.
+#
+# NB: "mise" here is the runtime version manager (jdx/mise). It is unrelated to
+# the assist:mise skill, which is the morning prep routine.
+
+[tools]
+node = "lts"
+ruby = "3.4.7"

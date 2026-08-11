@@ -2,8 +2,21 @@
   "config": {
     "extends": ".markdownlint.jsonc"
   },
+  // Kept in sync with the `globs` input in .github/workflows/lint.yml. CLI args
+  // win over this key, and the action's default is a single-asterisk
+  // `*.{md,markdown}` matching only the repo root, which is why this job linted
+  // exactly two files until 2026-08-11. Declaring globs here makes a bare
+  // `npx markdownlint-cli2` locally cover the same tree CI does.
+  "globs": [
+    "**/*.{md,markdown}"
+  ],
   "ignores": [
     ".vim/**",
-    ".claude/plugins/**"
+    ".claude/plugins/**",
+    // .claude/skills/assist is a tracked symlink to
+    // .claude/local-skills/plugins/assist, so without this the same files get
+    // linted twice, once through each path, and every finding is reported
+    // double. The real files are covered under local-skills.
+    ".claude/skills/assist/**"
   ]
 }

@@ -64,6 +64,14 @@ html_escape() {
 # On success: returns 0.
 # On failure: sets $email_error to a one-line reason and returns non-zero.
 # Requires $ROUTINE to be set in the caller's environment.
+#
+# $email_error is this function's out-parameter: deliberately not `local`, and
+# read by callers after a non-zero return (see .claude/references/headless-claude.md).
+# Static analysis cannot see those cross-file reads, so every assignment to it
+# looks unused. The directive sits here so it covers the whole function body.
+# NB: a comment line beginning with the linter's own name is parsed as a
+# directive, so keep explanatory prose from starting with it.
+# shellcheck disable=SC2034
 email_report() {
   local status="$1"
   local summary_html="$2"

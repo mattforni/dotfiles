@@ -31,28 +31,43 @@ Top-level repo files (`CLAUDE.md`, `README.md`, `.gitconfig`, `.aliases`, etc.) 
 
 Run `./setup.sh` to install homebase to the home directory. The script will:
 
-- Copy all configuration files from this repository to `$HOME`
-- Exclude repo tooling (setup.sh, README.md, .git, .github, .gitignore, .markdownlint.jsonc, .markdownlint-cli2.jsonc, brew)
-- Install brew packages, Node, npm globals, IDE extensions, and Claude plugins
+- Reconcile `$HOME` against the deploy table, creating what is missing, fixing what is wrong, and removing what homebase used to deploy and no longer does. Repo tooling is never deployed. See [How Homebase Reaches `$HOME`](#how-homebase-reaches-home)
+- Install brew packages, runtimes via mise, npm globals, IDE extensions, and Claude plugins
 - Set up authentication (GitHub CLI, SSH, Google Cloud, gws)
+
+Run `./setup.sh --dry-run` first to see every change it would make to `$HOME`,
+removals included, without installing anything.
 
 ## Key Shell Configurations
 
 ### Primary Configuration Files
 
-- `.bashrc` - Main bash configuration (sources aliases and functions)
-- `.zshrc` - Zsh configuration
-- `.profile` - General shell profile
-- `.bash_profile` - Bash-specific profile
+- `.zshrc` - Zsh configuration, and the only shell rc file. It sources `.aliases` and `.functions`
 - `.aliases` - Command aliases
 - `.functions` - Shell functions
 - `.gitconfig` - Git configuration with extensive aliases
+
+**There is no bash configuration, deliberately.** The login shell is zsh, and
+`.bashrc`, `.bash_profile`, `.profile` and `.bashrc.go` were removed 2026-08-11.
+They were dead: `.bashrc` was a stock Debian skeleton whose Linux-specific body
+(`debian_chroot`, `lesspipe`, `dircolors`, `notify-send`, `/etc/bash_completion`)
+is inert on macOS, and it sourced `~/.bashrc.aliases`, `~/.bashrc.functions` and
+`~/.bashrc.local`, none of which have ever existed, so it would not have loaded
+your aliases or functions even if bash ran. `.profile` is not read by zsh at all,
+and its only unique content started postgres and redis, which already run as
+persistent brew services. `.bashrc.go` was sourced by nothing and pointed
+`GOROOT` at the Intel homebrew path.
+
+Headless and non-interactive shells are unaffected, since `.bashrc` returned
+early on a non-interactive prompt anyway. If bash config is ever wanted again,
+write it fresh for macOS rather than restoring the skeleton.
 
 ### Development Environment
 
 - `.vimrc` - Vim editor configuration
 - `.screenrc` - GNU Screen configuration
-- `.vscode/settings.json` - VS Code settings (Ruby-focused with Rubocop integration)
+- `ide/settings.json` - Antigravity user settings, deployed to `~/Library/Application Support/Antigravity IDE/User/settings.json`
+- `ide/extensions.txt` - Curated extension list, read out of the repo by `setup.sh` and never deployed to `$HOME`
 
 ## Common Commands and Aliases
 
@@ -114,14 +129,17 @@ OAuth `client_secret.json` files for gws sync across machines via GCP Secret Man
 .
 ├── .aliases          # Command aliases
 ├── .functions        # Shell functions
-├── .bashrc          # Main bash config
-├── .zshrc           # Zsh configuration
+├── .zshrc           # Zsh configuration (the only shell rc)
 ├── .gitconfig       # Git aliases and settings
 ├── .vimrc           # Vim configuration
-├── .vscode/         # VS Code settings
+├── ide/             # Antigravity settings + curated extension list
+├── mise/            # Runtime version pins (node, ruby)
 ├── .claude/         # Claude Code skills, commands, and settings
 ├── bin/             # Custom scripts
-│   └── checkout-branch.sh  # Git branch checkout by number
+│   ├── lib/         #   Shared, sourced rather than duplicated
+│   │   └── deploy-table.sh  # What gets deployed to $HOME, and how
+│   └── lint/        #   shell + reconciler checks, run by CI and pre-commit
+├── .githooks/       # Tracked git hooks; activate with core.hooksPath
 └── setup.sh         # Installation and setup script
 ```
 
@@ -133,7 +151,13 @@ Applies to: `.claude/settings.json` permissions and marketplace paths, skill SKI
 
 ## setup.sh Phase Conventions
 
-`setup.sh` is split into phases like `setup_prerequisites`, `install_brew_packages`, `deploy_homebase`, and `setup_auth`. The `setup_auth` phase short circuits early when `INTERACTIVE != true`, because OAuth flows and `read -rp` prompts require a TTY.
+`setup.sh` is split into phases like `setup_prerequisites`, `install_brew_packages`, `reconcile_home`, and `setup_auth`. The `setup_auth` phase short circuits early when `INTERACTIVE != true`, because OAuth flows and `read -rp` prompts require a TTY.
+
+**Phase order is load bearing in three places.** `reconcile_home` deploys
+`mise/config.toml`, which `setup_runtimes` reads. `setup_runtimes` puts node on
+`PATH`, which `install_npm_globals` needs. And `reconcile_home` deploys the
+`.claude` tree that `install_claude_plugins` and `install_mcp_servers` read back
+out of `$HOME`.
 
 **Bootstrap operations must NOT live inside `setup_auth`.** File moves, directory creation, marker file seeding, and other no-TTY-required scaffolding belong in their own phases that run regardless of interactivity. If they sit inside `setup_auth`, a non-interactive run (Claude Code background session, headless launchd, CI) will silently skip them along with the auth prompts.
 
@@ -162,13 +186,13 @@ The desired array supports both stdio and http transports. For http entries that
 
 ## Development Workflow
 
-1. Edit files in this repository
+1. Edit files in this repository. Most configs are symlinked into `$HOME`, so the edit is already live
 2. Test changes locally
-3. Run `./setup.sh` to deploy to home directory
-4. Make changes in `$HOME` as needed
-5. Run `sync-dots` to pull changes back from `$HOME` to repository
-6. Use `git wip` for quick commits during development
-7. For Ruby projects: Rubocop integration is enabled in VS Code settings
+3. Run `./setup.sh` when the deploy table itself changed, or to pick up brew, node and plugin updates
+4. Use `git wip` for quick commits during development
+
+There is no step for copying changes back out of `$HOME`. That was `sync-dots`,
+and it retired when everything human-authored became a symlink.
 
 ### Landing Changes: Decide Together
 
@@ -176,14 +200,56 @@ The desired array supports both stdio and http transports. For http entries that
 
 **A direct merge is linted only after the fact, so check `main` afterward.** The lint workflow fires on pull requests and on pushes to `main` alike (it has since the workflow shipped in #40), but nothing gates a direct push: a failing commit lands anyway, `main` goes red, and the breakage stays invisible until someone looks at the Actions run or the next PR inherits it and appears to have caused it. Observed 2026-08-07: `e2c36dcb` landed direct with two `MD034` bare URL errors, `main` sat red for hours, and the breakage surfaced on an unrelated PR whose own diff was clean. After any direct merge, run the relevant check locally (`npx markdownlint-cli2 "*.md"` for prose, the matching linter otherwise), or open the Actions tab and confirm the push's own run went green. When a PR reports a failure in a file it did not touch, suspect inherited breakage before debugging your own diff, and confirm with `git log` on the offending line.
 
-### Syncing
+### Linting
 
-Use `sync-dots` to pull changes from your home directory back to this repository:
+Two gates, both running the same scripts locally and in CI.
 
-- `sync-dots` - Sync all tracked files from `$HOME` to repository
-- `sync-dots -d` - Dry run to see what would be synced without making changes
+- **Markdown** — `npx markdownlint-cli2`. Globs live in both `.markdownlint-cli2.jsonc` and the workflow's `globs:` input, kept in sync. **Do not remove the workflow's `globs:` input.** The action's default is a single-asterisk `*.{md,markdown}` that matches only the repo root; without an explicit glob this job linted exactly two files from the day it shipped until 2026-08-11, while 94 findings accumulated behind it.
+- **Shell** — `bin/lint/shell` runs shellcheck plus `bash -n` plus `zsh -n`, gated at warning severity so style noise does not train you into `--no-verify`. The `zsh -n` pass is the point: `.functions` must be zsh clean, and `bash -n` cannot see that class of bug.
+- **Reconciler** — `bin/lint/reconcile-test` clones to a scratch path and exercises `reconcile_home` against a throwaway `$HOME`, asserting migration, refusal, pruning, merge behaviour and idempotence.
 
-The sync function handles both files and directories automatically and includes: .aliases, .bashrc, .functions, .gitconfig, .vimrc, .vscode/, .claude/, bin/, and more.
+A tracked `.githooks/pre-commit` runs the first two on staged files. Activate it
+once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+**A comment whose first word is the analyzer's own name is parsed as a
+directive**, whitespace-insensitively, and errors as SC1072 or SC1124. Lead
+explanatory prose with something else. This bit three separate files while the
+gate was being written, including the linter itself.
+
+### How Homebase Reaches `$HOME`
+
+`bin/lib/deploy-table.sh` is the single source of truth. `setup.sh` reconciles
+`$HOME` against it: it creates what is missing, fixes what is wrong, and removes
+what homebase used to deploy and no longer does. `bin/claude-profiles-init.sh`
+sources the same table so the per-profile config dirs cannot drift from it.
+
+Three deploy modes, chosen per path:
+
+- **link** — symlink into the repo, so a `git pull` is live with no deploy step. Only for paths nothing but a human or git ever writes. **A tool that saves by writing a temp file and renaming over the target replaces the symlink with a regular file**; Claude Code ([#40857](https://github.com/anthropics/claude-code/issues/40857), closed as not planned), VS Code and macOS `sed -i` all do this, with no error. Never link a directory that receives foreign writes, which is why `~/.claude` is listed child by child.
+- **copy** — a tracked file living inside a directory that receives foreign writes. Files only.
+- **merge** — JSON merge by top-level key. Keys the repo declares are replaced whole; keys it does not are left alone, so Claude Code's `theme` and `effortLevel` and Antigravity's UI toggles survive every run. Because a declared key is replaced whole, dropping an entry from inside one (a permission out of `permissions.allow`) does reach `$HOME`. **Deleting an entire top-level key from the repo does not remove it downstream**: once undeclared it is indistinguishable from a key the app owns, so delete those by hand.
+
+Removal is what the record at `~/.local/state/homebase/manifest` exists for.
+Without it the script cannot tell a path it placed from one it never touched,
+which is why the old rsync could only ever add. **Nothing is removed unless
+provenance checks out**: every file under the path must be one homebase has
+tracked at some point in git history. Staleness is expected and fine; a file
+homebase never tracked means something else owns the directory, so it is left
+alone with a warning. That guard matters because `setup_auth` writes SSH keys
+and gws credentials into `$HOME` that cannot be regenerated without a terminal.
+
+Inspect before committing to it:
+
+```bash
+./setup.sh --dry-run    # every create, replace and delete; installs nothing
+```
+
+`setup.sh` refuses to reconcile from a git worktree, since the symlinks would
+resolve into a checkout that disappears when the branch merges.
 
 ## Custom Git Branch Checkout
 

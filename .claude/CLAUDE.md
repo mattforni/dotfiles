@@ -128,7 +128,7 @@ Choose the highest available option. Native connectors are smoother and require 
 
 ### gws Profiles
 
-The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, matt@theproductforge.com; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/Tools/gws.md`.
+The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, <matt@theproductforge.com>; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/Tools/gws.md`.
 
 ### Google Workspace (reading links, Docs, Gmail)
 
@@ -208,7 +208,7 @@ Upstream of the playbook, `~/Eudaimonia/Craft/Vocation/Atelic/icp-research.md` h
 
 ## Local File Conventions
 
-- **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering. Note: macOS Screenshots filenames have a literal leading space character (e.g., ` 2026-05-16 at 09.48.15.png`). `Read` with the bare name fails. Use `ls -1 ~/Screenshots/` to discover the exact name and pass it to `Read` with the leading space included. `ls -la` makes the leading space ambiguous because of column spacing, so prefer `ls -1` or `od -c` to verify.
+- **Screenshots** live in `~/Screenshots`. When Forni references "last screenshot", "the last N screenshots", "most recent screenshot", etc., check that directory and use modified time ordering. Note: macOS Screenshots filenames have a literal leading space character (e.g., `2026-05-16 at 09.48.15.png`). `Read` with the bare name fails. Use `ls -1 ~/Screenshots/` to discover the exact name and pass it to `Read` with the leading space included. `ls -la` makes the leading space ambiguous because of column spacing, so prefer `ls -1` or `od -c` to verify.
 - **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. Numbered files contain a literal space between `Scan` and the number, so the bare name must be quoted in shell commands (`"Scan 1.pdf"`). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
 
 The recipe for cropping scanned PDFs to their content (density-filter approach, calibrated parameters) lives in `~/Eudaimonia/Admin/Tools/pdf-crop.md`.

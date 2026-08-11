@@ -15,6 +15,7 @@ brew "linear"
 brew "markdownlint-cli2"
 brew "poppler"
 brew "mas"
+brew "shellcheck" # Static analysis for shell; bin/lint/shell and CI both require it
 brew "stow"
 brew "wget"
 brew "zsh"
@@ -28,12 +29,10 @@ brew "cmake"
 brew "make"
 brew "maven"
 brew "python@3.12"
-brew "rbenv"
-brew "ruby-build"
 
 # Runtime & package managers
+brew "mise" # Runtime version manager; replaced fnm and rbenv 2026-08-11
 brew "bun"
-brew "fnm"
 brew "pnpm"
 
 # Data & services
@@ -46,11 +45,11 @@ brew "heroku"
 brew "railway"
 
 # Applications
+cask "antigravity-ide" # The only IDE. Its cask puts antigravity-ide and agy-ide on PATH
 cask "bitwarden"
 cask "brave-browser"
 cask "claude"
 cask "coderabbit"
-cask "cursor"
 cask "darktable"
 cask "docker-desktop"
 cask "gcloud-cli"
@@ -61,7 +60,6 @@ cask "raycast"
 cask "slack"
 cask "spotify"
 cask "todoist-app"
-cask "visual-studio-code"
 cask "warp"
 cask "whatsapp"
 cask "zoom"

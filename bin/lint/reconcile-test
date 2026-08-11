@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# End to end test for reconcile_home against a throwaway $HOME.
+#
+# The reconciler is the one part of setup.sh that can leave you without a
+# working shell, and it refuses to run from a worktree, so it cannot be
+# exercised for real before merging. This clones the repo to a scratch path
+# (a real clone, not a worktree, so the refusal does not fire), seeds a fake
+# $HOME with the exact conditions the reconciler has to handle, then sources
+# setup.sh and calls the phase directly.
+#
+# Checks: fresh link, stale-copy migration, refusal on a foreign file, legacy
+# prune, merge preserving app-owned keys, prune on drop-out, idempotence, and
+# that a dry run mutates nothing.
+set -uo pipefail
+
+REPO=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) \
+  || { echo "not in a git repo"; exit 1; }
+
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+CLONE="$WORK/homebase"
+FAKE="$WORK/home"
+
+pass=0; fail=0
+ok()   { printf '  \033[0;32mok\033[0m   %s\n' "$1"; pass=$((pass+1)); }
+bad()  { printf '  \033[0;31mFAIL\033[0m %s\n' "$1"; fail=$((fail+1)); }
+check(){ if eval "$2"; then ok "$1"; else bad "$1"; fi; }
+
+echo "Cloning to a scratch path (a real clone, so the worktree guard stays quiet)"
+git clone --quiet --no-hardlinks "$REPO" "$CLONE" || exit 1
+git -C "$CLONE" checkout --quiet -B test HEAD || exit 1
+
+# A clone carries committed state only. Overlay the working tree so the test
+# exercises the setup.sh you are editing, not the last commit. Without this the
+# clone runs an older setup.sh, which dispatches every install phase for real.
+# No trailing slash on the exclude: in a linked worktree .git is a FILE, and a
+# '.git/' pattern matches directories only, so rsync would try to write that
+# file over the clone's .git directory.
+rsync -a --exclude '.git' "$REPO"/ "$CLONE"/ || exit 1
+
+mkdir -p "$FAKE"
+
+# --- seed the conditions ------------------------------------------------------
+# A stale copy of a tracked directory: right files, wrong content, one missing.
+mkdir -p "$FAKE/.claude/agents"
+echo "stale content" > "$FAKE/.claude/agents/runner.md"
+
+# A directory holding a file homebase has never tracked. Must be refused.
+mkdir -p "$FAKE/.claude/commands"
+echo "mine" > "$FAKE/.claude/commands/my-own-command.md"
+
+# A legacy path an older run rsynced in and never removed.
+mkdir -p "$FAKE/docs/plugins"
+echo "old" > "$FAKE/docs/plugins/sdlc.md"
+
+# A secrets file .zshrc sources. Must survive untouched: it is deliberately
+# absent from both the deploy table and the legacy list. Seeded here because an
+# assertion that it "is never touched" proves nothing if the file never existed.
+printf 'export SOME_TOKEN=keepme\n' > "$FAKE/.env.local"
+
+# An app-owned settings file carrying keys the repo does not declare.
+mkdir -p "$FAKE/.claude"
+cat > "$FAKE/.claude/settings.json" <<'JSON'
+{ "theme": "dark", "effortLevel": "high", "permissions": { "allow": ["Bash(ls:*)"] } }
+JSON
+
+# --- run ----------------------------------------------------------------------
+echo "Running reconcile_home against $FAKE"
+# Export rather than using a `VAR=x source ...` prefix. That form creates a
+# temporary binding which is torn down when source returns, taking setup.sh's
+# own DRY_RUN assignment with it and leaving the variable unbound.
+export HOME="$FAKE"
+# shellcheck source=/dev/null
+source "$CLONE/setup.sh" >"$WORK/run1.log" 2>&1
+reconcile_home >>"$WORK/run1.log" 2>&1
+rc1=$?
+
+echo
+echo "Assertions"
+check "fresh path is symlinked into the repo" \
+  '[[ -L "$FAKE/.zshrc" && "$(readlink "$FAKE/.zshrc")" == "$CLONE/.zshrc" ]]'
+check "stale copy was migrated to a symlink" \
+  '[[ -L "$FAKE/.claude/agents" ]]'
+check "migrated path now resolves to repo content" \
+  '[[ -f "$FAKE/.claude/agents/runner.md" ]] && ! grep -q "stale content" "$FAKE/.claude/agents/runner.md"'
+check "directory with an untracked file was REFUSED" \
+  '[[ ! -L "$FAKE/.claude/commands" ]] && [[ -f "$FAKE/.claude/commands/my-own-command.md" ]]'
+check "refusal made the phase fail" "[[ $rc1 -ne 0 ]]"
+check "legacy path was pruned" \
+  '[[ ! -e "$FAKE/docs" ]]'
+check "merge kept the app-owned keys" \
+  'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"theme\"]==\"dark\" and d[\"effortLevel\"]==\"high\""'
+check "merge replaced the repo-owned key" \
+  'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"permissions\"][\"allow\"]!=[\"Bash(ls:*)\"]"'
+check "manifest was written" \
+  '[[ -s "$FAKE/.local/state/homebase/manifest" ]]'
+check "\$HOME/.env.local survives untouched" \
+  '[[ -f "$FAKE/.env.local" ]] && grep -q keepme "$FAKE/.env.local"'
+
+# path_is_ours must fail closed. An empty directory it cannot attribute, or a
+# walk that cannot run, previously returned "ours" and handed the path to rm -rf.
+mkdir -p "$FAKE/mystery-empty"
+check "an unattributable empty directory is not treated as ours" \
+  '! (source "$CLONE/setup.sh" >/dev/null 2>&1; path_is_ours "$FAKE/mystery-empty" "mystery-empty")'
+
+# A link-to-copy mode change must replace the symlink, not compare it to itself.
+check "a symlink at a copy destination is replaced by a real file" \
+  '[[ -f "$FAKE/.claude/plugins/config.json" && ! -L "$FAKE/.claude/plugins/config.json" ]]'
+
+# --- idempotence --------------------------------------------------------------
+cp "$FAKE/.local/state/homebase/manifest" "$WORK/manifest.1"
+# The negative assertion below is only meaningful if the pattern still matches
+# something. It hardcodes the ANSI escape and [+] marker that info() emits, so
+# a format change in setup.sh would make it match nothing and pass forever.
+check "the change-line pattern still matches run 1 output" \
+  'grep -qE "^.\[0;32m\[\+\].\[0m (linked|copied|merged|removed)" "$WORK/run1.log"'
+reconcile_home >"$WORK/run2.log" 2>&1
+check "second run makes no new changes" \
+  '! grep -qE "^.\[0;32m\[\+\].\[0m (linked|copied|merged|removed)" "$WORK/run2.log"'
+check "manifest is stable across runs" \
+  'diff -q "$WORK/manifest.1" "$FAKE/.local/state/homebase/manifest" >/dev/null'
+
+# --- dry run ------------------------------------------------------------------
+# A --dry-run that mutates anything is the most damaging failure this reconciler
+# can have, and the documented workflow tells you to trust its output before
+# installing. Run in a subshell so neither the DRY_RUN flip nor the $HOME swap
+# leaks into the checks that follow. Note the manifest path resolved when
+# setup.sh was sourced, so the prune pass still reasons about $FAKE: that makes
+# this the strongest available check, because a broken DRY_RUN would delete the
+# already-deployed $FAKE tree, not just fail to populate the empty one.
+DRY="$WORK/home-dry"
+mkdir -p "$DRY"
+find "$FAKE" | sort > "$WORK/fake.before"
+(
+  export HOME="$DRY"
+  # shellcheck disable=SC2034  # read by the sourced setup.sh, not by this file
+  DRY_RUN=true
+  reconcile_home
+) >"$WORK/run-dry.log" 2>&1
+find "$FAKE" | sort > "$WORK/fake.after"
+check "a dry run reports the work it would do" \
+  'grep -q "link .zshrc" "$WORK/run-dry.log"'
+check "a dry run creates nothing in \$HOME" \
+  '[[ -z "$(ls -A "$DRY")" ]]'
+check "a dry run writes no manifest" \
+  '[[ ! -e "$DRY/.local/state/homebase/manifest" ]]'
+check "a dry run leaves the deployed tree untouched" \
+  'diff -q "$WORK/fake.before" "$WORK/fake.after" >/dev/null'
+
+# --- prune on drop-out --------------------------------------------------------
+# Drop a path from the table and confirm the next run removes what it deployed.
+ln -sfn "$CLONE/.screenrc" "$FAKE/.screenrc"
+grep -v '"link|.screenrc"' "$CLONE/bin/lib/deploy-table.sh" > "$WORK/table-dropped.sh"
+cp "$WORK/table-dropped.sh" "$CLONE/bin/lib/deploy-table.sh"
+# shellcheck source=/dev/null
+source "$CLONE/setup.sh" >/dev/null 2>&1
+reconcile_home >"$WORK/run3.log" 2>&1
+check "a path dropped from the table is pruned from \$HOME" \
+  '[[ ! -e "$FAKE/.screenrc" ]]'
+
+echo
+printf 'pass %d, fail %d\n' "$pass" "$fail"
+[[ $fail -eq 0 ]]

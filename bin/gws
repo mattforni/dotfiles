@@ -36,6 +36,7 @@ set -euo pipefail
 ACCOUNT_LOG_PREFIX="gws shim"
 account_lib="$(dirname "$0")/lib/account-profile.sh"
 if [[ -r "$account_lib" ]]; then
+    # shellcheck source-path=SCRIPTDIR
     # shellcheck source=lib/account-profile.sh
     . "$account_lib"
 else

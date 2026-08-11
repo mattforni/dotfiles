@@ -33,9 +33,15 @@ if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
   [[ -n "$ATELIC_API_TOKEN" ]] && export ATELIC_API_TOKEN || unset ATELIC_API_TOKEN
 fi
 
-directories=("/usr/local/opt/postgresql@15/bin", "$HOME/bin")
+# Homebrew keg-only binaries. Three things were wrong here until 2026-08-11:
+# a stray comma made the first element "...postgresql@15/bin," which could never
+# match; the prefix was the Intel /usr/local path rather than /opt/homebrew; and
+# the test was -s (non-empty file) rather than -d (directory). $HOME/bin is not
+# listed because the block at the bottom of this file prepends it, which is
+# where it belongs.
+directories=("$(brew --prefix 2>/dev/null)/opt/postgresql@15/bin")
 for directory in "${directories[@]}"; do
-  if [[ -s "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
+  if [[ -d "${directory}" ]] && [[ ":$PATH:" != *":${directory}:"* ]]; then
     export PATH="${PATH}:${directory}"
   fi
 done
@@ -43,8 +49,12 @@ done
 export EDITOR=vim
 eval "$(fzf --zsh)"
 
-# rbenv: shims + auto-switch Ruby from .ruby-version files
-command -v rbenv &>/dev/null && eval "$(rbenv init - zsh)"
+# mise: shims and auto-switching for node and ruby, reading the same
+# .node-version and .ruby-version files fnm and rbenv did. Replaced both on
+# 2026-08-11. Global fallback versions live in ~/.config/mise/config.toml.
+#
+# This is the runtime version manager (jdx/mise), not the assist:mise skill.
+command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
 export PATH="$HOME/.local/bin:$PATH"
 
