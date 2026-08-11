@@ -227,7 +227,11 @@ setup_runtimes() {
 
   local node_version ruby_version
   node_version=$(mise exec -- node --version 2>/dev/null || echo "unavailable")
-  ruby_version=$(mise exec -- ruby --version 2>/dev/null | awk '{print $2}' || echo "unavailable")
+  # The `|| echo` has to sit outside the pipeline: awk exits 0 on empty input,
+  # so a failing `mise exec` still yields a successful pipeline and an empty
+  # string, and the summary would print "ruby " with nothing after it.
+  ruby_version=$(mise exec -- ruby --version 2>/dev/null | awk '{print $2}')
+  [[ -n "$ruby_version" ]] || ruby_version="unavailable"
   info "node $node_version, ruby $ruby_version"
   SUMMARY+=("Runtimes: node $node_version, ruby $ruby_version")
 }

@@ -9,7 +9,8 @@
 # setup.sh and calls the phase directly.
 #
 # Checks: fresh link, stale-copy migration, refusal on a foreign file, legacy
-# prune, merge preserving app-owned keys, prune on drop-out, and idempotence.
+# prune, merge preserving app-owned keys, prune on drop-out, idempotence, and
+# that a dry run mutates nothing.
 set -uo pipefail
 
 REPO=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) \
@@ -108,11 +109,43 @@ check "a symlink at a copy destination is replaced by a real file" \
 
 # --- idempotence --------------------------------------------------------------
 cp "$FAKE/.local/state/homebase/manifest" "$WORK/manifest.1"
+# The negative assertion below is only meaningful if the pattern still matches
+# something. It hardcodes the ANSI escape and [+] marker that info() emits, so
+# a format change in setup.sh would make it match nothing and pass forever.
+check "the change-line pattern still matches run 1 output" \
+  'grep -qE "^.\[0;32m\[\+\].\[0m (linked|copied|merged|removed)" "$WORK/run1.log"'
 reconcile_home >"$WORK/run2.log" 2>&1
 check "second run makes no new changes" \
   '! grep -qE "^.\[0;32m\[\+\].\[0m (linked|copied|merged|removed)" "$WORK/run2.log"'
 check "manifest is stable across runs" \
   'diff -q "$WORK/manifest.1" "$FAKE/.local/state/homebase/manifest" >/dev/null'
+
+# --- dry run ------------------------------------------------------------------
+# A --dry-run that mutates anything is the most damaging failure this reconciler
+# can have, and the documented workflow tells you to trust its output before
+# installing. Run in a subshell so neither the DRY_RUN flip nor the $HOME swap
+# leaks into the checks that follow. Note the manifest path resolved when
+# setup.sh was sourced, so the prune pass still reasons about $FAKE: that makes
+# this the strongest available check, because a broken DRY_RUN would delete the
+# already-deployed $FAKE tree, not just fail to populate the empty one.
+DRY="$WORK/home-dry"
+mkdir -p "$DRY"
+find "$FAKE" | sort > "$WORK/fake.before"
+(
+  export HOME="$DRY"
+  # shellcheck disable=SC2034  # read by the sourced setup.sh, not by this file
+  DRY_RUN=true
+  reconcile_home
+) >"$WORK/run-dry.log" 2>&1
+find "$FAKE" | sort > "$WORK/fake.after"
+check "a dry run reports the work it would do" \
+  'grep -q "link .zshrc" "$WORK/run-dry.log"'
+check "a dry run creates nothing in \$HOME" \
+  '[[ -z "$(ls -A "$DRY")" ]]'
+check "a dry run writes no manifest" \
+  '[[ ! -e "$DRY/.local/state/homebase/manifest" ]]'
+check "a dry run leaves the deployed tree untouched" \
+  'diff -q "$WORK/fake.before" "$WORK/fake.after" >/dev/null'
 
 # --- prune on drop-out --------------------------------------------------------
 # Drop a path from the table and confirm the next run removes what it deployed.
