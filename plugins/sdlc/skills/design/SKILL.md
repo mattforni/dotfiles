@@ -149,7 +149,7 @@ git checkout -b "BRANCH_NAME" origin/"BASE_BRANCH"
 
 ## Step 4: Create Implementation Plan
 
-> # 🛑 STOP — CALL `EnterPlanMode` BEFORE ANYTHING ELSE IN THIS STEP. 🛑
+> ### 🛑 STOP — CALL `EnterPlanMode` BEFORE ANYTHING ELSE IN THIS STEP. 🛑
 >
 > **This is not a suggestion. This is not a vibe. This is a hard requirement.**
 >

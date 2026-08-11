@@ -44,7 +44,8 @@ Knowledge is stored in three layers. Each layer has a distinct audience and leve
 The root `CLAUDE.md` of the project. One line per topic, pointing to the deeper CLAUDE.md. This is what Claude Code reads at session start to know where knowledge lives.
 
 **Format:** Add a line under a relevant section (or create one) like:
-```
+
+```markdown
 - **[Topic]**: See `path/to/CLAUDE.md` for conventions
 ```
 
@@ -53,16 +54,19 @@ The root `CLAUDE.md` of the project. One line per topic, pointing to the deeper 
 A concise file in the target directory. Written for Claude Code. Contains only the rules and patterns needed to work correctly in this area.
 
 **What goes here:**
+
 - Do this, not that patterns
 - Key constraints or gotchas (one line each)
 - A pointer to README.md for full explanation
 
 **What does NOT go here:**
+
 - Explanations of why
 - Code examples longer than one line
 - Background or history
 
 **Format:**
+
 ```markdown
 # [Directory/Topic Name]
 
@@ -80,6 +84,7 @@ See [README.md](README.md) for full documentation.
 A thorough document in the target directory. Written for humans who encounter this topic for the first time.
 
 **What goes here:**
+
 - What the thing is and how it works
 - Code examples showing correct and incorrect usage (when applicable)
 - Gotchas, foot-guns, and lessons learned
@@ -87,6 +92,7 @@ A thorough document in the target directory. Written for humans who encounter th
 - Context that helps someone understand *why* the conventions exist
 
 **Structure varies by topic, but a good default:**
+
 ```markdown
 # [Topic]
 
@@ -114,6 +120,7 @@ A thorough document in the target directory. Written for humans who encounter th
 ### Step 1: Gather context
 
 Review the current conversation for relevant knowledge. Identify:
+
 - What was learned (the core insight)
 - Where it applies (which directory or domain)
 - What went wrong or was confusing (the foot-guns)
@@ -138,9 +145,11 @@ If the conversation does not contain enough context, ask the user to fill gaps. 
 After the user approves:
 
 **For skill directories:**
+
 1. **Add to or create the `## Learned Rules` section** in the target SKILL.md
 
 **For project directories:**
+
 1. **Write or update the README.md** in the target directory
 2. **Write or update the CLAUDE.md** in the target directory (extract conventions from the README, keep it concise, point back to README)
 3. **Update the root CLAUDE.md** with a discovery pointer if one does not already exist

@@ -10,7 +10,7 @@ Each rule states the rule, the reason, and how to apply it. Keep them tight; the
 
 ## Rules
 
-### CLI is the default tool, not MCP. Auth per workspace before grooming.
+### CLI is the default tool, not MCP. Auth per workspace before grooming
 
 When a user has both Linear MCP and Linear CLI available, default to the CLI for grooming actions. The MCP gets used only for read-only inspection when the CLI is not auth'd to the target workspace. Reasons: MCP cannot hard-delete, MCP fuzzy-maps state names imprecisely (the "Canceled" gotcha below), and the user may have explicitly requested CLI.
 
@@ -18,7 +18,7 @@ When a user has both Linear MCP and Linear CLI available, default to the CLI for
 
 **How to apply:** Before starting a groom, check `linear auth list` and confirm the target workspace is configured. If not, prompt the user to run `linear auth login` and pick the workspace. Once auth'd, prefer CLI commands (`linear issue update`, `linear issue delete --confirm`) over MCP `save_issue`.
 
-### MCP `save_issue` with `state: "Canceled"` may map to "Duplicate" status.
+### MCP `save_issue` with `state: "Canceled"` may map to "Duplicate" status
 
 The Linear MCP fuzzy-matches state names. Passing `state: "Canceled"` can land the issue in the "Duplicate" status (also a canceled-type, but semantically different — implies superseded by another issue). If you want literal "Canceled" via MCP, pass the explicit state ID for Canceled (visible from `list_issue_statuses`), not the name string.
 
@@ -26,7 +26,7 @@ The Linear MCP fuzzy-matches state names. Passing `state: "Canceled"` can land t
 
 **How to apply:** When canceling via MCP, either (a) accept the Duplicate-vs-Canceled imprecision since both hide the issue from active views, (b) pass the explicit Canceled state UUID, or (c) use the CLI: `linear issue update ATE-NNN --state Canceled`.
 
-### Default Scope to Assignee == Requesting User, Not the Whole Cycle.
+### Default Scope to Assignee == Requesting User, Not the Whole Cycle
 
 The skill's scope step should default to filtering cycle issues where `assignee.name == user` unless the user explicitly says "groom the whole cycle." Otherwise you partition other people's tickets, confuse the capacity math, and force the user to redirect mid-walk.
 
@@ -34,7 +34,7 @@ The skill's scope step should default to filtering cycle issues where `assignee.
 
 **How to apply:** At scope, query the cycle, then immediately filter to `assignee.name == user` for the working set. Surface the full cycle count plus the per assignee distribution so the user can opt into a broader scope if they want. Default working set is always "your tickets."
 
-### Linear `priority: 0` Is "No Priority," Not Urgent. Always Render `priorityLabel`.
+### Linear `priority: 0` Is "No Priority," Not Urgent. Always Render `priorityLabel`
 
 Linear priority integers: 1=Urgent, 2=High, 3=Normal, 4=Low, **0=No priority** (untriaged). Rendering the integer as `P0` makes untriaged tickets read as the most urgent thing in the cycle.
 
@@ -42,7 +42,7 @@ Linear priority integers: 1=Urgent, 2=High, 3=Normal, 4=Low, **0=No priority** (
 
 **How to apply:** In every table, sort key, and rationale string, use `priorityLabel` (the string Linear computes from the integer), never the integer. When sorting, treat `priority == 0` as Low for scheduling order, not as the top of the list.
 
-### Verify "Shipped but Todo" Against the Team's Main Repo Before Partitioning.
+### Verify "Shipped but Todo" Against the Team's Main Repo Before Partitioning
 
 For each cycle groom, grep the team's primary code repo for commits matching the ticket key pattern since cycle start. Any ticket key that appears in a merged commit but still sits in Todo is state drift: probably Done in reality, never moved in Linear.
 
@@ -50,7 +50,7 @@ For each cycle groom, grep the team's primary code repo for commits matching the
 
 **How to apply:** During scope, run `git -C <main-repo> log origin/main --since="<cycle-start>" --grep="<TEAM>-" -i --oneline` (adjust `origin/main` to the team's default branch; run `git -C <main-repo> fetch origin` first so the ref is current). Cross reference each ticket key against Linear states. For shipped-but-Todo, surface as a batch: "verified shipped in PR #N — mark Done?" Querying `origin/main` rather than `HEAD` avoids false positives from unmerged commits on a local feature branch.
 
-### Re-query the Cycle at the End of Partitioning to Catch Newly Added Tickets.
+### Re-query the Cycle at the End of Partitioning to Catch Newly Added Tickets
 
 Long groom sessions take an hour or more. New tickets land mid session. The final verification should re-pull the cycle and diff against the original working set so nothing slips through unclassified.
 
@@ -58,15 +58,13 @@ Long groom sessions take an hour or more. New tickets land mid session. The fina
 
 **How to apply:** After applying all approved changes, re-run the cycle query and diff `current_set - original_working_set`. Surface any newly-added tickets to the user as a final batch decision before declaring the groom complete.
 
-### A team's deferral label is sacred. Do not include it in the stale sweep.
+### A team's deferral label is sacred. Do not include it in the stale sweep
 
 The naive backlog stale-sweep heuristic (no priority + no recent activity + no assignee + no project) misfires on any team that uses a label like `👋 Later` to mean "intentionally deferred, save the intent." Items carrying that label are working as designed; bulk canceling them erases real intent.
 
 **Why:** Surfaced on the first Atelic groom run (2026-05-10). Of 37 candidates that matched the naive stale heuristic, 32 carried `👋 Later`. Mass canceling would have lost 32 deliberately-parked aspirations.
 
 **How to apply:** Detect the team's deferral convention before sweeping. Look at label distribution on Backlog issues; if a single non-priority label is on a large fraction of older items, treat it as the deferral signal and exclude it from the sweep. Stale candidates are then `(no priority + stale + no project + does not carry the deferral label)`. For Atelic, the label is `👋 Later`. For other teams, find the equivalent.
-
-
 
 ### Lifted from `zero:linear-groom`
 

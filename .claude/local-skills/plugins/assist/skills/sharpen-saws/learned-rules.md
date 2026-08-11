@@ -23,6 +23,7 @@ Before proposing a new headless routine, audit the feedback channels on existing
 **Why:** 2026-05-07 sharpen session. Proposed extending the headless pattern from one routine (mise) to a second (Monday `/assist:plan-week`). Forni redirected: "Before we move on to automation another routine, we first need to get better at the feedback and backpressure mechanisms for mise. Right now, it fails silently sometimes (because my notifications are silenced) and even when it succeeds, it tries to tell me some things, but they get cut off in the notification and when I click through, I get nothing else." macOS notifications are best effort and load-bear too much when used as the source of truth.
 
 **How to apply:**
+
 - For each live headless routine, ask: "If this fails silently, how would Forni find out?" If the answer is "macOS notification" alone, that is insufficient.
 - The current robust pattern is per-run email via Resend with API key in Keychain, recipient in `~/.config/headless-report/recipient`, osascript demoted to a redundant fallback. See `homebase/.claude/references/headless-claude.md` "Email reporting via Resend" section.
 - Apply this scrutiny in proportion to schedule frequency. A weekly routine that fails silently for a week is much worse than a daily one that fails silently once.

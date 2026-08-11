@@ -104,7 +104,7 @@ Nest content slides inside an outer `<section>` per act so vertical navigation w
 
 Always:
 
-```
+```text
 <host-repo>/
 ├── package.json          # one-time setup; references bin/preso.sh
 ├── bin/preso.sh          # one-time setup; serves any preso/<folder>/

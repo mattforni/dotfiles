@@ -14,4 +14,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      # globs must be passed here, not left to the action's default. The default
+      # is a single-asterisk `*.{md,markdown}`, which matches only the repo root,
+      # so this job linted exactly two files until 2026-08-11. CLI args win over
+      # the `globs` key in .markdownlint-cli2.jsonc, so the two are kept in sync.
       - uses: DavidAnson/markdownlint-cli2-action@05f32210e84442804257b2a6f20b273450ec8265 # v19
+        with:
+          globs: "**/*.{md,markdown}"
+
+  shell:
+    name: Shell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh
+
+      # shellcheck ships on the ubuntu runner image. The script runs shellcheck
+      # plus bash -n plus zsh -n, and is the same one .githooks/pre-commit calls.
+      - name: Lint shell
+        run: ./bin/lint/shell

@@ -8,5 +8,9 @@
   // MD041: First line should be a top-level heading - disabled for files with YAML frontmatter
   "MD041": false,
   // MD060: Table column style - disabled, gws skills use compact table format
-  "MD060": false
+  "MD060": false,
+  // MD024: Duplicate headings - allowed under different parents. Skills legitimately
+  // repeat a heading like "Cycle Mode" inside two different sections; a global
+  // uniqueness rule would force artificial renaming.
+  "MD024": { "siblings_only": true }
 }

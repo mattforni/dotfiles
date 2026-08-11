@@ -15,6 +15,7 @@ brew "linear"
 brew "markdownlint-cli2"
 brew "poppler"
 brew "mas"
+brew "shellcheck" # Static analysis for shell; bin/lint/shell and CI both require it
 brew "stow"
 brew "wget"
 brew "zsh"

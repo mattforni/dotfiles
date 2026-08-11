@@ -25,4 +25,4 @@ Corrections and calibration for how groom-context should reason. Seeded from the
 - **Records are not rules.** Personal historical records (a completed home-purchase timeline, a finished trip) that only load in their own directory are not a salience problem and not "stale guidance." Do not cull them by default; they are history, not a misleading rule. Cull stale *guidance*, archive or leave stale *records*.
 - **A doc can defensibly repeat a rule across separately-cloned repos.** "Never hard-code a username" living in both the Eudy-root and homebase-root CLAUDE.md is not duplication to collapse, because homebase clones standalone on machines without Eudy. Confirm a file's deployment context before treating repetition as dedup.
 
-_(Populated further as Forni corrects groom-context's judgment over time. Calibrate how aggressive culling should be from his vetoes.)_
+*(Populated further as Forni corrects groom-context's judgment over time. Calibrate how aggressive culling should be from his vetoes.)*

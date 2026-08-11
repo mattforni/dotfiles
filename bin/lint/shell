@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Lint homebase's shell sources. Used by CI (.github/workflows/lint.yml) and by
+# .githooks/pre-commit, so there is one implementation rather than two.
+#
+# With no arguments, checks every shell source in the repo. With arguments,
+# checks only those paths, which is how the pre-commit hook passes staged files.
+#
+# Three checks, because no single one covers this repo:
+#   shellcheck   static analysis; bash/sh only, it has no zsh mode
+#   bash -n      syntax for anything bash reads
+#   zsh -n       syntax for anything zsh reads
+#
+# Files zsh reads get the zsh check specifically. `bash -n` cannot see
+# zsh-specific breakage: the sharpest case is `local path=...`, which is
+# harmless in bash but silently clobbers command lookup in zsh, where `path` is
+# tied to $PATH as an array. That bug shipped once already (see the bin/lib
+# notes in CLAUDE.md), which is why this gate exists.
+set -uo pipefail
+
+ROOT=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) || ROOT=""
+[[ -n "$ROOT" ]] || ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; YELLOW=$'\033[1;33m'; NC=$'\033[0m'
+failed=0
+checked=0
+
+fail() { printf "${RED}[x]${NC} %s\n" "$1" >&2; failed=1; }
+note() { printf "${YELLOW}[!]${NC} %s\n" "$1"; }
+ok()   { printf "${GREEN}[+]${NC} %s\n" "$1"; }
+
+# Paths zsh sources or executes. These get `zsh -n`; the ones bash also reads
+# get both.
+is_zsh_read() {
+  case "$1" in
+    .zshrc|.aliases|.functions|.zsh/*.zsh|bin/lib/*.sh) return 0 ;;
+    *) head -n1 "$ROOT/$1" 2>/dev/null | grep -qE '^#!.*[ /]zsh$' ;;
+  esac
+}
+
+# Paths bash reads. Note .aliases and .functions are NOT here: only .zshrc
+# sources them, and shellcheck has no zsh mode, so running it over them reports
+# SC1071 on perfectly good zsh. bin/lib/*.sh is genuinely dual: bin/claude and
+# bin/gws source it under bash, .functions sources it under zsh.
+is_bash_read() {
+  case "$1" in
+    bin/lib/*.sh) return 0 ;;
+    .aliases|.functions|*.zsh|.zshrc) return 1 ;;
+    # The character class matters: a bare `(bash|sh)$` also matches a zsh
+    # shebang, since "zsh" ends in "sh". That sent bin/checkout-branch.sh to
+    # shellcheck, which has no zsh mode and errors out on SC1071.
+    *) head -n1 "$ROOT/$1" 2>/dev/null | grep -qE '^#!.*[ /](bash|sh)$' ;;
+  esac
+}
+
+discover() {
+  git -C "$ROOT" ls-files -z \
+    'setup.sh' '.aliases' '.functions' '.zshrc' '.zsh/*.zsh' \
+    'bin/*' 'bin/**/*' '.githooks/*' 2>/dev/null |
+    while IFS= read -r -d '' f; do
+      [[ -f "$ROOT/$f" ]] || continue
+      if is_zsh_read "$f" || is_bash_read "$f"; then printf '%s\n' "$f"; fi
+    done
+}
+
+if [[ $# -gt 0 ]]; then
+  targets=()
+  for arg in "$@"; do
+    rel="${arg#"$ROOT"/}"
+    [[ -f "$ROOT/$rel" ]] || continue
+    if is_zsh_read "$rel" || is_bash_read "$rel"; then targets+=("$rel"); fi
+  done
+else
+  mapfile -t targets < <(discover)
+fi
+
+if [[ ${#targets[@]} -eq 0 ]]; then
+  ok "No shell sources to check"
+  exit 0
+fi
+
+have_shellcheck=true
+command -v shellcheck &>/dev/null || { note "shellcheck not installed, skipping static analysis"; have_shellcheck=false; }
+have_zsh=true
+command -v zsh &>/dev/null || { note "zsh not installed, skipping zsh syntax checks"; have_zsh=false; }
+
+for rel in "${targets[@]}"; do
+  abs="$ROOT/$rel"
+  checked=$((checked + 1))
+
+  # shellcheck is bash/sh only. Running it on a zsh-targeted file reports
+  # noise about constructs zsh supports and bash does not.
+  # Gate at warning. Style and info findings (legacy backticks, unquoted
+  # expansions in simple paths, unresolvable `source` targets) are real but not
+  # worth failing a commit over, and a noisy gate just trains you to reach for
+  # --no-verify. Warnings and errors are the ones that bite.
+  if [[ "$have_shellcheck" == true ]] && is_bash_read "$rel"; then
+    shellcheck -x --severity=warning "$abs" || fail "shellcheck: $rel"
+  fi
+
+  if is_bash_read "$rel"; then
+    bash -n "$abs" || fail "bash -n: $rel"
+  fi
+
+  if [[ "$have_zsh" == true ]] && is_zsh_read "$rel"; then
+    zsh -n "$abs" || fail "zsh -n: $rel"
+  fi
+done
+
+if [[ $failed -ne 0 ]]; then
+  fail "Shell lint failed"
+  exit 1
+fi
+
+ok "Shell lint clean ($checked file(s))"

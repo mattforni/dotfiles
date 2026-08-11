@@ -452,7 +452,10 @@ install_ide_extensions() {
         if output=$("$cli" --install-extension "$ext" --force 2>&1); then
           ((installed_count++))
         else
-          warn "$cli: failed to install $ext"
+          # Surface why. A silent "failed to install" gives you nothing to act
+          # on, and the usual causes (extension delisted, not available for this
+          # editor, network) are all distinguishable from the CLI's own output.
+          warn "$cli: failed to install $ext: ${output//$'\n'/ }"
         fi
       done
       info "$cli: $installed_count/${#missing[@]} extensions installed"
@@ -661,14 +664,14 @@ configure_repo() {
   # sdlc:review and sdlc:iterate read the re review trigger from
   # `git config sdlc.review-command`. The plugin default is "/gemini review"
   # but this repo uses CodeRabbit, so pin it locally.
-  local desired="@coderabbitai review"
+  local desired_command="@coderabbitai review"
   local current
   current="$(git -C "$DIR" config --get sdlc.review-command 2>/dev/null || true)"
-  if [[ "$current" == "$desired" ]]; then
-    info "sdlc.review-command already set to '$desired'"
+  if [[ "$current" == "$desired_command" ]]; then
+    info "sdlc.review-command already set to '$desired_command'"
   else
-    git -C "$DIR" config sdlc.review-command "$desired" || return 1
-    info "sdlc.review-command set to '$desired'"
+    git -C "$DIR" config sdlc.review-command "$desired_command" || return 1
+    info "sdlc.review-command set to '$desired_command'"
     SUMMARY+=("git config: sdlc.review-command set")
   fi
 }

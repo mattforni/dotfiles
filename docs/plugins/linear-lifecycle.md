@@ -54,7 +54,7 @@ After installing the plugin, configure it:
 
 Run the setup command in Claude Code:
 
-```
+```text
 /linear-setup
 ```
 
@@ -83,7 +83,7 @@ Once installed and configured, Claude will automatically use the linear-lifecycl
 
 ### Start Work on an Issue
 
-```
+```text
 You: Start working on BET-123
 
 Claude: Fetching issue details...
@@ -99,7 +99,7 @@ Creating branch bet-123-dark-mode-toggle...
 
 ### Create a New Issue
 
-```
+```text
 You: Create a Linear issue for fixing the avatar crop bug
 
 Claude: Created issue BET-145: Fix avatar crop bug
@@ -110,7 +110,7 @@ Avatar images are cropping incorrectly on mobile devices. Need to adjust aspect 
 
 ### Update Issue Status
 
-```
+```text
 You: Update BET-456 to in progress
 
 Claude: Updated BET-456 to In Progress
@@ -118,7 +118,7 @@ Claude: Updated BET-456 to In Progress
 
 ### Add Comments
 
-```
+```text
 You: Add comment to BET-789 about the refactor being done
 
 Claude: Added comment to BET-789
@@ -127,7 +127,7 @@ Claude: Added comment to BET-789
 
 ### Close Completed Work
 
-```
+```text
 You: Close BET-789, PR merged
 
 Claude: Added completion comment to BET-789

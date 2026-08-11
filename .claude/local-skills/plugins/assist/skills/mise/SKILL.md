@@ -108,10 +108,12 @@ The user is mid-feature on this repo. The goal is to preserve any in-flight work
 2. **If dirty**, delegate to `/sdlc:checkpoint` via the Skill tool. That skill handles "save WIP with commit and push, no PR" — exactly what's needed here. `/sdlc:checkpoint` operates on its caller's cwd, so cd into `$REPO` first (or otherwise scope the invocation to the right repo) — do not let it run against the wrong directory.
 3. **If clean**, skip the checkpoint call entirely. `/sdlc:checkpoint` refuses on a clean tree, and invoking it would either error or become a wasted interaction. A clean feature branch (e.g., one with an open PR that's awaiting review) should flow straight to the merge step.
 4. Fetch and merge main into the current branch:
+
    ```bash
    git -C "$REPO" fetch origin main
    git -C "$REPO" merge origin/main
    ```
+
 5. If the merge surfaces conflicts, leave the branch in the conflicted state and abort mise. Forni resolves the merge; he can rerun mise after.
 
 ## Why each edge case matters
@@ -126,7 +128,7 @@ The user is mid-feature on this repo. The goal is to preserve any in-flight work
 
 ## Output Shape
 
-```
+```text
 Mise complete ✓
 
 Eudy (main): pulled, already up to date
@@ -137,14 +139,14 @@ setup.sh: ✓ (brew cache warm, no changes)
 
 When a marketplace needed a reset, name it and the reason on its own line so the recovery is unmissable:
 
-```
+```text
 Marketplaces (6 total): 4 pulled, 1 already current, 1 reset
   ⚠ skillset: drifted (235 commits behind, local merge artifact), reset to origin/main
 ```
 
 Or on partial completion:
 
-```
+```text
 Mise aborted after Eudy sync
 
 Eudy (feature-branch): checkpoint pushed, merge from origin/main hit conflicts in

@@ -6,7 +6,7 @@ Reference for how the `claude` binary stores credentials and how to isolate iden
 
 Current Claude Code binaries (verified as of May 2026 on the build shipping with `@anthropic-ai/claude-code` installed under `~/.local/bin/`) store OAuth credentials in macOS Keychain under a **per-CLAUDE_CONFIG_DIR service name**:
 
-```
+```text
 Claude Code-credentials-<hash>
 ```
 
