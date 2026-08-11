@@ -29,7 +29,7 @@ The agent-browser bundled Chromium cannot pass the ID.me Cloudflare challenge, h
 
 1. Quit Brave gracefully (`osascript -e 'quit app "Brave Browser"'`) and wait for the process to exit.
 2. Relaunch with the port: `open -a "Brave Browser" --args --remote-debugging-port=9222 --restore-last-session`.
-3. Verify with `curl -s http://localhost:9222/json/version`, then `agent-browser --session myui connect 9222`.
+3. Verify with `curl -s http://localhost:9222/json/version` and confirm the `Browser` field names Brave; any other responder means a stale process owns the port, so stop rather than attach. Then `agent-browser --session myui connect 9222`.
 4. Open MyUI+ in a new tab and pin it (`tab new <url>`, `tab list`, `tab <id> --pin-tab`). Unpinned, the session follows whatever tab Forni focuses.
 
 If a fresh ID.me login or MFA is needed, hand the keyboard to Forni and wait. An existing session redirects the login URL straight into the claimant flow.
@@ -37,14 +37,14 @@ If a fresh ID.me login or MFA is needed, hand the keyboard to Forni and wait. An
 ## The Flow
 
 1. **Confirm the week.** The Work Search screens name the claim week; verify it matches the slate's week before entering anything.
-2. **Basic Questions are Forni's answers** (work, earnings, offers, able, available). Never answer them for him; if the section is not already complete, walk it with him question by question.
+2. **Basic Questions are Forni's answers** (work, earnings, offers, able, available). Never answer them for him. Inline, walk them with him question by question; a background run bails to the main session the moment the section is not already Complete, per the agent contract.
 3. **Activity count**: select the radio matching the slate size (Five or More at cadence).
 4. **One form per activity**, saved individually. Field ids, dropdown mapping, and the ASPX gotchas live in [learned-rules.md](learned-rules.md). Verify each save by the numbered activity list growing.
 5. **Work Search Plan** checkboxes describe the coming week's intent: inquire online, apply online, interview online and by phone, other activities.
 6. **GATE: work search certification.** Checkbox plus initials (MGF), then FINISH. Requires Forni's explicit yes in that moment.
 7. **Summary readback.** Read every section back to Forni in full: Basic Questions answers, all activities, the plan.
 8. **GATE: penalty of perjury certification and Submit.** Requires Forni's explicit yes in that moment. Two gates, two yeses; never batch them.
-9. **Capture and close.** Record the confirmation number, submitted week, and timestamp. Append a confirmation line to the week's section in the log, complete the Todoist task, and report the number.
+9. **Capture and close.** Record the confirmation number, submitted week, and timestamp. Inline, append a confirmation line to the week's section in the log; a background run reports the number and leaves the append to the main session. Complete the Todoist task and report the number.
 
 ## Activity Type Mapping
 
