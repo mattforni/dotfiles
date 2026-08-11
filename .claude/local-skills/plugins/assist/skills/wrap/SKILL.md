@@ -33,7 +33,7 @@ The repos to scan are the repos touched in this session, no more and no less. Do
 
 If the inference produces nothing (rare), fall back to the current working directory's repo only.
 
-### Step 2: Git and PR State
+### Step 2: Git, PR, and Ticket State
 
 For each repo in the list:
 
@@ -68,6 +68,18 @@ Categorize per repo:
 - **Leftover worktree from a merged branch.** Destroy it: `git worktree remove <path>` then `git branch -D <branch>`. Do this for every session worktree whose PR has merged. The one exception is the current session's own working directory and any `locked` worktree; leave those, they get cleaned when the session ends.
 
 When the session already ran `/sdlc:complete`, this step is usually fast and returns clean for the main repo.
+
+#### Close the tickets whose work is done
+
+**A merged PR whose ticket is still open is not finished work, it is finished code.** Do not wait to be asked; a ticket left in Todo or In Progress after its PR merged is the exact loose end wrap exists to catch, and Forni should never have to remind anyone to move it.
+
+Identify every tracker item the session touched: an issue named in the session, an issue whose `gitBranchName` matches a branch worked on, or one moved to In Progress during the session. For each:
+
+- **Work complete and merged.** Post a closing comment, then move the issue to Done. The comment is a record, not a receipt: what shipped and where (PR links), what was verified on the machine rather than only in a test harness, anything that changed from the ticket's stated definition of done and why, and anything deliberately deferred so it is not silently lost.
+- **Work partially done.** Leave it open, comment with what landed and what remains, and surface it in the Step 8 summary. Do not close a ticket because the session ended.
+- **Work abandoned or superseded.** Ask before cancelling. That is a judgment call, not a cleanup.
+
+Follow the repo's tracker split: engineering and client work is a Linear issue, personal and operational work is Todoist (see [learned-rules.md](learned-rules.md)). Ticket hygiene conventions, including body-is-the-spec and comments-are-the-timeline, live in Eudy's root `CLAUDE.md`.
 
 ### Step 3: Surface External Commitments
 
@@ -161,6 +173,7 @@ The session is exit-ready only when every condition below holds:
 - No uncommitted changes remain in any session-touched repo
 - No unpushed commits remain, or any that do are intentional with a note
 - **No PR the user authored this session is still open.** An open PR is not exit-ready state. Watch the PR through review (CodeRabbit, Gemini, human reviewers), chain to `/sdlc:iterate` when feedback lands, and to `/sdlc:complete` once merged.
+- **No ticket whose work merged this session is still open.** Closed in Step 2. A ticket left open behind a merged PR is the loose end the user keeps having to point out.
 
 When all conditions are met, end with one line: "Ready to /exit when you are."
 
@@ -179,6 +192,7 @@ Do not invoke /exit automatically. The user controls the exit. The skill prepare
 - **Todoist offload.** Anything not handled in-session goes to Todoist. Working memory should not carry loose ends across sessions. The Sunday default channels non-urgent items into the existing Sunday planning ritual.
 - **Don't auto-exit.** Wrap prepares the exit; the user triggers it. Auto-exit would risk closing a session that still needs attention.
 - **Open PRs block exit.** A PR sitting open after exit risks losing context for review-comment handling, drifts further from main, and breaks the rhythm of finishing what you start. Wrap is responsible for shepherding the PR through review and merge, not just opening it.
+- **Closing the ticket is part of finishing, not a courtesy.** The tracker is how work is found again; a merged PR behind an open ticket makes the queue lie about what is left to do, and the ticket's closing comment is the only place the *why* survives once the branch is gone. Forni had been prompting for this at the end of sessions, which is the tell that it belonged in the routine rather than in his head. Added 2026-08-11.
 
 ## Output Shape
 
@@ -188,6 +202,10 @@ Wrap complete ✓
 Git / PRs:
   Eudaimonia (main): clean
   homebase (assist-wrap): 3 unpushed commits → pushed
+
+Tickets:
+  ATE-464 → Done (PRs #168, #169 merged; closing comment posted)
+  ATE-470 → left open, schema migration still pending
 
 External commitments:
   ⚠️ LBP waive form (sign today, due Monday)
@@ -214,6 +232,7 @@ Ready to /exit when you are.
 - Do not force codify. If the session did not produce a durable rule, say so and move on.
 - Do not maintain a fixed allowlist of repos. Repos to scan = repos touched in this session.
 - Do not declare exit readiness while a PR the user authored this session is still open. Watch it through review and merge before saying "Ready to /exit when you are."
+- Do not wait to be asked to close a ticket whose work merged. It is part of the routine, not a favour. Equally, do not close one whose work is only partly done just because the session is ending; leave it open and say what remains.
 
 ## Learned Rules
 
