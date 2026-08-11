@@ -52,6 +52,11 @@ echo "mine" > "$FAKE/.claude/commands/my-own-command.md"
 mkdir -p "$FAKE/docs/plugins"
 echo "old" > "$FAKE/docs/plugins/sdlc.md"
 
+# A secrets file .zshrc sources. Must survive untouched: it is deliberately
+# absent from both the deploy table and the legacy list. Seeded here because an
+# assertion that it "is never touched" proves nothing if the file never existed.
+printf 'export SOME_TOKEN=keepme\n' > "$FAKE/.env.local"
+
 # An app-owned settings file carrying keys the repo does not declare.
 mkdir -p "$FAKE/.claude"
 cat > "$FAKE/.claude/settings.json" <<'JSON'
@@ -88,8 +93,18 @@ check "merge replaced the repo-owned key" \
   'python3 -c "import json;d=json.load(open(\"$FAKE/.claude/settings.json\"));assert d[\"permissions\"][\"allow\"]!=[\"Bash(ls:*)\"]"'
 check "manifest was written" \
   '[[ -s "$FAKE/.local/state/homebase/manifest" ]]'
-check "\$HOME/.env.local is never touched" \
-  '[[ ! -e "$FAKE/.env.local" ]]'
+check "\$HOME/.env.local survives untouched" \
+  '[[ -f "$FAKE/.env.local" ]] && grep -q keepme "$FAKE/.env.local"'
+
+# path_is_ours must fail closed. An empty directory it cannot attribute, or a
+# walk that cannot run, previously returned "ours" and handed the path to rm -rf.
+mkdir -p "$FAKE/mystery-empty"
+check "an unattributable empty directory is not treated as ours" \
+  '! (source "$CLONE/setup.sh" >/dev/null 2>&1; path_is_ours "$FAKE/mystery-empty" "mystery-empty")'
+
+# A link-to-copy mode change must replace the symlink, not compare it to itself.
+check "a symlink at a copy destination is replaced by a real file" \
+  '[[ -f "$FAKE/.claude/plugins/config.json" && ! -L "$FAKE/.claude/plugins/config.json" ]]'
 
 # --- idempotence --------------------------------------------------------------
 cp "$FAKE/.local/state/homebase/manifest" "$WORK/manifest.1"

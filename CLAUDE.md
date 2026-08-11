@@ -231,7 +231,7 @@ Three deploy modes, chosen per path:
 
 - **link** — symlink into the repo, so a `git pull` is live with no deploy step. Only for paths nothing but a human or git ever writes. **A tool that saves by writing a temp file and renaming over the target replaces the symlink with a regular file**; Claude Code ([#40857](https://github.com/anthropics/claude-code/issues/40857), closed as not planned), VS Code and macOS `sed -i` all do this, with no error. Never link a directory that receives foreign writes, which is why `~/.claude` is listed child by child.
 - **copy** — a tracked file living inside a directory that receives foreign writes. Files only.
-- **merge** — JSON merge by top-level key. Keys the repo declares are replaced; keys it does not are left alone, so Claude Code's `theme` and `effortLevel` and Antigravity's UI toggles survive every run. Removing a key from the repo still removes it downstream.
+- **merge** — JSON merge by top-level key. Keys the repo declares are replaced whole; keys it does not are left alone, so Claude Code's `theme` and `effortLevel` and Antigravity's UI toggles survive every run. Because a declared key is replaced whole, dropping an entry from inside one (a permission out of `permissions.allow`) does reach `$HOME`. **Deleting an entire top-level key from the repo does not remove it downstream**: once undeclared it is indistinguishable from a key the app owns, so delete those by hand.
 
 Removal is what the record at `~/.local/state/homebase/manifest` exists for.
 Without it the script cannot tell a path it placed from one it never touched,

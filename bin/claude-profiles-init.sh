@@ -35,7 +35,10 @@ fi
 . "$DEPLOY_TABLE_LIB"
 
 for d in "${PROFILES[@]}"; do
-    mkdir -p "$d"/{projects,sessions,plugins,hooks}
+    # hooks is deliberately NOT created here. It is in the deploy table as a
+    # symlink into homebase, and the link loop below skips any path that already
+    # exists, so pre-creating the directory silently prevented the link.
+    mkdir -p "$d"/{projects,sessions,plugins}
 done
 
 # Per-profile settings: copy from legacy if not already present.

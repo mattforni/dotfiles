@@ -325,10 +325,19 @@ path_is_ours() {
   fi
 
   local f
+  local walked=0
   while IFS= read -r f; do
+    walked=1
     grep -qxF "$repo_rel/$f" <<<"$history" || return 1
-  done < <(cd "$home_path" && find . \( -type f -o -type l \) | sed 's|^\./||')
-  return 0
+  done < <(cd "$home_path" 2>/dev/null && find . \( -type f -o -type l \) 2>/dev/null | sed 's|^\./||')
+
+  # Fail closed when the walk produced nothing. An empty directory and a walk
+  # that could not run (cd refused, find failed, the path vanished mid-run) are
+  # indistinguishable from here, and the previous `return 0` treated both as
+  # "homebase owns this", which hands an unreadable directory straight to
+  # rm -rf. Callers that legitimately have an empty directory handle it before
+  # reaching this. "We could not tell" must never mean "safe to delete".
+  [[ $walked -eq 1 ]]
 }
 
 deploy_link() {
@@ -377,10 +386,17 @@ deploy_link() {
 deploy_copy() {
   local src="$1" dst="$2" rel="$3"
 
-  if [[ -f "$dst" ]] && cmp -s "$src" "$dst"; then return 0; fi
+  # `-f` follows symlinks, so a path moving from link mode to copy mode would
+  # find the old symlink, compare the source against itself through it, match,
+  # and return early leaving the link in place. The manifest would then hold a
+  # link entry where this run recorded a copy entry, and the prune loop would
+  # delete the path outright. Treat a symlink as "not a copy" so it is replaced,
+  # and unlink before writing, since cp writes THROUGH a symlink into the repo.
+  if [[ -f "$dst" && ! -L "$dst" ]] && cmp -s "$src" "$dst"; then return 0; fi
   if [[ "$DRY_RUN" == true ]]; then dry "copy $rel"; return 0; fi
 
   mkdir -p "$(dirname "$dst")" || return 1
+  rm -f "$dst" || return 1
   cp "$src" "$dst" || return 1
   info "copied $rel"
 }
@@ -690,7 +706,9 @@ install_ide_extensions() {
   local extra=()
   while IFS= read -r ext; do
     [[ -n "$ext" ]] || continue
-    grep -qix "$ext" "$extensions_file" || extra+=("$ext")
+    # -F matters: extension IDs contain dots, and without it "ms-python.python"
+    # is a regex whose dot matches any character.
+    grep -qixF "$ext" "$extensions_file" || extra+=("$ext")
   done <<< "$installed"
   if [[ ${#extra[@]} -gt 0 ]]; then
     warn "installed but not in ide/extensions.txt: ${extra[*]}"

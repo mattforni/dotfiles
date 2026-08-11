@@ -31,7 +31,12 @@
 #          receives foreign writes. Files only, never directories.
 #   merge  JSON merge by top level key: keys the repo declares are replaced,
 #          keys it does not are left alone. For files the owning app rewrites
-#          for itself. Removing a key from the repo still removes it downstream.
+#          for itself. A key the repo declares is replaced whole, so dropping an
+#          entry from inside one (a permission out of permissions.allow) does
+#          reach $HOME. Deleting an entire top-level key from the repo does NOT
+#          remove it downstream: once undeclared it is indistinguishable from a
+#          key the app owns. Delete those by hand, or add key tracking to the
+#          manifest if that ever becomes common.
 #
 # Never link a directory that receives foreign writes. ~/.claude is the reason:
 # it holds sessions, projects, history and credentials that Claude Code writes
