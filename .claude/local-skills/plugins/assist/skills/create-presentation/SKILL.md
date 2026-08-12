@@ -14,7 +14,7 @@ allowed-tools:
   - TodoWrite
 ---
 
-# Present Assist
+# Create Presentation Assist
 
 Build presentations that feel designed, not auto-generated. Single-file reveal.js decks with the RYLLC visual language, served locally, lived in a dated folder per deck.
 
@@ -149,7 +149,7 @@ After the deck ships and the demo lands, prompt Forni: "Anything from this build
 
 ## Output Shape
 
-A `present` session produces:
+A `create-presentation` session produces:
 
 1. A `preso/YYYY-MM-DD_<slug>/` folder with `index.html`, `README.md`, `assets/`
 2. Top-level `package.json` and `bin/preso.sh` if not present

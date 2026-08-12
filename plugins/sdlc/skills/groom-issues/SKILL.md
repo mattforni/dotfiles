@@ -71,7 +71,7 @@ Hierarchy. Fall through if the prior is absent:
 5. **Partition** into Keep / Move / Backlog / Reprioritize / Cancel buckets per [conventions.md](reference/conventions.md).
 6. **Present** the diff as a table grouped by action. Auto process only the Keep bucket.
 7. **Resolve ambiguity** in a Phase 2 pass, grouped by category. Use AskUserQuestion per ticket in the gray zone.
-8. **Apply** via the CLI (or MCP) after approval.
+8. **Apply** via the CLI after approval.
 9. **Audit** every kept ticket for project + label attribution.
 
 ### Backlog Mode
@@ -86,7 +86,7 @@ Calibrated against the Atelic 2026-05-10 run (118 backlog items, solo, no roadma
 6. **Verify shipped work against the actual code** for any cluster of implementation tickets that look stale (e.g., the feature is described as working in CLAUDE.md but tickets remain Backlog). Decide: mark Done, or demote to Low for follow-up.
 7. **Cluster batch decisions** via AskUserQuestion (up to four batched questions per round). Each option includes a label and one-sentence rationale. Common cluster outcomes: keep parked, demote to Low, cancel cluster, pull subset into next cycle.
 8. **Walk the gray zone individually** with per-ticket AskUserQuestion. Reserve batch tables for structurally uniform clusters; the gray zone is where the skill earns its keep.
-9. **Apply via CLI** (preferred) or MCP. Hard deletes require the CLI: `linear issue delete <ID> --confirm`. Loop singles, never `--bulk`.
+9. **Apply via CLI.** Hard deletes: `linear issue delete <ID> --confirm`. Loop singles, never `--bulk`.
 10. **Verify** the new priority distribution via `linear issue query --state backlog | jq '.nodes | group_by(.priorityLabel)'`. The High items should now read as actual shipping work.
 
 The Done archive is a separate pass. Linear's archive is UI-only as of CLI v2.0.0; multi-select Status=Done in the UI and bulk archive.
