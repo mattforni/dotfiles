@@ -1,11 +1,12 @@
 # shellcheck shell=bash
 # Shared .account profile resolution.
 #
-# Sourced by ~/bin/claude, ~/bin/gws, and .functions, which all read the same
-# `.account` marker convention and previously each carried their own copy of
-# this logic. That duplication was not theoretical: a path traversal fix on
-# 2026-08-07 had to be applied three separate times, and the bin/claude copy was
-# missed twice before a review caught it. One copy, three callers.
+# Sourced by ~/bin/gws and .functions, which read the same `.account` marker
+# convention and previously each carried their own copy of this logic. That
+# duplication was not theoretical: a path traversal fix on 2026-08-07 had to be
+# applied three separate times, and the third copy in the since retired
+# ~/bin/claude wrapper was missed twice before a review caught it. One copy, and
+# now two callers rather than three.
 #
 # Contract:
 #   account_resolve_profile   -> prints the profile name for $PWD, never empty

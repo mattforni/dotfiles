@@ -105,13 +105,13 @@ list and the editor stay reconcilable in both directions.
 - `log [-p] <executable>` - Run executable and log output with timestamp
 - `numf [-a] [directory]` - Count files in directory
 
-### Account Profiles (gws + Claude Code)
+### Account Profiles (gws)
 
-Both the `gws` CLI and Claude Code switch identity per directory subtree via a shared `.account` marker file (one-line text containing the profile name). Two profiles are active: `home` (personal, `mattforni@gmail.com`, the ambient default) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
+The `gws` CLI switches identity per directory subtree via a `.account` marker file (one-line text containing the profile name). Two profiles are active: `home` (personal, `mattforni@gmail.com`, the ambient default) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
 
 1. **Ambient**: recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
 2. **Directory override**: a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. Convenience only; it fires solely in interactive zsh, and only on an actual directory change.
-3. **Invocation time shim (authoritative)**: `~/bin/gws` re-resolves the marker on every single call and exports the config dir before exec'ing the real binary. This is the layer that actually guarantees the right account, because it does not care how the process was started. `~/bin/claude` does the equivalent for `CLAUDE_CONFIG_DIR` at launch.
+3. **Invocation time shim (authoritative)**: `~/bin/gws` re-resolves the marker on every single call and exports the config dir before exec'ing the real binary. This is the layer that actually guarantees the right account, because it does not care how the process was started.
 4. **Pin**: `gws-pin` sets `GWS_AUTO_SWITCH=0`, honored by both the hook and the shim, which then pass through untouched.
 
 **How The One Shot Override Survives The Shim.** A shim that re-resolves on every call would normally stomp a deliberate `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=... gws ...`, since it cannot see the difference between a value you meant and one that leaked in from a parent process. Every resolver therefore stamps `GWS_RESOLVED_DIR` with the config dir it set. A config dir equal to the stamp was inherited, so the shim re-resolves it; one that differs was set on purpose, so the shim honors it and passes through. The stamp has to be present for that to apply: a shell that never ran a resolver has no stamp, which is exactly the case this shim exists to correct, so an unstamped config dir counts as inherited rather than intentional. In stamp free contexts (launchd, cron, a raw `sh -c`), `GWS_AUTO_SWITCH=0` is the way to force a specific account.
@@ -127,7 +127,13 @@ Both the `gws` CLI and Claude Code switch identity per directory subtree via a s
 | `gws-whoami` | Re-resolve from `$PWD`, then show profile, config dir, and `gws auth status` |
 | `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
 
-**Claude Code:** `~/bin/claude` is a wrapper that exports `CLAUDE_CONFIG_DIR=~/.claude-<profile>/` and exec's the real binary. Claude Code stores OAuth credentials per CLAUDE_CONFIG_DIR natively in a `Claude Code-credentials-<hash>` Keychain entry, so the wrapper doesn't need to inject a token; setting the config dir is enough. Per-profile dirs are bootstrapped by `bin/claude-profiles-init.sh` (invoked from setup.sh); each profile needs a one time `claude` login from inside its directory to seed its Keychain credential.
+**Claude Code does not do this, deliberately (retired 2026-08-12, ATE-463).** A `~/bin/claude` wrapper used to export `CLAUDE_CONFIG_DIR=~/.claude-<profile>/`, with per-profile dirs bootstrapped by `bin/claude-profiles-init.sh`. All of it is gone, and `~/.claude` is the only config dir.
+
+It separated nothing worth having. Every profile dir authenticated to the same Claude account, and the claude.ai connectors are authorized against that account rather than a directory, so a config dir could never give you a second Reclaim or a second HubSpot. What it did do was cost: the VS Code extension launches the real binary directly and never consults PATH, so the wrapper silently did not run in the launch path actually in use, while a `.mcp.json` at a subtree root did exactly the per-directory scoping the profiles were supposed to provide.
+
+**So per-directory tooling belongs in the mechanism that actually scopes.** A `.mcp.json` is discovered upward across parent directories and git boundaries, so one at a subtree root covers everything beneath it. Per-repo behavior goes in that repo's `.claude/settings.json`. Per-directory CLI identity goes through the `.account` marker and an invocation time shim, which is what `gws` does. Anything that must differ by directory cannot be a claude.ai connector.
+
+One consequence worth knowing: the wrapper also injected the YNAB token, which is why `ynab` was unauthenticated in every VS Code session. That job moved into `bin/mcp/serve-ynab`, which reads the Keychain itself and so works however Claude Code was started.
 
 OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>` (vault project: `atelic`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/vault/push-gws-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/Tools/secret-manager.md`.
 
@@ -175,7 +181,7 @@ out of `$HOME`.
 - The bootstrap step goes in its own phase function (e.g., `bootstrap_claude_profiles`) or inside an existing non-auth phase.
 - The auth step goes inside `setup_auth`, gated by the existing `INTERACTIVE` check.
 
-**Why it matters:** Codified 2026-05-19. The Claude Code profile-dir bootstrap initially shipped inside `setup_auth`, which meant a non-interactive `./setup.sh` invocation (the way it runs from inside a Claude Code background session) skipped the entire block. The profile dirs never got created until manually invoking `bin/claude-profiles-init.sh` by hand.
+**Why it matters:** Codified 2026-05-19. The Claude Code profile-dir bootstrap initially shipped inside `setup_auth`, which meant a non-interactive `./setup.sh` invocation (the way it runs from inside a Claude Code background session) skipped the entire block, and the profile dirs never got created until `bin/claude-profiles-init.sh` was invoked by hand. That bootstrap retired with the profile split on 2026-08-12, but the rule it produced is general and still binding: split file operations out of `setup_auth` so a headless run does not skip them.
 
 ### Adding HTTP MCP Entries to `install_mcp_servers`
 
@@ -232,8 +238,7 @@ gate was being written, including the linter itself.
 
 `bin/lib/deploy-table.sh` is the single source of truth. `setup.sh` reconciles
 `$HOME` against it: it creates what is missing, fixes what is wrong, and removes
-what homebase used to deploy and no longer does. `bin/claude-profiles-init.sh`
-sources the same table so the per-profile config dirs cannot drift from it.
+what homebase used to deploy and no longer does.
 
 Three deploy modes, chosen per path:
 
@@ -267,9 +272,9 @@ The `git cob` alias uses `bin/checkout-branch.sh` to checkout branches by their 
 
 New scripts live in a namespace folder named for their tool or domain, with verb noun filenames: `bin/vault/push-secrets`, `bin/vault/push-gws-secrets`. Because `~/bin` is a single symlink to the repo's `bin/`, nested folders deploy with no extra plumbing. Legacy flat scripts (`checkout-branch.sh`, `sync-marketplaces`) migrate into namespaces opportunistically when next touched.
 
-**Flat files are shims; directories are namespaces.** A shim shadows a real binary of the same name on PATH (`bin/claude`, `bin/gws`), so it has to be a flat executable sitting directly in `bin/` where PATH lookup finds it. Everything else goes in a namespace folder. The two collide the moment a tool needs both, and the shim wins the bare name: `bin/gws/push-secrets` moved to `bin/vault/push-gws-secrets` on 2026-08-07 to free `bin/gws` for the profile shim, which also consolidated the two secret pushers under one namespace. When adding a shim, check that `bin/<tool>` is not already a directory, and remember a directory is also `-x`, so any "find the real binary on PATH" loop needs a `! -d` guard or it will happily try to exec the folder.
+**Flat files are shims; directories are namespaces.** A shim shadows a real binary of the same name on PATH (`bin/gws`), so it has to be a flat executable sitting directly in `bin/` where PATH lookup finds it. Everything else goes in a namespace folder. The two collide the moment a tool needs both, and the shim wins the bare name: `bin/gws/push-secrets` moved to `bin/vault/push-gws-secrets` on 2026-08-07 to free `bin/gws` for the profile shim, which also consolidated the two secret pushers under one namespace. When adding a shim, check that `bin/<tool>` is not already a directory, and remember a directory is also `-x`, so any "find the real binary on PATH" loop needs a `! -d` guard or it will happily try to exec the folder.
 
-**Shared logic lives in `bin/lib/`, sourced rather than duplicated.** `bin/lib/account-profile.sh` is the single implementation of `.account` marker parsing and profile resolution, sourced by `bin/claude`, `bin/gws`, and `.functions`. It exists because three copies drifted: a path traversal fix on 2026-08-07 had to be written three separate times and the `bin/claude` copy was missed twice before review caught it. Two rules when adding to `bin/lib/`:
+**Shared logic lives in `bin/lib/`, sourced rather than duplicated.** `bin/lib/account-profile.sh` is the single implementation of `.account` marker parsing and profile resolution, sourced by `bin/gws` and `.functions`. It exists because three copies drifted: a path traversal fix on 2026-08-07 had to be written three separate times and the third copy, in the since retired `bin/claude` wrapper, was missed twice before review caught it. Two rules when adding to `bin/lib/`:
 
-- **A sourced library must never take the caller down.** `bin/claude` launches Claude Code itself, so it warns and falls back to the home profile when the library is unreadable rather than exiting. `bin/gws` passes through untouched. `.functions` leaves its resolver a no-op so the shell still starts. Guard every source with `[[ -r ... ]]` and define the degraded behavior explicitly.
+- **A sourced library must never take the caller down.** `bin/gws` passes through untouched when the library is unreadable, since blocking the command it wraps would be worse than resolving the wrong profile. `.functions` leaves its resolver a no-op so the shell still starts. `setup.sh` is the deliberate exception and fails loudly, because it has nothing correct to do without its table. Guard every source with `[[ -r ... ]]` and define the degraded behavior explicitly.
 - **Anything `.functions` sources must be zsh clean, not just bash clean.** Shims run under bash where `path` is an ordinary variable; `.functions` is read by zsh, where **`path` is special and tied to `$PATH` as an array**. A `local path=...` there silently clobbers command lookup for the rest of the function, so `tr` stops resolving and every marker reads as empty with the error swallowed by `2>/dev/null`. Avoid the zsh special names entirely: `path`, `status`, `prompt`, `cdpath`, `manpath`, `dirstack`, `argv`. Run `zsh -n` and an actual zsh resolution test, since `bash -n` cannot see this class of bug.

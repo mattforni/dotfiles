@@ -46,12 +46,14 @@ INTERACTIVE=true
 [[ ! -t 0 ]] && INTERACTIVE=false
 
 # The deploy table, the legacy cleanup list and the manifest path live in
-# bin/lib/deploy-table.sh so bin/claude-profiles-init.sh can share them rather
-# than keeping its own copy, which is how the lists drifted apart before.
+# bin/lib/deploy-table.sh. It was factored out when a second consumer needed the
+# same list and kept its own drifting copy; that consumer has since retired, but
+# the table stays split out as the single declaration of what reaches $HOME.
 #
-# Unlike bin/claude, which must still launch Claude Code if its library is
-# unreadable, setup.sh has nothing to do without this one: every phase that
-# touches $HOME reads from it. Failing loudly is the correct degraded behaviour.
+# setup.sh has nothing to do without it: every phase that touches $HOME reads
+# from it, so failing loudly is the correct degraded behaviour. Contrast the
+# `gws` shim, which passes through untouched when its library is unreadable
+# rather than blocking the command it wraps.
 DEPLOY_TABLE_LIB="$DIR/bin/lib/deploy-table.sh"
 if [[ ! -r "$DEPLOY_TABLE_LIB" ]]; then
   printf 'setup.sh: cannot read %s; there is nothing to deploy without it\n' "$DEPLOY_TABLE_LIB" >&2
@@ -876,11 +878,16 @@ install_mcp_servers() {
   # managed in claude.ai Settings > Connectors), so it needs no entry here. The
   # old self hosted servers (community `strava` and the gated `strava-mcp`) were
   # retired 2026-06-14 when the native connector became available.
-  # ynab (stdio, Deno) reads YNAB_ACCESS_TOKEN. It is registered with a literal
-  # ${YNAB_ACCESS_TOKEN} placeholder (see the stdio branch below) that Claude
-  # Code expands at runtime from the env var the bin/claude wrapper injects from
-  # the login Keychain. The canonical token lives in BitWarden; setup_auth seeds
-  # the Keychain entry on a fresh machine. So no literal token is ever baked in.
+  # ynab (stdio, Deno) is registered as bin/mcp/serve-ynab, which reads the token
+  # from the login Keychain itself and execs the Deno server. It used to be
+  # registered with a ${YNAB_ACCESS_TOKEN} placeholder that Claude Code expanded
+  # from whatever the bin/claude wrapper had injected, which meant it only ever
+  # worked when Claude Code was launched from a terminal; the VS Code extension
+  # bypasses PATH entirely and left the server unauthenticated. Reading the token
+  # inside the server launcher removes that dependency on how Claude started, and
+  # is what allowed the wrapper to be retired (ATE-463). No literal token is
+  # baked in either way. The canonical token lives in BitWarden; setup_auth seeds
+  # the Keychain entry on a fresh machine.
 
   # Self-heal: when the env var is empty (headless runs do not source ~/.zshrc),
   # fall back to the token stashed in the macOS Keychain so a fresh machine can
@@ -893,7 +900,7 @@ install_mcp_servers() {
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
     "pinole|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
-    "ynab|stdio|deno run --allow-net=api.ynab.com --allow-env=YNAB_ACCESS_TOKEN,YNAB_READ_ONLY,YNAB_DEFAULT_PLAN_ID,YNAB_CACHE_PATH,PORT jsr:@jsclayton/ynab-mcp"
+    "ynab|stdio|$HOME/bin/mcp/serve-ynab"
   )
 
   for entry in "${desired[@]}"; do
@@ -934,15 +941,6 @@ install_mcp_servers() {
         claude mcp add "$name" "$url" --scope user --transport http
         add_status=$?
       fi
-    elif [[ "$name" == "ynab" ]]; then
-      # Single-quote the placeholder so setup.sh's own shell does not expand it
-      # and bake a literal token into .claude.json; Claude Code expands
-      # ${YNAB_ACCESS_TOKEN} at runtime. Name precedes --env because, like
-      # --header, --env is variadic and would otherwise eat the positional.
-      # shellcheck disable=SC2086
-      claude mcp add "$name" --scope user --transport stdio \
-        --env 'YNAB_ACCESS_TOKEN=${YNAB_ACCESS_TOKEN}' -- $target_and_extra
-      add_status=$?
     else
       # shellcheck disable=SC2086
       claude mcp add --scope user --transport "$transport" "$name" -- $target_and_extra
@@ -1122,23 +1120,6 @@ setup_auth() {
         error "gws auth login failed for $gws_profile"
       fi
     done
-  fi
-
-  # Claude Code (multi-profile)
-  if command -v claude &>/dev/null; then
-    if [[ ! -d "$HOME/.claude-home" ]]; then
-      info "Bootstrapping Claude Code profile dirs..."
-      if bash "$DIR/bin/claude-profiles-init.sh"; then
-        SUMMARY+=("Claude Code profile dirs bootstrapped")
-      else
-        warn "claude-profiles-init.sh failed"
-      fi
-    else
-      info "Claude Code profile dirs already present (~/.claude-home)"
-    fi
-    info "Per-profile auth: cd into each profile's territory and run \`claude\` once."
-    info "Claude Code stores credentials per CLAUDE_CONFIG_DIR natively (Keychain"
-    info "service \"Claude Code-credentials-<hash>\"). Sign in as the right account."
   fi
 
   # YNAB personal access token, Keychain-backed for the ynab MCP server. The

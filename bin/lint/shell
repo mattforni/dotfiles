@@ -58,8 +58,8 @@ is_zsh_read() {
 
 # Paths bash reads. Note .aliases and .functions are NOT here: only .zshrc
 # sources them, and shellcheck has no zsh mode, so running it over them reports
-# SC1071 on perfectly good zsh. bin/lib/*.sh is genuinely dual: bin/claude and
-# bin/gws source it under bash, .functions sources it under zsh.
+# SC1071 on perfectly good zsh. bin/lib/*.sh is genuinely dual: bin/gws sources
+# it under bash, .functions sources it under zsh.
 is_bash_read() {
   case "$1" in
     bin/lib/*.sh) return 0 ;;

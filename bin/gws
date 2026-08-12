@@ -2,7 +2,7 @@
 # Per-profile PATH shim around the real `gws` binary.
 #
 # Walks up from $PWD finding the nearest .account marker (the same marker read
-# by ~/bin/claude and by __gws_resolve_profile in .functions), then exports
+# by __gws_resolve_profile in .functions), then exports
 # GOOGLE_WORKSPACE_CLI_CONFIG_DIR for the matching profile and exec's the real
 # binary. `gws` itself has no --config-dir flag, so the environment variable is
 # the only lever.
@@ -30,8 +30,8 @@
 
 set -euo pipefail
 
-# Marker parsing and profile resolution are shared with ~/bin/claude and
-# .functions. $0 is the invoked path, so this resolves through the ~/bin symlink
+# Marker parsing and profile resolution are shared with .functions.
+# $0 is the invoked path, so this resolves through the ~/bin symlink
 # as well as the real repo path.
 ACCOUNT_LOG_PREFIX="gws shim"
 account_lib="$(dirname "$0")/lib/account-profile.sh"
