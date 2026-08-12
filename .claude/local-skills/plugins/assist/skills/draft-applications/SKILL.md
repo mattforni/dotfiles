@@ -53,7 +53,7 @@ The note's shape (proven on the EnergyHub send, 2026-07-29; Forni called it fant
 1. **Open:** "I recently applied to your [role, linked] opening and wanted to put a face on the application," then the forward request ("If you're not the right person to chat about this role with, I'd appreciate you forwarding this along to whoever's leading the hire").
 2. **One sentence of credentials, compressed.** The career domain plus the single strongest credential (six years as CTO and co-founder of Gremlin). No customer name lists, no second credential; the resume carries those.
 3. **The middle belongs to the mission.** "Since then I keep choosing climate:" with the climate roles as proof, then one sentence connecting this company's actual work to the crisis. Make that mission sentence the longest in the email, on purpose.
-4. **Close:** "Worth a chat? Here's my scheduling link if that's easier. Either way, I appreciate your time."
+4. **Close:** "Worth a chat? Here's my scheduling link to make it nice and easy. Either way, I appreciate your time."
 
 Title Case subject (just the role and company, e.g. "Software Architect at EnergyHub"). Never sign a name; the Gmail signature handles it.
 
