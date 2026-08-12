@@ -201,6 +201,7 @@ Upstream of the playbook, `~/Eudaimonia/Craft/Vocation/Atelic/icp-research.md` h
 ## Problem Solving Approach
 
 - Always be problem-first. Understand the problem deeply before jumping to solutions or tooling. Technology serves the problem, not the other way around.
+- **Read the instrument that creates a fact, not the documents that reference it.** Deeds, executed agreements, and declarations pages define; commitments, settlement statements, quotes, and summaries reference, and they abbreviate. When a value has to be exact (a legal name, a titling string, a term), read the creating instrument before asserting it, and name the document you read. Codified 2026-08-11, when a title commitment's abbreviated "THE FORNI TRUST" got generalized into the trust titling string for every account; the recorded warranty deed actually reads "THE FORNI TRUST, DATED MAY 27, 2026".
 
 ## Research Documentation
 
