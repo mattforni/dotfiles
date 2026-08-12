@@ -246,8 +246,16 @@ install_npm_globals() {
     return 0
   fi
 
+  # @doist/todoist-cli (binary `td`) and @hubspot/cli (binary `hs`) replaced the
+  # Todoist and HubSpot claude.ai connectors on 2026-08-12 (ATE-463). A connector
+  # is authorized against the Claude account rather than a directory, so it loads
+  # in every session and can only ever reach one account; the HubSpot one was
+  # bound to the TPF portal, leaving Atelic unreachable through it. Both CLIs
+  # cost nothing until invoked and resolve their account per directory.
   local globals=(
     "@anthropic-ai/claude-code"
+    "@doist/todoist-cli"
+    "@hubspot/cli"
     "typescript"
     "vercel"
     "yarn"
@@ -909,13 +917,21 @@ install_mcp_servers() {
     local transport="${rest%%|*}"
     local target_and_extra="${rest#*|}"
 
-    # Skip pinole when its bearer token is missing. Registering with an empty
-    # token bakes a broken entry that the `Already registered` short circuit
-    # below would silently preserve on future runs. (Keychain service:
-    # atelic-token, per the vault naming convention.)
-    if [[ "$name" == "pinole" && -z "${ATELIC_API_TOKEN:-}" ]]; then
-      warn "Skipping pinole: ATELIC_API_TOKEN not set in environment"
-      continue
+    # Skip any http entry whose bearer header resolved to nothing. Registering
+    # with an empty token bakes a broken entry that the `Already registered`
+    # short circuit below would silently preserve on every future run, so the
+    # server stays broken and setup.sh reports success. This used to test the
+    # literal name `pinole`, which meant a second token bearing entry would have
+    # walked straight into the same trap unnoticed.
+    if [[ "$transport" == "http" ]]; then
+      local hdr="${target_and_extra#*|}"
+      # An unset token expands to nothing and leaves the header ending in
+      # "Bearer " with the trailing space still attached, so trim before testing.
+      hdr="${hdr%"${hdr##*[![:space:]]}"}"
+      if [[ "$hdr" == *"Bearer" ]]; then
+        warn "Skipping $name: its bearer token is empty"
+        continue
+      fi
     fi
 
     if claude mcp get "$name" &>/dev/null; then
@@ -1125,9 +1141,8 @@ setup_auth() {
   # YNAB personal access token, Keychain-backed for the ynab MCP server. The
   # canonical copy lives in the BitWarden "YNAB" entry (PAT field); the login
   # Keychain is the operational store (service ynab-token, per the vault naming
-  # convention) that the bin/claude wrapper reads at launch and injects as
-  # YNAB_ACCESS_TOKEN, which Claude Code expands into the ynab MCP
-  # placeholder. -s read keeps the pasted token off the terminal.
+  # convention) that bin/mcp/serve-ynab reads when the MCP server starts. -s read
+  # keeps the pasted token off the terminal.
   if security find-generic-password -a "$USER" -s ynab-token -w &>/dev/null && [[ "$FORCE" != true ]]; then
     info "YNAB token already in Keychain"
   else
