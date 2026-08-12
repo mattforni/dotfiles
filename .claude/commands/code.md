@@ -3,7 +3,7 @@ model: claude-opus-4-1-20250805
 plan: true
 argument-hint: bet-XXX
 description: Start working on a Linear issue with automatic branch setup
-allowed-tools: Bash(git:*), mcp__linear-server__get_issue, mcp__linear-server__list_comments, mcp__linear-server__update_issue, TodoWrite, ExitPlanMode
+allowed-tools: Bash(git:*), Bash(linear *), TodoWrite, ExitPlanMode
 ---
 
 IMPORTANT: This command requires the Opus model. If not already set, please run `/model opus` first.

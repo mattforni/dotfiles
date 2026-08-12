@@ -10,21 +10,13 @@ Each rule states the rule, the reason, and how to apply it. Keep them tight; the
 
 ## Rules
 
-### CLI is the default tool, not MCP. Auth per workspace before grooming
+### The CLI is the only Linear tool. Auth per workspace before grooming
 
-When a user has both Linear MCP and Linear CLI available, default to the CLI for grooming actions. The MCP gets used only for read-only inspection when the CLI is not auth'd to the target workspace. Reasons: MCP cannot hard-delete, MCP fuzzy-maps state names imprecisely (the "Canceled" gotcha below), and the user may have explicitly requested CLI.
+All Linear access goes through the `linear` CLI. There is no MCP fallback, so a CLI that is missing or not authenticated for the target workspace is a stop, not a cue to find another route.
 
-**Why:** Atelic groom 2026-05-10. Forni said "Let's default to using the CLI instead of the MCP" mid-session after observing MCP's `state: "Canceled"` mapping to "Duplicate" status (Linear has both as canceled-type). The CLI-first default avoids that surprise.
+**Why:** The CLI was already the default after the Atelic groom of 2026-05-10, when Forni said "Let's default to using the CLI instead of the MCP" mid session. The reasons then were that the MCP could not hard delete and fuzzy matched state names, notably mapping `state: "Canceled"` onto the "Duplicate" status because Linear treats both as canceled types. The connector was retired outright on 2026-08-12 (ATE-463), since it loaded 53 tool definitions into every session, could not be scoped per directory, and could only ever authorize one workspace at a time.
 
-**How to apply:** Before starting a groom, check `linear auth list` and confirm the target workspace is configured. If not, prompt the user to run `linear auth login` and pick the workspace. Once auth'd, prefer CLI commands (`linear issue update`, `linear issue delete --confirm`) over MCP `save_issue`.
-
-### MCP `save_issue` with `state: "Canceled"` may map to "Duplicate" status
-
-The Linear MCP fuzzy-matches state names. Passing `state: "Canceled"` can land the issue in the "Duplicate" status (also a canceled-type, but semantically different — implies superseded by another issue). If you want literal "Canceled" via MCP, pass the explicit state ID for Canceled (visible from `list_issue_statuses`), not the name string.
-
-**Why:** Surfaced on the first Atelic groom run when ATE-349 came back with `status: "Duplicate"` after a `state: "Canceled"` update.
-
-**How to apply:** When canceling via MCP, either (a) accept the Duplicate-vs-Canceled imprecision since both hide the issue from active views, (b) pass the explicit Canceled state UUID, or (c) use the CLI: `linear issue update ATE-NNN --state Canceled`.
+**How to apply:** Before starting a groom, run `linear auth list` and confirm the target workspace is configured. If it is not, stop and have Forni run `linear auth login`. Note that a workspace's CLI slug is whatever it was authenticated under and does not automatically follow a rename in Linear, so the slug and the org name can disagree. Cancel with `linear issue update ATE-NNN --state Canceled`, which is exact, and hard delete with `linear issue delete <ID> --confirm`.
 
 ### Default Scope to Assignee == Requesting User, Not the Whole Cycle
 

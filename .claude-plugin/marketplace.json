@@ -13,7 +13,7 @@
     {
       "name": "linear-lifecycle",
       "source": "./plugins/linear-lifecycle",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "license": "MIT",
       "description": "Manage Linear issues via the Linear CLI with zero-context overhead.",
       "homepage": "https://github.com/mattforni/homebase",
@@ -31,7 +31,7 @@
     {
       "name": "sdlc",
       "source": "./plugins/sdlc",
-      "version": "4.0.5",
+      "version": "4.0.6",
       "license": "MIT",
       "description": "Software development lifecycle skills for planning, designing, implementing, reviewing, and completing work.",
       "homepage": "https://github.com/mattforni/homebase",

@@ -75,7 +75,7 @@ For technical demos: a benchmark, a regression eliminated, a complexity reductio
 
 Before writing slides, pull the structural source of truth:
 
-- **Linear projects** (for growth / product work): `mcp__claude_ai_Linear__list_projects` filtered to the right team. Projects become acts or sub-acts.
+- **Linear projects** (for growth / product work): `env -u LINEAR_API_KEY linear --workspace <slug> project list`, filtered to the right team. Projects become acts or sub-acts.
 - **Roadmap doc** (when one exists): the doc's section structure usually maps cleanly to slide structure.
 - **Git history**: `git log --since=<start-date>` and `gh pr list --state merged --limit 50` for evidence per project.
 - **Live dashboards**: HubSpot, PostHog, Slack canvases — for receipts.

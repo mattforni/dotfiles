@@ -1,16 +1,9 @@
 ---
 name: groom-issues
-description: Groom a Linear team's queue. Two modes — cycle grooming (when the team runs Linear cycles, trim the active cycle to a realistic slate) and backlog grooming (when the team has a backlog without active cycles, triage by priority, staleness, and intent). Use whenever the user mentions Linear grooming, triaging issues, pruning a backlog, sprint grooming, "the cycle is overstuffed", "let's clean up the queue", "groom the backlog", or wants to make decisions across many issues at once. Use the Linear CLI when available; fall back to the Linear MCP otherwise.
+description: Groom a Linear team's queue. Two modes, cycle grooming (when the team runs Linear cycles, trim the active cycle to a realistic slate) and backlog grooming (when the team has a backlog without active cycles, triage by priority, staleness, and intent). Use whenever the user mentions Linear grooming, triaging issues, pruning a backlog, sprint grooming, "the cycle is overstuffed", "let's clean up the queue", "groom the backlog", or wants to make decisions across many issues at once. All Linear access goes through the `linear` CLI.
 allowed-tools:
   - Bash(linear *)
   - Bash(git *)
-  - mcp__claude_ai_Linear__list_issues
-  - mcp__claude_ai_Linear__get_issue
-  - mcp__claude_ai_Linear__save_issue
-  - mcp__claude_ai_Linear__list_issue_statuses
-  - mcp__claude_ai_Linear__list_issue_labels
-  - mcp__claude_ai_Linear__list_cycles
-  - mcp__claude_ai_Linear__get_team
   - AskUserQuestion
   - Read
   - Grep
@@ -54,7 +47,7 @@ No active cycle, just a backlog (potentially with hundreds of issues). Goal: tri
 
 ## Prerequisites
 
-- **Linear access.** Linear CLI preferred (`linear --version` ≥ 2.0.0, `linear issue mine` succeeds). Falls back to Linear MCP if CLI is missing. The CLI is faster, supports hard delete, and avoids the MCP token overhead.
+- **Linear access.** The `linear` CLI, and only the CLI (`linear --version` ≥ 2.0.0, `linear issue mine` succeeds). The Linear MCP connector was retired 2026-08-12; there is no MCP fallback. If the CLI is missing or not authenticated for the target workspace, stop and say so rather than reaching for another path. Install with `brew install schpet/tap/linear`, authenticate with `linear auth login`, and see `~/Eudaimonia/Admin/Tools/linear.md` for workspace slugs and gotchas.
 - **Team key.** The user names the team. The skill resolves to the Linear team ID. If unclear, ask.
 - **Optional roadmap or vision doc.** Pointer to a markdown file describing strategic focus. The skill reads it for guidance and falls back to user judgment when absent.
 
@@ -112,7 +105,7 @@ The Done archive is a separate pass. Linear's archive is UI-only as of CLI v2.0.
 
 ## Quick Reference
 
-### Linear CLI (preferred where installed)
+### Linear CLI
 
 | Operation | Command |
 |---|---|
@@ -132,21 +125,6 @@ Priority integers: 1 = Urgent, 2 = High, 3 = Normal, 4 = Low.
 **State and cycle interaction.** Setting `--state Backlog` clears the ticket's `cycleId` automatically. Setting `--state Canceled` keeps the `cycleId` but flips `statusType` to canceled, dropping the ticket from active views.
 
 **Bulk delete gotcha.** `linear issue delete --bulk <ids> --confirm` still prompts interactively in CLI v2.0.0. Loop single deletes. Bulk also pulls in child issues automatically.
-
-### Linear MCP (fallback)
-
-| Operation | Tool |
-|---|---|
-| List issues by team and state | `mcp__claude_ai_Linear__list_issues(team, state, limit)` |
-| Get issue detail | `mcp__claude_ai_Linear__get_issue(id)` |
-| Update issue (state, priority, cycle, labels) | `mcp__claude_ai_Linear__save_issue(id, ...)` |
-| List cycles | `mcp__claude_ai_Linear__list_cycles(team)` |
-| List statuses | `mcp__claude_ai_Linear__list_issue_statuses(team)` |
-| List labels | `mcp__claude_ai_Linear__list_issue_labels(team)` |
-
-The MCP does not expose hard delete. When deletion is required, use the CLI or the Linear UI.
-
-The MCP `list_issues` response can exceed token limits on large teams. Pipe to a file via the harness and `jq` rather than loading inline.
 
 ## Conventions
 

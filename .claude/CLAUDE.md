@@ -149,6 +149,8 @@ Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Adm
 
 **Linear is the tracker for engineering and development work; Todoist is for personal and operational tasks.** Anything code (bugs, tech debt, features, follow-ups from a build session) goes to Linear, never Todoist. Route the personal/operational side to Todoist (see Todoist Preferences). Do not offer Todoist for dev follow-ups.
 
+**All Linear access goes through the `linear` CLI, never an MCP.** The connector was retired 2026-08-12 because it loaded 53 tool definitions into every session, could not be scoped per directory, and could only ever authorize one workspace. The CLI costs nothing until invoked and takes `--workspace <slug>`. Workspace slugs, the `LINEAR_API_KEY` conflict, and the rest of the mechanics live in `~/Eudaimonia/Admin/Tools/linear.md`.
+
 **Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale) and steered by honest due dates. The Reclaim Linear sync retired 2026-08-03. Conventions in `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds).
 
 **Every scheduled item carries exactly one cognitive load label, in Linear and Todoist alike** (🧠 Sharp / ⚖️ Medium / 🍃 Light). It grades how sharp I have to be, not how long the work takes, and is deliberately independent of the estimate: the estimate sizes the block, the label picks the time of day (Sharp first thing, Medium midday, Light late afternoon). Scale, IDs, and the 2026-08-10 rename from the old effort labels live in `~/Eudaimonia/Admin/Concepts/cognitive-load.md`, the shared home for schemes that span tools.
