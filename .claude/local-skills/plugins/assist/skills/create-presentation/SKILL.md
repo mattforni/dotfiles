@@ -1,6 +1,6 @@
 ---
-name: present
-description: Build a polished reveal.js presentation deck for an internal demo, talk, or share-out. Generates a single-file HTML deck with RYLLC brand styling, served locally via `npm run preso`. Use this skill whenever Forni says "build a presentation", "make a deck", "let's prep a demo", "create a preso", references an upcoming demo or talk that needs slides, or invokes `/assist:present`. Also trigger when Forni wants to walk through work to an audience and asks how to assemble it. Decks live under `preso/YYYY-MM-DD_<slug>/` in whichever repo the work was done.
+name: create-presentation
+description: Build a polished reveal.js presentation deck for an internal demo, talk, or share-out. Generates a single-file HTML deck with RYLLC brand styling, served locally via `npm run preso`. Use this skill whenever Forni says "build a presentation", "make a deck", "let's prep a demo", "create a preso", references an upcoming demo or talk that needs slides, or invokes `/assist:create-presentation`. Also trigger when Forni wants to walk through work to an audience and asks how to assemble it. Decks live under `preso/YYYY-MM-DD_<slug>/` in whichever repo the work was done.
 argument-hint: "[optional context, e.g., 'six weeks of growth eng' or 'mtm pilot pitch']"
 allowed-tools:
   - Bash
@@ -14,7 +14,7 @@ allowed-tools:
   - TodoWrite
 ---
 
-# Present Assist
+# Create Presentation Assist
 
 Build presentations that feel designed, not auto-generated. Single-file reveal.js decks with the RYLLC visual language, served locally, lived in a dated folder per deck.
 
@@ -75,7 +75,7 @@ For technical demos: a benchmark, a regression eliminated, a complexity reductio
 
 Before writing slides, pull the structural source of truth:
 
-- **Linear projects** (for growth / product work): `mcp__claude_ai_Linear__list_projects` filtered to the right team. Projects become acts or sub-acts.
+- **Linear projects** (for growth / product work): `env -u LINEAR_API_KEY linear --workspace <slug> project list`, filtered to the right team. Projects become acts or sub-acts.
 - **Roadmap doc** (when one exists): the doc's section structure usually maps cleanly to slide structure.
 - **Git history**: `git log --since=<start-date>` and `gh pr list --state merged --limit 50` for evidence per project.
 - **Live dashboards**: HubSpot, PostHog, Slack canvases — for receipts.
@@ -149,7 +149,7 @@ After the deck ships and the demo lands, prompt Forni: "Anything from this build
 
 ## Output Shape
 
-A `present` session produces:
+A `create-presentation` session produces:
 
 1. A `preso/YYYY-MM-DD_<slug>/` folder with `index.html`, `README.md`, `assets/`
 2. Top-level `package.json` and `bin/preso.sh` if not present

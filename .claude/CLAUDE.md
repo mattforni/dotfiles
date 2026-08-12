@@ -130,7 +130,9 @@ Choose the highest available option. Native connectors are smoother and require 
 
 ### gws Profiles
 
-The `gws` CLI and the `~/bin/claude` wrapper switch identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, <matt@theproductforge.com>; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/Tools/gws.md`.
+The `gws` CLI switches identity per directory subtree via `.account` marker files. Two profiles are active: `home` (personal, the ambient default) and `tpf` (The Product Forge, <matt@theproductforge.com>; its marker covers the TPF Vocation subtree). The `zero` profile retired with the Zero W2, 2026-06-29. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/Tools/gws.md`.
+
+**Claude Code has no profiles and only one config dir.** The `~/bin/claude` wrapper and the per-account config dirs were retired 2026-08-12 (ATE-463): they separated nothing, since every profile authenticated to the same Claude account and connectors bind to the account rather than a directory. Per-directory tooling goes in a `.mcp.json` at the subtree root, which is inherited downward, per-repo behavior in that repo's `.claude/settings.json`, and per-directory CLI identity through `.account` plus an invocation time shim.
 
 ### Google Workspace (reading links, Docs, Gmail)
 
@@ -148,6 +150,8 @@ Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Adm
 ## Linear Ticket Preferences
 
 **Linear is the tracker for engineering and development work; Todoist is for personal and operational tasks.** Anything code (bugs, tech debt, features, follow-ups from a build session) goes to Linear, never Todoist. Route the personal/operational side to Todoist (see Todoist Preferences). Do not offer Todoist for dev follow-ups.
+
+**All Linear access goes through the `linear` CLI, never an MCP.** The connector was retired 2026-08-12 because it loaded 53 tool definitions into every session, could not be scoped per directory, and could only ever authorize one workspace. The CLI costs nothing until invoked and takes `--workspace <slug>`. Workspace slugs, the `LINEAR_API_KEY` conflict, and the rest of the mechanics live in `~/Eudaimonia/Admin/Tools/linear.md`.
 
 **Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale) and steered by honest due dates. The Reclaim Linear sync retired 2026-08-03. Conventions in `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds).
 

@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # The single source of truth for what homebase deploys to $HOME.
 #
-# Sourced by setup.sh (which reconciles $HOME against it) and by
-# bin/claude-profiles-init.sh (which mirrors the .claude entries into each
-# per-profile config dir). It exists because this list used to be four lists
-# that disagreed: a symlink allowlist in setup.sh, an rsync exclusion array,
-# SYNC_FILES in .functions, and a hand-maintained subset in
-# claude-profiles-init.sh that had already drifted, missing agents, hooks and
-# workflows.
+# Sourced by setup.sh, which reconciles $HOME against it. It exists because this
+# list used to be four lists that disagreed: a symlink allowlist in setup.sh, an
+# rsync exclusion array, SYNC_FILES in .functions, and a hand-maintained subset
+# in bin/claude-profiles-init.sh that had already drifted, missing agents, hooks
+# and workflows. That fourth consumer retired with the Claude profile split on
+# 2026-08-12 (ATE-463), leaving one table and one reader.
 #
 # Defines DEPLOY_TABLE, LEGACY_PATHS and MANIFEST. No side effects.
 #
@@ -18,7 +17,7 @@
 
 # How homebase reaches $HOME. This one table replaced four lists that used to
 # disagree with each other: a symlink allowlist here, an rsync exclusion list in
-# deploy_homebase, SYNC_FILES in .functions, and a fourth in
+# deploy_homebase, SYNC_FILES in .functions, and a fourth in the retired
 # bin/claude-profiles-init.sh. Anything not named here is never deployed.
 #
 # Modes:
@@ -116,16 +115,3 @@ LEGACY_PATHS=(
 # pruned, because the script cannot tell a path it placed from one it did not.
 MANIFEST="$HOME/.local/state/homebase/manifest"
 
-# Repo-relative paths under .claude/ that are symlinked, for consumers that need
-# to mirror them somewhere other than $HOME.
-deploy_table_claude_links() {
-  local entry mode rel
-  for entry in "${DEPLOY_TABLE[@]}"; do
-    mode="${entry%%|*}"
-    rel="${entry#*|}"
-    rel="${rel%%|*}"
-    [[ "$mode" == "link" ]] || continue
-    [[ "$rel" == .claude/* ]] || continue
-    printf '%s\n' "${rel#.claude/}"
-  done
-}

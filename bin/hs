@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Per-portal PATH shim around the real `hs` (HubSpot CLI) binary.
+#
+# Walks up from $PWD finding the nearest .account marker, maps the profile to an
+# authenticated HubSpot account, and appends --account before exec'ing the real
+# binary. Work in the TPF subtree therefore hits the TPF portal and everything
+# else hits Atelic, with no per directory setup.
+#
+# Why not `hs account link`, which is the vendor's own mechanism: it writes a
+# .hs/settings.json per directory and can only be driven from a TTY, so it
+# cannot be set up from an agent shell, a headless run or a fresh machine
+# without a human sitting there. It would also need re running for every new
+# directory, while the .account markers already describe the split and deploy
+# with the repo. The gws shim solved the same problem the same way on
+# 2026-08-07; this is that pattern applied to HubSpot (ATE-463).
+#
+# Precedence, highest first:
+#   1. An explicit --account from the caller. Never second guess it.
+#   2. Nearest .account marker walking up from $PWD.
+#   3. The CLI's own global default, if the marker names no known portal.
+
+set -euo pipefail
+
+# Marker parsing and profile resolution are shared with bin/gws and .functions.
+# $0 is the invoked path, so this resolves through the ~/bin symlink as well as
+# the real repo path.
+ACCOUNT_LOG_PREFIX="hs shim"
+account_lib="$(dirname "$0")/lib/account-profile.sh"
+if [[ -r "$account_lib" ]]; then
+    # shellcheck source-path=SCRIPTDIR
+    # shellcheck source=lib/account-profile.sh
+    . "$account_lib"
+else
+    account_lib_missing=1
+    echo "hs shim: cannot read $account_lib, leaving the account untouched" >&2
+fi
+
+# Find the next `hs` on PATH that isn't this shim. The -ef test compares by
+# device and inode so reaching this script via ~/bin -> homebase/bin still
+# matches, and the -d guard matters because a directory is also -x.
+real_hs=""
+IFS=':' read -ra path_parts <<< "$PATH"
+for p in "${path_parts[@]}"; do
+    candidate="$p/hs"
+    if [[ -x "$candidate" && ! -d "$candidate" && ! "$candidate" -ef "$0" ]]; then
+        real_hs="$candidate"
+        break
+    fi
+done
+if [[ -z "$real_hs" ]]; then
+    echo "hs shim: cannot find real hs binary on PATH" >&2
+    exit 127
+fi
+
+# 1. A deliberate --account wins. Unlike the gws shim there is no inherited
+#    environment to disambiguate here, because the account arrives as an
+#    argument rather than an env var, so its presence is proof of intent.
+for arg in "$@"; do
+    if [[ "$arg" == "--account" || "$arg" == "--account="* ]]; then
+        exec "$real_hs" "$@"
+    fi
+done
+
+# A broken install cannot resolve anything. Pass through rather than guessing at
+# a portal, since guessing wrong is the failure this shim exists to prevent.
+if [[ -n "${account_lib_missing:-}" ]]; then
+    exec "$real_hs" "$@"
+fi
+
+# 2. Marker to portal. This is an explicit table rather than an `hs-pat-$profile`
+#    convention because the profiles are named for the identity (home, tpf) while
+#    the portals are named for the businesses, and `home` maps to Atelic. Adding
+#    a profile means adding a line here.
+profile="$(account_resolve_profile)"
+case "$profile" in
+    tpf)  hs_account="hs-pat-tpf" ;;
+    home) hs_account="hs-pat-atelic" ;;
+    *)    hs_account="" ;;
+esac
+
+# 3. An unmapped profile falls through to the CLI's global default rather than
+#    picking a portal on the caller's behalf. Writing to the wrong CRM is the
+#    expensive mistake here, so say so and let the default stand.
+if [[ -z "$hs_account" ]]; then
+    echo "hs shim: profile '$profile' maps to no HubSpot portal, using the CLI default" >&2
+    exec "$real_hs" "$@"
+fi
+
+exec "$real_hs" "$@" --account="$hs_account"

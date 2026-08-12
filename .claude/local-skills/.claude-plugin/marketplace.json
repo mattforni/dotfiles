@@ -12,7 +12,7 @@
   {
    "name": "assist",
    "source": "./plugins/assist",
-   "version": "10.1.2",
+   "version": "11.0.0",
    "license": "MIT",
    "description": "Personal productivity skills: email triage, weekly planning, knowledge capture, BD outreach, and job applications.",
    "author": {
@@ -28,7 +28,7 @@
     "learn",
     "bd",
     "draft-applications",
-    "present",
+    "create-presentation",
     "productivity"
    ],
    "strict": false,
@@ -46,7 +46,7 @@
     "./skills/handle-budget",
     "./skills/mise",
     "./skills/permissions",
-    "./skills/present",
+    "./skills/create-presentation",
     "./skills/sharpen-saws",
     "./skills/wrap",
     "./skills/refine-process",

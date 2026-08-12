@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Launch the YNAB stdio MCP server with its token read from the login Keychain.
+#
+# Why this exists: the token used to be injected by the ~/bin/claude wrapper,
+# which only ran when Claude Code was started from a terminal. The VS Code
+# extension launches the real binary directly and never consults PATH, so every
+# extension session registered ynab with an unexpanded ${YNAB_ACCESS_TOKEN} and
+# the server came up unauthenticated. Reading the token here instead makes the
+# server work identically no matter how Claude Code was started, which is what
+# let the wrapper be retired (ATE-463).
+#
+# Keychain service `ynab-token`, per the naming convention in
+# ~/Eudaimonia/Admin/Tools/secret-manager.md. The canonical copy lives in
+# BitWarden and setup_auth seeds the Keychain entry on a fresh machine.
+
+set -euo pipefail
+
+token="$(security find-generic-password -a "$USER" -s ynab-token -w 2>/dev/null || true)"
+if [[ -z "$token" ]]; then
+    echo "serve-ynab: no ynab-token in the login Keychain." >&2
+    echo "serve-ynab: seed it with ./setup.sh (setup_auth) or add it by hand." >&2
+    exit 1
+fi
+
+# The token goes to the child through the environment rather than a flag so it
+# never lands in the process table.
+exec env YNAB_ACCESS_TOKEN="$token" deno run \
+    --allow-net=api.ynab.com \
+    --allow-env=YNAB_ACCESS_TOKEN,YNAB_READ_ONLY,YNAB_DEFAULT_PLAN_ID,YNAB_CACHE_PATH,PORT \
+    jsr:@jsclayton/ynab-mcp
