@@ -15,7 +15,7 @@ Read before drafting; none of this is duplicated here:
 - **The rubric**: `~/Eudaimonia/Craft/Vocation/role-rubric.md`. Hard filters, dimensions, thresholds, shared with the recruiter.
 - **The profile**: `~/Eudaimonia/Craft/Vocation/README.md`. Background, compensation expectations, role fit tiers. The source for every credential claim in a cover letter.
 - **The plan**: `~/Eudaimonia/Craft/Vocation/Plans/FY27-H2.md`. The positioning frame (Mission Growth Engineering) and the weekly cadence the queue serves.
-- **Voice and email practices**: `~/Eudaimonia/Craft/Vocation/CLAUDE.md` (Vocation Email Practices, Negotiation Philosophy) and the Eudy communication style (tone, length, no dashes, Title Case subjects, no sign off).
+- **Voice and email practices**: the life level voice core is `~/Eudaimonia/VOICE.md`, overlaid in register order by `~/Eudaimonia/Admin/Tools/email.md` and `~/Eudaimonia/Craft/Vocation/CLAUDE.md` (Vocation Email Practices, Negotiation Philosophy). Sign off per email.md ("Cheers and chat soon!", never a name; the Gmail signature handles it).
 - **The outreach template**: `~/Eudaimonia/Craft/Vocation/templates/07-job-posting-cold-outreach.md` for the follow-up email.
 
 ## The Motion (One Role at a Time)
@@ -55,7 +55,7 @@ The note's shape (proven on the EnergyHub send, 2026-07-29; Forni called it fant
 3. **The middle belongs to the mission.** "Since then I keep choosing climate:" with the climate roles as proof, then one sentence connecting this company's actual work to the crisis. Make that mission sentence the longest in the email, on purpose.
 4. **Close:** "Worth a chat? Here's my scheduling link if that's easier. Either way, I appreciate your time."
 
-Title Case subject (just the role and company, e.g. "Software Architect at EnergyHub"). No sign off; Gmail handles the signature.
+Title Case subject (just the role and company, e.g. "Software Architect at EnergyHub"). Never sign a name; the Gmail signature handles it.
 
 ## Guardrails
 
