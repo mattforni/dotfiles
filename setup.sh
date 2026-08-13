@@ -1162,11 +1162,11 @@ setup_auth() {
     done
   fi
 
-  # YNAB personal access token, Keychain-backed for the ynab MCP server. The
-  # canonical copy lives in the BitWarden "YNAB" entry (PAT field); the login
-  # Keychain is the operational store (service ynab-token, per the vault naming
-  # convention) that bin/mcp/serve-ynab reads when the MCP server starts. -s read
-  # keeps the pasted token off the terminal.
+  # YNAB personal access token. The canonical copy lives in the BitWarden "YNAB"
+  # entry (PAT field); the login Keychain is the operational store (service
+  # ynab-token, per the vault naming convention). It seeded the retired MCP
+  # server launcher; it now backs `ynab auth login -t` for the CLI (see
+  # install_bun_globals). -s read keeps the pasted token off the terminal.
   if security find-generic-password -a "$USER" -s ynab-token -w &>/dev/null && [[ "$FORCE" != true ]]; then
     info "YNAB token already in Keychain"
   else

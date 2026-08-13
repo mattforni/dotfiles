@@ -138,7 +138,7 @@ It separated nothing worth having. Every profile dir authenticated to the same C
 
 **So per-directory tooling belongs in the mechanism that actually scopes.** A `.mcp.json` is discovered upward across parent directories and git boundaries, so one at a subtree root covers everything beneath it. Per-repo behavior goes in that repo's `.claude/settings.json`. Per-directory CLI identity goes through the `.account` marker and an invocation time shim, which is what `gws` does. Anything that must differ by directory cannot be a claude.ai connector.
 
-One consequence worth knowing: the wrapper also injected the YNAB token, which is why `ynab` was unauthenticated in every VS Code session. That job moved into `bin/mcp/serve-ynab`, which reads the Keychain itself and so works however Claude Code was started.
+One consequence worth knowing: the wrapper also injected the YNAB token, which is why `ynab` was unauthenticated in every VS Code session. That dependency is gone: the `ynab` CLI holds its own credential (seeded once with `ynab auth login -t` from the Keychain entry `setup_auth` stores), so it works however Claude Code was started.
 
 OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>` (vault project: `atelic`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/vault/push-gws-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/Tools/secret-manager.md`.
 
