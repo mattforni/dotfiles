@@ -23,11 +23,13 @@ Pull uncategorized YNAB transactions, file them into the right category, tag tri
    tok=$(security find-generic-password -a "$USER" -s ynab-token -w)
    ```
 
-4. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, RYLLC `e0d471f0-bf90-452c-8232-b1153b7411be`. Default to Personal unless asked.
+4. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, Atelic `e0d471f0-bf90-452c-8232-b1153b7411be` (shown as RYLLC before the entity rename). Default to Personal unless asked; it is also the `ynab` CLI's configured default.
 
 ## Why the API, Not the MCP
 
-Write through the YNAB REST API directly (`curl` plus `jq`, or a small Python script). The `ynab` MCP is fine for browsing but its text output **hides the transaction and category IDs** needed to write, so it cannot drive categorization. The API exposes `id`, `category_id`, `transfer_account_id`, and `approved` cleanly.
+Write through the YNAB REST API directly (`curl` plus `jq`, or a small Python script). The API exposes `id`, `category_id`, `transfer_account_id`, and `approved` cleanly, which is what categorization needs.
+
+**The `ynab` MCP this section used to warn about is gone (retired 2026-08-13).** It was replaced by the `ynab` CLI, which returns JSON by default, exposes the same IDs, and takes `--fields` to trim a response. The curl recipes below still work unchanged and are still the reference, but the CLI is now the lighter path for the read steps, for example `ynab transactions list --approved false --fields id,date,payee_name,amount`. Converting the write steps has not been done or verified, so treat the curl forms as canonical until it has.
 
 Category IDs: resolve by name at runtime so a renamed category never breaks the skill:
 
