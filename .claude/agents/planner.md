@@ -31,9 +31,9 @@ Read these before pulling anything; they override your judgment.
    Monday through Sunday of the week being planned, with
    `eventLabelVersion: 1` inside `--params` so labels come back. Record the
    `transparency` of every event; only opaque events block time.
-2. **Todoist**: via the MCP tools (load with ToolSearch, e.g.
-   `mcp__claude_ai_Todoist__find-tasks`). Two pulls: the Schedule filter's
-   raw query
+2. **Todoist**: via the `td` CLI, which replaced the MCP connector on
+   2026-08-13. Pass the raw query with `td task list --filter '<query>' --json`.
+   Two pulls: the Schedule filter's raw query
    `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday`,
    plus the Sunday drop date pull, the tasks due on the planning Sunday
    where drops and deferrals accumulate.

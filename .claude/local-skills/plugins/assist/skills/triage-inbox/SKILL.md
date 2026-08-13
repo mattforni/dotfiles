@@ -4,9 +4,6 @@ description: Triage the Gmail inbox to a settled state. Classify every email, dr
 argument-hint: ""
 allowed-tools:
   - Bash
-  - mcp__claude_ai_Todoist__*
-  - mcp__claude_ai_Notion__*
-  - mcp__claude_ai_Google_Calendar__*
   - Read
   - Edit
   - Write

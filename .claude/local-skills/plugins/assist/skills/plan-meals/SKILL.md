@@ -4,7 +4,6 @@ description: Weekly meal planning, shopping list generation, and pantry aware gr
 argument-hint: "[optional week, e.g. 2026-W17]"
 allowed-tools:
   - Bash
-  - mcp__claude_ai_Google_Calendar__*
   - mcp__pinole__*
   - WebFetch
   - WebSearch

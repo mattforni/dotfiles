@@ -6,8 +6,6 @@ allowed-tools:
   - Skill
   - Bash
   - mcp__claude_ai_Strava__*
-  - mcp__claude_ai_Todoist__*
-  - mcp__claude_ai_Notion__*
   - Read
   - Edit
   - Write
