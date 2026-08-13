@@ -28,3 +28,11 @@ Before proposing a new headless routine, audit the feedback channels on existing
 - The current robust pattern is per-run email via Resend with API key in Keychain, recipient in `~/.config/headless-report/recipient`, osascript demoted to a redundant fallback. See `homebase/.claude/references/headless-claude.md` "Email reporting via Resend" section.
 - Apply this scrutiny in proportion to schedule frequency. A weekly routine that fails silently for a week is much worse than a daily one that fails silently once.
 - Adding a second routine without robust feedback compounds the problem because each new agent multiplies the surface area of silent failure.
+
+## Structural Moves Get Plan Mode Before Any File Is Written
+
+When the chosen sharpen move creates or reshapes a durable surface (an agent, a skill, a hook, a workflow), enter plan mode and walk the design with Forni before authoring anything. Ground the design in the authoring conventions (`~/.claude/references/skills.md`) and, for anything agent shaped, a fresh read of Anthropic's guidance; settle the ownership and orchestration forks with him one at a time, then build.
+
+**Why:** 2026-08-13. The sharpener agent's first version was authored minutes after the pick with no plan: the skill ended up orchestrating the agent ("Step 1: dispatch the sharpener") when Forni wanted the agent to run the method, and the scan was delegated to three scouts when one context held it fine. Forni: "This feels like we didn't really think about this very hard and didn't really come up with a plan." The whole build was redone through plan mode the same session.
+
+**How to apply:** "Implement the chosen move" (Phase 5) is not license to skip planning; session sized refers to total effort, including the plan. A structural move that cannot afford a planning pass is not session sized, so split it instead.
