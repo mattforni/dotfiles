@@ -286,6 +286,17 @@ install_bun_globals() {
     return 0
   fi
 
+  # `bun install -g` drops binaries in ~/.bun/bin, which is on no default PATH.
+  # .zshrc adds it, but that only helps the NEXT shell; this process needs it
+  # too, because setup_auth runs `command -v ynab` later in this same run.
+  # Without this, a fresh machine installs the CLI and then silently skips
+  # authenticating it, which is the exact "setup green, tool dead" failure the
+  # move off Deno was meant to end.
+  case ":$PATH:" in
+    *":$HOME/.bun/bin:"*) ;;
+    *) export PATH="$HOME/.bun/bin:$PATH" ;;
+  esac
+
   local globals=(
     "@stephendolan/ynab-cli"
   )
