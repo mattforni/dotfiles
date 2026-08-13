@@ -36,3 +36,11 @@ When the chosen sharpen move creates or reshapes a durable surface (an agent, a 
 **Why:** 2026-08-13. The sharpener agent's first version was authored minutes after the pick with no plan: the skill ended up orchestrating the agent ("Step 1: dispatch the sharpener") when Forni wanted the agent to run the method, and the scan was delegated to three scouts when one context held it fine. Forni: "This feels like we didn't really think about this very hard and didn't really come up with a plan." The whole build was redone through plan mode the same session.
 
 **How to apply:** "Implement the chosen move" (Phase 5) is not license to skip planning; session sized refers to total effort, including the plan. A structural move that cannot afford a planning pass is not session sized, so split it instead.
+
+## Routines Are Not a Vault Grade L7 Primitive
+
+Anthropic's cloud Routines run in environments with no secrets store, and the docs explicitly warn against placing credentials there (env vars are plaintext). A Routine can only carry credential free work, so any background move that draws from the vault cannot ship as one.
+
+**Why:** 2026-08-13 afternoon session. The Sunday training retro spike disqualified Routines inside the research pass: the retro needs Strava reads and a Resend send, both vault credentials. Forni rejected shipping a credential poor partial as "punting the problem" and redirected to headless cloud runs with full vault access. Runtime picked: GCP Cloud Run Jobs fired by Cloud Scheduler with secrets injected natively from Secret Manager; GitHub Actions cron verified as the supported alternate, with subscription token auth official for both.
+
+**How to apply:** When a board row proposes cloud scheduled background work, ask first what credentials it draws. Credential free, a Routine is the smallest rep. Anything touching the vault routes through Cloud Run Jobs plus Cloud Scheduler with native Secret Manager injection (pattern home: ATE-471, The Sunday Retro Runner). And a spike that surfaces a disqualifier is a pass, not a failure: name the disqualifier, pick the runtime that meets the real want, and do not ship the degraded version just to log a live artifact.
