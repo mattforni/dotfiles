@@ -1181,6 +1181,28 @@ setup_auth() {
       unset ynab_pat
     fi
   fi
+
+  # Seeding the Keychain is not enough on its own. The CLI keeps its own
+  # credential under a separate Keychain service (`ynab-cli`) written by
+  # `ynab auth login`, and never reads `ynab-token`. Without this step a fresh
+  # machine finishes setup reporting success and leaves the CLI unauthenticated,
+  # which is the same failure the Deno dependency produced before it: setup is
+  # green, the tool is dead. Idempotent, since re-running login just replaces
+  # the stored credential.
+  if command -v ynab &>/dev/null; then
+    local ynab_tok
+    ynab_tok="$(security find-generic-password -a "$USER" -s ynab-token -w 2>/dev/null || true)"
+    if [[ -z "$ynab_tok" ]]; then
+      warn "No ynab-token in Keychain; skipping ynab CLI login"
+    elif ynab auth status &>/dev/null && [[ "$FORCE" != true ]]; then
+      info "ynab CLI already authenticated"
+    elif ynab auth login -t "$ynab_tok" &>/dev/null; then
+      SUMMARY+=("ynab CLI authenticated")
+    else
+      warn "ynab auth login failed"
+    fi
+    unset ynab_tok
+  fi
 }
 
 print_summary() {

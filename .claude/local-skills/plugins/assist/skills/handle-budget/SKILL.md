@@ -80,15 +80,19 @@ ynab transactions batch-update --transactions \
 
 Confirm the response count matches the plan's count, and say so. A mismatch means something was rejected silently and needs looking at before moving on.
 
-## Phase 5: Approve
+## Phase 5: Approve the Skipped Remainder
 
-Imported transactions land **unapproved**, and categorizing does NOT approve them. Until approved, the changes do not flow into the budget/category views, which reads as "my changes aren't showing up." Approve as the final step, and note that a blanket approve is itself a write, so it needs its own yes.
+Imported transactions land **unapproved**, and categorizing does NOT approve them. Until approved, the changes do not flow into the budget/category views, which reads as "my changes aren't showing up." Phase 4 already carries `approved: true` for everything it categorized, so what is left here is the deliberate skips: transfers and card payments, which stay uncategorized but should still be approved.
+
+**Approve only IDs that were in the reviewed plan. Never re-query for "everything unapproved" and approve that.** The queue is live, so a blanket approve would sweep up transactions that imported after the plan was built, or that were held back on purpose, and write them without Forni ever seeing them. That would quietly void the dry run guarantee this skill just made.
 
 ```bash
-ids=$(ynab transactions list --approved false \
-  | jq -c '[.[] | {id: .id, approved: true}]')
-ynab transactions batch-update --transactions "$ids"
+# ids come from the reviewed plan, not from a fresh unapproved query
+ynab transactions batch-update --transactions \
+ '[{"id":"<planned-skip-1>","approved":true},{"id":"<planned-skip-2>","approved":true}]'
 ```
+
+If the queue has grown since the plan was built, say so and offer a fresh pass rather than folding the new arrivals into this one.
 
 Then remind the user to hard-refresh the YNAB app or web tab, since an already-open client uses delta sync and will not show the writes until it re-syncs.
 
