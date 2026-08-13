@@ -164,6 +164,7 @@ When creating new Linear tickets:
 
 - Always set status to **Todo**
 - Always assign to **Forni** (me)
+- Always place the issue in the cycle its due date falls in. New issues default into the active cycle, so anything scheduled for future work needs its cycle set explicitly at create time (mechanics in `~/Eudaimonia/Admin/Tools/linear.md`)
 
 ## Email Preferences
 
