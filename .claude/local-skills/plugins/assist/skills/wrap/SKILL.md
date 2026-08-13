@@ -98,8 +98,8 @@ Categorize each in three tiers:
 Before triaging anything, query Todoist for tasks that already cover the candidate loose ends. Surfacing items that are already scheduled is noise and forces the user to triage the same thing twice.
 
 ```bash
-# overdue, plus today through next Sunday on a weekday wrap
-td task list --due overdue --json
+# 8 days covers today through next Sunday on a weekday wrap,
+# and upcoming already returns overdue tasks, so one call is the whole set
 td upcoming 8 --json
 ```
 
@@ -135,8 +135,8 @@ If candidates exist, ask the user whether to invoke `/assist:codify-context` via
 
 For each loose end the user triaged to "today" or "Sunday", create a Todoist task:
 
-- **Today:** `td task add "<title>" --due today --duration 30m`
-- **Sunday:** `td task add "<title>" --due "next Sunday" --duration 30m`
+- **Today:** `td task add "<title>" --due today --duration 30m --project "<project>" [--section "<section>"]`
+- **Sunday:** `td task add "<title>" --due "next Sunday" --duration 30m --project "<project>" [--section "<section>"]`
 
 For each 🔴 overdue item the user triaged to reschedule, use `td task reschedule <ref> <date>` rather than creating a new task, and never `td task update --due`. The dedicated subcommand preserves recurrence; setting a due date through update replaces the whole due string and destroys a recurring pattern.
 
