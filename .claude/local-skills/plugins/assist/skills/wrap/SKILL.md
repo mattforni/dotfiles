@@ -135,8 +135,8 @@ If candidates exist, ask the user whether to invoke `/assist:codify-context` via
 
 For each loose end the user triaged to "today" or "Sunday", create a Todoist task:
 
-- **Today:** `dueString: "today"`, `duration: "30m"`
-- **Sunday:** `dueString: "next Sunday"`, `duration: "30m"`
+- **Today:** `td task add "<title>" --due today --duration 30m`
+- **Sunday:** `td task add "<title>" --due "next Sunday" --duration 30m`
 
 For each 🔴 overdue item the user triaged to reschedule, use `td task reschedule <ref> <date>` rather than creating a new task, and never `td task update --due`. The dedicated subcommand preserves recurrence; setting a due date through update replaces the whole due string and destroys a recurring pattern.
 
