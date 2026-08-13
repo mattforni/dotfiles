@@ -21,6 +21,8 @@ Use semver:
 - **Minor** (`2.2.1` to `2.3.0`): new skill, new command, new hook, new public surface area.
 - **Major** (`2.2.1` to `3.0.0`): breaking change to a skill's contract, argument shape, or removed surface.
 
+**A removal that does not change the invocation contract is a minor.** The three buckets above define minor purely as additions, which leaves no home for taking an internal path out of a skill while `plugin:skill` still resolves and still accepts the same arguments. Patch understates it and major overstates it. Removing the MCP fallback from `sdlc:groom-issues` on 2026-08-12 is the worked example: the skill did the same job with the same arguments and only stopped reaching for a second tool internally. "Removed surface" in the major rule means removed *invocation* surface, the sense the rename example uses.
+
 **Renaming a skill is always a major bump.** A rename removes the old invocation surface (`assist:oldname` stops resolving), so it is a breaking change by definition regardless of how much the body changed. Renaming also has a blast radius beyond the version fields: the skill directory, its `name:` frontmatter, the `skills` array entry in `marketplace.json`, and every cross-reference in other skills or docs (`grep` for the old `assist:<name>`) must all move together in the same change.
 
 **Bump against origin/main, never against the local checkout.** A stale checkout carries an old version, and a bump computed from it silently regresses the marketplace: users on the newer version see nothing to update, and skill changes stop propagating with no error anywhere. (Observed 2026-08-04: a commit from a stale checkout took assist from 8.0.11 back to 8.0.7; the regression rode main until the next merge restored the lineage.) Before choosing the next version, fetch and read the current one from origin/main (`git show origin/main:<path to plugin.json>`), and treat any version that moves backward in a diff as a review red flag.
@@ -188,12 +190,22 @@ out of `$HOME`.
 
 **Why it matters:** Codified 2026-05-19. The Claude Code profile-dir bootstrap initially shipped inside `setup_auth`, which meant a non-interactive `./setup.sh` invocation (the way it runs from inside a Claude Code background session) skipped the entire block, and the profile dirs never got created until `bin/claude-profiles-init.sh` was invoked by hand. That bootstrap retired with the profile split on 2026-08-12, but the rule it produced is general and still binding: split file operations out of `setup_auth` so a headless run does not skip them.
 
+**A phase must prove the tool works in that same run, not that the install command exited zero.** A green `setup.sh` that leaves a tool dead is worse than a failing one, because nothing signals until the tool is next reached for, usually on the fresh machine where it matters most. The YNAB migration produced three of these in a single day (2026-08-13), each one green: the MCP server needed Deno, which neither the Brewfile nor mise installs; `setup_auth` seeded a Keychain token the CLI never reads, because the CLI keeps its own credential under a different service; and `install_bun_globals` put `~/.bun/bin` on the next shell's PATH but not on setup's own, so the very next phase's `command -v` found nothing. When adding tooling, end the phase with a check that exercises the thing (`auth status`, a trivial read, `command -v` after the PATH is set), and warn loudly when it fails.
+
 ### Adding HTTP MCP Entries to `install_mcp_servers`
 
 The desired array supports both stdio and http transports. For http entries that carry an `Authorization: Bearer ${SOME_TOKEN:-}` header, two non-obvious traps apply. Both are documented in `~/Eudaimonia/Admin/Tools/claude-code.md`:
 
 - `claude mcp add --header` is variadic, so positionals must precede the flag or the CLI eats them as additional headers.
 - Registering with an empty token bakes a broken auth header that the `Already registered` short circuit silently preserves on later runs. Guard with a `[[ -z "${SOME_TOKEN:-}" ]]` skip before the loop body, matching the atelic guard.
+
+### Removing an Integration Is Not Done Until Its Consumers Are Swept
+
+**Deleting an MCP server, a connector, or a plugin is half the change. The other half is grepping for everything that named it, and the grep covers every removed thing, not the one currently in mind.** A skill that declares a tool which no longer exists does not fail loudly; it silently loses a capability, or its `allowed-tools` block quietly stops matching anything.
+
+Before landing a removal, grep the live surface (`.claude/agents`, `.claude/commands`, `.claude/local-skills`, `plugins/`) for the server name in every form it appears: the qualified tool (`mcp__claude_ai_Todoist__add-tasks`), the wildcard (`mcp__claude_ai_Todoist__*`), and any prose naming it. Read the whole result; a truncated `head` is how a partial sweep looks complete.
+
+Codified 2026-08-13. Retiring six connectors in one session swept Linear's consumers thoroughly and left everything else: Todoist survived in five skills plus the `planner` agent, which is the entire Sunday planning set, and Notion and Google Calendar survived in five more. The break surfaced only when `assist:wrap` ran its own Todoist step and nothing happened. Two of them were found on a second pass, after a truncated grep had already been read as clean.
 
 ## Code Review Bots
 

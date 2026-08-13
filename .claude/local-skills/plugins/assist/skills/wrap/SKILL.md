@@ -8,10 +8,6 @@ allowed-tools:
   - Grep
   - AskUserQuestion
   - Skill
-  - mcp__claude_ai_Todoist__add-tasks
-  - mcp__claude_ai_Todoist__find-projects
-  - mcp__claude_ai_Todoist__find-tasks-by-date
-  - mcp__claude_ai_Todoist__reschedule-tasks
 ---
 
 # Wrap
@@ -101,13 +97,10 @@ Categorize each in three tiers:
 
 Before triaging anything, query Todoist for tasks that already cover the candidate loose ends. Surfacing items that are already scheduled is noise and forces the user to triage the same thing twice.
 
-```text
-mcp__claude_ai_Todoist__find-tasks-by-date(
-  startDate: "today",
-  daysCount: 8,          # covers today through next Sunday on a weekday wrap
-  overdueOption: "include-overdue",
-  limit: 50,
-)
+```bash
+# 8 days covers today through next Sunday on a weekday wrap,
+# and upcoming already returns overdue tasks, so one call is the whole set
+td upcoming 8 --json
 ```
 
 Match each candidate against scheduled tasks by content keyword (lender name, attorney name, deadline phrase, task type). For each match:
@@ -142,10 +135,10 @@ If candidates exist, ask the user whether to invoke `/assist:codify-context` via
 
 For each loose end the user triaged to "today" or "Sunday", create a Todoist task:
 
-- **Today:** `dueString: "today"`, `duration: "30m"`
-- **Sunday:** `dueString: "next Sunday"`, `duration: "30m"`
+- **Today:** `td task add "<title>" --due today --duration 30m --project "<project>" [--section "<section>"]`
+- **Sunday:** `td task add "<title>" --due "next Sunday" --duration 30m --project "<project>" [--section "<section>"]`
 
-For each 🔴 overdue item the user triaged to reschedule, use `mcp__claude_ai_Todoist__reschedule-tasks` rather than creating a new task. Preserves recurring patterns and existing context.
+For each 🔴 overdue item the user triaged to reschedule, use `td task reschedule <ref> <date>` rather than creating a new task, and never `td task update --due`. The dedicated subcommand preserves recurrence; setting a due date through update replaces the whole due string and destroys a recurring pattern.
 
 Task title conventions from global memory:
 
