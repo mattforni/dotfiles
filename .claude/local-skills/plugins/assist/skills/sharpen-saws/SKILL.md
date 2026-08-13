@@ -1,8 +1,9 @@
 ---
 name: sharpen-saws
-description: Run a sharpen session to move collaboration one small step toward Levels 7 and 8 of the agentic engineering hierarchy. Evaluate recent activity (git, memory, plans) against LEVELS.md, propose one or two concrete small moves toward background autonomy or agent teams, help implement the chosen move, and append a dated log entry. Use this skill whenever the user says "sharpen", "sharpen saws", asks to "sharpen our process", or explicitly starts a sharpen session. Paired with the weekly Sharpen Saws block on Wednesdays.
+description: Run a sharpen session to move collaboration one small step toward Levels 7 and 8 of the agentic engineering hierarchy. Evaluate recent activity (git, memory, plans) against LEVELS.md, propose one or two concrete small moves toward background autonomy or agent teams, help implement the chosen move, and append a dated log entry. Use this skill whenever the user says "sharpen", "sharpen saws", asks to "sharpen our process", or explicitly starts a sharpen session. Paired with the weekly Sharpen Saws block on Wednesdays. The sharpener agent carries this method for background dispatch.
 argument-hint: "[optional focus area, e.g., 'zero code review' or 'email triage']"
 allowed-tools:
+  - Agent
   - Bash
   - Read
   - Edit
@@ -16,6 +17,8 @@ allowed-tools:
 # Sharpen Assist
 
 Move our collaboration one rung at a time toward Level 7 (background agents) and Level 8 (autonomous agent teams) as framed in [Bassi Eledath's 8 Levels of Agentic Engineering](https://www.bassimeledath.com/blog/levels-of-agentic-engineering). Each session is small. One small move, logged, compounds.
+
+The `sharpener` agent (`~/.claude/agents/sharpener.md`) runs this method in the background and returns to Forni at the pick; the main session hosts the pick and the implementation, and performs every write. Run the method inline only when the sharpener is unavailable or Forni wants to drive together.
 
 ## Before Every Invocation
 
@@ -33,52 +36,47 @@ Move our collaboration one rung at a time toward Level 7 (background agents) and
 - **Codify what you learn.** If the session surfaces a durable lesson, invoke `assist:codify-context` or append directly to the right learned-rules.md.
 - **Sprawl is a grooming job, not a sharpen move.** If the session reveals the context architecture is duplicated, stale, at the wrong altitude, or a basic keeps getting dropped, that is `assist:groom-context` (run monthly via reflect, or on demand), not a sharpen rep.
 
-## Workflow
+## The Method
 
-### Step 1: Gather signal
+Seven phases. The sharpener owns Ground, Scan, and Board, and drafts the Log; the main session hosts Pick and Implement in dialogue with Forni, and performs every write, including Log and Codify.
 
-Pull recent activity to ground the session. Run these in parallel when possible.
+### Phase 1: Ground
 
-- **Recent git activity in Eudaimonia**: `git -C ~/Eudaimonia log --since="7 days ago" --oneline`
-- **Recent auto memory entries**: Read `~/.claude/projects/-Users-mattforni-Eudaimonia/memory/MEMORY.md` and skim the most recently added feedback_*.md files
+Anchor on LEVELS.md: the current state table, the last two log entries, and any queued reps, which are standing candidates unless explicitly retired. Read the plugin and skill learned rules. Honor the focus area if the session was given one (e.g., "zero code review"), narrowing every later pull to it.
+
+### Phase 2: Scan
+
+Pull the signal, inline:
+
+- **Recent git activity**: `git -C ~/Eudaimonia log --since="14 days ago" --oneline`, and the same for `~/Eudaimonia/Craft/Development/personal/homebase`
+- **Recent auto memory entries**: the Eudaimonia project's `MEMORY.md` index under `~/.claude/projects/`, plus a skim of the newest entries
 - **Recent plan files**: `ls -lt ~/.claude/plans/ | head -10` and read titles
-- **Optional focus area**: If the user gave a focus in arguments (e.g., "zero code review"), narrow the scan to commits, memories, and plans relating to that area
+- **Patterns to find**: repeated synchronous work (background candidates), friction points (corrections, retries, missing hooks), foundation cracks (Levels 3 to 5 drift), background ready tasks that do not need Forni's judgment each time
 
-### Step 2: Find patterns
+Then dispatch the two scouts in parallel, each for capability the scanner lacks, each briefed with objective, output format, and boundaries: **socrates** to critique this skill, its learned rules, and the LEVELS.md framing with fresh eyes, and **claude-code-guide** to surface current Claude Code and Agent SDK capabilities the setup is not using.
 
-Look for:
+### Phase 3: Board
 
-- **Repeated synchronous work** — tasks Forni ran manually multiple times that could be scheduled, looped, or delegated to a background agent
-- **Friction points** — corrections, retries, or stuck moments that suggest a missing skill, harness constraint, or hook
-- **Foundation cracks** — signs that Levels 3, 4, or 5 need shoring up (context noise, missed codifications, skill drift)
-- **Background-ready tasks** — anything that follows a predictable pattern and does not require Forni's judgment each time
+Synthesize the scan and both scout reports into a ranked board of three to five candidate moves. Each row: the move in one line, the level it pushes, the smallest rep this session, the evidence pointer, and whether it is session sized or plan sized. Rank by evidence strength first, then smallest rep size. Route context sprawl to a grooming flag rather than the board.
 
-### Step 3: Propose one or two moves
+### Phase 4: Pick
 
-Present proposals in Forni's voice: tight, facts forward, concrete. Each move should have:
+The main session surfaces the top one or two rows to Forni in his voice: tight, facts forward, concrete, never the whole board. Each proposal carries:
 
 - **What it is**: One sentence describing the change
 - **Which level it pushes**: 3 (context), 4 (compounding), 5 (skills), 6 (harness), 7 (background), 8 (teams)
 - **Concrete next action**: The smallest unit of work to make it real this session
 - **Why now**: What in the recent activity triggered this proposal
 
-Examples of the shape:
+Ask one question: which move (if any) do we make this session? If Forni picks none, still log the proposals and the board's remaining rows so they persist for next time.
 
-- "Schedule a weekly Monday morning background agent to surface new Linear tickets and draft a triage summary. Level 7. Uses CronCreate. Triggered by the fact that Monday planning sessions repeated the same scan four times."
-- "Add a pre-commit hook that runs the codify skill when a plan file is finalized. Level 6. Wire via settings.json hook. Triggered by three sessions where plan lessons did not survive into memory."
-- "Split the sharpen skill itself into a quick cadence reader and a deeper reflection agent. Level 5 → 7. Triggered by this session feeling too long for a weekly check in."
+### Phase 5: Implement
 
-### Step 4: Let Forni pick
+The main session, with Forni. Small enough to finish in session. If the chosen move is larger than session size, split it: do the enabling piece now, queue the rest as a Todoist task on next Sunday or as a follow up plan file.
 
-Ask one question: which move (if any) do we make this session? If Forni picks none, still log the proposals so they persist for next time.
+### Phase 6: Log
 
-### Step 5: Implement the chosen move
-
-Small enough to finish in session. If the chosen move is larger than session size, split it: do the enabling piece now, queue the rest as a Todoist task on next Monday or as a follow up plan file.
-
-### Step 6: Log
-
-Append a new entry to `~/Eudaimonia/LEVELS.md` under `## Log` with:
+Resume the sharpener with the pick and the session outcome; it drafts the entry and returns it. The main session reviews the draft and appends it to `~/Eudaimonia/LEVELS.md` under `## Log`:
 
 ```markdown
 ### YYYY-MM-DD — [one line title]
@@ -92,7 +90,7 @@ Append a new entry to `~/Eudaimonia/LEVELS.md` under `## Log` with:
 
 If the session altered the Current State table (a dimension's level genuinely changed), update that table as part of the log entry. Be honest: a single move rarely moves a level on its own.
 
-### Step 7: Codify if durable
+### Phase 7: Codify
 
 If the session surfaced a rule, preference, or insight worth preserving:
 
