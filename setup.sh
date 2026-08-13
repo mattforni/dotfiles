@@ -272,6 +272,48 @@ install_npm_globals() {
   done
 }
 
+install_bun_globals() {
+  header "bun globals"
+
+  # @stephendolan/ynab-cli (binary `ynab`) requires the Bun runtime, so it cannot
+  # ride install_npm_globals. It replaced the ynab MCP server on 2026-08-13. The
+  # server ran under Deno, which neither the Brewfile nor mise ever installed, so
+  # a fresh machine would have failed with "deno: command not found"; bun is in
+  # the Brewfile already. The CLI also stores its own token in the Keychain via
+  # `ynab auth login -t`, which retired the bin/mcp/serve-ynab launcher.
+  if ! command -v bun &>/dev/null; then
+    warn "bun not found, skipping"
+    return 0
+  fi
+
+  # `bun install -g` drops binaries in ~/.bun/bin, which is on no default PATH.
+  # .zshrc adds it, but that only helps the NEXT shell; this process needs it
+  # too, because setup_auth runs `command -v ynab` later in this same run.
+  # Without this, a fresh machine installs the CLI and then silently skips
+  # authenticating it, which is the exact "setup green, tool dead" failure the
+  # move off Deno was meant to end.
+  case ":$PATH:" in
+    *":$HOME/.bun/bin:"*) ;;
+    *) export PATH="$HOME/.bun/bin:$PATH" ;;
+  esac
+
+  local globals=(
+    "@stephendolan/ynab-cli"
+  )
+
+  for pkg in "${globals[@]}"; do
+    # `bun pm ls -g` prints the global tree; grep is the available check, since
+    # bun has no per package query equivalent to `npm list -g <pkg>`.
+    if [[ "$FORCE" != true ]] && bun pm ls -g 2>/dev/null | grep -q "$pkg"; then
+      info "$pkg already installed"
+    else
+      info "Installing $pkg..."
+      bun install -g "$pkg" || return 1
+      SUMMARY+=("$pkg installed")
+    fi
+  done
+}
+
 setup_agent_browser() {
   header "agent-browser"
 
@@ -886,16 +928,10 @@ install_mcp_servers() {
   # managed in claude.ai Settings > Connectors), so it needs no entry here. The
   # old self hosted servers (community `strava` and the gated `strava-mcp`) were
   # retired 2026-06-14 when the native connector became available.
-  # ynab (stdio, Deno) is registered as bin/mcp/serve-ynab, which reads the token
-  # from the login Keychain itself and execs the Deno server. It used to be
-  # registered with a ${YNAB_ACCESS_TOKEN} placeholder that Claude Code expanded
-  # from whatever the bin/claude wrapper had injected, which meant it only ever
-  # worked when Claude Code was launched from a terminal; the VS Code extension
-  # bypasses PATH entirely and left the server unauthenticated. Reading the token
-  # inside the server launcher removes that dependency on how Claude started, and
-  # is what allowed the wrapper to be retired (ATE-463). No literal token is
-  # baked in either way. The canonical token lives in BitWarden; setup_auth seeds
-  # the Keychain entry on a fresh machine.
+  # ynab is no longer here. It moved to the `ynab` CLI on 2026-08-13 (see
+  # install_bun_globals). The MCP server ran under Deno, which neither the
+  # Brewfile nor mise installs, so a fresh machine would have failed at launch;
+  # the CLI runs on bun, which the Brewfile already carries.
 
   # Self-heal: when the env var is empty (headless runs do not source ~/.zshrc),
   # fall back to the token stashed in the macOS Keychain so a fresh machine can
@@ -908,7 +944,6 @@ install_mcp_servers() {
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
     "pinole|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
-    "ynab|stdio|$HOME/bin/mcp/serve-ynab"
   )
 
   for entry in "${desired[@]}"; do
@@ -1138,11 +1173,11 @@ setup_auth() {
     done
   fi
 
-  # YNAB personal access token, Keychain-backed for the ynab MCP server. The
-  # canonical copy lives in the BitWarden "YNAB" entry (PAT field); the login
-  # Keychain is the operational store (service ynab-token, per the vault naming
-  # convention) that bin/mcp/serve-ynab reads when the MCP server starts. -s read
-  # keeps the pasted token off the terminal.
+  # YNAB personal access token. The canonical copy lives in the BitWarden "YNAB"
+  # entry (PAT field); the login Keychain is the operational store (service
+  # ynab-token, per the vault naming convention). It seeded the retired MCP
+  # server launcher; it now backs `ynab auth login -t` for the CLI (see
+  # install_bun_globals). -s read keeps the pasted token off the terminal.
   if security find-generic-password -a "$USER" -s ynab-token -w &>/dev/null && [[ "$FORCE" != true ]]; then
     info "YNAB token already in Keychain"
   else
@@ -1156,6 +1191,28 @@ setup_auth() {
       fi
       unset ynab_pat
     fi
+  fi
+
+  # Seeding the Keychain is not enough on its own. The CLI keeps its own
+  # credential under a separate Keychain service (`ynab-cli`) written by
+  # `ynab auth login`, and never reads `ynab-token`. Without this step a fresh
+  # machine finishes setup reporting success and leaves the CLI unauthenticated,
+  # which is the same failure the Deno dependency produced before it: setup is
+  # green, the tool is dead. Idempotent, since re-running login just replaces
+  # the stored credential.
+  if command -v ynab &>/dev/null; then
+    local ynab_tok
+    ynab_tok="$(security find-generic-password -a "$USER" -s ynab-token -w 2>/dev/null || true)"
+    if [[ -z "$ynab_tok" ]]; then
+      warn "No ynab-token in Keychain; skipping ynab CLI login"
+    elif ynab auth status &>/dev/null && [[ "$FORCE" != true ]]; then
+      info "ynab CLI already authenticated"
+    elif ynab auth login -t "$ynab_tok" &>/dev/null; then
+      SUMMARY+=("ynab CLI authenticated")
+    else
+      warn "ynab auth login failed"
+    fi
+    unset ynab_tok
   fi
 }
 
@@ -1212,6 +1269,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     run_phase reconcile_home
     run_phase setup_runtimes
     run_phase install_npm_globals
+    run_phase install_bun_globals
     run_phase setup_agent_browser
     run_phase install_launchagents
     run_phase install_ide_extensions

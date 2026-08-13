@@ -76,9 +76,11 @@
       "Bash(tree:*)",
       "Bash(uniq:*)",
       "Bash(unzip:*)",
+      "Bash(vercel:*)",
       "Bash(wc:*)",
       "Bash(while:*)",
       "Bash(xargs:*)",
+      "Bash(ynab:*)",
       "Bash(~/.zshrc)",
       "Read(//$HOME/**)",
       "Skill(assist:*)",
@@ -141,8 +143,7 @@
     "skill-creator@claude-plugins-official": true,
     "assist@local-skills": true,
     "linear-lifecycle@skillset": true,
-    "sdlc@skillset": true,
-    "vercel@claude-plugins-official": true
+    "sdlc@skillset": true
   },
   "extraKnownMarketplaces": {
     "claude-code-workflows": {
