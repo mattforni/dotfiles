@@ -14,7 +14,6 @@ allowed-tools:
   - EnterPlanMode
   - ExitPlanMode
   - Skill
-  - mcp__claude_ai_Todoist__*
 ---
 
 # Plan Venture Assist

@@ -5,7 +5,6 @@ argument-hint: "[scope | search | present | verify | book | doc]"
 allowed-tools:
   - Bash
   - mcp__playwright__*
-  - mcp__claude_ai_Todoist__*
   - WebSearch
   - WebFetch
   - Read

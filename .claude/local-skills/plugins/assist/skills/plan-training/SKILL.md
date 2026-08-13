@@ -4,7 +4,6 @@ description: Training plan scheduling, weekly retrospectives, and training adjac
 argument-hint: "[week | move | retro]"
 allowed-tools:
   - Bash
-  - mcp__claude_ai_Google_Calendar__*
   - mcp__claude_ai_Strava__*
   - WebSearch
   - WebFetch
