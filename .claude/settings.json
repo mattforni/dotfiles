@@ -79,6 +79,7 @@
       "Bash(wc:*)",
       "Bash(while:*)",
       "Bash(xargs:*)",
+      "Bash(ynab:*)",
       "Bash(~/.zshrc)",
       "Read(//$HOME/**)",
       "Skill(assist:*)",

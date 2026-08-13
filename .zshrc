@@ -58,13 +58,17 @@ command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# bun is installed via Homebrew (see brew/Brewfile), so it lives on
-# /opt/homebrew/bin and needs no extra PATH or completion wiring here.
+# bun itself is installed via Homebrew (see brew/Brewfile), so the binary lives
+# on /opt/homebrew/bin and needs no wiring. Packages installed with
+# `bun install -g` are a different matter: they land in ~/.bun/bin, which is on
+# no default PATH, and bun only prints a warning about it at install time. The
+# `ynab` CLI arrives that way (see install_bun_globals), so add it here.
+export PATH="$HOME/.bun/bin:$PATH"
 
 # PATH precedence finalization. Place LAST so it wins over every earlier
 # prepend in this file. `typeset -U path` keeps PATH unique on each
-# re-source of .zshrc; the explicit prepend ensures $HOME/bin (where
-# homebase wrappers like `claude` live) resolves before installers that
-# dropped binaries into $HOME/.local/bin or $BUN_INSTALL/bin.
+# re-source of .zshrc; the explicit prepend ensures $HOME/bin (where the
+# homebase shims `gws` and `hs` live) resolves before installers that
+# dropped binaries into $HOME/.local/bin or $HOME/.bun/bin.
 typeset -U path
 export PATH="$HOME/bin:$PATH"
