@@ -62,6 +62,19 @@ fi
 # shellcheck source=bin/lib/deploy-table.sh
 . "$DEPLOY_TABLE_LIB"
 
+# Which Secret Manager project holds which credential. Unlike the deploy table,
+# a missing routing table is not fatal: only the gws bootstrap reads it, and
+# every other phase should still run. Fall back to the business vault, which is
+# where all of these lived before the split.
+VAULT_LIB="$DIR/bin/lib/vault.sh"
+if [[ -r "$VAULT_LIB" ]]; then
+  # shellcheck source=bin/lib/vault.sh
+  . "$VAULT_LIB"
+else
+  printf 'setup.sh: cannot read %s; gws bootstrap will assume the business vault\n' "$VAULT_LIB" >&2
+  vault_project_for_profile() { printf '%s' "${VAULT_PROJECT_ATELIC:-atelic-keys}"; }
+fi
+
 # Colors & helpers
 GREEN=$'\033[0;32m'
 YELLOW=$'\033[1;33m'
@@ -1142,9 +1155,13 @@ setup_auth() {
       fi
     fi
 
-    local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-atelic}"
-    local gws_profile gws_dir
-    for gws_profile in personal tpf; do
+    # Each profile's OAuth client is fetched from its own identity's vault
+    # (bin/lib/vault.sh); the personal client moved out of the business project
+    # in the 2026-08-14 split. GWS_BOOTSTRAP_PROJECT still forces one project
+    # for every profile, which is what a recovery run wants.
+    local gws_bootstrap_project gws_profile gws_dir
+    for gws_profile in personal atelic tpf; do
+      gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-$(vault_project_for_profile "$gws_profile")}"
       gws_dir="$HOME/.config/gws-$gws_profile"
       if [[ -f "$gws_dir/client_secret.json" ]] && [[ -f "$gws_dir/credentials.enc" ]] && [[ "$FORCE" != true ]]; then
         info "gws $gws_profile profile already configured ($gws_dir)"
