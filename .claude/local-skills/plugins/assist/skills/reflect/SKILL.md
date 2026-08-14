@@ -63,7 +63,7 @@ Pull the data the paper journal does not tally, so the conversation is grounded 
   ```bash
   # Substitute the month boundaries: after = first of the reflection month,
   # before = first of the NEXT month. Example shown is May 2026.
-  GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws gmail users messages list \
+  GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws gmail users messages list \
     --params '{"userId":"me","q":"(Domino OR \"Illegal Pete\" OR DoorDash OR Grubhub OR \"Uber Eats\" OR Postmates) after:2026/05/01 before:2026/06/01","maxResults":100}'
   ```
 
