@@ -62,9 +62,12 @@ account_read_profile_file() {
         account_warn "ignoring malformed profile name in $src"
         return 0
     fi
-    # The zero profile retired with the Zero Homes W2 and its dirs are gone.
-    # Normalize stale markers and pointers so resolution never lands on it.
-    [[ "$name" == "zero" ]] && name="home"
+    # Two retired names normalize forward. The zero profile retired with the
+    # Zero Homes W2 and its dirs are gone; the home profile was renamed to
+    # personal on 2026-08-14, once atelic and tpf made "home" the odd one out.
+    # A stale marker or pointer on any machine still resolves rather than
+    # landing on a config dir that no longer exists.
+    [[ "$name" == "zero" || "$name" == "home" ]] && name="personal"
     printf '%s' "$name"
 }
 

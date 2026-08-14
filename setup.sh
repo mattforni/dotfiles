@@ -922,7 +922,7 @@ install_mcp_servers() {
   #   stdio: name|stdio|command_and_args
   #   http:  name|http|url|optional_header  (single header, eg. "Authorization: Bearer $TOKEN")
   # First time auth on a new machine: each MCP may require its own credentials
-  # (e.g., pinole needs ATELIC_API_TOKEN exported in the shell before this script
+  # (e.g., pinole needs PINOLE_API_TOKEN exported in the shell before this script
   # runs so the Bearer header registers populated). Subsequent runs are idempotent.
   # Strava is connected via the native claude.ai Strava connector (account level,
   # managed in claude.ai Settings > Connectors), so it needs no entry here. The
@@ -937,13 +937,13 @@ install_mcp_servers() {
   # fall back to the token stashed in the macOS Keychain so a fresh machine can
   # re-register pinole without a manual export. The empty-token guard below still
   # protects us if neither source has it.
-  if [[ -z "${ATELIC_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
-    ATELIC_API_TOKEN="$(security find-generic-password -s atelic-token -w)" || ATELIC_API_TOKEN=""
+  if [[ -z "${PINOLE_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
+    PINOLE_API_TOKEN="$(security find-generic-password -s pinole-mcp-token -w)" || PINOLE_API_TOKEN=""
   fi
 
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
-    "pinole|http|https://api.atelic.me/mcp|Authorization: Bearer ${ATELIC_API_TOKEN:-}"
+    "pinole|http|https://api.atelic.me/mcp|Authorization: Bearer ${PINOLE_API_TOKEN:-}"
   )
 
   for entry in "${desired[@]}"; do
@@ -1079,8 +1079,9 @@ setup_auth() {
   # Google Workspace CLI (multi-profile)
   if command -v gws &>/dev/null; then
     # Migrate legacy single-profile layout. Detect whether the legacy config
-    # has an authenticated account; any detected account maps to "home" (the
-    # zero profile retired with the Zero W2, 2026-06-29).
+    # has an authenticated account; any detected account maps to "personal"
+    # (the zero profile retired with the Zero W2, 2026-06-29; the home profile
+    # was renamed to personal 2026-08-14).
     local migrated_profile=""
     if [[ -d "$HOME/.config/gws" ]]; then
       local legacy_user=""
@@ -1091,13 +1092,13 @@ setup_auth() {
       local legacy_profile=""
       case "${legacy_user,,}" in
         "") legacy_profile="" ;;
-        *) legacy_profile=home ;;
+        *) legacy_profile=personal ;;
       esac
 
       if [[ -z "$legacy_profile" ]]; then
         warn "Could not detect account in ~/.config/gws (no auth state to inspect)."
         warn "Rename it manually before re-running setup:"
-        warn "  mv ~/.config/gws ~/.config/gws-home"
+        warn "  mv ~/.config/gws ~/.config/gws-personal"
       else
         local migration_target="$HOME/.config/gws-$legacy_profile"
         if [[ -e "$migration_target" ]]; then
@@ -1111,23 +1112,39 @@ setup_auth() {
       fi
     fi
 
-    # Seed the active-profile pointer. Prefer the just-migrated profile;
-    # otherwise default to home (the zero profile retired with the Zero W2,
-    # 2026-06-29; add profiles back to the loop below if multi-account
-    # returns).
-    [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-home}" > "$HOME/.config/gws-current"
+    # Rename the home profile dir to personal (2026-08-14). Done before the
+    # pointer is read so a machine that has not run setup since the rename
+    # heals itself rather than resolving to a dir that no longer exists.
+    if [[ -d "$HOME/.config/gws-home" ]]; then
+      if [[ -e "$HOME/.config/gws-personal" ]]; then
+        warn "Both ~/.config/gws-home and ~/.config/gws-personal exist. Inspect and remove the stale one manually."
+      else
+        info "Renaming ~/.config/gws-home -> ~/.config/gws-personal"
+        mv "$HOME/.config/gws-home" "$HOME/.config/gws-personal" || return 1
+        SUMMARY+=("gws: renamed home profile to personal")
+      fi
+    fi
 
-    # Migrate a stale zero pointer to home (the zero profile is retired and
-    # its config dirs are deleted; a leftover pointer would break resolution).
-    if [[ -r "$HOME/.config/gws-current" ]] \
-        && [[ "$(tr -d '[:space:]' < "$HOME/.config/gws-current")" == "zero" ]]; then
-      info "Rewriting retired zero profile pointer to home in ~/.config/gws-current"
-      printf '%s\n' "home" > "$HOME/.config/gws-current"
+    # Seed the active-profile pointer. Prefer the just-migrated profile;
+    # otherwise default to personal (add profiles back to the loop below if
+    # multi-account returns).
+    [[ -f "$HOME/.config/gws-current" ]] || printf '%s\n' "${migrated_profile:-personal}" > "$HOME/.config/gws-current"
+
+    # Migrate a retired pointer forward. zero retired with the Zero W2 and its
+    # dirs are deleted; home was renamed to personal. Either left in place
+    # would break resolution.
+    if [[ -r "$HOME/.config/gws-current" ]]; then
+      local current_pointer
+      current_pointer="$(tr -d '[:space:]' < "$HOME/.config/gws-current")"
+      if [[ "$current_pointer" == "zero" || "$current_pointer" == "home" ]]; then
+        info "Rewriting retired '$current_pointer' profile pointer to personal in ~/.config/gws-current"
+        printf '%s\n' "personal" > "$HOME/.config/gws-current"
+      fi
     fi
 
     local gws_bootstrap_project="${GWS_BOOTSTRAP_PROJECT:-atelic}"
     local gws_profile gws_dir
-    for gws_profile in home tpf; do
+    for gws_profile in personal tpf; do
       gws_dir="$HOME/.config/gws-$gws_profile"
       if [[ -f "$gws_dir/client_secret.json" ]] && [[ -f "$gws_dir/credentials.enc" ]] && [[ "$FORCE" != true ]]; then
         info "gws $gws_profile profile already configured ($gws_dir)"
