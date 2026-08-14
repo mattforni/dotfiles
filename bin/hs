@@ -68,14 +68,20 @@ if [[ -n "${account_lib_missing:-}" ]]; then
 fi
 
 # 2. Marker to portal. This is an explicit table rather than an `hs-pat-$profile`
-#    convention because the profiles are named for the identity (home, tpf) while
-#    the portals are named for the businesses, and `home` maps to Atelic. Adding
-#    a profile means adding a line here.
+#    convention because the profiles are named for the identity (personal,
+#    atelic, tpf) while the portals are named for the businesses. Adding a
+#    profile means adding a line here.
+#
+#    `personal` maps to the Atelic portal only transitionally: the Atelic subtree
+#    carries no marker of its own until the atelic profile is authenticated, so
+#    work there still resolves to the ambient personal profile. Drop that line
+#    once the marker lands, or personal life silently addresses a business CRM.
 profile="$(account_resolve_profile)"
 case "$profile" in
-    tpf)  hs_account="hs-pat-tpf" ;;
-    home) hs_account="hs-pat-atelic" ;;
-    *)    hs_account="" ;;
+    tpf)      hs_account="hs-pat-tpf" ;;
+    atelic)   hs_account="hs-pat-atelic" ;;
+    personal) hs_account="hs-pat-atelic" ;;
+    *)        hs_account="" ;;
 esac
 
 # 3. An unmapped profile falls through to the CLI's global default rather than

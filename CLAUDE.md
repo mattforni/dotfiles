@@ -109,7 +109,7 @@ list and the editor stay reconcilable in both directions.
 
 ### Account Profiles (gws, hs)
 
-Two CLIs switch identity per directory subtree via a `.account` marker file (one-line text containing the profile name): `gws` for Google Workspace and `hs` for HubSpot, each through its own PATH shim reading the same marker. Two profiles are active: `home` (personal, `mattforni@gmail.com`, the ambient default) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
+Two CLIs switch identity per directory subtree via a `.account` marker file (one-line text containing the profile name): `gws` for Google Workspace and `hs` for HubSpot, each through its own PATH shim reading the same marker. Two profiles are active: `personal` (`mattforni@gmail.com`, the ambient default, renamed from `home` on 2026-08-14) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). An `atelic` profile (`matt@atelic.me`) is in flight for the practice. The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
 
 1. **Ambient**: recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
 2. **Directory override**: a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. Convenience only; it fires solely in interactive zsh, and only on an actual directory change.
@@ -127,10 +127,12 @@ Two CLIs switch identity per directory subtree via a `.account` marker file (one
 | `gws-pin` | Lock to current profile in this shell |
 | `gws-unpin` | Resume chpwd hook |
 | `gws-whoami` | Re-resolve from `$PWD`, then show profile, config dir, and `gws auth status` |
-| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
+| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...` | One shot override |
 | `hs ... --account=hs-pat-atelic` | One shot override for HubSpot; an explicit flag always wins |
 
-**HubSpot maps through an explicit table, not a naming convention.** `gws` derives its config dir as `~/.config/gws-<profile>`, but the HubSpot accounts are named for the businesses (`hs-pat-tpf`, `hs-pat-atelic`) while the profiles are named for the identity (`tpf`, `home`), so `home` maps to Atelic. The table lives in `bin/hs`; a new profile means a new line there. An unmapped profile falls through to the CLI's own default with a warning rather than guessing a portal, because writing to the wrong CRM is the expensive failure.
+**HubSpot maps through an explicit table, not a naming convention.** `gws` derives its config dir as `~/.config/gws-<profile>`, but the HubSpot accounts are named for the businesses (`hs-pat-tpf`, `hs-pat-atelic`) while the profiles are named for the identity (`personal`, `atelic`, `tpf`). The table lives in `bin/hs`; a new profile means a new line there. An unmapped profile falls through to the CLI's own default with a warning rather than guessing a portal, because writing to the wrong CRM is the expensive failure.
+
+**The home profile was renamed to personal, 2026-08-14.** With `atelic` and `tpf` both naming an identity, `home` was the odd one out, and its vault secret had been seeded under both `gws-oauth-client-home` and `gws-oauth-client-personal` with byte identical contents, so the duplicate had to be resolved anyway. Both retired names (`zero`, `home`) normalize forward to `personal` in `bin/lib/account-profile.sh`, and `setup.sh` renames the config dir and rewrites a stale pointer, so a machine that has not run setup since heals itself instead of resolving to a directory that no longer exists.
 
 The vendor's own `hs account link` was tested and rejected: it writes a `.hs/settings.json` per directory and only runs from a TTY, so it cannot be set up from an agent shell, a headless run, or a fresh machine, and it would need re running for every new directory.
 

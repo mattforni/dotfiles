@@ -32,7 +32,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 
 | Profile | Config dir | Account |
 |---------|-----------|---------|
-| `home` | `~/.config/gws-home/` | personal Gmail |
+| `personal` | `~/.config/gws-personal/` | personal Gmail |
 
 The active profile is layered:
 
@@ -46,11 +46,11 @@ The `.account` marker is a cross-tool convention; the `~/bin/claude` wrapper rea
 | Command | Effect |
 |---------|--------|
 | `gws-use` | List profiles; show current |
-| `gws-use home` | Set ambient profile (persists across shells; also unpins) |
+| `gws-use personal` | Set ambient profile (persists across shells; also unpins) |
 | `gws-pin` | Lock to current profile in this shell (`GWS_AUTO_SWITCH=0`, honored by the hook and the shim) |
 | `gws-unpin` | Resume chpwd hook |
 | `gws-whoami` | Re-resolve from `$PWD`, then show profile, config dir, and `gws auth status` |
-| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-home gws ...` | One shot override |
+| `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws-personal gws ...` | One shot override |
 
 When writing tooling that should always run against a specific account regardless of where it runs, prefer the per command override over relying on the ambient profile. When in doubt about which account is active, run `gws-whoami` before any action that sends mail or modifies a calendar.
 
