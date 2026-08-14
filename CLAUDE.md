@@ -144,7 +144,7 @@ It separated nothing worth having. Every profile dir authenticated to the same C
 
 One consequence worth knowing: the wrapper also injected the YNAB token, which is why `ynab` was unauthenticated in every VS Code session. That dependency is gone: the `ynab` CLI holds its own credential (seeded once with `ynab auth login -t` from the Keychain entry `setup_auth` stores), so it works however Claude Code was started.
 
-OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>` (vault project: `atelic`, override via `GWS_BOOTSTRAP_PROJECT`). `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/vault/push-gws-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/Tools/secret-manager.md`.
+OAuth `client_secret.json` files for gws sync across machines via GCP Secret Manager under `gws-oauth-client-<profile>`, each stored in the vault for that identity (`personal` to `forni-keys`, `atelic` to `atelic-keys`, `tpf` to `tpf-keys`), routed by `bin/lib/vault.sh`. Set `GWS_BOOTSTRAP_PROJECT` to force one project for every profile, which is what a recovery run wants. `setup.sh` fetches automatically when a profile dir is missing one. Use `bin/vault/push-gws-secrets` once on the source machine to seed the secrets. Encrypted tokens stay per-machine by design. The full credential vault conventions (naming, push tooling, the credential inventory) live in `~/Eudaimonia/Admin/Tools/secret-manager.md`.
 
 ## Project Structure
 

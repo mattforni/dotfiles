@@ -72,7 +72,7 @@ if [[ -r "$VAULT_LIB" ]]; then
   . "$VAULT_LIB"
 else
   printf 'setup.sh: cannot read %s; gws bootstrap will assume the business vault\n' "$VAULT_LIB" >&2
-  vault_project_for_profile() { printf '%s' "${VAULT_PROJECT_BUSINESS:-atelic}"; }
+  vault_project_for_profile() { printf '%s' "${VAULT_PROJECT_ATELIC:-atelic-keys}"; }
 fi
 
 # Colors & helpers
