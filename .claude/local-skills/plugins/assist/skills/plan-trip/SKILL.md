@@ -86,7 +86,7 @@ Finish the artifact before you call it done.
 
 1. **Create the trip README** at `~/Eudaimonia/Craft/Adventure/<YEAR Trip Name>/README.md` using the structure below.
 2. **Register it** in `Adventure/CLAUDE.md` under Current Trips with a Key Files row, so future sessions pick it up.
-3. **Schedule the time sensitive follow ups** in Todoist. Reservation drops and refund deadlines are the classic ones. Put the exact datetime on the task, and add a timezone caveat when the source did not state one (recreation.gov releases are local to the site, so Mountain is the safe read for Colorado). Details go in a task comment per the Todoist conventions.
+3. **Propose the time sensitive follow ups** and create them in Todoist only on Forni's yes. Reservation drops and refund deadlines are the classic ones. Put the exact datetime on the task, and add a timezone caveat when the source did not state one (recreation.gov releases are local to the site, so Mountain is the safe read for Colorado). Details go in a task comment per the Todoist conventions.
 
 Trip README structure (adapt section names to the trip; this is the worked shape, not a rigid template):
 
