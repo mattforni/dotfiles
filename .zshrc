@@ -26,8 +26,8 @@ fi
 # Always source global .env.local for tokens and secrets
 [[ -f ~/.env.local ]] && source ~/.env.local
 
-# Atelic API token lives in the macOS Keychain (not a plaintext dotfile).
-# Export it for setup.sh's atelic MCP registration. Reads silently; no-op if absent.
+# Pinole API token lives in the macOS Keychain (not a plaintext dotfile).
+# Export it for setup.sh's pinole MCP registration. Reads silently; no-op if absent.
 if [[ -z "${PINOLE_API_TOKEN:-}" ]] && command -v security &>/dev/null; then
   PINOLE_API_TOKEN="$(security find-generic-password -s pinole-mcp-token -w 2>/dev/null)"
   [[ -n "$PINOLE_API_TOKEN" ]] && export PINOLE_API_TOKEN || unset PINOLE_API_TOKEN

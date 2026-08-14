@@ -87,10 +87,14 @@ account_marker_profile() {
     done
 }
 
+# The ambient pointer, with the default baked in. An absent, empty or malformed
+# ~/.config/gws-current falls back to personal, the same name the retired zero
+# and home markers normalize forward to, so no resolution path can land on a
+# config dir that no longer exists.
 account_ambient_profile() {
     local name
     name="$(account_read_profile_file "$HOME/.config/gws-current")"
-    printf '%s' "${name:-home}"
+    printf '%s' "${name:-personal}"
 }
 
 # Marker first, ambient second. Never prints empty.

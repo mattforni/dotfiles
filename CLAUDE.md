@@ -109,7 +109,7 @@ list and the editor stay reconcilable in both directions.
 
 ### Account Profiles (gws, hs)
 
-Two CLIs switch identity per directory subtree via a `.account` marker file (one-line text containing the profile name): `gws` for Google Workspace and `hs` for HubSpot, each through its own PATH shim reading the same marker. Two profiles are active: `home` (personal, `mattforni@gmail.com`, the ambient default) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
+Two CLIs switch identity per directory subtree via a `.account` marker file (one-line text containing the profile name): `gws` for Google Workspace and `hs` for HubSpot, each through its own PATH shim reading the same marker. Two profiles are active: `personal` (`mattforni@gmail.com`, the ambient default, renamed from `home` on 2026-08-14) and `tpf` (The Product Forge, `matt@theproductforge.com`, added 2026-08-06; its marker sits at the TPF Vocation subtree). An `atelic` profile (`matt@atelic.me`) is in flight for the practice. The `zero` profile retired with the Zero Homes W2 (2026-06-29). Active profile is layered:
 
 1. **Ambient**: recorded in `~/.config/gws-current` and exported as `GOOGLE_WORKSPACE_CLI_CONFIG_DIR` at shell startup. Persists across shells.
 2. **Directory override**: a zsh `chpwd` hook walks up from `$PWD` looking for the nearest `.account` marker file and silently swaps the env var for that shell. Convenience only; it fires solely in interactive zsh, and only on an actual directory change.
