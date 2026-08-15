@@ -170,7 +170,7 @@ Prioritize the full task slate, work first, then place the survivors.
 
 **Generic containers are placeholders with no standing.** The recurring 🔨 Deep Work and 🔨 Work Block events exist to reserve capacity for this scheduling pass and nothing else. When named work claims a container's time, delete the container rather than keeping it alongside the work. A week that has been through Plan Tasks carries zero generic 🔨 blocks. Forni, 2026-08-10: "We also don't need to hold onto Deep Work blocks. Those are placeholders for the scheduling work."
 
-**Then Todoist.** Fetch tasks using the **Schedule filter**. The MCP cannot resolve the saved filter by ID, so pass its raw query to `find-tasks`: `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday` — overdue tasks, non recurring non scheduled tasks due before next Monday, plus Scheduled labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
+**Then Todoist.** Fetch tasks using the **Schedule filter** via the `td` CLI. There is no saved filter lookup, so pass its raw query directly: `td task list --filter '(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday' --json`. That query pulls overdue tasks, non recurring non scheduled tasks due before next Monday, plus Scheduled labeled tasks that never got a time (the label is only honest when a time is attached; see Learned Rules).
 
 **Prioritize.** Prune hard: the filter routinely surfaces far too many items, so default to aggressively deleting notes, deferring the non critical, and combining duplicates rather than slotting everything. This is a collaborative pass through all tasks to:
 
@@ -193,10 +193,10 @@ Present the proposed slots as a board with corrections invited (the board patter
 - **Defer** to next week (reschedule in Todoist to the following Sunday)
 - **Skip** for now
 
-**Todoist tasks are scheduled via Todoist, not by creating Google Calendar events.** To slot a Todoist task:
+**Todoist tasks are scheduled via Todoist, not by creating Google Calendar events.** To slot a Todoist task (all through the `td` CLI; see Todoist Integration below):
 
-1. Use `reschedule-tasks` to set the date and time (e.g., `2026-03-31T07:00:00`)
-2. Use `update-tasks` to set the `duration` (e.g., `"2h"`, `"30m"`), add the `⏰ Scheduled` label, set exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), and move the task out of Inbox into its pillar project (see Slotting Rules in the plugin learned-rules.md)
+1. Set the date and time with `td task reschedule <ref> "2026-03-31T07:00:00"`. Reschedule preserves recurrence, and a date only value drops an existing time, so pass the full date and time form
+2. Set the duration with `td task update <ref> --duration 2h` (duration strings like `2h` or `30m`; bare integers are rejected) and the labels with `--labels`. The flag replaces the entire label set, so pass everything the task keeps in one list: the `⏰ Scheduled` label, exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), and any labels already on the task. Move the task out of Inbox into its pillar project with `td task move <ref> --project "<name>"` (see Slotting Rules in the plugin learned-rules.md)
 3. The `⏰ Scheduled` label removes the task from the Schedule filter so it does not resurface during prioritization
 4. Todoist's calendar integration automatically shows scheduled tasks on Google Calendar
 
@@ -248,7 +248,7 @@ Slot a specific task or event into the week.
 3. Identify available slots that fit the duration
 4. Present options via AskUserQuestion
 5. Slot into the chosen time:
-   - **If it is a Todoist task**: use `reschedule-tasks` to set the date/time, then `update-tasks` to set the `duration`, add the `⏰ Scheduled` label, set exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), and move the task out of Inbox into its pillar project. Do **not** create a Google Calendar event — Todoist's calendar integration handles visibility automatically.
+   - **If it is a Todoist task**: use `td task reschedule` to set the date and time, then `td task update` to set the `--duration` and the full `--labels` set (the `⏰ Scheduled` label, exactly one cognitive load label 🧠 Sharp / ⚖️ Medium / 🍃 Light, plus whatever the task already carries, since the flag replaces the whole set), and `td task move` to land it in its pillar project. Do **not** create a Google Calendar event; Todoist's calendar integration handles visibility automatically.
    - **If it is a non task event** (meeting, transition, sauna session, social event, etc.): propose the event details, confirm with the user, then create a Google Calendar event following the Calendar Event Conventions above.
 
 ## Mode: move
@@ -297,16 +297,16 @@ Training event creation lives in the `assist:plan-training` skill. See that skil
 
 ## Todoist Integration
 
-Use the Todoist MCP tools to read and reschedule tasks. Key operations:
+All Todoist access goes through the `td` CLI via Bash; the MCP connector retired 2026-08-13. The owning doc is `~/Eudaimonia/Admin/Tools/todoist.md` (install, auth, everyday shape, the full gotcha list); this section carries only the operations planning leans on, verified against `td --help` on 2026-08-15:
 
-- `find-tasks` with `filter`: Pull tasks using the raw Todoist filter string. The saved filter lookup by ID (`filterIdOrName`) is not supported by this MCP, so pass the Schedule filter's raw query directly (see Phase 6).
-- `find-tasks-by-date`: Get tasks due in a date range
-- `reschedule-tasks`: Move task due dates (always use this instead of update-tasks for date changes, to preserve recurrence)
-- `update-tasks`: Modify task properties (but NOT dates). Use to set duration and labels.
-- `complete-tasks`: Complete recurring tasks to fire the next occurrence
-- `delete-object`: Delete notes/bookmarks that were never real tasks. Never complete these.
-- `add-tasks`: Create one off tasks (e.g., a scheduled call from a recurring catch up)
-- `add-comments`: Add detail to tasks when combining or enriching them
+- `td task list --filter '<query>' --json`: pull tasks with a raw Todoist filter query. There is no saved filter lookup, so pass the Schedule filter's raw query directly (see Phase 6). A date range pull uses `--due` (today, overdue, or YYYY-MM-DD).
+- `td task reschedule <ref> "<date>"`: move a task's due date. Always use this instead of `td task update --due` for date changes: reschedule preserves recurrence, while `update --due` replaces the whole due string. A date only value drops an existing time of day, so pass the full form (`2026-08-18T09:00:00`) when a time matters.
+- `td task update <ref>`: set task properties (but NOT dates). `--duration` takes duration strings (`30m`, `1h`, `2h15m`); bare integers are rejected. `--labels` is plural and replaces the entire label set, so always pass every label the task keeps, not just the addition. `--priority` takes `p1` through `p4`.
+- `td task move <ref> --project "<name>"`: move a task out of Inbox into its pillar project.
+- `td task complete <ref>`: complete recurring tasks to fire the next occurrence (never `--forever`, which kills the recurrence).
+- `td task delete <ref> --yes`: delete notes/bookmarks that were never real tasks. Never complete these. The `--yes` flag is required or nothing is deleted.
+- `td task add "<title>" --project "<name>" --due "<date>" --priority p2 --labels "<a,b>" --duration 30m`: create one off tasks (e.g., a scheduled call from a recurring catch up).
+- `td comment add <ref> --content "<text>"`: add detail to tasks when combining or enriching them.
 
 When slotting tasks, respect Todoist priorities:
 

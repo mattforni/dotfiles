@@ -27,10 +27,15 @@ Read these before pulling anything; they override your judgment.
 
 ## The Four Pulls
 
-1. **Calendar week**: `gws calendar events list` on the 🌱 Life calendar,
-   Monday through Sunday of the week being planned, with
-   `eventLabelVersion: 1` inside `--params` so labels come back. Record the
-   `transparency` of every event; only opaque events block time.
+1. **Calendar week**: every calendar in `gws calendar calendarList list`,
+   never only 🌱 Life, pulled Monday through Sunday of the week being
+   planned with `gws calendar events list` per calendar, with
+   `eventLabelVersion: 1` inside `--params` so labels come back (the TPF
+   calendar needs the tpf profile pinned; see the gws doc). A single
+   calendar pull reads other identities' busy time as free: on 2026-08-15
+   it missed the SkySpec audit call sitting on the TPF calendar and
+   outreach got slotted over it. Record the `transparency` of every event;
+   only opaque events block time.
 2. **Todoist**: via the `td` CLI, which replaced the MCP connector on
    2026-08-13. Pass the raw query with `td task list --filter '<query>' --json`.
    Two pulls: the Schedule filter's raw query
