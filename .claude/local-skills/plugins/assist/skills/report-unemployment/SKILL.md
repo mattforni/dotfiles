@@ -29,15 +29,17 @@ The agent-browser bundled Chromium cannot pass the ID.me Cloudflare challenge, h
 
 1. Quit Brave gracefully (`osascript -e 'quit app "Brave Browser"'`) and wait for the process to exit.
 2. Relaunch with the port: `open -a "Brave Browser" --args --remote-debugging-port=9222 --restore-last-session`.
-3. Verify with `curl -s http://localhost:9222/json/version` and confirm the `Browser` field names Brave; any other responder means a stale process owns the port, so stop rather than attach. Then `agent-browser --session myui connect 9222`.
+3. Verify the port with `curl -s http://localhost:9222/json/version`, then confirm Brave itself owns it with `lsof -nP -i :9222 | grep LISTEN`. Do not check the JSON's `Browser` field: Brave is Chromium and reports `Chrome/<version>` there, never its own name, so that test can only ever fail. A listener that is not Brave means a stale process holds the port, so stop rather than attach. Then `agent-browser --session myui connect 9222`.
 4. Open MyUI+ in a new tab and pin it (`tab new <url>`, `tab list`, `tab <id> --pin-tab`). Unpinned, the session follows whatever tab Forni focuses.
 
 If a fresh ID.me login or MFA is needed, hand the keyboard to Forni and wait. An existing session redirects the login URL straight into the claimant flow.
 
 ## The Flow
 
-1. **Confirm the week.** The Work Search screens name the claim week; verify it matches the slate's week before entering anything.
-2. **Basic Questions are Forni's answers** (work, earnings, offers, able, available). Never answer them for him. Inline, walk them with him question by question; a background run bails to the main session the moment the section is not already Complete, per the agent contract.
+Nothing on this site responds reliably to a snapshot ref click; drive every control by DOM id, and read the section and error state rather than trusting a reported success. Ids and the entry path are in [learned-rules.md](learned-rules.md).
+
+1. **Confirm the week.** Start from My Claim Status and open the specific week row whose dates match the slate, not a generic start button. Only one week is ever certifiable, and the next week's row shows the date it opens.
+2. **Basic Questions are Forni's answers** (work, earnings, offers, able, available). Inline, walk them with him; a background run bails to the main session the moment the section is not already Complete, per the agent contract. Forni may hand the whole section over ("I trust you to answer these"), and most of it genuinely is derivable from the record: offers, refusals, quits, discharges, layoffs, holidays, able, available, and work search all follow from the log and the week. **Two never are, no matter how broad the authorization: whether he worked (self employment counts, so any Atelic work is work) and whether he received severance, retirement pay, 401(K), or pension.** Only he knows those, a wrong answer is a false certification under penalty of perjury, and a blanket yes does not create knowledge. Ask those two, answer the rest, and say which is which.
 3. **Activity count**: select the radio matching the slate size (Five or More at cadence).
 4. **One form per activity**, saved individually. Field ids, dropdown mapping, and the ASPX gotchas live in [learned-rules.md](learned-rules.md). Verify each save by the numbered activity list growing.
 5. **Work Search Plan** checkboxes describe the coming week's intent: inquire online, apply online, interview online and by phone, other activities.
