@@ -23,8 +23,12 @@
 #
 # Precedence, highest first:
 #   1. gws-pin (GWS_AUTO_SWITCH=0): the caller locked a profile deliberately.
+#   1b. GWS_FORCE_PROFILE=<name>: names a profile outright. Unambiguous, so
+#      prefer it over 2 in scripts and agent shells.
 #   2. One shot override: GOOGLE_WORKSPACE_CLI_CONFIG_DIR set to something other
-#      than the value a resolver last stamped into GWS_RESOLVED_DIR.
+#      than the value a resolver last stamped into GWS_RESOLVED_DIR. Note the
+#      "other than": setting it to the profile you are already on is
+#      indistinguishable from inheritance and will NOT override. Use 1b.
 #   3. Nearest .account marker walking up from $PWD.
 #   4. Ambient profile from ~/.config/gws-current.
 
@@ -66,6 +70,46 @@ fi
 # 1. gws-pin locks the profile for the current shell. Respect it.
 if [[ "${GWS_AUTO_SWITCH:-1}" == "0" ]]; then
     exec "$real_gws" "$@"
+fi
+
+# 1b. GWS_FORCE_PROFILE names a profile outright and always wins.
+#
+#     This exists because step 2's override is conditional in a way callers
+#     cannot see. It compares GOOGLE_WORKSPACE_CLI_CONFIG_DIR against the
+#     stamp, since an environment variable carries no record of who set it,
+#     so an explicit override to the profile the shell is ALREADY on is byte
+#     identical to an inherited value and gets silently re-resolved from the
+#     .account marker. Overriding to any other profile works. That makes the
+#     failure conditional on which profile you name: the same recipe works
+#     once and silently fails the next time, and the caller ends up on the
+#     wrong account with no signal. It cost a round of false Gmail results
+#     on 2026-08-17.
+#
+#     A dedicated input variable removes the ambiguity, because nothing else
+#     ever sets it. It is consumed here (env -u) so it cannot leak into a
+#     nested gws call and pin that one too. Unknown profiles fail loudly
+#     rather than falling back, since a silent fallback is the whole problem.
+if [[ -n "${GWS_FORCE_PROFILE:-}" ]]; then
+    # The name becomes a path component, so anything with a separator in it can
+    # escape the intended directory: `personal/..` resolves to ~/.config, which
+    # is a real directory, so the -d check below would pass and the shim would
+    # silently point gws somewhere it was never asked to go. That is the exact
+    # failure mode this variable exists to remove, so validate the shape rather
+    # than only the existence.
+    if [[ ! "$GWS_FORCE_PROFILE" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        echo "gws shim: GWS_FORCE_PROFILE='$GWS_FORCE_PROFILE' is not a valid profile name" >&2
+        exit 78
+    fi
+    forced_dir="$HOME/.config/gws-$GWS_FORCE_PROFILE"
+    if [[ ! -d "$forced_dir" ]]; then
+        echo "gws shim: GWS_FORCE_PROFILE='$GWS_FORCE_PROFILE' has no config dir at $forced_dir" >&2
+        exit 78
+    fi
+    exec env -u GWS_FORCE_PROFILE \
+        GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$forced_dir" \
+        GWS_RESOLVED_DIR="$forced_dir" \
+        GWS_PROFILE="$GWS_FORCE_PROFILE" \
+        "$real_gws" "$@"
 fi
 
 # 2. Deliberate one shot override, keeping the documented
