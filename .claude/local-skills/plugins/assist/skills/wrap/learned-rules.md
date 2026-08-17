@@ -14,7 +14,9 @@ Skill-specific corrections that override SKILL.md. Populate as Forni corrects wr
 
 ## Work search sessions
 
-- **Close the weekly Linear ticket when the cadence is complete.** When a session finishes the week's work search slate (applications and supporting activities logged in `Craft/Vocation/FY27-work-search.md`), wrap also: (1) posts the week's record as a comment on the open "Weekly Work Search" issue in the ATE Unemployment project and marks it Done, and (2) mints the next week's instance (Todo, assigned Forni, High priority, 3 points, `Reclaim` label, due the following Wednesday), carrying held listings and open calibration questions forward in its description. Codified 2026-07-30 while closing ATE-428 and minting ATE-435 at Forni's prompting.
+- **Never close the weekly work search issue, and never mint a replacement.** ATE-479 is a standing issue as of 2026-08-17, alongside ATE-480 (Weekly Outbound) and ATE-489 (Weekly Follow Ups). All three are permanent, and each is pointed at by a recurring Google Calendar block that names it by number, so closing one leaves its block aimed at a dead ticket. When a session finishes the week's slate (applications and supporting activities logged in `Craft/Vocation/FY27-work-search.md`), wrap posts the week's record as a **comment** on the issue and leaves it in Todo. Rebuild next week's slate in the body; do not open a new issue.
+
+  **Supersedes the 2026-07-30 rule** that had wrap close the ticket and mint the following week's instance (the ATE-428 to ATE-435 to ATE-479 chain). That pattern predated the standing block shape and predated the recurring calendar series. The shape itself is codified in the Atelic repo's `README.md` under The Weekly Operating Rhythm, which is the authority; this rule only tells wrap not to undo it.
 
 - **Business follow-ups go to Linear, never Todoist.** Anything in service of
   Atelic (prospect follow-ups, walk-ins, client work, template fixes) is
