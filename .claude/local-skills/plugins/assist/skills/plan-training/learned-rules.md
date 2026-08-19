@@ -1,15 +1,16 @@
 # Learned Rules
 
-Training specific rules tied to current life shape. Read on every invocation. Stable training conventions live in [SKILL.md](SKILL.md); rules that need updating as the season, plan, or body changes go here. Pruned 2026-08-05 at the fall block reshape; FPL era rules (long run pace budgets, route shortlist, Mon flex, vert co-equality, mileage budget math) live in git history.
+Training specific rules tied to current life shape. Read on every invocation. Stable training conventions live in [SKILL.md](SKILL.md); rules that need updating as the season, plan, or body changes go here. Pruned 2026-08-05 at the block reshape; FPL era rules (long run pace budgets, route shortlist, Mon flex, vert co-equality, mileage budget math) live in git history.
 
-## The Fall Block Shape (2026-08-05)
+## The Recomp Block Shape (2026-08-05, reshaped 2026-08-19)
 
-- **The skeleton is held loosely.** Every session is a default, not a law. Lifts, swims, and yoga move freely; place yoga and swims against the actual Movement and pool schedules each week rather than assuming the skeleton.
-- **Swims are held lap slots.** Tue and Thu 10:30 to 11:30 at Congress Park; the slot straddles the shared lane window into the full lap window, so moving it usually means losing lap access. Tuesday flows into High Noon 12:00; Thursday's High Noon is a maybe, decided in the moment, so never mark a skipped Thursday High Noon as a miss.
-- **4K Friday alternates.** Every other Friday, Golden, with the Tootsies / Sexy Pace crew, conversational. Track which Friday the week is in the week banner. Drive flanks required like any trailhead run. Deep work Fridays are the off weeks; Lift C lands Friday afternoon either way.
-- **Sun Hatha is opportunistic.** In town means go, traveling means skip without guilt; `n/a` in retros when away, never a miss. Week planning slides to 11:00 on Hatha mornings.
+- **The skeleton is held loosely.** Every session is a default, not a law. Lifts and yoga move freely; place yoga against the actual Movement schedule each week rather than assuming the skeleton.
+- **Swimming is retired (2026-08-18).** Congress Park closed ahead of Labor Day, pulling the September seam forward from W37 to W34. Laps did not move indoors; both held slots went to deep work. Do not propose swims, do not grade them, and do not offer to reopen the modality. High Noon consolidated onto Monday 12:00, so there is no Tuesday or Thursday recovery meeting to schedule around.
+- **4K Friday alternates, seeded 2026-08-28.** Every other Friday 06:00 to 08:00, Golden, with the Tootsies / Sexy Pace crew, conversational, with 🚙 drive flanks at 05:30 and 08:00. On a 4K week the Friday deep work window curtails to 08:30, and Morning Routine plus its transition come off that day. Track which Friday the week is in the week banner. The Friday lift lands at 15:30 either way.
+- **Yoga is four standing holds** (2026-08-19): Tue Align and Flow 16:30, Thu Alignment 16:30, Sun Hatha 09:30, Sun Yin 16:15. Hatha and Yin are no longer opportunistic. Traveling still means skip without guilt; `n/a` in retros when away, never a miss. Week planning sits at 11:15, behind Hatha's return flank.
 - **Heel guardrail: intensity is the trigger, not volume.** The heel flares after hard efforts (the 6:27 DRC mile, 2026-08-04), not easy miles. Conversational is the default; at most one hard effort a week; skip hard efforts entirely the week after any flare; any heel signal drops the next hard or trail effort. PT is a named focus of the block, form is the fix.
 - **Scale trend is directional.** Sunday reads only for the log; single reads are noise. A 2 to 3 lb rebound through mid August is glycogen and water, not failure; the trend restarts from the first standard Sunday reads.
+- **All three lifts sit at 15:30** (Mon, Wed, Fri, Movement RiNo), moved out of the midday on 2026-08-19 for consistency. Strength is always the late afternoon.
 - **Fitbod programs the strength work; do not program it here.** Three sessions a week, core every session, emphasis on upper body and core, lower body on maintenance after the run block. The block doc holds the emphasis and the session count, nothing more. A short lived experiment in Claude owned programming ran 2026-08-05 to 2026-08-10 and was retired as a distraction; do not propose reviving it, and do not offer to build tooling around lift delivery or logging.
 
 ## Calendar Mechanics
@@ -29,12 +30,12 @@ Training specific rules tied to current life shape. Read on every invocation. St
 ## Retro Evaluation
 
 - **Retro precedes scheduling.** Never schedule the current week without knowing what happened last week; drift compounds. Codified 2026-05-18 after Wk 2 of the FPL block was scheduled over an unexamined slip.
-- **Strava is the source of record for ALL movement; never ask the user to confirm sessions.** Lifts, yoga, swims, runs, all of it. A session absent from Strava did not happen, for retro purposes. Forni, 2026-08-02: "Strava will tell you if lifts or yoga happened. You do not need to ask me again."
+- **Strava is the source of record for ALL movement; never ask the user to confirm sessions.** Lifts, yoga, runs, all of it. A session absent from Strava did not happen, for retro purposes. Forni, 2026-08-02: "Strava will tell you if lifts or yoga happened. You do not need to ask me again."
 - **Tally by sport_type, not distance alone.** Filter activities by type before counting; walks and yoga get miscounted otherwise. The native connector's `list_activities` carries `sport_type`; prefer it. Codified 2026-06-26.
 - **Strava distances are metric; convert.** miles = meters / 1609.34, feet = meters * 3.28084.
 - **Interrogate significant deltas, don't just record them.** The cause drives the adjustment more than the numbers do; ask category, then leave room for detail. Codified 2026-05-18 (the Wk 2 heel injury read as "fell off" until interrogated).
 - **PAH is transit, not training.** The Wednesday bike commute to Project Angel Heart is logistics; mark PAH `n/a` in coverage. Codified 2026-05-25.
-- **Coverage misses drive schedule repair, not target step downs.** There is no volume ladder in the fall block; a missed session means the slot needs moving or shrinking, and only a two week weight stall touches nutrition (the 18:30 close lever, proposed not imposed).
+- **Coverage misses drive schedule repair, not target step downs.** There is no volume ladder in this block; a missed session means the slot needs moving or shrinking, and only a two week weight stall touches nutrition (the 18:30 close lever, proposed not imposed).
 
 ## Reference Library
 

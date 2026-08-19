@@ -1,6 +1,6 @@
 ---
 name: plan-training
-description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, swims, the 4K Friday, yoga placement, recovery days, the fall block, the September seam, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my training", "what does training look like this week", "how did last week go", "training retro", "this week's lifts", or any request that touches the block plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
+description: Training plan scheduling, weekly retrospectives, and training adjacent constraint validation. Use this skill whenever the user mentions training, lifts, runs, swims, the 4K Friday, yoga placement, recovery days, the recomp block, asking to schedule a training session, or asking to look back / retrospect on a past training week. Also trigger for "/assist:plan-training", "schedule my training", "what does training look like this week", "how did last week go", "training retro", "this week's lifts", or any request that touches the block plan in `Constitution/Fitness/`. Independently usable, and also called by `/assist:plan-week` during Monday planning.
 argument-hint: "[week | move | retro]"
 allowed-tools:
   - Bash
@@ -21,7 +21,7 @@ Help Forni schedule the week's training from the active block plan, run the week
 
 1. Read [learned-rules.md](learned-rules.md) in this directory
 2. Read the canonical training context:
-   - `~/Eudaimonia/Constitution/Fitness/2026-fall-block.md` — active block (target, weekly shape, strength emphasis, guardrails, checkpoints, weigh-in log)
+   - `~/Eudaimonia/Constitution/Fitness/2026-recomp-block.md` — active block (target, weekly shape, strength emphasis, guardrails, checkpoints, weigh-in log)
    - `~/Eudaimonia/Constitution/Fitness/CLAUDE.md` — training conventions
    - `~/Eudaimonia/schedule.md` — weekly skeleton (held loosely by design)
 3. Determine the target week. Default to the current ISO week. Use `date +"%G-W%V"` for the week identifier.
@@ -30,11 +30,11 @@ The FPL block (`2026-training-plan.md`) is closed and read only for history.
 
 ## Source of Truth
 
-The block plan lives at `Constitution/Fitness/2026-fall-block.md`. The weekly skeleton lives at `schedule.md` and is a default, not a law. Google Calendar holds the live scheduled reality.
+The block plan lives at `Constitution/Fitness/2026-recomp-block.md`. The weekly skeleton lives at `schedule.md` and is a default, not a law. Google Calendar holds the live scheduled reality.
 
 **For scheduling decisions** (what's on the calendar this week, what conflicts with what): the calendar is truth.
 
-**For retrospective decisions** (what actually happened last week): Strava is truth for all movement, lifts and yoga and swims included. Calendar events are scheduled intent, never evidence of completion.
+**For retrospective decisions** (what actually happened last week): Strava is truth for all movement, lifts and yoga included. Calendar events are scheduled intent, never evidence of completion.
 
 **Strength programming is Fitbod's, not this skill's.** The block doc holds the emphasis and the session count; exercise selection, weights, and reps live in Fitbod and are not planned, targeted, or graded here.
 
@@ -54,7 +54,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 The named label table and title formats live in `~/Eudaimonia/Admin/Tools/google-calendar.md`; calendar reads and writes go through the `gws` CLI (`~/Eudaimonia/Admin/Tools/gws.md`) with `eventLabelVersion: 1` on every write. Events are colored via named labels (`eventLabelId`), never the legacy `colorId`. Training specific use:
 
-- Training events use the 🍏 Constitution label: runs, lifts, swims, yoga, body care
+- Training events use the 🍏 Constitution label: runs, lifts, yoga, body care
 - 4K Friday: `🏃 4K Friday` with paired `🚙 <Trailhead>` and `🚙 Home` drive flanks (🚙 Travel label), 30 minute increments aligned to 30 minute blocks
 - Every change of location needs flanking transition or travel events
 
@@ -72,19 +72,19 @@ Fetch the week's calendar events (Monday through Sunday). Do not overwrite or du
 
 | Cadence | Items | Action |
 |---------|-------|--------|
-| Recurring (assumed on calendar) | Mon lift 11:30, Wed lift 11:30, Tue swim 10:30, Thu swim 10:30, Tue DRC eve, Thu SPRC 06:00, Thu Alignment 16:30 | Skip if present; surface if missing (may be intentional) |
+| Recurring (assumed on calendar) | Mon/Wed/Fri lift 15:30, Tue Fun Run 08:00, Tue DRC 18:00, Thu SPRC 06:00, Tue Align and Flow 16:30, Thu Alignment 16:30, Sun Weigh In 05:45, Sun Hatha 09:30, Sun Yin 16:15 | Skip if present; surface if missing (may be intentional) |
 | Alternating (check which week) | 4K Friday (every other week) + drive flanks | Create on 4K weeks |
-| Opportunistic / optional | Sun Hatha 09:30 (in town only), Tue Align and Flow 16:30 (open Tuesday evenings), Fri lap window 11:15 (deep work Fridays), Sun Yin 16:15 | Surface as options, never auto create |
+| Opportunistic / optional | A fourth lift, extra mobility, an added social run | Surface as options, never auto create |
 
 ### Phase 3: Week Shape
 
-Determine which Friday this is (4K or deep work) from the alternation, then lay out the week as one small table: day, session, purpose. Place yoga and swims against the actual Movement and pool schedules for the week (the skeleton is a default; studio schedules change). Verify the pool and studio still hold the assumed slots when in doubt.
+Determine which Friday this is (4K or deep work) from the alternation, then lay out the week as one small table: day, session, purpose. Place yoga against the actual Movement schedule for the week (the skeleton is a default; studio schedules change). Verify the studio still holds the assumed slots when in doubt.
 
-**The one look weekly summary is the deliverable**: sessions by modality (3 lifts, 2 swims, runs, yoga), which Friday it is, and the weight trend in one line. Write it into the week banner body (the banner itself is created by `assist:plan-week` during Set Intention; this skill only writes the training block into its body, and flags back if the banner is missing).
+**The one look weekly summary is the deliverable**: sessions by modality (3 lifts, runs, 4 yoga holds), which Friday it is, and the weight trend in one line. Write it into the week banner body (the banner itself is created by `assist:plan-week` during Set Intention; this skill only writes the training block into its body, and flags back if the banner is missing).
 
 ### Phase 4: Special Week Handling
 
-- **September seam (W37, week of Sep 7)**: outdoor pools close at Labor Day. Walk the swim decision with Forni: indoor laps (Carla Madison, 20th Street) or reallocate the slots.
+- **Last Thursday of the month**: the 16:00 Liz session replaces Alignment Yoga. Clear the yoga instance and both of its transition flanks; do not schedule around a collision that should not exist.
 - **Travel weeks**: skeleton sessions become opportunistic, not graded.
 - **Block close (W45, week of Nov 8)**: composition read plus the winter shape conversation.
 
@@ -94,7 +94,7 @@ Move or swap a training event with constraint validation.
 
 1. User describes what to move
 2. Fetch the relevant events
-3. Validate against training constraints: heel guardrail (no stacking hard efforts), Thu SPRC protection, held swim slots (moving one usually means losing the lap window, the pool schedule is specific), cold plunge sequencing when sauna returns, transition flanks on any location change
+3. Validate against training constraints: heel guardrail (no stacking hard efforts), Thu SPRC protection, cold plunge sequencing when sauna returns, transition flanks on any location change
 4. Present the proposed change with downstream impacts
 5. Execute after confirmation
 
@@ -102,7 +102,7 @@ When moving recurring events for one week, modify only that occurrence. Permanen
 
 ## Mode: retro
 
-Look back on a completed week. Compare planned vs actual coverage and the weight trend. Append the result as a new `### Wk N` subsection under a **Weekly Retrospectives** section of `2026-fall-block.md` (create the section on first use, immediately before References), chronological order, `####` inner headings.
+Look back on a completed week. Compare planned vs actual coverage and the weight trend. Append the result as a new `### Wk N` subsection under a **Weekly Retrospectives** section of `2026-recomp-block.md` (create the section on first use, immediately before References), chronological order, `####` inner headings.
 
 ### Phase 1: Determine the Target Week
 
@@ -115,23 +115,22 @@ Default: the most recently completed ISO week. Natural cadence is Monday morning
 
 ### Phase 3: Build the Coverage Table
 
-One row per planned session: Mon lift A, Tue swim, Tue DRC, Wed lift B, Thu SPRC, Thu swim, Thu Alignment, Fri (4K or deep work + lift C), Sun Hatha. Mark `✅` (hit), `❌` (missed), `↪️` (shifted), `n/a` (not applicable). Opportunistic sessions (Hatha away from home, optional Fri lap, Yin) are `n/a` when skipped, never misses. A session that moved days but happened is a hit; the skeleton is a default.
+One row per planned session: Mon lift, Tue Fun Run, Tue DRC, Tue Align and Flow, Wed lift, Thu SPRC, Thu Alignment, Fri (4K or deep work) + Fri lift, Sun Hatha, Sun Yin. Mark `✅` (hit), `❌` (missed), `↪️` (shifted), `n/a` (not applicable). Sessions skipped while travelling are `n/a`, never misses, and Alignment Yoga is `n/a` on the last Thursday of the month, when Liz replaces it. A session that moved days but happened is a hit; the skeleton is a default.
 
 ### Phase 4: The Numbers
 
 | Metric | Source |
 |---|---|
 | Lifts | count vs 3 |
-| Swims | count vs 2 (season dependent) |
 | Runs | sessions + total miles (informational, no target) |
-| Yoga | anchor hit or not |
+| Yoga | count vs 4 standing holds |
 | Weight | Sunday weigh-in, trend vs the 0.5 to 0.7 lb/wk arc |
 
 Run mileage carries no target and no ceiling; it is context, not a grade. Mileage and vert ceilings retired with the FPL block.
 
 ### Phase 5: Load Check
 
-Reshaped for the fall block; run every retro:
+Reshaped for the recomp block; run every retro:
 
 1. **Hard effort count.** More than one hard run effort in the week is a flag (heel guardrail). Any hard effort the week after a flare is a flag.
 2. **Clustering.** Two big days (over 8 mi or over 1,000 ft) within 48 hours is a flag; the pattern to catch is a Saturday adventure stacked on a 4K Friday.
@@ -163,7 +162,6 @@ The long-run mode (Friday mountain long run workflow, route selection, vert budg
 | Name | Address |
 |------|---------|
 | Movement RiNo | 3201 Walnut St #107, Denver, CO 80205 |
-| Congress Park Pool | 850 Josephine St, Denver, CO 80206 |
 
 ## Learned Rules
 
