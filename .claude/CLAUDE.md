@@ -204,7 +204,7 @@ Todoist conventions (Sunday scheduling, follow-ups always land on a Sunday, shor
 
 For any SEO, GEO, or growth engineering work (Atelic clients or personal), the canonical playbook is `~/Eudaimonia/Craft/Vocation/Atelic/GROWTH.md`. It is built on two vectors: **The Funnel** (the map of where a site leaks) and **The Loop** (the repeatable measure, find the constraint, ship, measure again motion). Apply it and extend it there.
 
-Upstream of the playbook, `~/Eudaimonia/Craft/Vocation/Atelic/icp-research.md` holds the ICP research method: outbound opens as a research ask rather than a pitch, and the theory stays deliberately unsaturated, so closing work a call surfaces is fine while rewriting positioning or pricing around the condition waits for saturation.
+Upstream of the playbook, `~/Eudaimonia/Craft/Vocation/Atelic/OUTBOUND.md` holds the outbound motion and the ICP research method (it absorbed the retired `icp-research.md`, 2026-08-20): the ICP is a thesis under test, a qualifier rather than a gate, and the theory stays deliberately unsaturated, so closing work a call surfaces is fine while rewriting positioning or pricing around the condition waits for saturation.
 
 ## Problem Solving Approach
 
