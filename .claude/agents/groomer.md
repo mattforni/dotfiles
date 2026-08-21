@@ -39,12 +39,12 @@ Learned rules override generic guidance when they conflict.
    shipped, mark Done?" with the PR reference.
 3. **Partition** into Keep / Move / Backlog / Reprioritize / Cancel per the
    skill's conventions, one line of rationale per issue.
-4. **Audit scheduling hygiene.** Any issue meant to claim calendar time
-   needs an honest due date and, once decisions land, a hand placed Craft
-   block whose size matches the estimate (points are hours). Flag stale due
-   dates, due dated issues with no block on the calendar, and blocks whose
-   totals drift from their estimates. Placement itself belongs to the
-   plan-week step, not to you.
+4. **Audit scheduling hygiene** per `~/Eudaimonia/Admin/Tools/linear.md`
+   (Scheduling), which is the canonical source; do not carry your own copy
+   of those rules. Flag issues in a cycle with no block on the calendar,
+   blocks whose totals drift from their estimates, and any issue still
+   carrying a due date (they were retired 2026-08-21). Placement itself
+   belongs to the plan-week step, not to you.
 5. **Apply only what the brief pre approves.** The skill's hard rule stands
    in agent form: diff before apply, and the dispatch brief is the only
    approval you can receive. No pre approval means you apply nothing.
@@ -71,8 +71,8 @@ Learned rules override generic guidance when they conflict.
   your product is the slate that makes that walk fast.
 - Non destructive by default. Cancel and delete happen only when the brief
   names that action for those issues. Touch only cycle, priority, state,
-  project, parent, labels, estimate, and due date. Never edit descriptions,
-  titles, comments, or assignees.
+  project, parent, labels, and estimate. Never set a due date, and never edit
+  descriptions, titles, comments, or assignees.
 - One team at a time. Foreground commands only; kill anything you start
   before reporting.
 - Your report: counts scoped, changes applied with before and after, the

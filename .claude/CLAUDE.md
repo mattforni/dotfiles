@@ -154,7 +154,7 @@ Notion connects via the native claude.ai connector; details in `~/Eudaimonia/Adm
 
 **All Linear access goes through the `linear` CLI, never an MCP.** The connector was retired 2026-08-12 because it loaded 53 tool definitions into every session, could not be scoped per directory, and could only ever authorize one workspace. The CLI costs nothing until invoked and takes `--workspace <slug>`. Workspace slugs, the `LINEAR_API_KEY` conflict, and the rest of the mechanics live in `~/Eudaimonia/Admin/Tools/linear.md`.
 
-**Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale) and steered by honest due dates. The Reclaim Linear sync retired 2026-08-03. Conventions in `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds).
+**Linear issues that need real calendar time get hand placed Craft calendar blocks during weekly planning** (the plan-week placement step), sized by the estimate (points are hours on the linear extended scale). The cycle says which week, the block says which day; **`~/Eudaimonia/Admin/Tools/linear.md` (Scheduling) is the canonical source and the only place that rule is written down.** The Reclaim Linear sync retired 2026-08-03. Block conventions in `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds).
 
 **Every scheduled item carries exactly one cognitive load label, in Linear and Todoist alike** (🧠 Sharp / ⚖️ Medium / 🍃 Light). It grades how sharp I have to be, not how long the work takes, and is deliberately independent of the estimate: the estimate sizes the block, the label picks the time of day (Sharp first thing, Medium midday, Light late afternoon). Scale, IDs, and the 2026-08-10 rename from the old effort labels live in `~/Eudaimonia/Admin/Concepts/cognitive-load.md`, the shared home for schemes that span tools.
 
@@ -164,7 +164,7 @@ When creating new Linear tickets:
 
 - Always set status to **Todo**
 - Always assign to **Forni** (me)
-- Always place the issue in the cycle its due date falls in. New issues default into the active cycle, so anything scheduled for future work needs its cycle set explicitly at create time (mechanics in `~/Eudaimonia/Admin/Tools/linear.md`)
+- Always place the issue in a cycle, and **never set a due date**. Cycles are the whole schedule (2026-08-21). New issues default into the active cycle, so anything meant for later needs its cycle set explicitly at create time. Full rules in `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling)
 - No emojis in issue titles or bodies, plain Title Case only (2026-08-18). Emoji led titles are a Todoist convention; the team's cognitive load labels keep their emoji names
 
 ## Email Preferences
