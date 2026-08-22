@@ -33,17 +33,29 @@ Most inbox mail is Delete or Archive; lean toward getting things out. Stars enco
 
 ## Setup
 
+**Name the mailbox before the first call.** Forni has two: personal
+(`mattforni@gmail.com`, gws profile `personal`) and Atelic (`matt@atelic.me`,
+gws profile `atelic`). A triage run covers both unless he scopes it to one, and
+each is a separate working batch with its own labels, its own star state, and
+its own task destination (Todoist for personal, Linear for Atelic). Every `gws`
+call below must carry an explicit `GWS_FORCE_PROFILE=<profile>` prefix; without
+one, gws resolves the profile from the working directory and will silently read
+whichever mailbox that happens to point at. An inbox that comes back empty, or
+that returns identical threads for both profiles, is that bug rather than a
+clean inbox. Prefer dispatching the `clerk` agent, which does both mailboxes;
+the steps below are the manual fallback.
+
 1. Read this skill's local [learned-rules.md](learned-rules.md), then the plugin-wide [learned-rules.md](../../learned-rules.md) and [email-rules.md](../../reference/email-rules.md) (corrections override everything below), then [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification and routing.
 2. Resolve label name to ID mapping (needed for every modify call):
 
    ```bash
-   gws gmail users labels list --params '{"userId":"me"}' --format json 2>&1 | grep -v "^Using"
+   GWS_FORCE_PROFILE=<profile> gws gmail users labels list --params '{"userId":"me"}' --format json 2>&1 | grep -v "^Using"
    ```
 
 3. Pull the authoritative inbox:
 
    ```bash
-   gws gmail users messages list --params '{"userId":"me","q":"in:inbox","maxResults":50}' --format json 2>&1 | grep -v "^Using"
+   GWS_FORCE_PROFILE=<profile> gws gmail users messages list --params '{"userId":"me","q":"in:inbox","maxResults":50}' --format json 2>&1 | grep -v "^Using"
    ```
 
    Snapshot this set as the working batch. Triage that batch; mail that arrives mid-session (including the one-time-code and verification mail your own portal activity generates while you work) is a separate next batch, not chased now.
