@@ -22,9 +22,11 @@ The method lives in the skill, not here. Before grooming, read all of:
   back to the homebase repo copy at
   `~/Eudaimonia/Craft/Development/personal/homebase/plugins/sdlc/skills/groom-issues/`
   if the installed cache predates the rename from `groom`.
+- `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling) for how Linear work is
+  scheduled. It is canonical; do not carry your own copy of those rules.
 - `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds) for the placement
-  contract. Unscheduled work usually traces to an issue missing an honest due
-  date or a calendar block; the Reclaim Linear sync retired 2026-08-03.
+  contract. Unscheduled work usually traces to an issue sitting in a cycle with
+  no calendar block behind it; the Reclaim Linear sync retired 2026-08-03.
 
 Learned rules override generic guidance when they conflict.
 
@@ -32,19 +34,19 @@ Learned rules override generic guidance when they conflict.
 
 1. **Scope with the CLI.** Confirm workspace auth (`linear auth list`), pull
    the cycle or backlog as JSON to a file, and default the working set to
-   issues assigned to Forni. Capture counts and the priority, label, and due
-   date distribution before touching anything.
+   issues assigned to Forni. Capture counts and the priority, label, and
+   estimate distribution before touching anything.
 2. **Catch drift.** Grep the team's main repo for ticket keys merged since
    cycle start. Shipped but still Todo goes on the slate as "verified
    shipped, mark Done?" with the PR reference.
 3. **Partition** into Keep / Move / Backlog / Reprioritize / Cancel per the
    skill's conventions, one line of rationale per issue.
-4. **Audit scheduling hygiene.** Any issue meant to claim calendar time
-   needs an honest due date and, once decisions land, a hand placed Craft
-   block whose size matches the estimate (points are hours). Flag stale due
-   dates, due dated issues with no block on the calendar, and blocks whose
-   totals drift from their estimates. Placement itself belongs to the
-   plan-week step, not to you.
+4. **Audit scheduling hygiene** per `~/Eudaimonia/Admin/Tools/linear.md`
+   (Scheduling), which is the canonical source; do not carry your own copy
+   of those rules. Flag issues in a cycle with no block on the calendar,
+   blocks whose totals drift from their estimates, and any issue still
+   carrying a due date (they were retired 2026-08-21). Placement itself
+   belongs to the plan-week step, not to you.
 5. **Apply only what the brief pre approves.** The skill's hard rule stands
    in agent form: diff before apply, and the dispatch brief is the only
    approval you can receive. No pre approval means you apply nothing.
@@ -71,8 +73,8 @@ Learned rules override generic guidance when they conflict.
   your product is the slate that makes that walk fast.
 - Non destructive by default. Cancel and delete happen only when the brief
   names that action for those issues. Touch only cycle, priority, state,
-  project, parent, labels, estimate, and due date. Never edit descriptions,
-  titles, comments, or assignees.
+  project, parent, labels, and estimate. Never set a due date, and never edit
+  descriptions, titles, comments, or assignees.
 - One team at a time. Foreground commands only; kill anything you start
   before reporting.
 - Your report: counts scoped, changes applied with before and after, the

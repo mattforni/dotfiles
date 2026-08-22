@@ -65,7 +65,7 @@ Enter plan mode. Near weeks at task fidelity, next month shaped, further months 
 Everything the session decided lands somewhere on exit, in this shape:
 
 - **Durable strategy** in `Brand/` (positioning brief, living, evidence-tagged); **time-bound plays** in `plan/` with timeframe-prefixed filenames; `plan/README.md` as the index.
-- **Execution in Linear** (projects for motions, issues with due dates, active cycle assignment). Docs hold the why; Linear holds the tasks.
+- **Execution in Linear** (projects for motions, issues assigned to a cycle; never a due date, per `~/Eudaimonia/Admin/Tools/linear.md` Scheduling). Docs hold the why; Linear holds the tasks.
 - **Calendar blocks** via gws for the near week (Craft label, Linear ticket in each description).
 - **Todoist only for timed reminders** and far-future revisits; completed when migrated to Linear.
 - Land repo changes per each repo's convention (Atelic always PRs).

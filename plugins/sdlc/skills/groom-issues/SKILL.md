@@ -93,11 +93,12 @@ The Done archive is a separate pass. Linear's archive is UI-only as of CLI v2.0.
 
 ## Hard Rules
 
-- **Triage has a definition, and it is four fields.** An issue counts as triaged only when it carries exactly one cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), an hourly estimate (points are hours on the linear extended scale), tagging that actually describes the work, and a due date matching where the work will be done. Missing any one of the four makes it untriaged no matter what its state says, and untriaged is always a Decision, never a silent Keep.
-- **The cycle equals the week (cycle mode).** An active cycle should contain exactly the work intended for that week. Anything undated, unfittable, or unowned goes to Backlog so the board stays readable. Two drifts break this quietly; see learned-rules.md.
+- **Scheduling rules are not defined here.** `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling) is the canonical source for cycles, due dates, and what counts as triaged. Read it rather than trusting a copy, and do not restate its rules in this skill.
+- **Untriaged is always a Decision, never a silent Keep.** An issue counts as triaged only when it carries every field named in `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling, What Counts as Triaged). Read the definition there rather than from memory; missing any one field makes an issue untriaged no matter what its state says. An issue still carrying a due date is drift to flag.
+- **The cycle equals the week (cycle mode).** An active cycle should contain exactly the work intended for that week. Anything unfittable or unowned goes to Backlog so the board stays readable. Two drifts break this quietly; see learned-rules.md.
 - **Non destructive by default.** Prefer move, reprioritize, or backlog over cancel/delete. Never silently destroy.
 - **Diff before apply.** Always present the proposed slate as a table and wait for explicit approval. Auto apply is reserved for the Keep bucket (which by definition changes nothing).
-- **Preserve history.** Touch only `cycle`, `priority`, `state`, `project`, `parent`, `labels`. Do not edit descriptions, titles, comments, or assignees unless explicitly asked.
+- **Preserve history.** Touch only `cycle`, `priority`, `state`, `project`, `parent`, `labels`, `estimate`. Never set a due date. Do not edit descriptions, titles, comments, or assignees unless explicitly asked.
 - **One team at a time.** Default scope is whatever the user names. Do not silently widen.
 - **Capacity check (cycle mode).** Keep bucket must fit `business_days × active_owners × multiplier` (start at 0.9, calibrate). If over, push back before approving.
 - **Walk the gray zone individually.** Per ticket AskUserQuestion with three to four labeled options. Reserve batch tables for the auto keep cluster and structurally uniform clusters.
