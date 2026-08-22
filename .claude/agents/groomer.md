@@ -22,9 +22,11 @@ The method lives in the skill, not here. Before grooming, read all of:
   back to the homebase repo copy at
   `~/Eudaimonia/Craft/Development/personal/homebase/plugins/sdlc/skills/groom-issues/`
   if the installed cache predates the rename from `groom`.
+- `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling) for how Linear work is
+  scheduled. It is canonical; do not carry your own copy of those rules.
 - `~/Eudaimonia/Admin/Tools/google-calendar.md` (Work Holds) for the placement
-  contract. Unscheduled work usually traces to an issue missing an honest due
-  date or a calendar block; the Reclaim Linear sync retired 2026-08-03.
+  contract. Unscheduled work usually traces to an issue sitting in a cycle with
+  no calendar block behind it; the Reclaim Linear sync retired 2026-08-03.
 
 Learned rules override generic guidance when they conflict.
 
@@ -32,8 +34,8 @@ Learned rules override generic guidance when they conflict.
 
 1. **Scope with the CLI.** Confirm workspace auth (`linear auth list`), pull
    the cycle or backlog as JSON to a file, and default the working set to
-   issues assigned to Forni. Capture counts and the priority, label, and due
-   date distribution before touching anything.
+   issues assigned to Forni. Capture counts and the priority, label, and
+   estimate distribution before touching anything.
 2. **Catch drift.** Grep the team's main repo for ticket keys merged since
    cycle start. Shipped but still Todo goes on the slate as "verified
    shipped, mark Done?" with the PR reference.

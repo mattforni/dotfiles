@@ -84,7 +84,7 @@ Reclaim no longer schedules Linear work. The groom's scheduling output is cycle 
 
 ### Triage Means Three Fields, and the Cycle Means the Week
 
-A groom is not done when the buckets are applied. It is done when every issue carries all three of a cognitive load label (🧠 Sharp / ⚖️ Medium / 🍃 Light), an hourly estimate, and tagging that describes the work, and when the cycle holds exactly the week's intended work with everything unfittable or unowned pushed to Backlog. Canonical definition in `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling).
+A groom is not done when the buckets are applied. It is done when every issue carries every field the triage definition names, and when the cycle holds exactly the week's intended work with everything unfittable or unowned pushed to Backlog. The definition itself lives in `~/Eudaimonia/Admin/Tools/linear.md` (Scheduling, What Counts as Triaged) and is not restated here.
 
 **Why:** Forni's own definition, given during the 2026-08-10 planning session: "everything has a cognitive estimate. It has an hourly estimate. We've got good tagging on it that makes sense." That same session reported a groomed board that still held an untriaged issue and a 7 point item with no priority. He caught both. The fourth field, a due date, was retired 2026-08-21 precisely because it kept disagreeing with the cycle it was supposed to match.
 
