@@ -222,7 +222,7 @@ A recurring catch up that gets deferred instead of slotted lands on the followin
 
 ### Phase 7: Plan Meals
 
-Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch prep friendly meal plan authored into the Atelic app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed).
+Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch prep friendly meal plan authored into the Pinole app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed).
 
 Meal planning generates schedulable work, and this phase runs after Plan Tasks, so that work does not flow back into the task queue. The standing blocks (Sprouts run, Batch Prep, Cook Night) already hold their time; confirm they cover the plan. Anything the plan generates beyond them (an extra prep session, a second store run) is **slotted inline in this phase**, through the same decision gate as task slotting, against a fresh calendar pull. Return here once meal planning and its slotting are complete.
 
