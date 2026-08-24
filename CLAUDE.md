@@ -232,9 +232,35 @@ Codified 2026-08-13. Retiring six connectors in one session swept Linear's consu
 There is no step for copying changes back out of `$HOME`. That was `sync-dots`,
 and it retired when everything human-authored became a symlink.
 
-### Landing Changes: Decide Together
+### Landing Changes: Decide By The Heuristic
 
-**Do not unilaterally pick between direct-to-main and PR workflow on this repo.** Both patterns appear in the log (some commits land direct, some through PRs), and Forni prefers to make the call each time rather than have it picked for him. After staging a change, pause and ask which path to take — even for small changes. The friction of asking is low; the cost of an unwanted push to main is higher than it looks.
+**Pick the path from the change, do not ask.** Forni delegated this decision on
+2026-08-24, having noticed the ask had become a bottleneck he was not actually
+reading: "I'm not really paying attention when you ask me how you want to land
+things." The heuristic below was derived from 117 homebase commits over the
+preceding six weeks and reproduces his observed choices.
+
+**Direct to main** when all three hold: under roughly 20 lines changed, prose
+only, and touching nothing executable and no plugin version. That describes the
+median direct commit exactly, at 6 lines changed against 70 for the median PR
+commit, with 77% of direct commits under 20 lines against 21% of PR commits.
+
+**A pull request** otherwise, and always for anything that runs. By area over
+that window: `setup.sh` 90% PR, `plugins/` and `.claude-plugin/` 89%, `bin/`
+79%, and `.claude/settings.json`, `.zshrc`, `.functions` and new skills all
+100%. The prose shaped areas sit near a coin flip, which is what the size test
+is for: `.claude/local-skills` 50%, `.claude/CLAUDE.md` 57%.
+
+**Fetch `origin/main` again and compare against it immediately before landing,
+never against the base the branch was cut from.** Concurrent sessions land here often
+enough that an hour old branch is routinely stale, and a plugin version bump
+makes staleness silently destructive rather than merely noisy: two branches that
+both bump 11.3.0 to 11.3.1 carry identical version lines, merge perfectly clean,
+and publish the second change under a version already released, where no
+installed copy will ever see it. Both hazards fired inside one session on
+2026-08-22, when #184 took 11.3.1 out from under #185, and an earlier GC commit
+surfaced as a phantom revert in a two dot diff. Cut follow up branches fresh
+from `origin/main` immediately before the bump commit.
 
 **A direct merge is linted only after the fact, so check `main` afterward.** The lint workflow fires on pull requests and on pushes to `main` alike (it has since the workflow shipped in #40), but nothing gates a direct push: a failing commit lands anyway, `main` goes red, and the breakage stays invisible until someone looks at the Actions run or the next PR inherits it and appears to have caused it. Observed 2026-08-07: `e2c36dcb` landed direct with two `MD034` bare URL errors, `main` sat red for hours, and the breakage surfaced on an unrelated PR whose own diff was clean. After any direct merge, run the relevant check locally (`npx markdownlint-cli2 "*.md"` for prose, the matching linter otherwise), or open the Actions tab and confirm the push's own run went green. When a PR reports a failure in a file it did not touch, suspect inherited breakage before debugging your own diff, and confirm with `git log` on the offending line.
 
