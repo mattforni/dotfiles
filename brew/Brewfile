@@ -29,6 +29,7 @@ brew "cmake"
 brew "make"
 brew "maven"
 brew "python@3.12"
+brew "rust" # cargo toolchain; the toggl CLI installs via `cargo install toggl`
 
 # Runtime & package managers
 brew "mise" # Runtime version manager; replaced fnm and rbenv 2026-08-11
