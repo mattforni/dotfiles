@@ -38,23 +38,23 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 
 ### Community (🤝)
 
-- `🤝 Community` (parent)
-- `🤝 Community/🤗 Friends` -- personal friends
-- `🤝 Community/🧬 Family` -- family members (always surface for response)
-- `🤝 Community/🏛 Brown` -- Brown University
-- `🤝 Community/🏛 Brown/👬 Phi Psi` -- Phi Psi fraternity
-- `🤝 Community/🏛 Brown/Interviews` -- Brown alumni interviews
-- `🤝 Community/🌇 Denver` -- Denver community, local events (sits directly under Community; the Cities parent retired)
-- `🤝 Community/🤲 Giving` -- charity, volunteering, donations
+- `🤗 Community` (parent)
+- `🤗 Community/👬 Friends` -- personal friends
+- `🤗 Community/🧬 Family` -- family members (always surface for response)
+- `🤗 Community/🏛 Brown` -- Brown University
+- `🤗 Community/🏛 Brown/👬 Phi Psi` -- Phi Psi fraternity
+- `🤗 Community/🏛 Brown/Interviews` -- Brown alumni interviews
+- `🤗 Community/🌇 Denver` -- Denver community, local events (sits directly under Community; the Cities parent retired)
+- `🤗 Community/🤲 Giving` -- charity, volunteering, donations
 
 ### Craft (🛠️)
 
 - `🛠️ Craft` (parent)
 - `🛠️ Craft/💼 Vocation` -- job search, career
-- `🛠️ Craft/💼 Vocation/🤝 Atelic` -- Atelic, the practice
-- `🛠️ Craft/💼 Vocation/🤝 Atelic/🌽 Pinole` -- Pinole, the meal and training dojo
+- `🛠️ Craft/💼 Vocation/💻 Atelic` -- Atelic, the practice
+- `🛠️ Craft/💼 Vocation/💻 Atelic/🌽 Pinole` -- Pinole, the meal and training dojo
 - `🛠️ Craft/💼 Vocation/⚒️ TPF` -- The Product Forge, Titus
-- `🛠️ Craft/💻 Development` -- software, dev tools, GitHub, tech subscriptions
+- `🛠️ Craft/🧑‍💻 Development` -- software, dev tools, GitHub, tech subscriptions
 - `🛠️ Craft/🌏 Adventure` -- travel, trips, flights, hotels
 - `🛠️ Craft/🌦️ Climate` -- climate tech
 - `🛠️ Craft/🎨 Leisure` -- leisure, hobbies, art, gaming

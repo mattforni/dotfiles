@@ -279,7 +279,7 @@ When moving recurring events for just one week, modify only that occurrence, not
 The named label table (names, hexes, label IDs) and the transition / travel / title conventions live in `~/Eudaimonia/Admin/Tools/google-calendar.md`; the behavioral rule lives in GC `Calendar Preferences`. The conventions below are skill specific additions.
 
 - **Emoji prefix**: All personal events use an emoji prefix (e.g., "🏋️ Strength", "✍️ Writing")
-- **Labels, not colors**: every created event carries the `eventLabelId` matching its meaning (🍏 Constitution, 🧠 Contemplation, 🤝 Community, 🛠️ Craft, and the rest of the table)
+- **Labels, not colors**: every created event carries the `eventLabelId` matching its meaning (🍏 Constitution, 🧠 Contemplation, 🤗 Community, 🛠️ Craft, and the rest of the table)
 - **Deep work**: 🙈 Deep Work blocks live on `💻 Atelic` and carry the 🛠️ Craft label (the Heads Down label retired 2026-07-19; deep work is Craft, not its own category). Protected focus, no transitions needed (block stays at current location). The generic block is a capacity placeholder, deleted once named work claims its time (see Phase 6).
 - **Week banner**: the all day event spanning Monday through Sunday that carries the week's theme, created by Set Intention with the 🧭 Theme label, transparency `"free"`. Title is emoji + theme only; training detail lives in the body, written there by `assist:plan-training`.
 

@@ -36,9 +36,9 @@ Auto-process (label, mark read, archive) when ANY of these match:
 
 **Multi-label purchases** (get Purchases + a second label):
 
-- `invoice+statements@mail.anthropic.com` -> also `🛠️ Craft/💻 Development` (Anthropic receipts)
+- `invoice+statements@mail.anthropic.com` -> also `🛠️ Craft/🧑‍💻 Development` (Anthropic receipts)
 - `noreply@singenuity.com` -> also `🛠️ Craft/🌏 Adventure` (Cajun Encounters, tour bookings)
-- Tech tools/dev subscriptions -> also `🛠️ Craft/💻 Development`
+- Tech tools/dev subscriptions -> also `🛠️ Craft/🧑‍💻 Development`
 
 Target: `📑 Admin/🛒 Purchases`. Always mark read and archive.
 
@@ -58,11 +58,11 @@ Family emails always get surfaced for response, regardless of content.
 **Known family senders:**
 
 - `mfornaciari2000@yahoo.com` Michael Fornaciari (dad): Likes to send articles and links. Read the full content, summarize the article/topic, offer to draft a warm, appreciative reply.
-- Any sender in `🤝 Community/👨‍👩‍👦‍👦 Family` label history
+- Any sender in `🤗 Community/👨‍👩‍👦‍👦 Family` label history
 
 **Handling:**
 
-1. Label `🤝 Community/👨‍👩‍👦‍👦 Family`
+1. Label `🤗 Community/👨‍👩‍👦‍👦 Family`
 2. Yellow or red star (red if >3 days old)
 3. Read full email content
 4. Present overview to user
@@ -74,9 +74,9 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 
 **Known sender routing** (exact matches, highest priority):
 
-- `samwieds@gmail.com` -> `🤝 Community/🤗 Friends` (Sam Wiedemeier; adventure/outdoor content may also get `🛠️ Craft/🌏 Adventure`)
+- `samwieds@gmail.com` -> `🤗 Community/👬 Friends` (Sam Wiedemeier; adventure/outdoor content may also get `🛠️ Craft/🌏 Adventure`)
 - `mealplanner@richroll.com` -> `🍏 Constitution/🥕 Nutrition`, archive + Linear ticket in Atelic
-- `gifts@childhelp.org` -> `🤝 Community/🤲 Giving` (donation receipts, archive)
+- `gifts@childhelp.org` -> `🤗 Community/🤲 Giving` (donation receipts, archive)
 - `do_not_reply@geico.com` -> `🍏 Constitution/🪪 Insurance` (NOT Healthcare; GEICO is auto insurance)
 - `kettlesarah@gmail.com` -> `🛠️ Craft/💻 TPF` (Sarah Kettles, TPF associate)
 
@@ -101,16 +101,16 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 
 **Community signals:**
 
-- Jasmine -> `🤝 Community/😘 Jasmine`
-- Family members -> `🤝 Community/👨‍👩‍👦‍👦 Family`
-- Friends (personal social) -> `🤝 Community/🤗 Friends`
-- Brown University -> `🤝 Community/🏛 Brown`
-- Book club -> `🤝 Community/📚 Book Club`
-- SCF -> `🤝 Community/🌱 SCF`
-- Denver events/community -> `🤝 Community/🌇 Denver`
-- Italian language -> `🤝 Community/🇮🇹 Italiano`
-- Charity, volunteering -> `🤝 Community/🤲 Giving`
-- Seattle contacts -> `🤝 Community/⚓ Seattle`
+- Jasmine -> `🤗 Community/😘 Jasmine`
+- Family members -> `🤗 Community/👨‍👩‍👦‍👦 Family`
+- Friends (personal social) -> `🤗 Community/👬 Friends`
+- Brown University -> `🤗 Community/🏛 Brown`
+- Book club -> `🤗 Community/📚 Book Club`
+- SCF -> `🤗 Community/🌱 SCF`
+- Denver events/community -> `🤗 Community/🌇 Denver`
+- Italian language -> `🤗 Community/🇮🇹 Italiano`
+- Charity, volunteering -> `🤗 Community/🤲 Giving`
+- Seattle contacts -> `🤗 Community/⚓ Seattle`
 
 **Craft signals:**
 
@@ -119,7 +119,7 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 - Gremlin -> `🛠️ Craft/💼 Vocation/😈 Gremlin` (historical; still matches old mail)
 - Networking, intros, conferences -> `🛠️ Craft/💼 Vocation/🕸 Networking`
 - Mentorship -> `🛠️ Craft/💼 Vocation/👨‍🏫 Mentorship`
-- Software, dev tools, GitHub -> `🛠️ Craft/💻 Development`
+- Software, dev tools, GitHub -> `🛠️ Craft/🧑‍💻 Development`
 - RYLLC, consulting -> `🛠️ Craft/💻 RYLLC`
 - Atelic -> `🛠️ Craft/💻 RYLLC/🎯 Atelic`
 - Product Forge, Titus -> `🛠️ Craft/💻 TPF`
