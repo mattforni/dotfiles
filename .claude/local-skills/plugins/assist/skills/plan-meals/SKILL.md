@@ -16,6 +16,8 @@ allowed-tools:
 
 # Plan Meals Assist
 
+**Direct invocation only (2026-08-24).** Weekly planning no longer includes a meals phase; this skill runs only when Forni asks for meal planning himself.
+
 Help Forni plan a week of plant based, seasonal, batch prep friendly meals, author it into the Pinole app, and produce a single primary shopping list. The goal is less decision fatigue mid week and more momentum on the healthy eating front.
 
 ## Why This Matters

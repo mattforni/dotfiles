@@ -1,6 +1,6 @@
 ---
 name: plan-week
-description: Weekly planning, calendar management, and Sunday planning session task slotting. Use this skill whenever the user mentions weekly planning, the Sunday planning session (formerly the Monday planning session), slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training` and meal planning in `assist:plan-meals`; this skill calls into both during the weekly planning session.
+description: Weekly planning, calendar management, and Sunday planning session task slotting. Use this skill whenever the user mentions weekly planning, the Sunday planning session (formerly the Monday planning session), slotting tasks, finding free time, checking what their week looks like, moving or swapping calendar events, or wants help fitting something into their week. Also trigger when the user asks about V2MOM measure coverage. Training plan scheduling lives in `assist:plan-training`; this skill calls into it during the weekly planning session.
 argument-hint: "[plan | week | slot | move]"
 allowed-tools:
   - Skill
@@ -54,7 +54,7 @@ These constraints exist for real physiological and practical reasons. They are n
 
 ## Mode: plan (default)
 
-The Sunday planning session. This is the primary use case. It runs isolated in a worktree and moves through eight phases: look back quietly, then gather, then clean, then place, then show. Every phase that generates work runs before the phase that places work, with one deliberate exception: Plan Meals runs after Plan Tasks and slots its own generated work inline (see Phase 7).
+The Sunday planning session. This is the primary use case. It runs isolated in a worktree and moves through seven phases: look back quietly, then gather, then clean, then place, then show. Every phase that generates work runs before the phase that places work.
 
 1. **Review Week** — look back, quietly, before any agents
 2. **Set Intention** — theme and banner
@@ -62,8 +62,7 @@ The Sunday planning session. This is the primary use case. It runs isolated in a
 4. **Sweep Calendar** — make the calendar true
 5. **Plan Training** — every training event placed
 6. **Plan Tasks** — work slate first, then personal, then slot
-7. **Plan Meals** — food plus its calendar footprint, slotted inline
-8. **Present Week** — the finished board
+7. **Present Week** — the finished board
 
 ### Agent Fan Out (After the Retro, Never Before)
 
@@ -220,13 +219,7 @@ A recurring catch up that gets deferred instead of slotted lands on the followin
 
 **Deferred tasks land on Sunday**: When deferring tasks to next week or further out, always schedule them for the Sunday that plans the target week (the day before the target week's Monday). Sunday is the landing zone where tasks get triaged during the planning session. (Replaced the Monday landing zone 2026-08-09.)
 
-### Phase 7: Plan Meals
-
-Invoke the `assist:plan-meals` skill via the Skill tool. It produces a plant based, seasonal, batch prep friendly meal plan authored into the Pinole app plus a consolidated shopping list grouped by store, reconciling the pantry first. It reads the rectified week so it accounts for nights out, social dinners, and travel (a camp, race weekend, or trip where no home dinner is needed).
-
-Meal planning generates schedulable work, and this phase runs after Plan Tasks, so that work does not flow back into the task queue. The standing blocks (Sprouts run, Batch Prep, Cook Night) already hold their time; confirm they cover the plan. Anything the plan generates beyond them (an extra prep session, a second store run) is **slotted inline in this phase**, through the same decision gate as task slotting, against a fresh calendar pull. Return here once meal planning and its slotting are complete.
-
-### Phase 8: Present Week
+### Phase 7: Present Week
 
 The finished board is the Google Calendar week view. Present a link to it (`https://calendar.google.com/calendar/u/0/r/week/YYYY/M/D`). Todoist sync already renders slotted tasks there alongside training, meetings, and events, so do not rebuild the week as prose day lists or summary tables (see the Learned Rules entry).
 

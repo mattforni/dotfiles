@@ -34,7 +34,7 @@ Take a recurring process the user runs (usually codified as a skill, sometimes a
 - **Generators go upstream of placers.** A phase that generates work (email sweep creating tasks, meal planning creating a grocery run) belongs before the phase that places work. Audit every phase for hidden outputs that feed an earlier stage.
 - **Verb noun names, and see what resists.** Rename every phase as verb noun. A phase that needs two verbs is two phases bolted together. Two phases producing the same artifact are one phase. The naming convention is a structural diagnostic, not cosmetics.
 - **Artifacts belong to the phase that owns their meaning**, not the phase that happened to create them historically (the week theme banner belongs to intention setting, not training scheduling).
-- **Symmetry is a signal.** When parallel streams get parallel verbs (Sweep Inbox / Sweep Calendar, Plan Training / Plan Meals / Plan Tasks), the structure is probably right. Forced symmetry is the corresponding smell; do not invent a phase to complete a pattern.
+- **Symmetry is a signal.** When parallel streams get parallel verbs (Sweep Inbox / Sweep Calendar, Plan Training / Plan Tasks), the structure is probably right. Forced symmetry is the corresponding smell; do not invent a phase to complete a pattern.
 
 **Grounding**
 
