@@ -232,7 +232,7 @@ Codified 2026-08-13. Retiring six connectors in one session swept Linear's consu
 There is no step for copying changes back out of `$HOME`. That was `sync-dots`,
 and it retired when everything human-authored became a symlink.
 
-### Landing Changes: Decide By The Heuristic
+### Landing Changes: Decide by the Heuristic
 
 **Pick the path from the change, do not ask.** Forni delegated this decision on
 2026-08-24, having noticed the ask had become a bottleneck he was not actually
