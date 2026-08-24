@@ -65,6 +65,11 @@ export PATH="$HOME/.local/bin:$PATH"
 # `ynab` CLI arrives that way (see install_bun_globals), so add it here.
 export PATH="$HOME/.bun/bin:$PATH"
 
+# cargo installs binaries to ~/.cargo/bin; the toggl CLI arrives that way
+# (`cargo install toggl`, rust toolchain in brew/Brewfile), and cargo does
+# not wire its own PATH.
+export PATH="$HOME/.cargo/bin:$PATH"
+
 # PATH precedence finalization. Place LAST so it wins over every earlier
 # prepend in this file. `typeset -U path` keeps PATH unique on each
 # re-source of .zshrc; the explicit prepend ensures $HOME/bin (where the
