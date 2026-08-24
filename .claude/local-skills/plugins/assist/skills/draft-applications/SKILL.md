@@ -22,6 +22,8 @@ Read before drafting; none of this is duplicated here:
 
 Work a single role to a finished package before touching the next; Forni processes serially.
 
+Bracket the drain with the session timer per Session Timers in `~/Eudaimonia/Admin/Tools/toggl.md`: project `💼 Vocation`, description `💼 Weekly Work Search`. Start before the first role; stop when the drain ends, whether the queue is empty or Forni stops early.
+
 1. **Pull the next Queued row** (or the role Forni names).
 2. **Fetch the live posting.** Confirm it is still open and still passes the rubric's hard filters (mission, full remote, Staff+ IC). If the posting is gone or a hard filter fails, note it on the row, tell Forni, and move on.
 3. **Sanity check the fit score** the sweep assigned. Re-score from the rubric only on disagreement, and say why.

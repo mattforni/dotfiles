@@ -23,6 +23,7 @@ Help Forni plan his week: review the calendar, slot Todoist tasks into open time
 3. Read the weekly template: `~/Eudaimonia/schedule.md`
 4. Determine the ISO week being planned: the upcoming Monday through Sunday. The session runs on the Sunday before it, so the week closing today is the retro's subject (Review Week), never the planning target
 5. **Cut and enter a `wk-<ISO week>` worktree** in each repo the session will touch (Eudaimonia for planning artifacts, homebase for skill or config edits). Planning runs in an isolated worktree, never on a shared branch, so a branch switch in another terminal cannot move the ground under the session. All planning edits land in the worktree copy.
+6. **Start the session timer** per Session Timers in `~/Eudaimonia/Admin/Tools/toggl.md`: project `🗺️ Planning`, description `🗺️ Weekly Planning`.
 
 **Calendar access:** reads and writes go through the `gws` CLI via Bash, not a Google Calendar MCP. Find calendar IDs with `gws calendar calendarList list`. Pull with `gws calendar events list`, patch a recurring series with `gws calendar events patch` (only the fields you change), create with `events insert`, delete a whole series by its `recurringEventId`. The `gws` output is prefixed with a `Using keyring backend` line, so strip it before parsing JSON. See `~/Eudaimonia/Admin/Tools/gws.md` for the exact invocation syntax: `calendarId` goes inside `--params`, the event body (and any array fields) go in `--json`.
 
@@ -228,6 +229,8 @@ Supplement the link only with what the calendar cannot show:
 - The deferred ledger: any tasks that could not be slotted (no available time)
 - Remaining open slots for spontaneous work
 - The week's theme
+
+Close the session by stopping the timer, per Session Timers in `~/Eudaimonia/Admin/Tools/toggl.md`.
 
 ## Mode: week
 
