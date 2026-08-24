@@ -44,3 +44,8 @@ Training specific rules tied to current life shape. Read on every invocation. St
 ## Weekly Summary
 
 - **Every training pass ends with the one look weekly summary before anything else gets discussed**: sessions by modality, which Friday it is (4K or deep work), and the weight trend in one line, then the day by day table. Surfaced 2026-07-19; reshaped 2026-08-05 from mileage to modality. Write the same summary into the week banner body.
+
+## Retro Weight (2026-08-24)
+
+- **Retros are a light dialogue, not a written artifact.** With the trail run mesocycle over, do not write Wk N retro subsections into the block doc, and do not use block relative week numbering at all; weeks are named by the ISO year calendar (W35, never "Wk 2"). The retro that matters is the conversational check inside weekly planning: the Strava pull, the coverage glance, the heel check, and the carry forward. Write a subsection only when something genuinely needs the record, and ask first. Forni: "We can deprioritize training. We can evaluate weeks according to the year calendar... I don't think I'll ever take a look at it now that we're out of the trail run training mesocycle."
+- **The guardrail proposes; Forni decides.** The heel guardrail's "any signal drops the next hard or trail effort" is a proposal to surface, never an auto action: on 2026-08-24 he kept the first 4K Friday with tenderness noted. Surface the tension plainly, then follow his call.
