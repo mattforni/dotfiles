@@ -42,7 +42,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 - `🤗 Community/👬 Friends` -- personal friends
 - `🤗 Community/🧬 Family` -- family members (always surface for response)
 - `🤗 Community/🏛 Brown` -- Brown University
-- `🤗 Community/🏛 Brown/👬 Phi Psi` -- Phi Psi fraternity
+- `🤗 Community/🏛 Brown/🍻 Phi Psi` -- Phi Psi fraternity
 - `🤗 Community/🏛 Brown/Interviews` -- Brown alumni interviews
 - `🤗 Community/🌇 Denver` -- Denver community, local events (sits directly under Community; the Cities parent retired)
 - `🤗 Community/🤲 Giving` -- charity, volunteering, donations
