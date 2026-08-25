@@ -62,8 +62,23 @@ beyond the PR you were given.
   #51, #52, 2026-07-23). Do not wait for a review object that will never
   arrive.
 - **A CodeRabbit "Review limit reached" cooldown comment means no review is
-  available, not pending.** Proceed on CI plus your own read; never wait out
-  the cooldown.
+  available yet, and the merge gate still needs one.** Never merge on CI
+  alone. Wait the cooldown out in the background (a background agent's wait
+  costs nothing), then retrigger `@coderabbitai review` once the window
+  reopens, and bail only if a second cooldown follows the retrigger. Amended
+  2026-08-25: the old rule said proceed on CI plus your own read, which merges
+  with zero automated review, and the gate forbids that.
+- **After a cooldown retrigger, CodeRabbit rewrites the cooldown comment in
+  place into the walkthrough; it never posts a new comment.** A poll that
+  filters on comments created after the retrigger times out on a review that
+  is already sitting there. Poll the cooldown comment's body or `updated_at`,
+  or list every CodeRabbit comment and look for the walkthrough markers
+  (pinole-app #71, 2026-08-25: "Review finished" landed under the same comment
+  id while the created after poll reported a timeout).
+- **Wait on PR state, not the wall clock.** A clock based `until` loop under
+  Monitor reported a timeout instead of firing when its threshold passed
+  (2026-08-25). Poll the PR's comments and checks on a bounded sleep loop
+  instead.
 - **Gemini Code Assist (consumer app) was sunset 2026-07-17.** Historical
   Gemini reviews in a repo's closed PRs do not mean a live bot; if no fresh
   Gemini activity appears, treat the repo as having no review bot.
