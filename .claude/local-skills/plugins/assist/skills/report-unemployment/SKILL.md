@@ -23,6 +23,14 @@ Claim weeks run Sunday through Saturday; the Monday task files for the week that
 - **Excluded**: postings that closed before anything went out, roles declined on fit, anything still in flight. If it would not survive an audit, it stays off.
 - The cadence targets five activities (three applications plus two supporting, per the FY27 plan). Fewer than five is reported honestly, never padded.
 
+**Sweep forward before trusting the count.** The claim week's own section is not the whole slate. An activity that was *committed to* in an earlier week and *happened* during the claim week is often recorded only in the earlier week's row, as "call booked for <date>" or "interview scheduled", and never written into the week it actually landed in. Reading the claim week's section alone therefore undercounts. Before settling the count:
+
+1. Scan the two preceding week sections for any row naming a future date, and keep the ones falling inside the claim week.
+2. Confirm each against the calendar (`gws calendar events list` over the claim week) and the mailbox, which is where a call leaves its real trace. A post call email is the strongest evidence a booked call was actually held.
+3. Anything confirmed is a genuine activity and goes in, and the log gets the missing row backfilled at the same time the confirmation number is appended. That backfill is the inline path's, exactly like the confirmation number append: a background run never writes the Eudy repo, and instead returns the confirmed rows in its report for the main session to record.
+
+Codified 2026-08-25, when the week of 08-16 read as three applications and was actually four. A True Search intro call sat in the week of 08-09 as "Call booked 2026-08-18", the calendar showed it at 14:30 that Tuesday, and Forni's own "Great chatting, Nick" email an hour later proved it happened. Forni had to supply it from memory because neither the skill nor the agent thought to look one week back.
+
 ## Browser Mechanics
 
 The agent-browser bundled Chromium cannot pass the ID.me Cloudflare challenge, headed or not; the check spins forever on the automation fingerprint. Attach to Forni's real Brave instead:
@@ -36,7 +44,7 @@ If a fresh ID.me login or MFA is needed, hand the keyboard to Forni and wait. An
 
 ## The Flow
 
-Nothing on this site responds reliably to a snapshot ref click; drive every control by DOM id, and read the section and error state rather than trusting a reported success. Ids and the entry path are in [learned-rules.md](learned-rules.md).
+Drive every control by DOM id, and read the section and error state rather than trusting a reported success. Snapshot ref clicks do fire on this site, but refs shift on every postback, so a stable id is the safer target. Ids and the entry path are in [learned-rules.md](learned-rules.md).
 
 1. **Confirm the week.** Start from My Claim Status and open the specific week row whose dates match the slate, not a generic start button. Only one week is ever certifiable, and the next week's row shows the date it opens.
 2. **Basic Questions are Forni's answers** (work, earnings, offers, able, available). Inline, walk them with him; a background run bails to the main session the moment the section is not already Complete, per the agent contract. Forni may hand the whole section over ("I trust you to answer these"), and most of it genuinely is derivable from the record: offers, refusals, quits, discharges, layoffs, holidays, able, available, and work search all follow from the log and the week. **Two never are, no matter how broad the authorization: whether he worked (self employment counts, so any Atelic work is work) and whether he received severance, retirement pay, 401(K), or pension.** Only he knows those, a wrong answer is a false certification under penalty of perjury, and a blanket yes does not create knowledge. Ask those two, answer the rest, and say which is which.
