@@ -41,6 +41,10 @@ Corrections and preferences specific to meal planning. Read on every invocation.
   - Why: The 2026-08-04 duplicates were invisible at authoring time because each add looked reasonable alone. One read back of the merged view would have caught all of them before the store did.
   - How to apply: final step of every list build: call `list_shopping` filtered to the store, compare it line by line against the intended basket, and reconcile every extra or missing line before handing the list over. Print the reconciled list in chat as the backup copy.
 
+- **`list_shopping` prints staple rows only, so a tracked non staple rides a one off shopping item and never duplicates.** The merged view unions pantry rows with `staple: true` and `needs_restock: true` plus open ShoppingItems. A tracked non staple at level 0 (cucumbers, lemons, peaches, cilantro, jalapenos, tomatoes) is out but never prints, so the 2026-08-04 duplicate hazard applies only to staple rows.
+  - Why: Confirmed on the 2026-08-25 post vacation Sprouts list; the tool narrowed to staples only after the 2026-08-04 duplicate incident. Flipping `staple` on for a one week seasonal buy is wrong because it nags every week after.
+  - How to apply: staples still ride their pantry row (level 0, store routed, quantity in notes). Seasonal or single week produce that the pantry tracks as a non staple gets `add_shopping_item` with the quantity in the name, and Phase 6 restores its pantry level after the shop. On a bare week with no Costco run coming, reroute the needed Costco staples to Sprouts with "Costco normally, route back after the shop" in notes, and route them back in Phase 6. Still read back the merged store view before handing the list over.
+
 - **All bulk dry goods come from Sprouts, not Costco.** Beans (black, kidney, adzuki), rice (white basmati, brown short grain), lentils (green, red), quinoa, and similar bulk items live in the Sprouts bulk bin section.
   - Why: Forni said on 2026-04-17 "I LOVE their bulk section."
   - How to apply: when generating a shopping list, put dried beans, rice, lentils, quinoa, and related bulk staples under Sprouts. Costco is for jarred/packaged items (kimchi, hummus, olives, artichokes, pickled onions, yogurt, nuts, coffee, vanilla extract).
@@ -93,6 +97,12 @@ Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-
   - Why: Stated 2026-08-02. The format buries fresh ingredients under a second cook.
   - How to apply: Do not propose stuffed pepper, stuffed tomato, or stuffed squash formats.
 
+**Produce preference:**
+
+- **Tomatoes on the vine over any other slicing variety.** Cluster, roma, and heirloom are fallbacks, not equals.
+  - Why: Stated 2026-08-25 when the list carried "slicing tomatoes, any variety": "I tend to prefer those."
+  - How to apply: write tomato lines as "Tomatoes on the vine, N" and keep the on vine pantry row as the slicing tomato of record.
+
 **Dislikes / avoid:**
 
 - **Corn.** Keep it off menus and shopping lists entirely.
@@ -134,6 +144,10 @@ Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-
 - **Sweet potatoes scale down.** ~1 lb (about 2 medium) per week is plenty if they're a side / oat bowl topping, not a centerpiece. 3+ lb lasts way too long.
   - Why: Forni said 3 large last week (W17) lasted too long on 2026-05-15.
   - How to apply: default to 1 lb / 2 medium unless the menu has sweet potatoes as a main two or more nights.
+
+- **Tofu restocks at two blocks (32 oz) minimum.** One block is never enough for a week.
+  - Why: Forni, 2026-08-25: "two blocks of super firm tofu, bare minimum."
+  - How to apply: any tofu line on a Sprouts list reads "2 blocks (32 oz)" or more; size up when tofu is a centerpiece.
 
 ## Pantry Rules
 
