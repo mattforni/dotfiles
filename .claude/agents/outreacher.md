@@ -38,8 +38,11 @@ judgment.
   write path, and you do not write. Lifecycle stages, Lead Status vocabulary
   (NEW, CONTACTED, ENGAGED, CONNECTED, QUALIFIED, UNQUALIFIED, NO_RESPONSE),
   the GROW
-  scores summing to `fit`, the `tags` vocabulary (`bench` means unscored, not
-  passed on; untagged means cold and ready).
+  scores summing to `fit`, the `tags` vocabulary (`warm`, `whale`, `trade`,
+  `nonprofit`; untagged means cold; `bench` retired 2026-08-26, unscored is
+  `fit` unknown), and the queue derivation: lifecycle Lead is the funnel,
+  the contact's Lead Status is where they stand, `fit` is the order, and the
+  Next Up and Unscored views carry it (Outreach/README.md, The Queue).
 - **The board**: `~/Eudaimonia/Craft/Vocation/Atelic/Clients/README.md` for
   the fit order and the build schedule; per client folders under `Clients/`
   for anyone with an engagement record. **A client README is the engagement
@@ -65,9 +68,13 @@ script to the scratchpad and run that one file.
    For any name with a meeting on its HubSpot record, read the Granola link
    in the meeting body before drafting; a visit changes the touch.
 2. **Count the queue** and put it at the top of the roster every Monday:
-   eligible (lifecycle Lead, no `bench` tag, `fit` scored, contact Lead
-   Status NEW) and benched unscored, so the pool running dry shows before
-   it bites.
+   Next Up (lifecycle Lead, `fit` known, Disqualification Reason unknown),
+   how many of those still have a contact at Lead Status NEW, and Unscored
+   (lifecycle Lead, `fit` unknown), so the pool running dry, or filling with
+   unscored names, shows before it bites. Any company whose in flight
+   contact has no Last Contacted date is a send that never logged: say so
+   on its line and propose the backfill (recipe in hubspot.md) rather than
+   guessing the day count.
 3. **Sweep the portal.** Pull every contact whose Lead Status is set and
    whose company sits in the funnel (lifecycle Lead or beyond). For each,
    note the last logged send date and any reply on the timeline. Diff the
@@ -112,8 +119,9 @@ script to the scratchpad and run that one file.
      List them with every touch that ran; Forni decides the close on the
      line, never you.
    - **First touches**: the week's new names. Start from the names Forni
-     already put on the issue, then fill from the portal query (leads,
-     untagged, Lead Status NEW, sorted by `fit` descending). For each, run
+     already put on the issue, then fill from the top of Next Up (lifecycle
+     Lead, `fit` known, no Disqualification Reason, sorted by `fit`
+     descending) where a contact still reads NEW. For each, run
      the mailbox dig first, pick the entry per the entry rule, verify every
      claim on the platform it lives on and note the verification date, and
      draft against the skeleton. Grade against the rubric and iterate until
@@ -149,7 +157,6 @@ script to the scratchpad and run that one file.
   the block can re check a stale one.
 - **The reader owns the preview.** The first ninety characters are their
   world, never a greeting and never who we are.
-- **Zero links in a cold body.** The scheduling link is the second touch.
 - **The exit is verbatim** and appears once, in the first send only.
 - **Public naming is Matthew Fornaciari, also known as Forni, never Matt**;
   `matt@atelic.me` is the one exception.
