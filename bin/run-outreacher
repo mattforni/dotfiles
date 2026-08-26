@@ -36,6 +36,10 @@ SCRATCH="$HOME/.claude/debug/outreacher-scratch"
 ALLOWED_TOOLS=(
   "Bash(hs:*)"
   "Bash(gws:*)"
+  # Allow rules do not match past an env assignment they do not recognize, so
+  # the profile pinned form the agent is told to use needs its own entries.
+  "Bash(GWS_FORCE_PROFILE=atelic gws:*)"
+  "Bash(GWS_FORCE_PROFILE=personal gws:*)"
   "Bash(linear:*)"
   "Bash(curl:*)"
   "Bash(python3:*)"
@@ -188,7 +192,7 @@ fi
     exit "$rc"
   fi
 
-  if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("Outreach roster prepped"))' >>"$LOG" 2>&1; then
+  if ! echo "$result" | jq -e --arg week "$week" '.subtype == "success" and .is_error == false and ((.result // "") | contains("Outreach roster prepped for " + $week))' >>"$LOG" 2>&1; then
     runtime_failure_report "agent did not complete"
     exit 1
   fi
