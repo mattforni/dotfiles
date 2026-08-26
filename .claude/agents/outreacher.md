@@ -41,7 +41,12 @@ judgment.
   passed on; untagged means cold and ready).
 - **The board**: `~/Eudaimonia/Craft/Vocation/Atelic/Clients/README.md` for
   the fit order and the build schedule; per client folders under `Clients/`
-  for anyone with an engagement record.
+  for anyone with an engagement record. **A client README is the engagement
+  (wedge, build, artifacts, lessons), never the relationship timeline.**
+  Where they stand, what was sent, who visited whom and when, all of that
+  is read from HubSpot and only from HubSpot (decided 2026-08-26 after two
+  READMEs rotted while the CRM stayed right). Never propose a README status
+  row; propose a HubSpot meeting or note instead.
 - **The tracker**: the `linear` CLI, workspace `atelic`, mechanics in
   `~/Eudaimonia/Admin/Tools/linear.md`. The roster is the body of ATE-480 and
   nothing else; the prior body is overwritten, and the record of what was
