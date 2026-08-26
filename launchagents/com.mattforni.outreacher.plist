@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.mattforni.outreacher</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{HOME}}/bin/run-outreacher</string>
+  </array>
+
+  <!-- Monday 06:00, so the ATE-480 roster is rebuilt and drafted before the
+       Tuesday 07:00 outreach block. If the Mac is asleep, launchd runs the
+       missed window on the next wake. -->
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict>
+      <key>Hour</key><integer>6</integer>
+      <key>Minute</key><integer>0</integer>
+      <key>Weekday</key><integer>1</integer>
+    </dict>
+  </array>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>{{HOME}}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>{{HOME}}/.claude/debug/outreacher-launchd.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>{{HOME}}/.claude/debug/outreacher-launchd.log</string>
+</dict>
+</plist>

@@ -2,12 +2,23 @@
 
 Build recurring `claude -p` automations that run on launchd, survive sleep, auth
 from Keychain, and fail visibly. Based on the 2026-04-23 implementation of
-L7 mise; see Eudy's `LEVELS.md` for the story. The reference implementation,
-`bin/run-mise`, was pruned 2026-07-23 along with the rest of the mise
-automation (the plist went 2026-07-16); recover it from homebase git history
-if a local headless routine returns. The current direction for recurring
-routines is cloud scheduling drawing credentials from the Secret Manager
-vault (`~/Eudaimonia/Admin/Tools/secret-manager.md`).
+L7 mise; see Eudy's `LEVELS.md` for the story. The first reference
+implementation, `bin/run-mise`, was pruned 2026-07-23 along with the rest of
+the mise automation (the plist went 2026-07-16). **The live reference is
+`bin/run-outreacher`** with `launchagents/com.mattforni.outreacher.plist`
+(added 2026-08-26): a Monday routine that runs the `outreacher` agent through
+`claude -p --agent outreacher` to rebuild the Atelic outreach roster. Cloud
+scheduling drawing credentials from the Secret Manager vault
+(`~/Eudaimonia/Admin/Tools/secret-manager.md`) is the direction for routines
+whose credentials can leave the machine; this one reads Gmail through gws,
+whose tokens are local by design, so it stays on launchd.
+
+**Running an agent, not a skill.** `claude -p "<prompt>" --agent <name>`
+makes a user level agent definition (`~/.claude/agents/<name>.md`) the main
+thread, model and all, so a routine can share one definition with the
+interactive `Agent` tool instead of carrying a skill copy. The agent's own
+prose has to enforce the single command rule below, because the allowlist
+cannot.
 
 ## When to use this pattern
 
