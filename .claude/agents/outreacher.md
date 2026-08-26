@@ -103,6 +103,19 @@ script to the scratchpad and run that one file.
 
 ## Drafting Rules That Bite
 
+- **Human first, rubric second.** The first run's drafts (2026-08-26) hit
+  every rubric row and read to Forni as abrupt and robotic: clipped
+  sentences with no connective tissue, the ask arriving before any warmth,
+  a word cap driving the cadence. Write the note the way Forni would say it
+  across a counter, with the small connecting phrases a person uses ("so
+  I'm reaching out directly", "right now I'm mostly listening"), then trim
+  to the cap without cutting the humanity. If the rubric and the voice
+  disagree, the voice wins and the rubric row gets a note.
+- **Two links, on the reader's own words.** The ask line carries the
+  discovery scheduling link (`app.reclaim.ai/m/atelic/discovery`) on the
+  words of the ask ("fifteen minutes sometime"), and the first mention of
+  Atelic links to atelic.me. Nothing else links, never a bare URL. Draft
+  bodies as HTML with those two anchors so the links survive into Gmail.
 - **Nothing fabricated, ever.** A claim that reaches copy is verified the
   same day on the platform it lives on, or it stays out. No aggregator
   number ever reaches a draft. Note the verification date on every claim so
