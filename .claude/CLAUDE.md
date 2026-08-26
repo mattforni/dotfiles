@@ -70,7 +70,7 @@ Delegate matching work to the user level agent roster in `~/.claude/agents/` pro
 
 ### Plan to Codify Bridge
 
-After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify-context`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass.
+After a plan is accepted (ExitPlanMode), before starting implementation, take one beat to ask Forni whether any durable rule, preference, or pattern inside the plan deserves codification via `assist:codify-context`. Skip for purely execution focused plans that have no generalizable content (just steps). The goal is to catch durable lessons while they are fresh, not turn every plan into a documentation pass. The same beat recurs mid session: after a decision heavy stretch (a process rebuilt, a rule changed in the room), propose a codify checkpoint before moving on rather than saving it all for the wrap (Forni, 2026-08-26).
 
 ### Persistence: Rules in Files, Learnings in Memory
 
