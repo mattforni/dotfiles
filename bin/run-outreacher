@@ -42,6 +42,8 @@ ALLOWED_TOOLS=(
   "Bash(GWS_FORCE_PROFILE=personal gws:*)"
   "Bash(linear:*)"
   "Bash(curl:*)"
+  # The customer path walk runs in a real browser, never curl alone.
+  "Bash(agent-browser:*)"
   "Bash(python3:*)"
   "Bash(security:*)"
   "Bash(date:*)"

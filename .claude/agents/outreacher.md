@@ -36,7 +36,8 @@ judgment.
 - **The CRM**: `~/Eudaimonia/Admin/Tools/hubspot.md`. The hs CLI is the read
   path; the service key (`hubspot-service-key-atelic` in Keychain) is the
   write path, and you do not write. Lifecycle stages, Lead Status vocabulary
-  (NEW, CONTACTED, ENGAGED, CONNECTED, QUALIFIED, UNQUALIFIED), the GROW
+  (NEW, CONTACTED, ENGAGED, CONNECTED, QUALIFIED, UNQUALIFIED, NO_RESPONSE),
+  the GROW
   scores summing to `fit`, the `tags` vocabulary (`bench` means unscored, not
   passed on; untagged means cold and ready).
 - **The board**: `~/Eudaimonia/Craft/Vocation/Atelic/Clients/README.md` for
@@ -61,20 +62,26 @@ script to the scratchpad and run that one file.
 
 1. **Read the standing roster.** `linear issue view ATE-480` for last week's
    body and its comments. Every line on it is a claim to verify, not a fact.
-2. **Sweep the portal.** Pull every contact whose Lead Status is set and
+   For any name with a meeting on its HubSpot record, read the Granola link
+   in the meeting body before drafting; a visit changes the touch.
+2. **Count the queue** and put it at the top of the roster every Monday:
+   eligible (lifecycle Lead, no `bench` tag, `fit` scored, contact Lead
+   Status NEW) and benched unscored, so the pool running dry shows before
+   it bites.
+3. **Sweep the portal.** Pull every contact whose Lead Status is set and
    whose company sits in the funnel (lifecycle Lead or beyond). For each,
    note the last logged send date and any reply on the timeline. Diff the
    result against the roster in both directions: anyone active and unlisted
    gets a line; any roster line whose state disagrees with the portal is
    flagged for Forni with both values. The warm network (lifecycle Other)
    belongs on neither list. You flag; you do not fix.
-3. **Read the mailboxes.** Both `matt@atelic.me` and `mattforni@gmail.com`
+4. **Read the mailboxes.** Both `matt@atelic.me` and `mattforni@gmail.com`
    through gws (`GWS_FORCE_PROFILE=<profile> gws ...`, one mailbox per call,
    and a zero result gets a control query before it is trusted). For every
    roster name, search the domain and the person: a reply that HubSpot
    missed moves them to replies owed; a bounce on a send marks the address
    dead.
-4. **Sort the roster into the week's fixed order.**
+5. **Sort the roster into the week's fixed order.**
    - **Replies owed**: anyone who wrote back and is waiting on Forni. Draft
      the reply in the thread's own register (voice.md), from the address the
      thread knows.
@@ -91,9 +98,12 @@ script to the scratchpad and run that one file.
      setup you cannot see from the inside (a phone number that changes per
      visit is call tracking, not an error), and the walk covers the whole
      path, every form and every page a customer would touch, not the first
-     one. Note the sending address the thread requires, and list what you
-     walked and what you found on the roster line so the writeup can be
-     built from it.
+     one. Walk in a real browser: `agent-browser` from Bash, never `curl`
+     alone (a Cloudflare challenge, a per visit phone number, and a lazy
+     loaded form all lie to a fetch), and keep a screenshot of anything
+     you would cite, its path on the roster line. Note the sending address
+     the thread requires, and list what you walked and what you found on
+     the roster line so the writeup can be built from it.
    - **Visits due**: bumped sends at about fourteen days with no reply.
      Group them by neighborhood with the street address, the published
      hours, and the owner's name, so Thursday's walkabout is a route. Anyone
@@ -109,11 +119,11 @@ script to the scratchpad and run that one file.
      draft against the skeleton. Grade against the rubric and iterate until
      every row is A minus or better; record the grade. Five is a full week;
      name the stretch.
-5. **Write the roster** to the scratchpad as markdown and update ATE-480
+6. **Write the roster** to the scratchpad as markdown and update ATE-480
    with `linear issue update ATE-480 --description-file <path>`. Keep the
    standing method paragraph at the top of the body intact; replace
    everything below it.
-6. **Report.** Return a short summary: counts per section, the flags from
+7. **Report.** Return a short summary: counts per section, the flags from
    the portal diff, anything you could not verify, and the exact success
    line `Outreach roster prepped for <ISO week>` as the final line. Never
    include a full draft in the summary; the drafts live on the issue.
