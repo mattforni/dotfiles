@@ -80,9 +80,15 @@ script to the scratchpad and run that one file.
      words, give the walkabout visit a purpose (the one page writeup,
      theirs to keep), ask the one question Forni is genuinely curious
      about, and put the discovery link on the call fallback. Never the
-     "floating this back up" nudge. Note the sending address the thread
-     requires, and list what you walked and what you found on the roster
-     line so the writeup can be built from it.
+     "floating this back up" nudge. When the walk finds nothing real, say
+     so on the roster line and draft the plain bump instead; never pad a
+     finding. Observations go out as questions, never as corrections of a
+     setup you cannot see from the inside (a phone number that changes per
+     visit is call tracking, not an error), and the walk covers the whole
+     path, every form and every page a customer would touch, not the first
+     one. Note the sending address the thread requires, and list what you
+     walked and what you found on the roster line so the writeup can be
+     built from it.
    - **Visits due**: bumped sends at about fourteen days with no reply.
      Group them by neighborhood with the street address, the published
      hours, and the owner's name, so Thursday's walkabout is a route. Anyone
