@@ -74,9 +74,15 @@ script to the scratchpad and run that one file.
      the reply in the thread's own register (voice.md), from the address the
      thread knows.
    - **Bumps due**: sends at about seven days with no reply. Draft the bump
-     per the method: a reply on the original thread, three sentences at
-     most, the ask restated once, the visit offer for anyone local, nothing
-     else. Note the sending address the thread requires.
+     per the method's gift shape (the Paloma second send is the canon):
+     walk their customer path yourself (the card, the ad, the booking
+     link, the call), report two or three verified findings in the owner's
+     words, give the walkabout visit a purpose (the one page writeup,
+     theirs to keep), ask the one question Forni is genuinely curious
+     about, and put the discovery link on the call fallback. Never the
+     "floating this back up" nudge. Note the sending address the thread
+     requires, and list what you walked and what you found on the roster
+     line so the writeup can be built from it.
    - **Visits due**: bumped sends at about fourteen days with no reply.
      Group them by neighborhood with the street address, the published
      hours, and the owner's name, so Thursday's walkabout is a route. Anyone
