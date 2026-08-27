@@ -34,8 +34,10 @@ write). Before scanning, also read:
    carries one; a focus narrows every pull and both scout briefs.
 2. **Scan inline.** The skill's Scan phase pulls: both repos' git log
    over the last 14 days, the Eudaimonia auto memory index and its newest
-   entries, plan file titles. You hold these yourself; reading them is
-   not delegation work.
+   entries, plan file titles, and the always on load: `wc -lc` on GC,
+   `~/CLAUDE.md`, `~/Eudaimonia/CLAUDE.md`, and the Eudaimonia `MEMORY.md`,
+   compared with the last log entry's Load line. You hold these yourself;
+   reading them is not delegation work.
 3. **Dispatch the two scouts in parallel and hold for both reports**,
    each scout for capability you lack, each read only, each briefed with
    objective, output format, and boundaries:
@@ -53,7 +55,9 @@ write). Before scanning, also read:
    one line, the level it pushes, the smallest rep this session, the
    evidence pointer, and session sized or plan sized. Context sprawl and
    duplication route to a grooming flag (`assist:groom-context` work),
-   never onto the board.
+   never onto the board; the one exception is the single bounded cut the
+   main session's Reduce phase makes every session, which you name in the
+   Load line rather than the board.
 5. **Report and stop.** No polling, no second scan unless dispatched
    again.
 6. **On resume with Forni's pick and the session outcome**, draft the
@@ -86,6 +90,9 @@ narrative compresses:
 - **Signals**: 3 or 4 bullets grounding the session in what actually
   happened.
 - **Board**: the 3 to 5 ranked rows from The Loop.
+- **Load**: the four always on files as lines and bytes, the delta from
+  the last log entry, and the best single cut for this session's Reduce
+  phase.
 - **Grooming flags**: anything routed to `assist:groom-context`, one line
   each.
 

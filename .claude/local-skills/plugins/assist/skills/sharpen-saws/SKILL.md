@@ -33,11 +33,11 @@ The `sharpener` agent (`~/.claude/agents/sharpener.md`) runs this method in the 
 - **Levels 3 through 5 are the foundation.** If context engineering, compounding, or skills feel sloppy, sharpening those is a legitimate move even though they are not 7 or 8. Clean foundation lets higher levels scale.
 - **Evidence over theory.** Ground proposals in what actually happened in recent sessions, not abstract ideals.
 - **Codify what you learn.** If the session surfaces a durable lesson, invoke `assist:codify-context` or append directly to the right learned-rules.md.
-- **Sprawl is a grooming job, not a sharpen move.** If the session reveals the context architecture is duplicated, stale, at the wrong altitude, or a basic keeps getting dropped, that is `assist:groom-context` (run monthly via reflect, or on demand), not a sharpen rep.
+- **Every session reduces; sprawl beyond one bounded cut is a grooming job.** The Reduce phase trims one thing from the always loaded context every run (Forni, 2026-08-27). Anything larger, such as layers duplicated, altitude wrong across files, or a basic that keeps getting dropped, is `assist:groom-context` (run monthly via reflect, or on demand), not a sharpen rep.
 
 ## The Method
 
-Seven phases. The sharpener owns Ground, Scan, and Board, and drafts the Log; the main session hosts Pick and Implement in dialogue with Forni, and performs every write, including Log and Codify.
+Eight phases. The sharpener owns Ground, Scan, and Board, and drafts the Log; the main session hosts Pick, Reduce, and Implement in dialogue with Forni, and performs every write, including Log and Codify.
 
 ### Phase 1: Ground
 
@@ -50,6 +50,7 @@ Pull the signal, inline:
 - **Recent git activity**: `git -C ~/Eudaimonia log --since="14 days ago" --oneline`, and the same for `~/Eudaimonia/Craft/Development/personal/homebase`
 - **Recent auto memory entries**: the Eudaimonia project's `MEMORY.md` index under `~/.claude/projects/`, plus a skim of the newest entries
 - **Recent plan files**: `ls -lt ~/.claude/plans/ | head -10` and read titles
+- **The always on load**: line and byte counts of GC (`~/.claude/CLAUDE.md`), `~/CLAUDE.md`, `~/Eudaimonia/CLAUDE.md`, and the Eudaimonia `MEMORY.md` (`wc -lc` on the four), set against the Load line of the last log entry. Anything over the 200 line anchor is a Reduce candidate; name the best single cut
 - **Patterns to find**: repeated synchronous work (background candidates), friction points (corrections, retries, missing hooks), foundation cracks (Levels 3 to 5 drift), background ready tasks that do not need Forni's judgment each time
 
 Then dispatch the two scouts in parallel, each for capability the scanner lacks, each briefed with objective, output format, and boundaries: **socrates** to critique this skill, its learned rules, and the LEVELS.md framing with fresh eyes, and **claude-code-guide** to surface current Claude Code and Agent SDK capabilities the setup is not using.
@@ -69,11 +70,15 @@ The main session surfaces the top one or two rows to Forni in his voice: tight, 
 
 Ask one question: which move (if any) do we make this session? If Forni picks none, still log the proposals and the board's remaining rows so they persist for next time.
 
-### Phase 5: Implement
+### Phase 5: Reduce
+
+The main session, before the pick's implementation begins, every session. When any always on file is over the anchor, make one bounded cut: a section that only matters when a particular file is being edited moves into a path scoped rule (`.claude/rules/<topic>.md` with `paths:` frontmatter, which loads at the point of use), a narrative moves into its tool doc under `~/Eudaimonia/Admin/Tools/`, or a derivable inventory is deleted. Measure before and after, and when the file is one homebase owns, lower its cap in `bin/lint/context-size` so the reduction locks in. One cut, never a restructure; a restructure routes to `assist:groom-context`. If every file is under the anchor, say so and move on.
+
+### Phase 6: Implement
 
 The main session, with Forni. Small enough to finish in session. If the chosen move is larger than session size, split it: do the enabling piece now, queue the rest as a Todoist task on next Sunday or as a follow up plan file.
 
-### Phase 6: Log
+### Phase 7: Log
 
 Resume the sharpener with the pick and the session outcome; it drafts the entry and returns it. The main session reviews the draft and appends it to `~/Eudaimonia/LEVELS.md` under `## Log`:
 
@@ -84,12 +89,13 @@ Resume the sharpener with the pick and the session outcome; it drafts the entry 
 **Level pushed:** [which dimension/level]
 **Implemented:** [what landed this session]
 **Deferred:** [what got queued, if anything]
+**Load:** [GC, ~/CLAUDE.md, Eudy CLAUDE.md, MEMORY.md as lines and KB, after this session's cut]
 **Next rep:** [one line hint for future sharpen]
 ```
 
 If the session altered the Current State table (a dimension's level genuinely changed), update that table as part of the log entry. Be honest: a single move rarely moves a level on its own.
 
-### Phase 7: Codify
+### Phase 8: Codify
 
 If the session surfaced a rule, preference, or insight worth preserving:
 
@@ -103,9 +109,10 @@ A sharpen session produces:
 
 1. A short summary of signals found (2 to 4 bullets max)
 2. One or two proposed moves
-3. Whatever got implemented
-4. A new log entry in LEVELS.md
-5. Any learned-rules additions
+3. One bounded reduction, with the before and after numbers
+4. Whatever got implemented
+5. A new log entry in LEVELS.md
+6. Any learned-rules additions
 
 Keep the session tight. If it starts to feel like an essay, it is too long. One page.
 
