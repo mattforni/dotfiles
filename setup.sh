@@ -986,6 +986,11 @@ install_mcp_servers() {
   # Brewfile nor mise installs, so a fresh machine would have failed at launch;
   # the CLI runs on bun, which the Brewfile already carries.
 
+  # pinole left user scope on 2026-08-27. It is project scoped now, in
+  # ~/Eudaimonia/.mcp.json, with a headersHelper that reads the bearer token from
+  # the Keychain at connect time, so code repo sessions never load it and the
+  # token no longer sits in plaintext in ~/.claude.json. The PINOLE_API_TOKEN
+  # self heal below stays for any future http entry that needs it.
   # Self-heal: when the env var is empty (headless runs do not source ~/.zshrc),
   # fall back to the token stashed in the macOS Keychain so a fresh machine can
   # re-register pinole without a manual export. The empty-token guard below still
@@ -996,7 +1001,6 @@ install_mcp_servers() {
 
   local desired=(
     "playwright|stdio|npx -y @playwright/mcp@latest"
-    "pinole|http|https://api.atelic.me/mcp|Authorization: Bearer ${PINOLE_API_TOKEN:-}"
   )
 
   for entry in "${desired[@]}"; do

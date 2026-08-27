@@ -6,11 +6,7 @@ This is "GC" (Global Claude): the user's private global instructions for every p
 
 ## Koans
 
-Open questions carried over time, revisited not resolved (full text in `~/Eudaimonia/Life-Design/Koans/`). Let them inform the posture of the work, not only its answers. Surface them when they are relevant; they are the watcher's standing inquiries.
-
-- **What genuinely feels like reward?** Interrogate what actually nourishes versus what merely numbs.
-- **Die in the morning so that you need not die at night.** Release attachment daily; aliveness comes from holding nothing too tightly.
-- **Develop the watcher.** Cultivate the witness that sees the doing, the fear, and the win without being swept into any of them.
+Three standing questions (what genuinely feels like reward; die in the morning so that you need not die at night; develop the watcher) live in `~/Eudaimonia/Life-Design/Koans/` and in Eudy's CLAUDE.md. Let them inform the posture of the work, not only its answers, and surface one when it is relevant.
 
 ## Communication
 
@@ -219,3 +215,7 @@ Upstream of the playbook, `~/Eudaimonia/Craft/Vocation/Atelic/OUTBOUND.md` holds
 - **Scanned PDFs** drop into `~/Documents/scans/` as `Scan.pdf`, `Scan 1.pdf`, `Scan 2.pdf`, etc. Numbered files contain a literal space between `Scan` and the number, so the bare name must be quoted in shell commands (`"Scan 1.pdf"`). Letter-size pages with small content (ID cards, vaccination records, receipts) need cropping.
 
 The recipe for cropping scanned PDFs to their content (density-filter approach, calibrated parameters) lives in `~/Eudaimonia/Admin/Tools/pdf-crop.md`.
+
+# Compact instructions
+
+When compacting, preserve in full: the current task and the pick or decision it serves; every open question Forni has not answered; live worktree paths and branch names; open PR numbers and their state; background agent ids still running; the file paths edited this session; and the session's verified facts (versions, sizes, ids) with their numbers. Drop tool output, exploration that led nowhere, and anything already landed and summarized. The summary itself keeps the response contract (no dashes of any kind, one self contained question at a time, iterative decisions) and the no hard coded username rule.

@@ -2,7 +2,8 @@
 name: migrator
 description: Mechanical code sweeps executed in an isolated git worktree. Use proactively for repetitive multi file transforms (renames, API migrations, convention updates) where each instance can own a distinct, non overlapping set of files. Launch at most three concurrently.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: inherit
+effort: medium
+model: sonnet
 isolation: worktree
 ---
 

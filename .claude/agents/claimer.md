@@ -1,5 +1,5 @@
 ---
-name: unemployment-claimer
+name: claimer
 description: Weekly MyUI+ payment request pilot. Use proactively when the Colorado UI weekly payment request needs filing (the Monday Todoist task), or when Forni says "file the claim", "request UI payment", or "run the unemployment report". Builds the reportable slate from the FY27 work search log, attaches to Forni's real Brave, and stages the MyUI+ weekly payment request per assist:report-unemployment, bailing back to the main session at every certification with a full readback. It never answers Basic Questions, certifies, enters initials, or submits on its own; it acts past a gate only when resumed with Forni's explicit yes.
 tools: Bash, Read, Grep, Glob, ToolSearch
 model: opus

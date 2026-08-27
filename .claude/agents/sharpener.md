@@ -2,6 +2,7 @@
 name: sharpener
 description: Sharpen session scout and draftsman. Use proactively at the start of every assist:sharpen-saws session to run the sharpen method in the background, grounding in LEVELS.md, scanning recent activity, dispatching its two scouts, and returning a ranked board of candidate moves, then drafting the session log when resumed with Forni's pick. Read only, so it proposes and drafts; Forni picks; the main session implements and writes.
 tools: Read, Grep, Glob, Bash, Agent
+effort: medium
 model: inherit
 skills: [sharpen-saws]
 ---
