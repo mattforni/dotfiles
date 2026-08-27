@@ -71,7 +71,7 @@ DEPLOY_TABLE=(
   "link|.claude/skills"
   "link|.claude/statusline.sh"
   "link|.claude/workflows"
-  # Claude Code adds its own keys here (theme, effortLevel, and whatever it
+  # Claude Code adds its own keys here (theme, language, and whatever it
   # gains next), so the repo owns only the keys it declares.
   "merge|.claude/settings.json"
   # Inside .claude/plugins, which Claude Code fills with caches and marketplace
