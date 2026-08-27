@@ -37,7 +37,7 @@ def coverage_head($text):
   "<td style=\"" + mono + "font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:#8a8272;padding:10px 8px 8px 0;\">" + $text + "</td>";
 
 def coverage_row(r):
-  (if (r.logged|tostring) == "0" and (r.target|tostring) != "0" then "#d63a10" else "#55503f" end) as $logged_color
+  (if ((r.logged|tostring) == "0" or (r.logged|tostring) == "no") then "#d63a10" else "#55503f" end) as $logged_color
   | "<tr>"
     + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.modality|esc) + "</td>"
     + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.target|esc) + "</td>"
@@ -76,7 +76,7 @@ def mark:
   + "<title>" + ($week|esc) + " Retro</title></head>"
   + "<body style=\"margin:0;padding:0;background:#f6f1e7;\">"
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"background:#f6f1e7;\"><tr><td align=\"center\" style=\"padding:40px 16px;\">"
-  + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"560\" style=\"max-width:560px;width:100%;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;\"><tr><td style=\"padding:36px 40px;\">"
+  + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"760\" style=\"max-width:760px;width:100%;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;\"><tr><td style=\"padding:36px 44px;\">"
 
   # header
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr>"
@@ -101,8 +101,8 @@ def mark:
   # overconsumption
   + section_label("Overconsumption")
   + (if ($r.takeout|length) > 0
-     then table3($r.takeout | map({a: .day, b: .vehicle, c: .detail, muted: (.confirmed | not)}))
-     else empty_line("No takeout candidates in Gmail this week.") end)
+     then done_table($r.takeout | map({theme: .day, item: .vehicle}))
+     else empty_line("No takeout orders this week.") end)
   + para($r.takeout_read; "#151515")
 
   # done
