@@ -61,13 +61,17 @@ beyond the PR you were given.
   review-complete on Free plan repos (precedent: mattforni/atelic PRs #50,
   #51, #52, 2026-07-23). Do not wait for a review object that will never
   arrive.
-- **A CodeRabbit "Review limit reached" cooldown comment means no review is
-  available yet, and the merge gate still needs one.** Never merge on CI
-  alone. Wait the cooldown out in the background (a background agent's wait
-  costs nothing), then retrigger `@coderabbitai review` once the window
-  reopens, and bail only if a second cooldown follows the retrigger. Amended
-  2026-08-25: the old rule said proceed on CI plus your own read, which merges
-  with zero automated review, and the gate forbids that.
+- **A CodeRabbit "Review limit reached" cooldown means no bot review is
+  available yet; whether to wait depends on what CI runs.** When the repo's
+  CI ran real checks on the head (lint, tests, a build) and they are green,
+  land on CI plus your own read; a prose or doc only change lands that way
+  with linting alone. When the repo has no CI checks at all, wait the cooldown
+  out in the background (a background agent's wait costs nothing), retrigger
+  `@coderabbitai review` once the window reopens, and bail only if a second
+  cooldown follows. Paying to skip the wait is Forni's call, never assumed.
+  Amended 2026-08-27 (Forni: "land based on CI if and only if there are
+  checks in the CI") after the 2026-08-25 rule, wait always, cost an hour on
+  homebase #200 while that repo's own lint gate was green.
 - **After a cooldown retrigger, CodeRabbit rewrites the cooldown comment in
   place into the walkthrough; it never posts a new comment.** A poll that
   filters on comments created after the retrigger times out on a review that
