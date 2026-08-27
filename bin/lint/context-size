@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# The ratchet on the two always loaded context files this repo owns.
+#
+# CLAUDE.md deploys to ~/CLAUDE.md and .claude/CLAUDE.md to ~/.claude/CLAUDE.md,
+# so both load into every Claude Code session on the machine, Eudaimonia
+# included, and every byte in them is paid on every session and read past on
+# every turn. Adherence falls as they grow. Each file has a byte cap set at its
+# last deliberate reduction; this check fails when a file grows past its cap.
+# Lowering a cap is how a reduction locks in, and raising one is a decision to
+# make out loud in a review, never a side effect of an edit.
+#
+# Run by .githooks/pre-commit when either file is staged, and by CI on every
+# push. With no arguments it checks both files; with arguments it checks only
+# the named paths, which is how the hook passes staged files.
+set -uo pipefail
+
+ROOT=$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+  git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null) || ROOT=""
+if [[ -z "$ROOT" || ! -f "$ROOT/setup.sh" ]]; then
+  ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+fi
+
+# Path, then cap in bytes. Set 2026-08-27 at the first prune (CLAUDE.md went
+# from 35,658 bytes to 11,355) with a little slack for a one line edit.
+CAPS=(
+  "CLAUDE.md|12288"
+  ".claude/CLAUDE.md|33280"
+)
+
+want=("$@")
+status=0
+checked=0
+for entry in "${CAPS[@]}"; do
+  rel="${entry%%|*}"
+  cap="${entry##*|}"
+  if [[ ${#want[@]} -gt 0 ]]; then
+    hit=0
+    for w in "${want[@]}"; do [[ "$w" == "$rel" ]] && hit=1; done
+    [[ $hit -eq 1 ]] || continue
+  fi
+  file="$ROOT/$rel"
+  [[ -f "$file" ]] || continue
+  checked=$((checked + 1))
+  size=$(wc -c < "$file" | tr -d ' ')
+  if (( size > cap )); then
+    printf 'context-size: %s is %s bytes, over its %s byte cap by %s. Move depth into a path scoped rule (.claude/rules/) or a tool doc rather than raising the cap.\n' \
+      "$rel" "$size" "$cap" "$((size - cap))" >&2
+    status=1
+  else
+    printf 'context-size: %s %s/%s bytes\n' "$rel" "$size" "$cap"
+  fi
+done
+
+if (( checked == 0 )); then
+  printf 'context-size: nothing to check\n'
+fi
+exit $status

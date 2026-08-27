@@ -2,6 +2,8 @@
 
 Personal development environment: shell configs, Claude Code skills, dev tooling, and workstation setup.
 
+Homebase is where every dotfile and configuration file lives so it can be iterated on in one place and shared across machines through `./setup.sh`. It is public; [Eudaimonia](https://github.com/mattforni/Eudaimonia), the personal library, is private and loads this repo's `CLAUDE.md` through the `~/CLAUDE.md` link the deploy table creates, which is how the workstation conventions reach every Claude Code session. Depth that only matters when a particular file is being edited lives in path scoped rules under `.claude/rules/`, so the always loaded file stays short.
+
 ## Claude Code Marketplaces
 
 Homebase hosts two plugin marketplaces.

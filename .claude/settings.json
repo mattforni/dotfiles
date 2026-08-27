@@ -232,5 +232,9 @@
         ]
       }
     ]
-  }
+  },
+  "subagentPromptCacheTtl": "1h",
+  "claudeMdExcludes": [
+    "**/homebase*/.claude/CLAUDE.md"
+  ]
 }
