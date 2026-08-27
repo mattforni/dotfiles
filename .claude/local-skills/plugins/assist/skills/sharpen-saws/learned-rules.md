@@ -63,8 +63,8 @@ Reduction of the always loaded context is a standing phase of every sharpen run 
 
 ## Enter the Worktree After the Board Returns
 
-The sharpener runs on Bash, and the worktree gate denies every Bash call a background agent makes once the main session has entered a worktree. Dispatch the sharpener from the primary checkout, hold the worktree cut until its board is back, then cut and enter.
+The sharpener runs on Bash, and once the main session has entered a worktree (EnterWorktree) the harness's worktree isolation refuses Bash calls that reach outside it, subagents included: `git -C` against another repo, the Linear CLI's wrappers, greps over paths beyond the worktree. This is Claude Code's session isolation, not the tracked worktree gate hook, which denies only mutating git on a primary checkout. Dispatch the sharpener from the primary checkout, hold the worktree cut until its board is back, then cut and enter.
 
-**Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the gate refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
+**Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the isolation refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
 
 **How to apply:** Step 4 of Before Every Invocation ("cut its worktree branch") happens at the top of Implement, never before the sharpener returns. If the worktree is already entered when a scout must run, exit with keep for the dispatch and re enter by path afterwards. A board built read only should say so in its Signals, as this one did.
