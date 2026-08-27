@@ -98,6 +98,7 @@ The stores above are the **layers** of the context architecture (GC, the Eudy CL
 - **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it, stated once, with other layers pointing to it rather than repeating it.
 - **Load-bearing process gates belong at the point of use, and must be enforced there.** Prose is the weakest form of a rule; a flow-skill step is stronger; a hook is strongest and is the only deterministic guarantee. Review before merge lives in the merge-gate hook and `sdlc:land`, not here.
 - **Trim before adding.** When a rule keeps getting dropped, the first response is shrinking and scoping the file it lives in, not restating it louder.
+- **Depth that matters only when a particular file is being edited belongs in a path scoped rule.** A `.claude/rules/<topic>.md` with `paths:` frontmatter loads the moment Claude reads a matching file and never otherwise, so it carries the mechanics, the why paragraphs, and the dated incidents; the always loaded CLAUDE.md keeps the one line rule and a pointer. Adopted 2026-08-27 when homebase's CLAUDE.md, loaded into every session through `~/CLAUDE.md`, was pruned from 332 lines this way.
 
 When context sprawls or duplicates, run `assist:groom-context` (also run monthly via `assist:reflect`).
 

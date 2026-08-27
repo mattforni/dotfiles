@@ -52,4 +52,19 @@ if [[ ${#sh[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/shell" ]]; then
   fi
 fi
 
+# Context size ratchet, only when an always loaded file is staged
+ctx=()
+for f in "${staged[@]}"; do
+  case "$f" in
+    CLAUDE.md|.claude/CLAUDE.md) ctx+=("$f") ;;
+  esac
+done
+
+if [[ ${#ctx[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/context-size" ]]; then
+  if ! "$ROOT/bin/lint/context-size" "${ctx[@]}"; then
+    printf "${RED}[x]${NC} context size cap exceeded. Move depth into .claude/rules/ or a tool doc, or re-run with --no-verify.\n" >&2
+    status=1
+  fi
+fi
+
 exit $status

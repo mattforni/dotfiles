@@ -46,3 +46,9 @@ jobs:
       # runs it against a throwaway $HOME.
       - name: Test home reconciliation
         run: ./bin/lint/reconcile-test
+
+      # The two always loaded context files (CLAUDE.md, .claude/CLAUDE.md) each
+      # carry a byte cap set at their last reduction. Growth past it fails here
+      # and in the pre-commit hook, so a reduction stays reduced.
+      - name: Check context size caps
+        run: ./bin/lint/context-size
