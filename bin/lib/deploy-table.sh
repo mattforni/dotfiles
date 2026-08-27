@@ -64,6 +64,7 @@ DEPLOY_TABLE=(
   "link|.claude/CLAUDE.md"
   "link|.claude/agents"
   "link|.claude/commands"
+  "link|.claude/output-styles"
   "link|.claude/hooks"
   "link|.claude/local-skills"
   "link|.claude/references"

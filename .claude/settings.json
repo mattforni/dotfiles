@@ -189,7 +189,7 @@
       }
     }
   },
-  "outputStyle": "Concise",
+  "outputStyle": "Forni",
   "alwaysThinkingEnabled": true,
   "skipAutoPermissionPrompt": true,
   "hooks": {
