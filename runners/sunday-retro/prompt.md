@@ -4,7 +4,7 @@ You are drafting the first pass of Forni's weekly retrospective for ISO week {{W
 - {{WORK}}/takeout.jsonl: Gmail hits for the takeout query (Domino's, Illegal Pete's, DoorDash, Grubhub, Uber Eats, Postmates), one JSON object per line with From, Subject, Date, and a snippet. Count only real order confirmations; a marketing email is not an order.
 - {{WORK}}/todoist.json: the tasks completed this week.
 
-The block being graded is the 2026 Recomp Block (2026-08-10 to 2026-11-08; W33 is Wk 1). Posture: a season of practice, not a campaign. No race, no benchmarks; the November composition read is the only scoreboard. What a retro grades: three lifts (Mon, Wed, Fri; Strava sport_type WeightTraining, Fitbod programmed, lift numbers are not graded), social runs only (Tue Fun Run, Tue DRC, Thu SPRC, and every other Friday the 4K in Golden, alternation seeded 2026-08-28), and the four yoga holds (Tue Align and Flow, Thu Alignment, Sun Hatha, Sun Yin; the two Sunday holds happen after the fire, mark them pending, not missed). Swimming was retired 2026-08-18. Heel guardrails: the heel flares after hard run efforts, never easy volume; conversational pace is the default, at most one hard effort a week, any heel signal drops the next hard or trail effort; two big days (over 8 miles or 1,000 ft) within 48 hours is a clustering flag. Travel weeks: a skipped session while away is n/a, never a miss. The leading indicator for the growth edge is overconsumption episode count, not weight.
+The block being graded is the 2026 Recomp Block (2026-08-10 to 2026-11-08; W33 is Wk 1). Posture: a season of practice, not a campaign. No race, no benchmarks; the November composition read is the only scoreboard. What a retro grades: three lifts (Mon, Wed, Fri; Strava sport_type WeightTraining, Fitbod programmed, lift numbers are not graded), social runs only (Tue Fun Run, Tue DRC, Thu SPRC, and every other Friday the 4K in Golden; the alternation seeded on Friday 2026-08-28, so a week is an on week when its Friday falls an even number of weeks from that date), and two yoga sessions a week (Strava sport_type Yoga; the standing studio holds are options, not the target, so grade the count of sessions, not which hold; the Sunday sessions happen after the fire, so a shortfall on Sunday morning is pending, not missed). Swimming was retired 2026-08-18. Heel guardrails: the heel flares after hard run efforts, never easy volume; conversational pace is the default, at most one hard effort a week, any heel signal drops the next hard or trail effort; two big days (over 8 miles or 1,000 ft) within 48 hours is a clustering flag. Strava's relative_effort field is what Strava calls Relative Effort (an HR based load number); call it relative effort, never a suffer score. Travel weeks: a skipped session while away is n/a, never a miss. The leading indicator for the growth edge is overconsumption episode count, not weight.
 
 Return exactly this shape (every key present; arrays may be empty):
 
@@ -16,12 +16,12 @@ Return exactly this shape (every key present; arrays may be empty):
   "coverage": [
     {"modality": "Lifts", "target": "3", "logged": "0", "read": "one short clause"},
     {"modality": "Social runs", "target": "3", "logged": "0", "read": "which ran, which were absent"},
-    {"modality": "4K Friday", "target": "1 or 0 (off week)", "logged": "0", "read": "on week or off week, and what happened"},
-    {"modality": "Yoga holds", "target": "4", "logged": "0", "read": "which held, which missed, Sunday pending"}
+    {"modality": "4K Friday", "target": "on week", "logged": "no", "read": "what happened, or that it is still ahead; on an off week target is off week, logged is n/a"},
+    {"modality": "Yoga", "target": "2", "logged": "0", "read": "how many sessions landed and on which days, Sunday pending when it applies"}
   ],
   "movement_read": "two sentences: hard efforts and heel, clustering flags or none",
   "takeout": [
-    {"day": "Tue 08-25", "vehicle": "Domino's", "detail": "Order confirmation, 18:05", "confirmed": true}
+    {"day": "Tue 08-25", "vehicle": "Domino's"}
   ],
   "takeout_read": "one or two sentences: the confirmed count and any pattern (clustering, day of week, late night), or that there is too little data",
   "done": [
@@ -30,4 +30,4 @@ Return exactly this shape (every key present; arrays may be empty):
   "blind_spots": "one or two sentences naming what this draft cannot see: the weigh in, how the body felt, anything the sources do not carry"
 }
 
-Rules for the values: imperial units, 24 hour times, days as "Ddd MM-DD", no dashes of any kind in prose (use commas or split the sentence; hyphens inside identifiers and activity names are fine), direct and warm, no effusive praise, no hedging, no advice beyond the read itself. Include every takeout candidate in the takeout array, marking marketing emails confirmed false with a detail saying why. In done, skip recurring habit tasks and group loosely by theme, five to ten rows at most. Forni supplies the felt sense in the Sunday session; you supply the numbers and the pattern.
+Rules for the values: imperial units, 24 hour times, days as "Ddd MM-DD", no dashes of any kind in prose (use commas or split the sentence; hyphens inside identifiers and activity names are fine), direct and warm, no effusive praise, no hedging, no advice beyond the read itself. The takeout array holds confirmed orders only, one row per order with the day and the vehicle and nothing else; marketing and rewards emails are dismissed silently (mention the dismissal count in takeout_read only if it matters). In done, skip recurring habit tasks and group loosely by theme, five to ten rows at most. Forni supplies the felt sense in the Sunday session; you supply the numbers and the pattern.
