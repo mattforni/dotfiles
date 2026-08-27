@@ -259,6 +259,10 @@ install_npm_globals() {
     return 0
   fi
 
+  # @anthropic-ai/claude-code left this list on 2026-08-27: the native install
+  # at ~/.local/bin/claude is the binary every terminal and headless run uses,
+  # and the npm copy only ever sat shadowed behind it on PATH. update_claude_code
+  # keeps the native one current and removes a leftover npm copy.
   # @doist/todoist-cli (binary `td`) and @hubspot/cli (binary `hs`) replaced the
   # Todoist and HubSpot claude.ai connectors on 2026-08-12 (ATE-463). A connector
   # is authorized against the Claude account rather than a directory, so it loads
@@ -266,7 +270,6 @@ install_npm_globals() {
   # bound to the TPF portal, leaving Atelic unreachable through it. Both CLIs
   # cost nothing until invoked and resolve their account per directory.
   local globals=(
-    "@anthropic-ai/claude-code"
     "@doist/todoist-cli"
     "@hubspot/cli"
     "typescript"
@@ -283,6 +286,43 @@ install_npm_globals() {
       SUMMARY+=("$pkg installed")
     fi
   done
+}
+
+update_claude_code() {
+  header "Claude Code"
+
+  # The native install only auto updates when it is itself launched, and Forni
+  # drives Claude Code from the VS Code extension, which ships its own binary.
+  # The terminal copy therefore fell twenty releases behind without a signal
+  # (2.1.226 against the extension's 2.1.246 on 2026-08-27), and every
+  # headless run rode the stale one. Update it here and prove the version.
+  if ! command -v claude &>/dev/null; then
+    warn "claude not found on PATH; install the native build: curl -fsSL https://claude.ai/install.sh | bash"
+    return 0
+  fi
+
+  if command -v npm &>/dev/null && npm list -g @anthropic-ai/claude-code &>/dev/null; then
+    info "Removing the shadowed npm copy of @anthropic-ai/claude-code..."
+    npm uninstall -g @anthropic-ai/claude-code >/dev/null 2>&1 || warn "could not remove the npm copy of claude-code"
+  fi
+
+  local before after
+  before="$(claude --version 2>/dev/null | awk '{print $1}')"
+  if ! claude update >/dev/null 2>&1; then
+    warn "claude update failed; the terminal binary may be stale ($before)"
+    return 0
+  fi
+  after="$(claude --version 2>/dev/null | awk '{print $1}')"
+  if [[ -z "$after" ]]; then
+    warn "claude --version returned nothing after the update"
+    return 0
+  fi
+  if [[ "$before" != "$after" ]]; then
+    info "Claude Code $before -> $after"
+    SUMMARY+=("Claude Code updated to $after")
+  else
+    info "Claude Code $after is current"
+  fi
 }
 
 install_bun_globals() {
@@ -1303,6 +1343,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     run_phase reconcile_home
     run_phase setup_runtimes
     run_phase install_npm_globals
+    run_phase update_claude_code
     run_phase install_bun_globals
     run_phase setup_agent_browser
     run_phase install_launchagents

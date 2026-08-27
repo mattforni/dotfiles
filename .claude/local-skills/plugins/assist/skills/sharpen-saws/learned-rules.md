@@ -44,3 +44,11 @@ Anthropic's cloud Routines run in environments with no secrets store, and the do
 **Why:** 2026-08-13 afternoon session. The Sunday training retro spike disqualified Routines inside the research pass: the retro needs Strava reads and a Resend send, both vault credentials. Forni rejected shipping a credential poor partial as "punting the problem" and redirected to headless cloud runs with full vault access. Runtime picked: GCP Cloud Run Jobs fired by Cloud Scheduler with secrets injected natively from Secret Manager; GitHub Actions cron verified as the supported alternate, with subscription token auth official for both.
 
 **How to apply:** When a board row proposes cloud scheduled background work, ask first what credentials it draws. Credential free, a Routine is the smallest rep. Anything touching the vault routes through Cloud Run Jobs plus Cloud Scheduler with native Secret Manager injection (pattern home: ATE-471, The Sunday Retro Runner). And a spike that surfaces a disqualifier is a pass, not a failure: name the disqualifier, pick the runtime that meets the real want, and do not ship the degraded version just to log a live artifact.
+
+## Every Session Reduces
+
+Reduction of the always loaded context is a standing phase of every sharpen run (Phase 5, Reduce), not a grooming flag that waits for the monthly pass. One bounded cut per session, measured, locked in by the ratchet.
+
+**Why:** 2026-08-27. The board proposed unloading homebase's CLAUDE.md from every session; Forni corrected the premise (the `~/CLAUDE.md` link is the design, homebase is the config store loaded into Eudy on purpose) and set the direction instead: "If we can slim down and go through and reduce, I think that is great. We should definitely have that reduction stage as a part of every sharpened saws run." The first cut took that file from 332 lines to 88 by moving depth into path scoped rules.
+
+**How to apply:** The sharpener's Scan reports the four always on files with lines and bytes and names the best single cut. The main session makes exactly one cut before implementing the pick, prefers a path scoped rule for file specific depth and a tool doc for narrative, and lowers the matching cap in homebase's `bin/lint/context-size`. The Log entry carries the Load line so the trend is visible. Never turn the cut into a restructure; that is `assist:groom-context`.
