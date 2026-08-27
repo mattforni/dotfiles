@@ -87,7 +87,8 @@ html_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
 finish() {
     if [[ "$status" == "success" ]]; then
-        send_email "$WEEK Retro" "$(cat "$RETRO_HTML")"
+        # A failed delivery is a failed run: Cloud Run has to see it.
+        send_email "$WEEK Retro" "$(cat "$RETRO_HTML")" || { sleep 1; exit 1; }
     else
         echo "FAILED: $fail_reason"
         local body
@@ -162,16 +163,24 @@ gmail_pull() {
     # Gmail's before: is exclusive, so the bound is the Monday after the week.
     local q
     q="(Domino OR \"Illegal Pete\" OR DoorDash OR Grubhub OR \"Uber Eats\" OR Postmates) after:${MONDAY//-//} before:${NEXT_MONDAY//-//}"
+    # An error body would read as zero candidates, so a failed list or fetch
+    # fails the run rather than reporting a clean week.
     local ids
-    ids="$(curl -sS --max-time 30 -G -H "Authorization: Bearer $access" \
+    if ! ids="$(curl -fsS --max-time 30 -G -H "Authorization: Bearer $access" \
         --data-urlencode "q=$q" --data-urlencode "maxResults=50" \
-        https://gmail.googleapis.com/gmail/v1/users/me/messages | jq -r '.messages[]?.id')"
+        https://gmail.googleapis.com/gmail/v1/users/me/messages | jq -r '.messages[]?.id')"; then
+        fail_reason="Gmail message list pull failed"
+        return 1
+    fi
     : > "$WORK/takeout.jsonl"
     local id
     for id in $ids; do
-        curl -sS --max-time 30 -H "Authorization: Bearer $access" \
+        if ! curl -fsS --max-time 30 -H "Authorization: Bearer $access" \
             "https://gmail.googleapis.com/gmail/v1/users/me/messages/$id?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date" \
-            | jq -c '{id, snippet, headers: (.payload.headers | map({(.name): .value}) | add)}' >> "$WORK/takeout.jsonl"
+            | jq -c '{id, snippet, headers: (.payload.headers | map({(.name): .value}) | add)}' >> "$WORK/takeout.jsonl"; then
+            fail_reason="Gmail message pull failed for $id"
+            return 1
+        fi
     done
     echo "gmail: $(wc -l < "$WORK/takeout.jsonl") takeout candidates"
 }
