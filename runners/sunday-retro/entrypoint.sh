@@ -92,7 +92,7 @@ finish() {
     else
         echo "FAILED: $fail_reason"
         local body
-        body="<body style=\"margin:0;padding:40px 16px;background:#f6f1e7;font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;color:#151515;\"><div style=\"max-width:560px;margin:0 auto;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;padding:36px 40px;\"><div style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#55503f;\">Sunday Retro</div><div style=\"font-size:28px;font-weight:600;margin-top:18px;\">The retro did not run.</div><p style=\"font-size:15px;line-height:1.55;color:#55503f;\">$(printf '%s' "$fail_reason" | html_escape)</p><pre style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;white-space:pre-wrap;color:#55503f;border-top:1px solid #d9d4c8;padding-top:14px;\">$(tail -n 60 "$LOG" | html_escape)</pre></div></body>"
+        body="<body style=\"margin:0;padding:40px 16px;background:#f6f1e7;font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;color:#151515;\"><div style=\"max-width:760px;margin:0 auto;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;padding:36px 40px;\"><div style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#55503f;\">Sunday Retro</div><div style=\"font-size:28px;font-weight:600;margin-top:18px;\">The retro did not run.</div><p style=\"font-size:15px;line-height:1.55;color:#55503f;\">$(printf '%s' "$fail_reason" | html_escape)</p><pre style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;white-space:pre-wrap;color:#55503f;border-top:1px solid #d9d4c8;padding-top:14px;\">$(tail -n 60 "$LOG" | html_escape)</pre></div></body>"
         send_email "$WEEK Retro" "$body" || true
         sleep 1
         exit 1
@@ -162,7 +162,7 @@ gmail_pull() {
     fi
     # Gmail's before: is exclusive, so the bound is the Monday after the week.
     local q
-    q="(Domino OR \"Illegal Pete\" OR DoorDash OR Grubhub OR \"Uber Eats\" OR Postmates) after:${MONDAY//-//} before:${NEXT_MONDAY//-//}"
+    q="(Domino OR \"Illegal Pete\" OR DoorDash OR Grubhub OR \"Uber Eats\" OR Postmates) -from:claude@atelic.me after:${MONDAY//-//} before:${NEXT_MONDAY//-//}"
     # An error body would read as zero candidates, so a failed list or fetch
     # fails the run rather than reporting a clean week.
     local ids
@@ -216,7 +216,14 @@ if ! jq -e '.subtype == "success" and .is_error == false' <<<"$result" >/dev/nul
 fi
 # The result is the JSON object the prompt asked for; tolerate a stray code
 # fence, then require every key the renderer reads.
-jq -r '.result // ""' <<<"$result" | sed -e '/^```/d' > "$RETRO_JSON"
+# Cut the object out of whatever surrounds it: a code fence, or prose the
+# model wrote before it despite the brief.
+raw="$(jq -r '.result // ""' <<<"$result")"
+if [[ "$raw" == *"{"* && "$raw" == *"}"* ]]; then
+    raw="{${raw#*\{}"
+    raw="${raw%\}*}}"
+fi
+printf '%s\n' "$raw" > "$RETRO_JSON"
 if ! jq -e 'type == "object" and has("headline") and has("movement") and has("coverage") and has("movement_read") and has("takeout") and has("takeout_read") and has("done") and has("blind_spots")' "$RETRO_JSON" >/dev/null 2>&1; then
     fail_reason="claude did not return the retro shape: $(head -c 300 "$RETRO_JSON")"
     exit 1
