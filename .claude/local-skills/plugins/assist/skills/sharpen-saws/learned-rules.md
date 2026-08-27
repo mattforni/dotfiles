@@ -60,3 +60,11 @@ Reduction of the always loaded context is a standing phase of every sharpen run 
 **Why:** 2026-08-27. The board's top row proposed a `claudeMdExcludes` entry for `~/CLAUDE.md` on the strength of a scout finding that called the link a placement failure. Forni corrected the premise before the pick: the link is intentional, so the move became slimming the file (332 to 88 lines) and moving depth into path scoped rules.
 
 **How to apply:** When a scout or the scan names an existing mechanism as a mistake, read the deploy table entry, the doc, or the commit that created it before boarding its removal. A mechanism with recorded intent gets a reduction row, not a removal row. The always loaded files are reduced, never excluded; exclusion is reserved for a genuine double load (the repo path copy of `.claude/CLAUDE.md` in a homebase session).
+
+## Enter the Worktree After the Board Returns
+
+The sharpener runs on Bash, and once the main session has entered a worktree (EnterWorktree) the harness's worktree isolation refuses Bash calls that reach outside it, subagents included: `git -C` against another repo, the Linear CLI's wrappers, greps over paths beyond the worktree. This is Claude Code's session isolation, not the tracked worktree gate hook, which denies only mutating git on a primary checkout. Dispatch the sharpener from the primary checkout, hold the worktree cut until its board is back, then cut and enter.
+
+**Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the isolation refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
+
+**How to apply:** Step 4 of Before Every Invocation ("cut its worktree branch") happens at the top of Implement, never before the sharpener returns. If the worktree is already entered when a scout must run, exit with keep for the dispatch and re enter by path afterwards. A board built read only should say so in its Signals, as this one did.

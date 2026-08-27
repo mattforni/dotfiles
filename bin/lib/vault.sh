@@ -53,7 +53,7 @@ vault_project_for_profile() {
 # Atelic is the default, so a new business credential needs no edit here.
 vault_project_for_secret() {
     case "$1" in
-        ynab-token|reclaim-api-key|gws-oauth-client-personal)
+        ynab-token|reclaim-api-key|todoist-api-token|gws-oauth-client-personal)
             printf '%s' "$VAULT_PROJECT_PERSONAL" ;;
         hubspot-service-key-tpf|linear-cli-theproductforge|gws-oauth-client-tpf)
             printf '%s' "$VAULT_PROJECT_TPF" ;;
