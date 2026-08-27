@@ -16,6 +16,7 @@
 #   STRAVA_REFRESH_TOKEN      forni-keys/strava-refresh-token
 #   GWS_OAUTH_TOKEN_JSON      forni-keys/gws-oauth-token-personal (authorized_user JSON)
 #   TODOIST_API_TOKEN         forni-keys/todoist-api-token
+#   EUDY_DEPLOY_KEY           forni-keys/github-deploy-key-eudy (read only deploy key on mattforni/Eudaimonia)
 # Plain configuration:
 #   REPORT_RECIPIENT          where the retro goes
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
@@ -103,7 +104,32 @@ finish() {
 }
 trap finish EXIT
 
-require CLAUDE_CODE_OAUTH_TOKEN RESEND_API_KEY REPORT_RECIPIENT STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON TODOIST_API_TOKEN || exit 1
+require CLAUDE_CODE_OAUTH_TOKEN RESEND_API_KEY REPORT_RECIPIENT STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON TODOIST_API_TOKEN EUDY_DEPLOY_KEY || exit 1
+
+# ---------- Eudaimonia ----------
+# The first pull is the repo itself: the block doc is the one source for what
+# the retro grades, and the prompt reads it rather than carrying a copy.
+EUDY="$WORK/eudy"
+EUDY_REPO="${EUDY_REPO:-git@github.com:mattforni/Eudaimonia.git}"
+BLOCK_DOC="Constitution/Fitness/2026-recomp-block.md"
+eudy_pull() {
+    mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+    printf '%s\n' "$EUDY_DEPLOY_KEY" > "$HOME/.ssh/eudy_deploy_key"
+    chmod 600 "$HOME/.ssh/eudy_deploy_key"
+    export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/eudy_deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes"
+    rm -rf "$EUDY"
+    if ! timeout 2m git clone --quiet --depth 1 "$EUDY_REPO" "$EUDY" 2>"$WORK/git-stderr.txt"; then
+        fail_reason="Eudaimonia clone failed: $(head -c 300 "$WORK/git-stderr.txt")"
+        return 1
+    fi
+    # The block doc is the only thing the prompt grades against; without it the
+    # retro would still render, graded against nothing, so fail closed here.
+    if [[ ! -f "$EUDY/$BLOCK_DOC" ]]; then
+        fail_reason="Eudaimonia clone is missing $BLOCK_DOC"
+        return 1
+    fi
+    echo "eudy: $(git -C "$EUDY" log -1 --format='%h %s' | cut -c1-80)"
+}
 
 # ---------- Strava ----------
 strava_pull() {
@@ -196,12 +222,13 @@ todoist_pull() {
     echo "todoist: $(jq length "$WORK/todoist.json") completed tasks"
 }
 
+eudy_pull || exit 1
 strava_pull || exit 1
 gmail_pull || exit 1
 todoist_pull
 
 # ---------- Claude ----------
-prompt="$(sed -e "s/{{WEEK}}/$WEEK/g" -e "s/{{MONDAY}}/$MONDAY/g" -e "s/{{SUNDAY}}/$SUNDAY/g" -e "s/{{TODAY}}/$(date +%F)/g" -e "s#{{WORK}}#$WORK#g" /home/runner/prompt.md)"
+prompt="$(sed -e "s/{{WEEK}}/$WEEK/g" -e "s/{{MONDAY}}/$MONDAY/g" -e "s/{{SUNDAY}}/$SUNDAY/g" -e "s/{{TODAY}}/$(date +%F)/g" -e "s#{{WORK}}#$WORK#g" -e "s#{{EUDY}}#$EUDY#g" /home/runner/prompt.md)"
 result="$(timeout 20m claude -p "$prompt" \
     --allowedTools "Read" \
     --output-format json 2>"$WORK/claude-stderr.txt")"
