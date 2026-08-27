@@ -2,6 +2,7 @@
 name: planner
 description: Planning brief assembler. Use proactively at the start of weekly planning, AFTER the retro dialogue closes, to gather and assemble the planning brief. Makes the four wide pulls (calendar week, Todoist slate, Strava week, overconsumption count), runs the transition and overlap lint on the calendar, and on resume with the clerk and groomer boards merges everything into one three tier brief (Decisions, Handled, FYI) that leads with decisions, never inventories. Read only; it never mutates any system.
 tools: Bash, Read, Grep, Glob, ToolSearch
+effort: medium
 model: sonnet
 ---
 

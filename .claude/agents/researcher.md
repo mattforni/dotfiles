@@ -2,6 +2,7 @@
 name: researcher
 description: Web research on a focused question. Use proactively when a question needs current external sources rather than codebase knowledge. Safe to fan out several instances concurrently, one per research angle.
 tools: WebSearch, WebFetch, Read
+effort: medium
 model: inherit
 ---
 

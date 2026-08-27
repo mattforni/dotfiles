@@ -1,11 +1,11 @@
 ---
 name: report-unemployment
-description: File the weekly Colorado unemployment payment request in MyUI+ from the FY27 work search log. Builds the reportable activity slate for the just ended claim week, drives MyUI+ through agent-browser attached to Forni's real Brave, walks the weekly payment request screens, and stops hard at both certifications for Forni's explicit yes. Use whenever Forni says "report unemployment", "request UI payment", "file the weekly claim", "MyUI+", mentions the Monday payment request task, or invokes /assist:report-unemployment. The unemployment-claimer agent carries this method for background dispatch.
+description: File the weekly Colorado unemployment payment request in MyUI+ from the FY27 work search log. Builds the reportable activity slate for the just ended claim week, drives MyUI+ through agent-browser attached to Forni's real Brave, walks the weekly payment request screens, and stops hard at both certifications for Forni's explicit yes. Use whenever Forni says "report unemployment", "request UI payment", "file the weekly claim", "MyUI+", mentions the Monday payment request task, or invokes /assist:report-unemployment. The claimer agent carries this method for background dispatch.
 ---
 
 # Report Unemployment
 
-The weekly motion that turns the work search log into a filed MyUI+ payment request. The log is already kept in audit shape; this skill moves the week into the state system and captures the confirmation trail. The `unemployment-claimer` agent runs this method in the background and bails to Forni at every gate; run it inline when Forni wants to drive together.
+The weekly motion that turns the work search log into a filed MyUI+ payment request. The log is already kept in audit shape; this skill moves the week into the state system and captures the confirmation trail. The `claimer` agent runs this method in the background and bails to Forni at every gate; run it inline when Forni wants to drive together.
 
 ## Where Truth Lives
 
