@@ -6,7 +6,7 @@
 FROM node:20-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl jq tzdata \
+    && apt-get install -y --no-install-recommends ca-certificates curl jq tzdata git openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Claude Code, pinned so a rebuild is a deliberate upgrade.
@@ -22,6 +22,11 @@ COPY --chown=runner:runner entrypoint.sh /home/runner/entrypoint.sh
 COPY --chown=runner:runner prompt.md /home/runner/prompt.md
 COPY --chown=runner:runner render.jq /home/runner/render.jq
 RUN chmod +x /home/runner/entrypoint.sh
+
+# GitHub's published ed25519 host key, pinned so the Eudy clone never trusts
+# on first use. Rotate from https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
+RUN mkdir -p /home/runner/.ssh && chmod 700 /home/runner/.ssh \
+    && echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > /home/runner/.ssh/known_hosts
 
 ENV TZ=America/Denver
 ENTRYPOINT ["/home/runner/entrypoint.sh"]
