@@ -11,7 +11,6 @@ allowed-tools:
   - Grep
   - WebFetch
   - AskUserQuestion
-  - TodoWrite
 ---
 
 # Create Presentation Assist

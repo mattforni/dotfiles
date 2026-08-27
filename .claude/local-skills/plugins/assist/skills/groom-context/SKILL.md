@@ -10,7 +10,6 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
-  - TodoWrite
   - Agent
 ---
 

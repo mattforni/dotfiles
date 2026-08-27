@@ -12,7 +12,6 @@ allowed-tools:
   - Bash(grep *)
   - Bash(echo *)
   - Read
-  - TodoWrite
   - EnterWorktree
   - EnterPlanMode
   - ExitPlanMode
@@ -164,7 +163,7 @@ Once plan mode is active, your task is to:
 1. **Understand the requirement** from the issue description
 2. **Explore the codebase** to understand relevant files and patterns
 3. **Design the implementation approach**
-4. **Create a detailed plan** using TodoWrite with specific tasks
+4. **Create a detailed plan** with specific tasks
 5. **Present the plan to the user** for approval
 
 Do not start implementing until the user approves. The plan exists so the user can course-correct before any code is written. When the plan is ready, use `ExitPlanMode` to request approval.
