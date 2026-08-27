@@ -52,3 +52,11 @@ Reduction of the always loaded context is a standing phase of every sharpen run 
 **Why:** 2026-08-27. The board proposed unloading homebase's CLAUDE.md from every session; Forni corrected the premise (the `~/CLAUDE.md` link is the design, homebase is the config store loaded into Eudy on purpose) and set the direction instead: "If we can slim down and go through and reduce, I think that is great. We should definitely have that reduction stage as a part of every sharpened saws run." The first cut took that file from 332 lines to 88 by moving depth into path scoped rules.
 
 **How to apply:** The sharpener's Scan reports the four always on files with lines and bytes and names the best single cut. The main session makes exactly one cut before implementing the pick, prefers a path scoped rule for file specific depth and a tool doc for narrative, and lowers the matching cap in homebase's `bin/lint/context-size`. The Log entry carries the Load line so the trend is visible. Never turn the cut into a restructure; that is `assist:groom-context`.
+
+## The Homebase Link Is the Design, Not a Placement Failure
+
+`~/CLAUDE.md` is a deliberate symlink to homebase's CLAUDE.md (`deploy-table.sh`, `link|CLAUDE.md`). Homebase is the config store, public and shared across machines, and its CLAUDE.md is meant to load into every session under `$HOME`, Eudy included. Never board its exclusion or unlinking; the lever on that file is reduction in place.
+
+**Why:** 2026-08-27. The board's top row proposed a `claudeMdExcludes` entry for `~/CLAUDE.md` on the strength of a scout finding that called the link a placement failure. Forni corrected the premise before the pick: the link is intentional, so the move became slimming the file (332 to 88 lines) and moving depth into path scoped rules.
+
+**How to apply:** When a scout or the scan names an existing mechanism as a mistake, read the deploy table entry, the doc, or the commit that created it before boarding its removal. A mechanism with recorded intent gets a reduction row, not a removal row. The always loaded files are reduced, never excluded; exclusion is reserved for a genuine double load (the repo path copy of `.claude/CLAUDE.md` in a homebase session).
