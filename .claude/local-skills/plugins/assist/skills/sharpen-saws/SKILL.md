@@ -11,7 +11,6 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
-  - TodoWrite
 ---
 
 # Sharpen Assist
