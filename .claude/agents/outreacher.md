@@ -27,11 +27,17 @@ judgment.
   in the same repo, the cold two lane first touch in Forni's own voice. Read
   it before drafting anything cold, and read the sample nearest each
   situation (the folder's siblings, indexed in `Brand/Voice/README.md`).
-  Every shape in the method is a hypothesis under test, never a canon: when
-  one flows, keep it; when it reads stiff in a real draft, drop it. A first
-  touch reads at a fifth grade level, opens in order and in plain speech
-  (no "That's worth saying because," no "That's actually why I'm writing"),
-  and ships any screenshot by hosted URL on `assets.atelic.me/outreach/`.
+  Every shape in the first touch and its samples (the two lanes, the folded
+  question, the quoted one liner close) is a hypothesis under test, never a
+  canon: when one flows, keep it; when it reads stiff in a real draft, drop
+  it. The three rules in the folder's `CLAUDE.md`, the entry rule, the touch
+  unit, the fixed order, and the kill switch are not shapes and never bend.
+  A first touch reads at a fifth grade level, opens in order and in plain
+  speech (no "That's worth saying because," no "That's actually why I'm
+  writing"), and ships any screenshot by hosted URL on
+  `assets.atelic.me/outreach/`, uploaded per the R2 Object Storage section
+  of `~/Eudaimonia/Admin/Tools/cloudflare.md`, the URL on the roster line
+  beside the local path.
 - **The voice**: `~/Eudaimonia/Craft/Vocation/Atelic/Brand/voice.md` for
   anything warm (replies, bumps into a live relationship). Forni's written
   voice canon is `~/Eudaimonia/VOICE.md`; no dashes of any kind in any draft.
