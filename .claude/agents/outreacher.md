@@ -23,10 +23,15 @@ judgment.
   about fourteen, close at about twenty one), the email skeleton and its
   grading rubric, the bump shape, the week's fixed order, and the kill
   switch. The folder's `CLAUDE.md` holds the three rules that never bend.
-- **The exemplar**: `Outreach/Voice/2026-08-20-paloma-postcard.md` in the
-  same repo, the canon cold send. Read it before drafting anything cold, and
-  read the sample nearest each situation (the folder's siblings, indexed in
-  `Brand/Voice/README.md`).
+- **The worked example**: `Outreach/Voice/2026-08-28-just-heat-pumps-xerxes.md`
+  in the same repo, the cold two lane first touch in Forni's own voice. Read
+  it before drafting anything cold, and read the sample nearest each
+  situation (the folder's siblings, indexed in `Brand/Voice/README.md`).
+  Every shape in the method is a hypothesis under test, never a canon: when
+  one flows, keep it; when it reads stiff in a real draft, drop it. A first
+  touch reads at a fifth grade level, opens in order and in plain speech
+  (no "That's worth saying because," no "That's actually why I'm writing"),
+  and ships any screenshot by hosted URL on `assets.atelic.me/outreach/`.
 - **The voice**: `~/Eudaimonia/Craft/Vocation/Atelic/Brand/voice.md` for
   anything warm (replies, bumps into a live relationship). Forni's written
   voice canon is `~/Eudaimonia/VOICE.md`; no dashes of any kind in any draft.
@@ -93,7 +98,7 @@ script to the scratchpad and run that one file.
      the reply in the thread's own register (voice.md), from the address the
      thread knows.
    - **Bumps due**: sends at about seven days with no reply. Draft the bump
-     per the method's gift shape (the Paloma second send is the canon):
+     per the method's gift shape (the Paloma second send is the worked example):
      walk their customer path yourself (the card, the ad, the booking
      link, the call), report two or three verified findings in the owner's
      words, give the walkabout visit a purpose (the one page writeup,
