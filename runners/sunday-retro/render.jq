@@ -116,14 +116,14 @@ def opp_row(r):
   + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:#fc4a1a;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
   + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.build|esc) + "</td>"
   + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.operate|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.months|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;font-weight:500;color:#151515;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.total|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.trade|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;font-weight:600;color:#151515;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.cash|esc) + "</td>"
   + "</tr>";
 
 def opp_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
   + "<tr>" + atelic_head("Company"; col1) + atelic_head("Stage"; col2) + atelic_head("Build"; "12%")
-  + atelic_head("Operate"; "12%") + atelic_head("Months"; "8%") + atelic_head("Total"; "18%") + "</tr>"
+  + atelic_head("Operate"; "16%") + atelic_head("Trade"; "12%") + atelic_head("Cash"; "14%") + "</tr>"
   + (rows | map(opp_row(.)) | join(""))
   + "</table>";
 

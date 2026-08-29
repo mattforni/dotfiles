@@ -244,7 +244,7 @@ const STAGES = Object.fromEntries((await api("crm/v3/pipelines/deals")).results
     .flatMap((pl) => pl.stages.map((st) => [st.id, st.label])));
 const openDeals = (await searchAll("deals", {
     filterGroups: [{ filters: [{ propertyName: "hs_is_closed", operator: "NEQ", value: "true" }] }],
-    properties: ["dealname", "dealstage", "amount", "build_price", "operate_price", "operate_length"],
+    properties: ["dealname", "dealstage", "amount", "build_price", "operate_price", "operate_length", "trade_credit"],
 }));
 const dealCompanies = await assoc("deals", "companies", openDeals.map((d) => d.id));
 const dealByCompany = new Map();
@@ -326,13 +326,20 @@ for (const [cid, r] of rows) {
             : (operate && months
                 ? Number(operate) * Number(months)
                 : (deal?.amount ? Number(deal.amount) : null));
+        // What is actually collectable. An engagement partly paid in goods is
+        // worth its total to the business and less than that to the bank
+        // account, and the Sunday read wants the second number.
+        const trade = deal?.trade_credit ? Number(deal.trade_credit) : 0;
+        const cash = total === null ? null : total - trade;
         tables.opportunities.push({
             company: entry.company,
             stage: deal ? (STAGES[deal.dealstage] || deal.dealstage) : "-",
             build: money(build),
-            operate: money(operate),
-            months: months ? String(months) : "-",
-            total: money(total),
+            // The term rides with the operate figure rather than taking a
+            // column of its own; the table is already wide.
+            operate: (operate && months) ? `${money(operate)} x${months}` : money(operate),
+            trade: trade ? money(trade) : "-",
+            cash: money(cash),
             last_send: entry.last_send,
         });
     }
