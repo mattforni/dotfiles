@@ -1,0 +1,5 @@
+# gcloud builds submit uses this directory as the source root, so the
+# repository .gitignore does not reach the paths below. Without this file the
+# live credentials in .env.local would be uploaded into the build context.
+.env.local
+out/

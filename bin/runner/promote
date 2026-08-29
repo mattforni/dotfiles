@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Promote a runner to production: build its image and point its job at it.
+#
+# Usage: promote <runner-name> [--dirty] [--tag <tag>]
+#
+# The two gcloud commands this wraps lived only in a README code block, which
+# meant production was something retyped from documentation every time. Cloud
+# Build does the build, so no local Docker daemon is involved.
+#
+# By default this refuses to promote a runner whose files are not committed,
+# because an image built from a dirty tree is a production artifact nobody can
+# reproduce or reason about later. --dirty is the deliberate override.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name=""; allow_dirty=0; tag="latest"
+while (( $# )); do
+    case "$1" in
+        --dirty)   allow_dirty=1; shift ;;
+        --tag)     tag="${2:-}"; shift 2 ;;
+        -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)        die "unknown option $1" ;;
+        *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+
+dir="$(runner_dir "$name")"
+command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
+
+root="$(runner_repo_root)"
+dirty="$(git -C "$root" status --porcelain -- "runners/$name" 2>/dev/null || true)"
+if [[ -n "$dirty" && $allow_dirty -eq 0 ]]; then
+    echo "runners/$name has uncommitted changes:" >&2
+    printf '%s\n' "$dirty" >&2
+    die "commit them, or pass --dirty to promote anyway"
+fi
+
+image="$RUNNER_REGISTRY/$name:$tag"
+echo "building $image from $dir"
+gcloud builds submit "$dir" --tag "$image" --project="$RUNNER_PROJECT"
+
+echo "pointing the job at it"
+gcloud run jobs update "$name" --project="$RUNNER_PROJECT" --region="$RUNNER_REGION" --image="$image"
+
+echo "promoted $name. Fire it with: bin/runner/fire $name"

@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Run a runner on this machine, rendering its email instead of sending it.
+#
+# Usage: run-local <runner-name> [--week YYYY-Www] [--reuse] [--send] [--no-open]
+#
+#   --week    draft a past or future week instead of the current one
+#   --reuse   skip the API pulls and reuse the JSON already in out/, which is
+#             the loop to use while iterating on the prompt
+#   --send    actually deliver the email, off by default
+#   --no-open leave the rendered HTML on disk without opening a browser
+#
+# This runs the very entrypoint the container runs, against the very secrets
+# Cloud Run is injected with, so what passes here is what production will do.
+# The one deliberate difference is the send: a local run renders to out/ and
+# stops, because the whole point of iterating locally is to look at the thing
+# before anyone's inbox does.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name=""; week=""; reuse=0; send=0; open_it=1
+while (( $# )); do
+    case "$1" in
+        --week)    week="${2:-}"; shift 2 ;;
+        --reuse)   reuse=1; shift ;;
+        --send)    send=1; shift ;;
+        --no-open) open_it=0; shift ;;
+        -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)        die "unknown option $1" ;;
+        *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+
+dir="$(runner_dir "$name")"
+envfile="$dir/.env.local"
+[[ -r "$envfile" ]] || die "no $envfile; run 'bin/runner/fetch-env $name' first"
+
+# shellcheck source=/dev/null
+set -a
+# shellcheck source=/dev/null
+. "$envfile"
+set +a
+
+export WORK="$dir/out"
+mkdir -p "$WORK"
+export DRY_RUN=$(( send ? 0 : 1 ))
+export SKIP_PULLS="$reuse"
+[[ -z "$week" ]] || export WEEK="$week"
+
+if (( send )); then
+    echo "SENDING for real to ${REPORT_RECIPIENT:-the configured recipient}"
+fi
+
+"$dir/entrypoint.sh"
+
+html="$WORK/retro.html"
+if [[ -s "$html" ]]; then
+    # The week the run actually used, so render-local can re-render this draft
+    # later without being told the week a second time.
+    grep -Eo '^=== .* start: [0-9]{4}-W[0-9]{2} \([0-9-]+ to [0-9-]+\)' "$WORK/run.log" \
+        | tail -1 \
+        | sed -E 's/.*start: ([0-9]{4}-W[0-9]{2}) \(([0-9-]+) to ([0-9-]+)\).*/WEEK=\1\nMONDAY=\2\nSUNDAY=\3/' \
+        > "$WORK/week.env" || true
+    echo "html: $html"
+    if (( open_it )) && command -v open >/dev/null 2>&1; then
+        open "$html"
+    fi
+fi

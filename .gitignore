@@ -22,3 +22,7 @@
 .claude/.oauth-token
 .claude.json
 .worktrees/
+
+# Runner local iteration: live credentials and rendered output.
+runners/*/.env.local
+runners/*/out/

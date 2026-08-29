@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Write a runner's local environment file from its deployed Cloud Run job.
+#
+# Usage: fetch-env <runner-name>
+#
+# The map from environment variable to vault secret lives in exactly one place,
+# the deployed job's own configuration, and this reads it back rather than
+# keeping a second copy in the repo. A second copy would be wrong the first
+# time a runner gained a secret, and wrong in the direction that is hardest to
+# see: the local run would simply behave like an older version of production.
+# Plain configuration values come across too, so a local run sees the same
+# recipient and the same defaults the cloud does.
+#
+# The result is runners/<name>/.env.local, gitignored and mode 600. It holds
+# live credentials in plaintext: never commit it, never print it.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name="${1:-}"
+dir="$(runner_dir "$name")"
+out="$dir/.env.local"
+
+command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
+
+echo "reading the deployed job's configuration"
+job="$(gcloud run jobs describe "$name" --project="$RUNNER_PROJECT" --region="$RUNNER_REGION" --format=json 2>/dev/null)" \
+    || die "could not describe the Cloud Run job '$name' in $RUNNER_PROJECT/$RUNNER_REGION"
+
+# The container spec sits at a different depth across gcloud versions, so find
+# it by shape (the one object carrying both an image and an env list) rather
+# than by a path that a gcloud upgrade can move underneath us.
+env_json="$(jq -c '[.. | objects | select(has("image") and has("env"))] | first | .env // []' <<<"$job")"
+[[ "$env_json" != "null" && "$env_json" != "[]" ]] || die "the job describes no environment variables"
+
+tmp="$(mktemp)"
+# The file is sourced, not passed as a docker --env-file, because two of these
+# values (the deploy key, the Google token JSON) are multi line and --env-file
+# cannot carry a newline at all.
+trap 'rm -f "$tmp"' EXIT
+{
+    echo "# Written by bin/runner/fetch-env from the deployed Cloud Run job '$name'."
+    echo "# $(date +%F) . Live credentials. Gitignored. Do not commit or print."
+    echo
+} > "$tmp"
+
+count_plain=0
+count_secret=0
+while IFS= read -r entry; do
+    var="$(jq -r '.name' <<<"$entry")"
+    secret="$(jq -r '.valueFrom.secretKeyRef.name // empty' <<<"$entry")"
+    if [[ -z "$secret" ]]; then
+        value="$(jq -r '.value // ""' <<<"$entry")"
+        count_plain=$((count_plain + 1))
+    else
+        version="$(jq -r '.valueFrom.secretKeyRef.key // "latest"' <<<"$entry")"
+        # A cross project reference arrives as projects/<number>/secrets/<name>;
+        # a same project one is the bare name.
+        if [[ "$secret" == projects/* ]]; then
+            secret_project="${secret#projects/}"
+            secret_project="${secret_project%%/*}"
+            secret_name="${secret##*/}"
+        else
+            secret_project="$RUNNER_PROJECT"
+            secret_name="$secret"
+        fi
+        echo "  $var -> $secret_project/$secret_name:$version"
+        value="$(runner_access_secret "$secret_project" "$secret_name" "$version")" \
+            || die "could not read $secret_name from $secret_project as any authenticated gcloud account"
+        count_secret=$((count_secret + 1))
+    fi
+    printf "export %s='%s'\n" "$var" "${value//\'/\'\\\'\'}" >> "$tmp"
+done < <(jq -c '.[]' <<<"$env_json")
+
+install -m 600 "$tmp" "$out"
+echo "wrote $out ($count_secret secrets, $count_plain plain)"

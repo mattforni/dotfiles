@@ -18,6 +18,25 @@
 #   1. An explicit --account from the caller. Never second guess it.
 #   2. Nearest .account marker walking up from $PWD.
 #   3. The CLI's own global default, if the marker names no known portal.
+#
+# `hs api` does not reach the real CLI at all: it is answered here with curl
+# and the portal's service key, because the CLI can only authenticate with a
+# personal access key and a personal access key cannot carry the scopes the CRM
+# reads need. Its scope set is fixed to what the CLI itself uses, cannot be
+# edited after issue, and offers nothing for email engagements, so
+# /crm/v3/objects/emails is a permanent 403 through the CLI no matter who
+# issues the key (confirmed 2026-08-29, twice, on two separate keys). The
+# service key has the scopes, including sales-email-read. Everything that is
+# not `api` still execs the real binary.
+#
+# Two consequences worth knowing:
+#   - `hs api` now prints the response body and nothing else, where the CLI
+#     printed the request line and a "Response:" header first. Piping to jq no
+#     longer needs the preamble stripped.
+#   - The service key can write, where the personal access key was read only by
+#     accident of its scopes. That safety was load bearing and is not given up:
+#     anything but a read is refused unless HS_APPLY=1 is set on the
+#     invocation, the same speed bump bin/ynab puts in front of YNAB writes.
 
 set -euo pipefail
 
@@ -55,15 +74,18 @@ fi
 # 1. A deliberate --account wins. Unlike the gws shim there is no inherited
 #    environment to disambiguate here, because the account arrives as an
 #    argument rather than an env var, so its presence is proof of intent.
-for arg in "$@"; do
-    if [[ "$arg" == "--account" || "$arg" == "--account="* ]]; then
-        exec "$real_hs" "$@"
-    fi
+explicit_account=""
+for i in "$@"; do
+    case "$i" in
+        --account=*|-a=*) explicit_account="${i#*=}" ;;
+        --account|-a)     account_next=1 ;;
+        *) if [[ -n "${account_next:-}" ]]; then explicit_account="$i"; account_next=""; fi ;;
+    esac
 done
 
 # A broken install cannot resolve anything. Pass through rather than guessing at
 # a portal, since guessing wrong is the failure this shim exists to prevent.
-if [[ -n "${account_lib_missing:-}" ]]; then
+if [[ -n "${account_lib_missing:-}" ]] && [[ -z "$explicit_account" ]]; then
     exec "$real_hs" "$@"
 fi
 
@@ -76,12 +98,101 @@ fi
 #    transitionally, while the Atelic subtree had no marker of its own; that
 #    marker landed 2026-08-14, so personal life no longer addresses a business
 #    CRM and an accidental write from the wrong tree now warns instead.
-profile="$(account_resolve_profile)"
+if [[ -n "${account_lib_missing:-}" ]]; then
+    profile=""
+else
+    profile="$(account_resolve_profile)"
+fi
 case "$profile" in
     tpf)    hs_account="hs-pat-tpf" ;;
     atelic) hs_account="hs-pat-atelic" ;;
     *)      hs_account="" ;;
 esac
+
+# An explicit --account names the portal directly and outranks the marker, for
+# the service key path as much as for the CLI one.
+case "${explicit_account:-$hs_account}" in
+    hs-pat-tpf|tpf|246641731)       keychain_service="hubspot-service-key-tpf" ;;
+    hs-pat-atelic|atelic|246648548) keychain_service="hubspot-service-key-atelic" ;;
+    *)                              keychain_service="" ;;
+esac
+
+# The service key path. Reached only for `api`, and only when a key for the
+# resolved portal is actually in the Keychain; without one this falls back to
+# the CLI, which still answers every endpoint its own scopes cover.
+if [[ "${1:-}" == "api" && -n "$keychain_service" ]]; then
+    # The parser below consumes every argument, so the original line is kept
+    # whole for the fallback at the bottom: without it the CLI would be handed
+    # a bare endpoint with the `api` subcommand already shifted away.
+    original_args=("$@")
+    shift
+    endpoint=""; method=""; data=""; want_account=""
+    while (( $# )); do
+        case "$1" in
+            -X|--method)        method="${2:-}"; shift 2 ;;
+            -X=*|--method=*)    method="${1#*=}"; shift ;;
+            --data)             data="${2:-}"; shift 2 ;;
+            --data=*)           data="${1#*=}"; shift ;;
+            -a|--account)       want_account="${2:-}"; shift 2 ;;
+            -a=*|--account=*)   want_account="${1#*=}"; shift ;;
+            --json|--format-output-as-json|-d|--debug|--use-env) shift ;;
+            -c|--config)        shift 2 ;;
+            -h|--help)          exec "$real_hs" api --help ;;
+            *)                  [[ -n "$endpoint" ]] || endpoint="$1"; shift ;;
+        esac
+    done
+    : "${want_account:=}"
+
+    if [[ -z "$endpoint" ]]; then
+        echo "hs shim: hs api needs an endpoint" >&2
+        exit 2
+    fi
+
+    # Matching the CLI's own default: GET, unless a body was given.
+    if [[ -z "$method" ]]; then
+        if [[ -n "$data" ]]; then method="POST"; else method="GET"; fi
+    fi
+    method="$(printf '%s' "$method" | tr '[:lower:]' '[:upper:]')"
+
+    # HubSpot answers several genuinely read only endpoints over POST, so the
+    # write gate keys on what the call does rather than on its verb alone.
+    is_read=0
+    [[ "$method" == "GET" ]] && is_read=1
+    if [[ "$method" == "POST" ]]; then
+        case "${endpoint%%\?*}" in
+            */search|*/batch/read) is_read=1 ;;
+        esac
+    fi
+    if (( ! is_read )) && [[ "${HS_APPLY:-0}" != "1" ]]; then
+        echo "hs shim: refusing $method ${endpoint%%\?*}: the service key can write to the CRM." >&2
+        echo "hs shim: set HS_APPLY=1 on this invocation to mean it." >&2
+        exit 3
+    fi
+
+    key="$(security find-generic-password -s "$keychain_service" -w 2>/dev/null || true)"
+    if [[ -z "$key" ]]; then
+        echo "hs shim: no Keychain entry '$keychain_service'; falling back to the CLI, whose scopes are narrower" >&2
+        set -- "${original_args[@]}"
+    else
+        body="$(mktemp)"
+        trap 'rm -f "$body"' EXIT
+        code="$(curl -sS --max-time 60 -o "$body" -w '%{http_code}' \
+            -X "$method" \
+            -H "Authorization: Bearer $key" \
+            -H "Content-Type: application/json" \
+            ${data:+--data "$data"} \
+            "https://api.hubapi.com/${endpoint#/}")" || { echo "hs shim: request to $endpoint failed" >&2; exit 1; }
+        cat "$body"
+        [[ "$code" =~ ^2 ]] || { echo "hs shim: HTTP $code from ${endpoint%%\?*}" >&2; exit 1; }
+        exit 0
+    fi
+fi
+
+# Everything that is not `api`, and `api` with no service key to answer it, goes
+# to the real binary. An explicit --account is already on the command line.
+if [[ -n "$explicit_account" ]]; then
+    exec "$real_hs" "$@"
+fi
 
 # 3. An unmapped profile falls through to the CLI's global default rather than
 #    picking a portal on the caller's behalf. Writing to the wrong CRM is the

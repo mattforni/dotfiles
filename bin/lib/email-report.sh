@@ -291,3 +291,65 @@ build_meta_block() {
   [[ -n "$session" ]] && rows+="<tr><td style=\"padding:2px 12px 2px 0;color:#888;\">session</td><td style=\"padding:2px 0;font-family:ui-monospace,Menlo,monospace;font-size:11px;\">$session</td></tr>"
   printf '<table style="border-collapse:collapse;font-size:12px;color:#444;margin-top:16px;">%s</table>' "$rows"
 }
+
+# Usage: email_raw <subject> <html-file>
+#   Sends an HTML document verbatim as the body, with the given subject,
+#   from the same sender and to the same recipient as email_report.
+#
+# email_report wraps its content in this library's own template, which is
+# right for a status report and wrong for anything that renders a finished
+# document. The Sunday retro renders its own HTML and needs it delivered
+# untouched, so this is the second door: same Keychain read, same recipient
+# file, no template.
+#
+# It exists so a local preview of a runner's email does not have to grow its
+# own credential path. Production sending stays inside the runner, which is
+# injected with the key from the vault and never reads the Keychain at all.
+#
+# Sets email_error and returns non zero on failure, matching email_report.
+# shellcheck disable=SC2034
+email_raw() {
+  local subject="$1" html_file="$2"
+  email_error=""
+
+  [[ -r "$html_file" ]] || { email_error="cannot read $html_file"; return 1; }
+
+  # `|| true` on each substitution because bin/runner/mail sources this under
+  # `set -e`, where a failing assignment would take the caller down before the
+  # error below could ever be set or read.
+  local api_key
+  api_key=$(security find-generic-password -s "$EMAIL_REPORT_RESEND_KEY_SERVICE" -w 2>/dev/null || true)
+  [[ -n "$api_key" ]] || {
+    email_error="Resend API key missing in Keychain (service $EMAIL_REPORT_RESEND_KEY_SERVICE)"
+    return 2
+  }
+
+  [[ -r "$EMAIL_REPORT_RECIPIENT_FILE" ]] || {
+    email_error="Recipient file missing or unreadable: $EMAIL_REPORT_RECIPIENT_FILE"
+    return 3
+  }
+  local recipient
+  recipient=$(grep -vE '^\s*(#|$)' "$EMAIL_REPORT_RECIPIENT_FILE" | head -n1 | tr -d '[:space:]') || true
+  [[ -n "$recipient" ]] || { email_error="no recipient in $EMAIL_REPORT_RECIPIENT_FILE"; return 3; }
+
+  local payload body code
+  payload=$(jq -n --arg from "$EMAIL_REPORT_SENDER" --arg to "$recipient" \
+    --arg subject "$subject" --rawfile html "$html_file" \
+    '{from: $from, to: [$to], subject: $subject, html: $html}') || {
+    email_error="could not build the Resend payload"; return 4; }
+
+  body=$(mktemp -t runner-resend.XXXXXX) || { email_error="mktemp failed"; return 4; }
+  code=$(curl -sS --max-time 30 -o "$body" -w '%{http_code}' \
+    -X POST "$EMAIL_REPORT_API_URL" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload") || true
+  if [[ "$code" =~ ^2 ]]; then
+    echo "sent \"$subject\" to $recipient"
+    rm -f "$body"
+    return 0
+  fi
+  email_error="Resend returned HTTP $code: $(head -c 300 "$body")"
+  rm -f "$body"
+  return 5
+}

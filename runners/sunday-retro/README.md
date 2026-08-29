@@ -2,12 +2,16 @@
 
 A Cloud Run Job (`sunday-retro`, project `atelic`, region `us-central1`) that fires every Sunday at 07:00 Denver, pulls the ISO week from Strava, Gmail, and Todoist with curl, has headless Claude Code draft the retrospective as JSON, renders it into the branded email with `render.jq`, and sends it through Resend as `YYYY-Www Retro`. Read only against the world except the rotated Strava refresh token, which it writes back to the vault. Tracked as ATE-471.
 
-The runtime one pager (why Cloud Run over Routines and launchd, the service account and its secrets, the schedule, the rebuild and test fire recipe, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`. Edit the files here, then rebuild and point the job at the new image:
+The runtime one pager (why Cloud Run over Routines and launchd, the service account and its secrets, the schedule, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
+
+**Iterate locally first.** The loops and the promote step are in [../README.md](../README.md); the short version is `bin/runner/render-local sunday-retro` while changing how the email looks, `bin/runner/run-local sunday-retro --reuse` while changing what it says, and `bin/runner/promote sunday-retro` once it is right.
 
 ```bash
-gcloud builds submit runners/sunday-retro --tag us-central1-docker.pkg.dev/atelic/runners/sunday-retro:latest --project=atelic
-gcloud run jobs update sunday-retro --project=atelic --region=us-central1 --image=us-central1-docker.pkg.dev/atelic/runners/sunday-retro:latest
-gcloud run jobs execute sunday-retro --project=atelic --region=us-central1 --wait
+bin/runner/fetch-env sunday-retro                 # once per machine
+bin/runner/run-local sunday-retro --week 2026-W35 # renders to out/, sends nothing
+bin/runner/render-local sunday-retro              # instant re-render after a render.jq edit
+bin/runner/promote sunday-retro                   # build and point the job at it
+bin/runner/fire sunday-retro                      # run production now
 ```
 
 | File | Role |

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Execute a runner's Cloud Run job now and print what it logged.
+#
+# Usage: fire <runner-name> [--week YYYY-Www] [--lines N]
+#
+# This is production: whatever the runner does on a schedule, it does now, send
+# included. A --week override rides on the execution itself rather than being
+# written into the Job and cleaned up afterwards, so there is no window in
+# which a crash, a signal, or an overlapping run can leave the scheduled job
+# pinned to a week in the past.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name=""; week=""; lines=60
+while (( $# )); do
+    case "$1" in
+        --week)    week="${2:-}"; shift 2 ;;
+        --lines)   lines="${2:-60}"; shift 2 ;;
+        -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)        die "unknown option $1" ;;
+        *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+
+runner_dir "$name" >/dev/null
+command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
+
+override=()
+if [[ -n "$week" ]]; then
+    echo "pinning this execution to $week"
+    override=(--update-env-vars="WEEK=$week")
+fi
+
+echo "firing $name"
+# The status is kept rather than acted on immediately: the log below is the
+# whole reason to run this, and it is most wanted precisely when the run
+# failed. It becomes the exit status once the log has been printed.
+rc=0
+gcloud run jobs execute "$name" --project="$RUNNER_PROJECT" --region="$RUNNER_REGION" \
+    ${override[@]+"${override[@]}"} --wait || rc=$?
+
+echo
+gcloud logging read \
+    "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"$name\"" \
+    --project="$RUNNER_PROJECT" --limit="$lines" --order=asc --format='value(textPayload)'
+
+(( rc == 0 )) || echo "$name execution failed (exit $rc)" >&2
+exit "$rc"
