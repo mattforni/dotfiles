@@ -13,8 +13,20 @@ def col2: "22%";
 # verdict in colour.
 def yesno($v):
   (if $v == "yes" then "\u2713" else "\u2715" end) as $glyph
-  | (if $v == "yes" then "#1a7f37" else "#d63a10" end) as $ink
+  | (if $v == "yes" then "#6b8b64" else "#b3705e" end) as $ink
   | "<span style=\"color:" + $ink + ";font-size:15px;font-weight:600;\">" + $glyph + "</span>";
+
+# Money reads by sign: earned is green, given up is red, and an absent figure
+# stays grey rather than claiming either.
+def stage_ink($v):
+  if ($v|tostring) == "-" or ($v|tostring) == "" then "#8a8272"
+  elif ($v|tostring) | startswith("Closed Lost") then "#b3705e"
+  else "#6b8b64" end;
+
+def money_ink($v):
+  if ($v|tostring) == "-" or ($v|tostring) == "" then "#8a8272"
+  elif ($v|tostring) | startswith("-") then "#b3705e"
+  else "#6b8b64" end;
 
 def mono: "font-family:'Geist Mono',Menlo,Consolas,monospace;";
 def sans: "font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;";
@@ -49,7 +61,7 @@ def coverage_head($text):
 def coverage_row($name; $logged; $target):
   # The miss colour means a target was not met, so a row that carries no
   # target never earns it. Clicks at zero is a fact, not a failure.
-  (if ($logged|tostring) == "0" and ($target|tostring) != "" then "#d63a10" else "#151515" end) as $ink
+  (if ($logged|tostring) == "0" and ($target|tostring) != "" then "#b3705e" else "#151515" end) as $ink
   | "<tr>"
     + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + ($name|esc) + "</td>"
     + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:13px;font-weight:500;color:" + $ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($logged|esc) + "</td>"
@@ -90,7 +102,7 @@ def atelic_head($text; $w):
 # greyed, because rendering it as a zero would invent a fact.
 def atelic_row(r):
   (if (r.opens|tostring) == "-" then "#8a8272"
-   elif (r.opens|tostring) == "0" then "#d63a10"
+   elif (r.opens|tostring) == "0" then "#b3705e"
    else "#151515" end) as $open_ink
   | "<tr>"
     + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
@@ -113,17 +125,19 @@ def atelic_table(rows):
 def opp_row(r):
   "<tr>"
   + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
-  + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:#fc4a1a;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.build|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.operate|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.trade|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;font-weight:600;color:#151515;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.cash|esc) + "</td>"
+  + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:" + stage_ink(r.stage) + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:" + money_ink(r.build) + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.build|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:" + money_ink(r.operate) + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.operate|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:" + money_ink(r.trade) + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.trade|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:" + money_ink(r.cash) + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.cash|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:" + money_ink(r.total) + ";padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.total|esc) + "</td>"
   + "</tr>";
 
 def opp_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
-  + "<tr>" + atelic_head("Company"; col1) + atelic_head("Stage"; col2) + atelic_head("Build"; "12%")
-  + atelic_head("Operate"; "16%") + atelic_head("Trade"; "12%") + atelic_head("Cash"; "14%") + "</tr>"
+  + "<tr>" + atelic_head("Company"; col1) + atelic_head("Status"; col2) + atelic_head("Build"; "10%")
+  + atelic_head("Operate"; "14%") + atelic_head("Trade"; "10%") + atelic_head("Cash"; "9%")
+  + atelic_head("Total"; "9%") + "</tr>"
   + (rows | map(opp_row(.)) | join(""))
   + "</table>";
 
@@ -176,7 +190,7 @@ def mark:
 
   # atelic
   + section_label("Atelic")
-  + opp_block("Opportunities"; ($r.atelic.opportunities // []); "No opportunity moved this week.")
+  + opp_block("Deals"; ($r.atelic.opportunities // []); "No deal moved this week.")
   + atelic_block("Open Leads"; ($r.atelic.open_leads // []); "No lead was touched this week.")
   + atelic_block("Closed Leads"; ($r.atelic.closed_leads // []); "Nothing closed this week.")
   + sub_label("The Week")
