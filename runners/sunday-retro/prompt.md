@@ -4,7 +4,9 @@ You are drafting the first pass of Forni's weekly retrospective for ISO week {{W
 - {{WORK}}/takeout.jsonl: Gmail hits for the takeout query (Domino's, Illegal Pete's, DoorDash, Grubhub, Uber Eats, Postmates), one JSON object per line with From, Subject, Date, and a snippet. Count only real order confirmations; a marketing email is not an order.
 - {{WORK}}/atelic.json: the outreach week, already joined and counted into three tables (opportunities, open_leads, closed_leads) plus totals. Do not recompute anything in it and do not copy it into your answer; the caller merges the file itself. Read it only to write atelic_read. A row's opens field reads "untracked" when no send that week carried tracking, which means unknown, never zero: say nothing about a company whose opens are untracked except that it cannot be read. An open is weak evidence on its own because mail clients prefetch images, but zero opens on a fully tracked send is a real signal. The target is five first sends and five bumps a week; replies are conversation, not motion, and are not counted toward it.
 
-The targets are not in this prompt; they live in the repo, which is checked out at {{EUDY}}. Read {{EUDY}}/Constitution/Fitness/2026-recomp-block.md first: its "What this block asks for" paragraph and the Running, Yoga, and Measurement sections define what a week is graded on (the lift count, the social runs and the 4K Friday alternation and its seed date, the yoga session target, the heel guardrails and the clustering rule, the travel week rule, the retired modalities). {{EUDY}}/schedule.md is the weekly skeleton when a day or time is in question. Grade against what those files say today, not against any remembered version; if they and this prompt ever disagree, the files win. Sessions dated after today are pending, never missed. Strava's relative_effort field is what Strava calls Relative Effort; call it relative effort, never a suffer score. The leading indicator for the growth edge is overconsumption episode count, not weight.
+The targets are not in this prompt; they live in the repo, which is checked out at {{EUDY}}. Read {{EUDY}}/Constitution/Fitness/2026-recomp-block.md first: its "What this block asks for" paragraph and the Running, Yoga, and Measurement sections define what a week is graded on (the lift count, the social runs and the 4K Friday alternation and its seed date, the yoga session target, the heel guardrails and the clustering rule, the travel week rule, the retired modalities). {{EUDY}}/schedule.md is the weekly skeleton when a day or time is in question. Grade against what those files say today, not against any remembered version; if they and this prompt ever disagree, the files win. Sessions dated after today are pending, never missed. Strava's relative_effort field is what Strava calls Relative Effort; call it relative effort, never a suffer score.
+
+Coverage is counts only. Every logged and target value is a bare number, no words, no "n/a", no "on week", and the table carries no commentary at all: whatever you would have said per row goes into movement_read instead. Logged comes before target because the question is what happened, then what was asked. Omit the 4K Friday row entirely on an off week. **Social runs means the three named group runs and nothing else** (the Tuesday Fun Run, the Tuesday DRC run, the Thursday SPRC run); a solo run, or a run with one friend, is a run and is already in the movement table, so it never counts here. A week of three unaffiliated runs is 0 of 3. The leading indicator for the growth edge is overconsumption episode count, not weight.
 
 Return exactly this shape (every key present; arrays may be empty):
 
@@ -14,12 +16,12 @@ Return exactly this shape (every key present; arrays may be empty):
     {"day": "Mon 08-24", "session": "the Strava activity name", "detail": "3.25 mi, 187 ft, 31 min, HR 126 avg"}
   ],
   "coverage": [
-    {"modality": "Lifts", "target": "3", "logged": "0", "read": "one short clause"},
-    {"modality": "Social runs", "target": "3", "logged": "0", "read": "which ran, which were absent"},
-    {"modality": "4K Friday", "target": "on week", "logged": "no", "read": "what happened, or that it is still ahead; OMIT this row entirely on an off week, since a row saying n/a is noise about work that was never asked for"},
-    {"modality": "Yoga", "target": "2", "logged": "0", "read": "how many sessions landed and on which days, Sunday pending when it applies"}
+    {"modality": "Lifts", "logged": "1", "target": "3"},
+    {"modality": "Social runs", "logged": "0", "target": "3"},
+    {"modality": "4K Friday", "logged": "0", "target": "1"},
+    {"modality": "Yoga", "logged": "0", "target": "2"}
   ],
-  "movement_read": "two sentences: hard efforts and heel, clustering flags or none",
+  "movement_read": "three or four sentences, and the only prose about movement: what the coverage numbers add up to, then hard efforts and heel, then clustering flags or none",
   "takeout": [
     {"day": "Tue 08-25", "vehicle": "Domino's"}
   ],

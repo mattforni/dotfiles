@@ -234,7 +234,7 @@ const STAGES = Object.fromEntries((await api("crm/v3/pipelines/deals")).results
     .flatMap((pl) => pl.stages.map((st) => [st.id, st.label])));
 const openDeals = (await searchAll("deals", {
     filterGroups: [{ filters: [{ propertyName: "hs_is_closed", operator: "NEQ", value: "true" }] }],
-    properties: ["dealname", "dealstage", "amount", "closedate"],
+    properties: ["dealname", "dealstage", "amount", "build_price", "operate_price", "operate_length"],
 }));
 const dealCompanies = await assoc("deals", "companies", openDeals.map((d) => d.id));
 const dealByCompany = new Map();
@@ -293,12 +293,24 @@ for (const [cid, r] of rows) {
     // with it was still moving.
     const closed = CLOSED.has(status);
     if (stage === "opportunity" || stage === "customer") {
+        const money = (v) => (v === null || v === undefined || v === ""
+            ? "-" : `$${Number(v).toLocaleString("en-US")}`);
+        const build = deal?.build_price;
+        const operate = deal?.operate_price;
+        const months = deal?.operate_length;
+        // Total is the engagement's whole value, the build plus the operate
+        // retainer over its term. Deals priced before those fields existed
+        // carry only `amount`, so that stands in rather than showing nothing.
+        const total = (build || operate)
+            ? Number(build || 0) + Number(operate || 0) * Number(months || 0)
+            : (deal?.amount ? Number(deal.amount) : null);
         tables.opportunities.push({
             company: entry.company,
-            deal: deal?.dealname || "(no deal record)",
             stage: deal ? (STAGES[deal.dealstage] || deal.dealstage) : "-",
-            amount: deal?.amount ? `$${Number(deal.amount).toLocaleString("en-US")}` : "-",
-            close: (deal?.closedate || "").slice(0, 10) || "-",
+            build: money(build),
+            operate: money(operate),
+            months: months ? String(months) : "-",
+            total: money(total),
             last_send: entry.last_send,
         });
     }
@@ -314,16 +326,29 @@ for (const t of [tables.open_leads, tables.closed_leads]) {
 tables.opportunities.sort((a, b) => b.last_send.localeCompare(a.last_send));
 
 const all = [...rows.values()];
-console.log(JSON.stringify({
-    ...tables,
-    totals: {
-        companies: tables.opportunities.length + tables.open_leads.length + tables.closed_leads.length,
-        sends: all.reduce((n, r) => n + r.sends, 0),
-        first: all.reduce((n, r) => n + r.first, 0),
-        bumps: all.reduce((n, r) => n + r.bump, 0),
-        replies_sent: all.reduce((n, r) => n + r.reply, 0),
-        tracked: all.reduce((n, r) => n + r.tracked, 0),
-        opens: all.reduce((n, r) => n + r.opens, 0),
-        clicks: all.reduce((n, r) => n + r.clicks, 0),
-    },
-}, null, 2));
+const totals = {
+    companies: tables.opportunities.length + tables.open_leads.length + tables.closed_leads.length,
+    sends: all.reduce((n, r) => n + r.sends, 0),
+    first: all.reduce((n, r) => n + r.first, 0),
+    bumps: all.reduce((n, r) => n + r.bump, 0),
+    replies_sent: all.reduce((n, r) => n + r.reply, 0),
+    tracked: all.reduce((n, r) => n + r.tracked, 0),
+    opens: all.reduce((n, r) => n + r.opens, 0),
+    clicks: all.reduce((n, r) => n + r.clicks, 0),
+};
+
+// The same logged against target shape the movement coverage table uses, so
+// the outreach week is read the same way the training week is. Only the two
+// the target actually names carry one; the rest are counts worth seeing.
+const TARGET_FIRST = Number(process.env.ATELIC_TARGET_FIRST || 5);
+const TARGET_BUMPS = Number(process.env.ATELIC_TARGET_BUMPS || 5);
+const coverage = [
+    { measure: "First sends", logged: String(totals.first), target: String(TARGET_FIRST) },
+    { measure: "Bumps", logged: String(totals.bumps), target: String(TARGET_BUMPS) },
+    { measure: "Replies sent", logged: String(totals.replies_sent), target: "" },
+    { measure: "Tracked", logged: `${totals.tracked} of ${totals.sends}`, target: "" },
+    { measure: "Opens", logged: String(totals.opens), target: "" },
+    { measure: "Clicks", logged: String(totals.clicks), target: "" },
+];
+
+console.log(JSON.stringify({ ...tables, coverage, totals }, null, 2));

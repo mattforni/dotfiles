@@ -36,19 +36,20 @@ def table3(rows):
 def coverage_head($text):
   "<td style=\"" + mono + "font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:#8a8272;padding:10px 8px 8px 0;\">" + $text + "</td>";
 
-def coverage_row(r):
-  (if ((r.logged|tostring) == "0" or (r.logged|tostring) == "no") then "#d63a10" else "#55503f" end) as $logged_color
+def coverage_row($name; $logged; $target):
+  # The miss colour means a target was not met, so a row that carries no
+  # target never earns it. Clicks at zero is a fact, not a failure.
+  (if ($logged|tostring) == "0" and ($target|tostring) != "" then "#d63a10" else "#151515" end) as $ink
   | "<tr>"
-    + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.modality|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.target|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;color:" + $logged_color + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.logged|esc) + "</td>"
-    + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 0 8px 0;vertical-align:top;" + hair + "\">" + (r.read|esc) + "</td>"
+    + "<td width=\"30%\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + ($name|esc) + "</td>"
+    + "<td width=\"14%\" style=\"" + mono + "font-size:13px;font-weight:500;color:" + $ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($logged|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (if ($target|tostring) == "" then "" else ("of " + ($target|esc)) end) + "</td>"
     + "</tr>";
 
-def coverage_table(rows):
+def coverage_table($first_head; rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
-  + "<tr>" + coverage_head("Modality") + coverage_head("Target") + coverage_head("Logged") + coverage_head("Read") + "</tr>"
-  + (rows | map(coverage_row(.)) | join(""))
+  + "<tr>" + coverage_head($first_head) + coverage_head("Logged") + coverage_head("Target") + "</tr>"
+  + (rows | map(coverage_row(.a; .b; .c)) | join(""))
   + "</table>";
 
 def done_row(r; $first):
@@ -103,16 +104,17 @@ def atelic_table(rows):
 def opp_row(r):
   "<tr>"
   + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
-  + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.deal|esc) + "</td>"
   + "<td style=\"" + mono + "font-size:12px;color:#fc4a1a;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:13px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.amount|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:12px;color:#8a8272;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.close|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.build|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.operate|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.months|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;font-weight:500;color:#151515;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.total|esc) + "</td>"
   + "</tr>";
 
 def opp_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
-  + "<tr>" + atelic_head("Company"; "26%") + atelic_head("Deal"; "32%") + atelic_head("Stage"; "16%")
-  + atelic_head("On the table"; "14%") + atelic_head("Close"; "12%") + "</tr>"
+  + "<tr>" + atelic_head("Company"; "30%") + atelic_head("Stage"; "16%") + atelic_head("Build"; "14%")
+  + atelic_head("Operate"; "14%") + atelic_head("Months"; "10%") + atelic_head("Total"; "16%") + "</tr>"
   + (rows | map(opp_row(.)) | join(""))
   + "</table>";
 
@@ -153,7 +155,7 @@ def mark:
      then table3($r.movement | map({a: .day, b: .session, c: .detail, muted: false}))
      else empty_line("Nothing logged in Strava this week.") end)
   + section_label("Coverage")
-  + coverage_table($r.coverage)
+  + coverage_table("Modality"; ($r.coverage | map({a: .modality, b: (.logged|tostring), c: (.target|tostring)})))
   + para($r.movement_read; "#151515")
 
   # overconsumption
@@ -168,13 +170,8 @@ def mark:
   + opp_block("Opportunities"; ($r.atelic.opportunities // []); "No opportunity moved this week.")
   + atelic_block("Open Leads"; ($r.atelic.open_leads // []); "No lead was touched this week.")
   + atelic_block("Closed Leads"; ($r.atelic.closed_leads // []); "Nothing closed this week.")
-  + (($r.atelic.totals // {}) as $t
-     | "<p style=\"" + mono + "font-size:12px;color:#8a8272;margin:16px 0 0 0;\">"
-       + (($t.first // 0)|tostring) + " first sends and " + (($t.bumps // 0)|tostring) + " bumps against five and five, "
-       + (($t.replies_sent // 0)|tostring) + " replies sent, "
-       + (($t.tracked // 0)|tostring) + " of " + (($t.sends // 0)|tostring) + " tracked, "
-       + (($t.opens // 0)|tostring) + " opens and " + (($t.clicks // 0)|tostring) + " clicks."
-       + "</p>")
+  + sub_label("The Week")
+  + coverage_table("Measure"; (($r.atelic.coverage // []) | map({a: .measure, b: (.logged|tostring), c: (.target|tostring)})))
   + para($r.atelic_read; "#151515")
 
   # blind spots
