@@ -66,6 +66,44 @@ def done_table(rows):
 def empty_line($text):
   "<p style=\"" + sans + "font-size:14px;color:#8a8272;margin:12px 0 0 0;" + rule + "padding-top:12px;\">" + $text + "</p>";
 
+def sub_label($text):
+  "<div style=\"" + mono + "font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:#151515;padding:22px 0 8px 0;\">" + ($text|esc) + "</div>";
+
+# Explicit widths so the three tables line up as one grid down the page. They
+# stacked raggedly when each sized its own columns.
+def atelic_head($text; $w):
+  "<td width=\"" + $w + "\" style=\"" + mono + "font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:#8a8272;padding:10px 8px 8px 0;\">" + $text + "</td>";
+
+# Opens carry three states, not two. A tracked send that was never opened is a
+# real negative and gets the miss colour; an untracked one is unknown and is
+# greyed, because rendering it as a zero would invent a fact.
+def atelic_row(r):
+  (if (r.opens|tostring) == "untracked" then "#8a8272"
+   elif (r.opens|tostring) == "0" then "#d63a10"
+   else "#151515" end) as $open_ink
+  | (if r.replied == "yes" then "#151515" else "#8a8272" end) as $reply_ink
+  | "<tr>"
+    + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:12px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.status|esc)
+      + (if (r.reason // "") != "" then "<div style=\"color:#8a8272;font-size:11px;padding-top:3px;\">" + (r.reason|esc) + "</div>" else "" end)
+      + "</td>"
+    + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.kind|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.touches|tostring|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:13px;color:" + $open_ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.opens|tostring|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:13px;color:" + $reply_ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.replied|esc) + "</td>"
+    + "</tr>";
+
+def atelic_table(rows):
+  "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
+  + "<tr>" + atelic_head("Company"; "31%") + atelic_head("Status"; "17%") + atelic_head("This week"; "20%")
+  + atelic_head("Touches"; "10%") + atelic_head("Opens"; "12%") + atelic_head("Replied"; "10%") + "</tr>"
+  + (rows | map(atelic_row(.)) | join(""))
+  + "</table>";
+
+def atelic_block($label; rows; $empty):
+  sub_label($label)
+  + (if (rows|length) > 0 then atelic_table(rows) else empty_line($empty) end);
+
 def mark:
   "<svg width=\"26\" height=\"26\" viewBox=\"0 0 26 26\" aria-hidden=\"true\"><text x=\"2\" y=\"19\" font-family=\"Geist, Helvetica, Arial, sans-serif\" font-size=\"22\" font-weight=\"600\" fill=\"#151515\">a</text><path d=\"M3 23 Q 13 20 23 23\" stroke=\"#fc4a1a\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></svg>";
 
@@ -105,11 +143,19 @@ def mark:
      else empty_line("No takeout orders this week.") end)
   + para($r.takeout_read; "#151515")
 
-  # done
-  + section_label("Done")
-  + (if ($r.done|length) > 0
-     then done_table($r.done)
-     else empty_line("No completed tasks worth naming.") end)
+  # atelic
+  + section_label("Atelic")
+  + atelic_block("Opportunities"; ($r.atelic.opportunities // []); "No opportunity moved this week.")
+  + atelic_block("Open Leads"; ($r.atelic.open_leads // []); "No lead was touched this week.")
+  + atelic_block("Closed Leads"; ($r.atelic.closed_leads // []); "Nothing closed this week.")
+  + (($r.atelic.totals // {}) as $t
+     | "<p style=\"" + mono + "font-size:12px;color:#8a8272;margin:16px 0 0 0;\">"
+       + (($t.first // 0)|tostring) + " first sends and " + (($t.bumps // 0)|tostring) + " bumps against five and five, "
+       + (($t.replies_sent // 0)|tostring) + " replies sent, "
+       + (($t.tracked // 0)|tostring) + " of " + (($t.sends // 0)|tostring) + " tracked, "
+       + (($t.opens // 0)|tostring) + " opens and " + (($t.clicks // 0)|tostring) + " clicks."
+       + "</p>")
+  + para($r.atelic_read; "#151515")
 
   # blind spots
   + section_label("Blind Spots")
@@ -118,7 +164,7 @@ def mark:
   # footer
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin-top:36px;border-top:1px solid #ece8de;\"><tr>"
   + "<td style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Drafted by Claude for the Sunday session</td>"
-  + "<td align=\"right\" style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Strava, Gmail, Todoist</td>"
+  + "<td align=\"right\" style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Strava, Gmail, Todoist, HubSpot</td>"
   + "</tr></table>"
 
   + "</td></tr></table>"

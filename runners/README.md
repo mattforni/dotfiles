@@ -23,9 +23,16 @@ Three loops, each answering a different question. Use the cheapest one that can 
 Then, and only then:
 
 ```bash
+bin/runner/mail <name>             # read the draft in Gmail, where it lands
 bin/runner/promote <name>          # Cloud Build builds it, the job points at it
 bin/runner/fire <name>             # run production now and print its log
 ```
+
+A browser preview is not the artifact. Gmail collapses styles, rewrites markup,
+and renders on a phone, so `mail` is the last check before `promote`: it sends
+the exact rendered bytes through the same Resend sender the job uses. Its key
+comes from the Keychain through `bin/lib/email-report.sh`, never from the
+vault, because the vault copy belongs to the container.
 
 ### The Commands
 
@@ -36,6 +43,7 @@ bin/runner/fire <name>             # run production now and print its log
 | `render-local <name>` | Pushes the saved `out/retro.json` back through `render.jq`. No network, no model. |
 | `promote <name>` | Cloud Build builds the image, the job is pointed at it. Refuses a dirty tree without `--dirty`. |
 | `fire <name>` | Executes the job now and prints its log. `--week` is applied, used, and cleared again. |
+| `mail <name>` | Mails whatever is rendered in `out/` to the production recipient, so a draft can be read in Gmail rather than a browser. Preview only; production sending stays in the runner. |
 
 `out/` and `.env.local` are gitignored. `.env.local` is mode 600 and holds live credentials in plaintext: never commit it, never print it into a transcript.
 

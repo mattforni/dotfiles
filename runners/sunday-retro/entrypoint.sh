@@ -16,6 +16,7 @@
 #   STRAVA_REFRESH_TOKEN      forni-keys/strava-refresh-token
 #   GWS_OAUTH_TOKEN_JSON      forni-keys/gws-oauth-token-personal (authorized_user JSON)
 #   TODOIST_API_TOKEN         forni-keys/todoist-api-token
+#   HUBSPOT_SERVICE_KEY       atelic-keys/hubspot-service-key-atelic (read only use here)
 #   EUDY_DEPLOY_KEY           forni-keys/github-deploy-key-eudy (read only deploy key on mattforni/Eudaimonia)
 # Plain configuration:
 #   REPORT_RECIPIENT          where the retro goes
@@ -147,7 +148,7 @@ trap finish EXIT
 # demanding all nine every time would make the fast local loops impossible.
 required=(CLAUDE_CODE_OAUTH_TOKEN)
 [[ "$DRY_RUN" == "1" ]] || required+=(RESEND_API_KEY REPORT_RECIPIENT)
-[[ "$SKIP_PULLS" == "1" ]] || required+=(STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON TODOIST_API_TOKEN EUDY_DEPLOY_KEY)
+[[ "$SKIP_PULLS" == "1" ]] || required+=(STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON TODOIST_API_TOKEN EUDY_DEPLOY_KEY HUBSPOT_SERVICE_KEY)
 require "${required[@]}" || exit 1
 
 # ---------- Eudaimonia ----------
@@ -287,11 +288,23 @@ todoist_pull() {
     echo "todoist: $(jq length "$WORK/todoist.json") completed tasks"
 }
 
+# ---------- HubSpot (the Atelic week) ----------
+# The joins behind these tables have traps that a model reading raw JSON would
+# get wrong quietly, so the arithmetic is done here and the prompt is handed
+# three finished tables to write one sentence about. See hubspot.mjs.
+atelic_pull() {
+    if ! HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" node "$SELF_DIR/hubspot.mjs" "$MONDAY" "$NEXT_MONDAY" > "$WORK/atelic.json" 2>"$WORK/hubspot-stderr.txt"; then
+        fail_reason="HubSpot pull failed: $(head -c 300 "$WORK/hubspot-stderr.txt")"
+        return 1
+    fi
+    echo "hubspot: $(jq -r '.totals.companies' "$WORK/atelic.json") companies, $(jq -r '.totals.sends' "$WORK/atelic.json") sends"
+}
+
 if [[ "$SKIP_PULLS" == "1" ]]; then
     # Reusing the last run's pulls is what makes prompt iteration cheap, but a
     # missing file would reach Claude as an empty week rather than an error, so
     # every input the prompt names is checked before the call.
-    for cached in strava.json takeout.jsonl todoist.json; do
+    for cached in strava.json takeout.jsonl todoist.json atelic.json; do
         [[ -f "$WORK/$cached" ]] || { fail_reason="SKIP_PULLS is set but $WORK/$cached is missing; run once without it"; exit 1; }
     done
     [[ -f "$EUDY/$BLOCK_DOC" ]] || { fail_reason="SKIP_PULLS is set but the Eudaimonia clone at $EUDY has no $BLOCK_DOC; run once without it"; exit 1; }
@@ -301,6 +314,7 @@ else
     strava_pull || exit 1
     gmail_pull || exit 1
     todoist_pull
+    atelic_pull || exit 1
 fi
 
 # ---------- Claude ----------
@@ -327,11 +341,19 @@ if [[ "$raw" == *"{"* && "$raw" == *"}"* ]]; then
     raw="${raw%\}*}}"
 fi
 printf '%s\n' "$raw" > "$RETRO_JSON"
-if ! jq -e 'type == "object" and has("headline") and has("movement") and has("coverage") and has("movement_read") and has("takeout") and has("takeout_read") and has("done") and has("blind_spots")' "$RETRO_JSON" >/dev/null 2>&1; then
+if ! jq -e 'type == "object" and has("headline") and has("movement") and has("coverage") and has("movement_read") and has("takeout") and has("takeout_read") and has("atelic_read") and has("blind_spots")' "$RETRO_JSON" >/dev/null 2>&1; then
     fail_reason="claude did not return the retro shape: $(head -c 300 "$RETRO_JSON")"
     exit 1
 fi
 echo "claude: retro drafted (cost $(jq -r '.total_cost_usd // "?"' <<<"$result") USD)"
+
+# The Atelic tables are data, not draft: they go in after the model, so nothing
+# it writes can move a number.
+if ! jq -s '.[0] * {atelic: .[1]}' "$RETRO_JSON" "$WORK/atelic.json" > "$RETRO_JSON.merged" 2>/dev/null; then
+    fail_reason="could not merge the Atelic tables into the retro"
+    exit 1
+fi
+mv "$RETRO_JSON.merged" "$RETRO_JSON"
 
 # ---------- render ----------
 if ! jq -r --arg week "$WEEK" --arg monday "$MONDAY" --arg sunday "$SUNDAY" -f "$RENDER" "$RETRO_JSON" > "$RETRO_HTML" 2>"$WORK/render-stderr.txt" || [[ ! -s "$RETRO_HTML" ]]; then

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Mail a runner's rendered email to Forni, for looking at a draft in the place
+# it will actually be read.
+#
+# Usage: mail <runner-name> [--subject "..."]
+#
+# A browser preview is not the artifact. Gmail collapses styles, rewrites some
+# markup, and renders on a phone, so a table that lines up in Chrome can still
+# arrive broken. This sends the exact bytes in out/retro.html through the same
+# Resend sender and to the same recipient the production runner uses.
+#
+# It sends only what is already rendered; run render-local or run-local first.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name=""; subject=""
+while (( $# )); do
+    case "$1" in
+        --subject)  subject="${2:-}"; shift 2 ;;
+        -h|--help)  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)         die "unknown option $1" ;;
+        *)          [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+
+dir="$(runner_dir "$name")"
+html="$dir/out/retro.html"
+[[ -s "$html" ]] || die "nothing rendered at $html; run 'bin/runner/render-local $name' first"
+
+week=""
+[[ -r "$dir/out/week.env" ]] && week="$(sed -n 's/^WEEK=//p' "$dir/out/week.env" | head -1)"
+subject="${subject:-${week:-$(date +%G-W%V)} Retro (draft)}"
+
+REPORT_LIB="$(runner_repo_root)/bin/lib/email-report.sh"
+[[ -r "$REPORT_LIB" ]] || die "cannot read $REPORT_LIB"
+# shellcheck source=../lib/email-report.sh
+. "$REPORT_LIB"
+
+if ! email_raw "$subject" "$html"; then
+    die "${email_error:-send failed}"
+fi
