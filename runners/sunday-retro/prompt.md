@@ -21,7 +21,7 @@ Return exactly this shape (every key present; arrays may be empty):
     {"modality": "4K Friday", "logged": "0", "target": "1"},
     {"modality": "Yoga", "logged": "0", "target": "2"}
   ],
-  "movement_read": "three or four sentences, and the only prose about movement: what the coverage numbers add up to, then hard efforts and heel, then clustering flags or none",
+  "movement_read": "ONE short sentence, at most about 110 characters, that fits on a single rendered line: the shape of the training week and the one thing worth noticing. Not a paragraph.",
   "takeout": [
     {"day": "Tue 08-25", "vehicle": "Domino's"}
   ],

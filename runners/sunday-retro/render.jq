@@ -6,6 +6,16 @@
 
 def esc: tostring | gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
 
+def col1: "26%";
+def col2: "22%";
+
+# Yes and no read faster as marks than as words, and the mark carries its own
+# verdict in colour.
+def yesno($v):
+  (if $v == "yes" then "\u2713" else "\u2715" end) as $glyph
+  | (if $v == "yes" then "#1a7f37" else "#d63a10" end) as $ink
+  | "<span style=\"color:" + $ink + ";font-size:15px;font-weight:600;\">" + $glyph + "</span>";
+
 def mono: "font-family:'Geist Mono',Menlo,Consolas,monospace;";
 def sans: "font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;";
 def hair: "border-top:1px solid #ebe6db;";
@@ -23,8 +33,8 @@ def row3($a; $b; $c; $muted; $first):
   | (if $muted then "#8a8272" else "#151515" end) as $ink
   | (if $muted then "#8a8272" else "#55503f" end) as $soft
   | "<tr>"
-    + "<td style=\"" + mono + "font-size:12px;color:#8a8272;padding:11px 8px 9px 0;vertical-align:top;white-space:nowrap;" + $top + "\">" + ($a|esc) + "</td>"
-    + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:" + $ink + ";padding:11px 8px 9px 0;vertical-align:top;" + $top + "\">" + ($b|esc) + "</td>"
+    + "<td width=\"" + col1 + "\" style=\"" + mono + "font-size:12px;color:#8a8272;padding:11px 8px 9px 0;vertical-align:top;white-space:nowrap;" + $top + "\">" + ($a|esc) + "</td>"
+    + "<td width=\"" + col2 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:" + $ink + ";padding:11px 8px 9px 0;vertical-align:top;" + $top + "\">" + ($b|esc) + "</td>"
     + "<td style=\"" + sans + "font-size:14px;color:" + $soft + ";padding:11px 0 9px 0;vertical-align:top;" + $top + "\">" + ($c|esc) + "</td>"
     + "</tr>";
 
@@ -41,9 +51,9 @@ def coverage_row($name; $logged; $target):
   # target never earns it. Clicks at zero is a fact, not a failure.
   (if ($logged|tostring) == "0" and ($target|tostring) != "" then "#d63a10" else "#151515" end) as $ink
   | "<tr>"
-    + "<td width=\"30%\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + ($name|esc) + "</td>"
-    + "<td width=\"14%\" style=\"" + mono + "font-size:13px;font-weight:500;color:" + $ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($logged|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (if ($target|tostring) == "" then "" else ("of " + ($target|esc)) end) + "</td>"
+    + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + ($name|esc) + "</td>"
+    + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:13px;font-weight:500;color:" + $ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($logged|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($target|esc) + "</td>"
     + "</tr>";
 
 def coverage_table($first_head; rows):
@@ -55,7 +65,7 @@ def coverage_table($first_head; rows):
 def done_row(r; $first):
   (if $first then "" else hair end) as $top
   | "<tr>"
-    + "<td width=\"14%\" style=\"" + mono + "font-size:12px;color:#8a8272;padding:11px 8px 9px 0;vertical-align:top;white-space:nowrap;" + $top + "\">" + (r.theme|esc) + "</td>"
+    + "<td width=\"" + col1 + "\" style=\"" + mono + "font-size:12px;color:#8a8272;padding:11px 8px 9px 0;vertical-align:top;white-space:nowrap;" + $top + "\">" + (r.theme|esc) + "</td>"
     + "<td style=\"" + sans + "font-size:14px;color:#151515;padding:11px 0 9px 0;vertical-align:top;" + $top + "\">" + (r.item|esc) + "</td>"
     + "</tr>";
 
@@ -79,32 +89,31 @@ def atelic_head($text; $w):
 # real negative and gets the miss colour; an untracked one is unknown and is
 # greyed, because rendering it as a zero would invent a fact.
 def atelic_row(r):
-  (if (r.opens|tostring) == "untracked" then "#8a8272"
+  (if (r.opens|tostring) == "-" then "#8a8272"
    elif (r.opens|tostring) == "0" then "#d63a10"
    else "#151515" end) as $open_ink
-  | (if r.replied == "yes" then "#151515" else "#8a8272" end) as $reply_ink
   | "<tr>"
-    + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:12px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.status|esc)
+    + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
+    + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.status|esc)
       + (if (r.reason // "") != "" then "<div style=\"color:#8a8272;font-size:11px;padding-top:3px;\">" + (r.reason|esc) + "</div>" else "" end)
       + "</td>"
     + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.kind|esc) + "</td>"
     + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.touches|tostring|esc) + "</td>"
     + "<td style=\"" + mono + "font-size:13px;color:" + $open_ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.opens|tostring|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;color:" + $reply_ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.replied|esc) + "</td>"
+    + "<td style=\"" + mono + "font-size:13px;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + yesno(r.replied) + "</td>"
     + "</tr>";
 
 def atelic_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
-  + "<tr>" + atelic_head("Company"; "31%") + atelic_head("Status"; "17%") + atelic_head("This week"; "20%")
+  + "<tr>" + atelic_head("Company"; col1) + atelic_head("Status"; col2) + atelic_head("This week"; "16%")
   + atelic_head("Touches"; "10%") + atelic_head("Opens"; "12%") + atelic_head("Heard back"; "10%") + "</tr>"
   + (rows | map(atelic_row(.)) | join(""))
   + "</table>";
 
 def opp_row(r):
   "<tr>"
-  + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
-  + "<td style=\"" + mono + "font-size:12px;color:#fc4a1a;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
+  + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
+  + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:#fc4a1a;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
   + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.build|esc) + "</td>"
   + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.operate|esc) + "</td>"
   + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.months|esc) + "</td>"
@@ -113,8 +122,8 @@ def opp_row(r):
 
 def opp_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
-  + "<tr>" + atelic_head("Company"; "30%") + atelic_head("Stage"; "16%") + atelic_head("Build"; "14%")
-  + atelic_head("Operate"; "14%") + atelic_head("Months"; "10%") + atelic_head("Total"; "16%") + "</tr>"
+  + "<tr>" + atelic_head("Company"; col1) + atelic_head("Stage"; col2) + atelic_head("Build"; "12%")
+  + atelic_head("Operate"; "12%") + atelic_head("Months"; "8%") + atelic_head("Total"; "18%") + "</tr>"
   + (rows | map(opp_row(.)) | join(""))
   + "</table>";
 

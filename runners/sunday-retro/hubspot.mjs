@@ -281,8 +281,11 @@ for (const [cid, r] of rows) {
         touches: (priorTouches.get(cid) || 0) + r.sends,
         // Opens are only readable on a send that carried tracking, so an
         // untracked send reports as unknown rather than as a zero.
-        opens: r.tracked ? String(r.opens) : "untracked",
-        clicks: r.tracked ? String(r.clicks) : "untracked",
+        // A send that carried no tracking cannot be read, which is not the
+        // same as a zero. It renders as a dash, the table's own way of saying
+        // the question does not apply here.
+        opens: r.tracked ? String(r.opens) : "-",
+        clicks: r.tracked ? String(r.clicks) : "-",
         tracked: `${r.tracked}/${r.sends}`,
         replied: r.replied ? "yes" : "no",
         last_send: r.lastSend,
@@ -343,12 +346,9 @@ const totals = {
 const TARGET_FIRST = Number(process.env.ATELIC_TARGET_FIRST || 5);
 const TARGET_BUMPS = Number(process.env.ATELIC_TARGET_BUMPS || 5);
 const coverage = [
-    { measure: "First sends", logged: String(totals.first), target: String(TARGET_FIRST) },
-    { measure: "Bumps", logged: String(totals.bumps), target: String(TARGET_BUMPS) },
-    { measure: "Replies sent", logged: String(totals.replies_sent), target: "" },
-    { measure: "Tracked", logged: `${totals.tracked} of ${totals.sends}`, target: "" },
+    { measure: "First Sends", logged: String(totals.first), target: String(TARGET_FIRST) },
+    { measure: "Follow Ups", logged: String(totals.bumps), target: String(TARGET_BUMPS) },
     { measure: "Opens", logged: String(totals.opens), target: "" },
-    { measure: "Clicks", logged: String(totals.clicks), target: "" },
 ];
 
 console.log(JSON.stringify({ ...tables, coverage, totals }, null, 2));

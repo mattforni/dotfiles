@@ -33,7 +33,12 @@ html="$dir/out/retro.html"
 
 week=""
 [[ -r "$dir/out/week.env" ]] && week="$(sed -n 's/^WEEK=//p' "$dir/out/week.env" | head -1)"
-subject="${subject:-${week:-$(date +%G-W%V)} Retro (draft)}"
+# Every draft gets its own subject. Gmail threads messages that share one and
+# then hides the parts a later message repeats behind its trimmed content
+# button, so a second draft of the same week arrives with its tables collapsed
+# and reads as broken markup rather than as a repeat. The production runner
+# sends one email a week and never hits this.
+subject="${subject:-${week:-$(date +%G-W%V)} Retro (draft $(date +%H:%M))}"
 
 REPORT_LIB="$(runner_repo_root)/bin/lib/email-report.sh"
 [[ -r "$REPORT_LIB" ]] || die "cannot read $REPORT_LIB"
