@@ -54,7 +54,7 @@ def coverage_table(rows):
 def done_row(r; $first):
   (if $first then "" else hair end) as $top
   | "<tr>"
-    + "<td style=\"" + mono + "font-size:12px;color:#8a8272;padding:11px 8px 9px 0;vertical-align:top;white-space:nowrap;" + $top + "\">" + (r.theme|esc) + "</td>"
+    + "<td width=\"14%\" style=\"" + mono + "font-size:12px;color:#8a8272;padding:11px 8px 9px 0;vertical-align:top;white-space:nowrap;" + $top + "\">" + (r.theme|esc) + "</td>"
     + "<td style=\"" + sans + "font-size:14px;color:#151515;padding:11px 0 9px 0;vertical-align:top;" + $top + "\">" + (r.item|esc) + "</td>"
     + "</tr>";
 
@@ -96,9 +96,29 @@ def atelic_row(r):
 def atelic_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
   + "<tr>" + atelic_head("Company"; "31%") + atelic_head("Status"; "17%") + atelic_head("This week"; "20%")
-  + atelic_head("Touches"; "10%") + atelic_head("Opens"; "12%") + atelic_head("Replied"; "10%") + "</tr>"
+  + atelic_head("Touches"; "10%") + atelic_head("Opens"; "12%") + atelic_head("Heard back"; "10%") + "</tr>"
   + (rows | map(atelic_row(.)) | join(""))
   + "</table>";
+
+def opp_row(r):
+  "<tr>"
+  + "<td style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
+  + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.deal|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:12px;color:#fc4a1a;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.stage|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.amount|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:12px;color:#8a8272;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.close|esc) + "</td>"
+  + "</tr>";
+
+def opp_table(rows):
+  "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
+  + "<tr>" + atelic_head("Company"; "26%") + atelic_head("Deal"; "32%") + atelic_head("Stage"; "16%")
+  + atelic_head("On the table"; "14%") + atelic_head("Close"; "12%") + "</tr>"
+  + (rows | map(opp_row(.)) | join(""))
+  + "</table>";
+
+def opp_block($label; rows; $empty):
+  sub_label($label)
+  + (if (rows|length) > 0 then opp_table(rows) else empty_line($empty) end);
 
 def atelic_block($label; rows; $empty):
   sub_label($label)
@@ -145,7 +165,7 @@ def mark:
 
   # atelic
   + section_label("Atelic")
-  + atelic_block("Opportunities"; ($r.atelic.opportunities // []); "No opportunity moved this week.")
+  + opp_block("Opportunities"; ($r.atelic.opportunities // []); "No opportunity moved this week.")
   + atelic_block("Open Leads"; ($r.atelic.open_leads // []); "No lead was touched this week.")
   + atelic_block("Closed Leads"; ($r.atelic.closed_leads // []); "Nothing closed this week.")
   + (($r.atelic.totals // {}) as $t
@@ -164,7 +184,7 @@ def mark:
   # footer
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin-top:36px;border-top:1px solid #ece8de;\"><tr>"
   + "<td style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Drafted by Claude for the Sunday session</td>"
-  + "<td align=\"right\" style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Strava, Gmail, Todoist, HubSpot</td>"
+  + "<td align=\"right\" style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Strava, Gmail, HubSpot</td>"
   + "</tr></table>"
 
   + "</td></tr></table>"
