@@ -314,8 +314,11 @@ email_raw() {
 
   [[ -r "$html_file" ]] || { email_error="cannot read $html_file"; return 1; }
 
+  # `|| true` on each substitution because bin/runner/mail sources this under
+  # `set -e`, where a failing assignment would take the caller down before the
+  # error below could ever be set or read.
   local api_key
-  api_key=$(security find-generic-password -s "$EMAIL_REPORT_RESEND_KEY_SERVICE" -w 2>/dev/null)
+  api_key=$(security find-generic-password -s "$EMAIL_REPORT_RESEND_KEY_SERVICE" -w 2>/dev/null || true)
   [[ -n "$api_key" ]] || {
     email_error="Resend API key missing in Keychain (service $EMAIL_REPORT_RESEND_KEY_SERVICE)"
     return 2
@@ -326,7 +329,7 @@ email_raw() {
     return 3
   }
   local recipient
-  recipient=$(grep -vE '^\s*(#|$)' "$EMAIL_REPORT_RECIPIENT_FILE" | head -n1 | tr -d '[:space:]')
+  recipient=$(grep -vE '^\s*(#|$)' "$EMAIL_REPORT_RECIPIENT_FILE" | head -n1 | tr -d '[:space:]') || true
   [[ -n "$recipient" ]] || { email_error="no recipient in $EMAIL_REPORT_RECIPIENT_FILE"; return 3; }
 
   local payload body code
@@ -340,7 +343,7 @@ email_raw() {
     -X POST "$EMAIL_REPORT_API_URL" \
     -H "Authorization: Bearer $api_key" \
     -H "Content-Type: application/json" \
-    -d "$payload")
+    -d "$payload") || true
   if [[ "$code" =~ ^2 ]]; then
     echo "sent \"$subject\" to $recipient"
     rm -f "$body"

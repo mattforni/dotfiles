@@ -32,20 +32,35 @@ runner_dir() {
 # ever one of them, so a read that spans both projects has to try each. The
 # working account is cached per project for the life of the process, since a
 # fetch-env run reads eight secrets and probing on every one is slow.
-declare -A RUNNER_VAULT_ACCOUNT=()
+#
+# A newline delimited "project<TAB>account" string rather than an associative
+# array, for the same reason bin/vault/push-secrets uses one: the shebang is
+# `env bash`, which resolves to bash 3.2 on a Mac with no homebrew bash on
+# PATH, and 3.2 has no `declare -A`. Sourcing this would fail outright there.
+RUNNER_VAULT_ACCOUNTS=""
+
+runner_vault_account() {
+    printf '%s\n' "$RUNNER_VAULT_ACCOUNTS" | while IFS="$(printf '\t')" read -r p a; do
+        [[ "$p" == "$1" ]] || continue
+        printf '%s' "$a"
+        break
+    done
+}
 
 runner_access_secret() {
     # $1 project, $2 secret name, $3 version
-    local project="$1" name="$2" version="${3:-latest}" account value
-    if [[ -n "${RUNNER_VAULT_ACCOUNT[$project]:-}" ]]; then
+    local project="$1" name="$2" version="${3:-latest}" account value cached
+    cached="$(runner_vault_account "$project")"
+    if [[ -n "$cached" ]]; then
         gcloud secrets versions access "$version" --secret="$name" --project="$project" \
-            --account="${RUNNER_VAULT_ACCOUNT[$project]}" 2>/dev/null && return 0
+            --account="$cached" 2>/dev/null && return 0
         return 1
     fi
     while read -r account; do
         [[ -n "$account" ]] || continue
         if value="$(gcloud secrets versions access "$version" --secret="$name" --project="$project" --account="$account" 2>/dev/null)"; then
-            RUNNER_VAULT_ACCOUNT[$project]="$account"
+            RUNNER_VAULT_ACCOUNTS="$RUNNER_VAULT_ACCOUNTS$project$(printf '\t')$account
+"
             printf '%s' "$value"
             return 0
         fi

@@ -121,6 +121,10 @@ esac
 # resolved portal is actually in the Keychain; without one this falls back to
 # the CLI, which still answers every endpoint its own scopes cover.
 if [[ "${1:-}" == "api" && -n "$keychain_service" ]]; then
+    # The parser below consumes every argument, so the original line is kept
+    # whole for the fallback at the bottom: without it the CLI would be handed
+    # a bare endpoint with the `api` subcommand already shifted away.
+    original_args=("$@")
     shift
     endpoint=""; method=""; data=""; want_account=""
     while (( $# )); do
@@ -168,6 +172,7 @@ if [[ "${1:-}" == "api" && -n "$keychain_service" ]]; then
     key="$(security find-generic-password -s "$keychain_service" -w 2>/dev/null || true)"
     if [[ -z "$key" ]]; then
         echo "hs shim: no Keychain entry '$keychain_service'; falling back to the CLI, whose scopes are narrower" >&2
+        set -- "${original_args[@]}"
     else
         body="$(mktemp)"
         trap 'rm -f "$body"' EXIT

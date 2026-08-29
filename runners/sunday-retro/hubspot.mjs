@@ -110,9 +110,12 @@ const rawWeek = await searchAll("emails", {
     properties: EMAIL_PROPS,
     sorts: [{ propertyName: "hs_timestamp", direction: "ASCENDING" }],
 });
+// Both directions, deliberately. An earlier week's inbound message is what
+// makes this week's outbound a reply rather than a bump, so filtering this
+// query to EMAIL would leave `answered` blind to every thread answered before
+// Monday and misclassify exactly the case it exists to catch.
 const rawPrior = await searchAll("emails", {
     filterGroups: [{ filters: [
-        { propertyName: "hs_email_direction", operator: "EQ", value: "EMAIL" },
         { propertyName: "hs_timestamp", operator: "LT", value: `${MONDAY}T00:00:00Z` },
     ] }],
     properties: EMAIL_PROPS,
@@ -149,6 +152,9 @@ const companiesFor = (eid, aCo, aCt) => {
 const priorSeen = new Set();
 const priorTouches = new Map();
 for (const e of prior) {
+    // A touch is something Forni sent. Inbound rides along in `prior` only so
+    // that `answered` can see it.
+    if (e.properties.hs_email_direction !== "EMAIL") continue;
     for (const c of (aCoPrior.get(e.id) || []).filter((c) => c !== SELF_COMPANY)) {
         const key = `${c}|${normSubject(e.properties.hs_email_subject)}`;
         if (priorSeen.has(key)) continue;
@@ -258,6 +264,7 @@ const warmest = (ids) => {
 };
 
 const tables = { opportunities: [], open_leads: [], closed_leads: [] };
+const counted = new Map();
 for (const [cid, r] of rows) {
     const c = companies.get(cid) || {};
     const stage = c.lifecyclestage || "";
@@ -272,6 +279,7 @@ for (const [cid, r] of rows) {
     if (r.first) kinds.push(r.first > 1 ? `${r.first} first` : "first");
     if (r.bump) kinds.push(r.bump > 1 ? `${r.bump} bumps` : "bump");
     if (r.reply) kinds.push(r.reply > 1 ? `${r.reply} replies` : "reply");
+    counted.set(cid, r);
     const deal = dealByCompany.get(cid);
     const entry = {
         company: c.name || `(company ${cid})`,
@@ -304,9 +312,16 @@ for (const [cid, r] of rows) {
         // Total is the engagement's whole value, the build plus the operate
         // retainer over its term. Deals priced before those fields existed
         // carry only `amount`, so that stands in rather than showing nothing.
-        const total = (build || operate)
+        // An operate price with no term cannot be totalled: multiplying by a
+        // missing term would quietly report the build alone, a number lower
+        // than the deal. Fall back to `amount`, and to nothing if there is
+        // none, rather than showing a figure that is wrong.
+        const totalable = build && (!operate || months);
+        const total = totalable
             ? Number(build || 0) + Number(operate || 0) * Number(months || 0)
-            : (deal?.amount ? Number(deal.amount) : null);
+            : (operate && months
+                ? Number(operate) * Number(months)
+                : (deal?.amount ? Number(deal.amount) : null));
         tables.opportunities.push({
             company: entry.company,
             stage: deal ? (STAGES[deal.dealstage] || deal.dealstage) : "-",
@@ -328,7 +343,12 @@ for (const t of [tables.open_leads, tables.closed_leads]) {
 }
 tables.opportunities.sort((a, b) => b.last_send.localeCompare(a.last_send));
 
-const all = [...rows.values()];
+// Totals count the rows the tables actually show. Built from every row in
+// `rows` they included the companies the table loop skips on lifecycle stage
+// and on missing lead status, which is how mail to Forni's PT and his lawyers
+// reached the First Sends and Follow Ups coverage numbers while being absent
+// from every table under them.
+const all = [...counted.values()];
 const totals = {
     companies: tables.opportunities.length + tables.open_leads.length + tables.closed_leads.length,
     sends: all.reduce((n, r) => n + r.sends, 0),
