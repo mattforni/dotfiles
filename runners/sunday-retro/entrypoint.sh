@@ -276,7 +276,6 @@ gmail_pull() {
     echo "gmail: $(wc -l < "$WORK/takeout.jsonl") takeout candidates"
 }
 
-
 # ---------- HubSpot (the Atelic week) ----------
 # The joins behind these tables have traps that a model reading raw JSON would
 # get wrong quietly, so the arithmetic is done here and the prompt is handed
