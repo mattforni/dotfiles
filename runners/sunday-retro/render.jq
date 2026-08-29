@@ -19,7 +19,9 @@ def yesno($v):
 # Money reads by sign: earned is green, given up is red, and an absent figure
 # stays grey rather than claiming either.
 def stage_ink($v):
-  if ($v|tostring) | startswith("Closed Lost") then "#b3705e" else "#6b8b64" end;
+  if ($v|tostring) == "-" or ($v|tostring) == "" then "#8a8272"
+  elif ($v|tostring) | startswith("Closed Lost") then "#b3705e"
+  else "#6b8b64" end;
 
 def money_ink($v):
   if ($v|tostring) == "-" or ($v|tostring) == "" then "#8a8272"
