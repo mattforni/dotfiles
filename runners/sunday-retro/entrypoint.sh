@@ -15,7 +15,6 @@
 #   STRAVA_CLIENT_SECRET      forni-keys/strava-client-secret
 #   STRAVA_REFRESH_TOKEN      forni-keys/strava-refresh-token
 #   GWS_OAUTH_TOKEN_JSON      forni-keys/gws-oauth-token-personal (authorized_user JSON)
-#   TODOIST_API_TOKEN         forni-keys/todoist-api-token
 #   HUBSPOT_SERVICE_KEY       atelic-keys/hubspot-service-key-atelic (read only use here)
 #   EUDY_DEPLOY_KEY           forni-keys/github-deploy-key-eudy (read only deploy key on mattforni/Eudaimonia)
 # Plain configuration:
@@ -144,11 +143,11 @@ finish() {
 trap finish EXIT
 
 # What a run needs depends on what it will do. A dry run never sends, and a run
-# over cached pulls never authenticates to Strava, Google, Todoist or GitHub, so
+# over cached pulls never authenticates to Strava, Google, HubSpot or GitHub, so
 # demanding all nine every time would make the fast local loops impossible.
 required=(CLAUDE_CODE_OAUTH_TOKEN)
 [[ "$DRY_RUN" == "1" ]] || required+=(RESEND_API_KEY REPORT_RECIPIENT)
-[[ "$SKIP_PULLS" == "1" ]] || required+=(STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON TODOIST_API_TOKEN EUDY_DEPLOY_KEY HUBSPOT_SERVICE_KEY)
+[[ "$SKIP_PULLS" == "1" ]] || required+=(STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON EUDY_DEPLOY_KEY HUBSPOT_SERVICE_KEY)
 require "${required[@]}" || exit 1
 
 # ---------- Eudaimonia ----------
@@ -277,17 +276,6 @@ gmail_pull() {
     echo "gmail: $(wc -l < "$WORK/takeout.jsonl") takeout candidates"
 }
 
-# ---------- Todoist ----------
-todoist_pull() {
-    curl -sS --max-time 30 -G -H "Authorization: Bearer $TODOIST_API_TOKEN" \
-        --data-urlencode "since=${MONDAY}T00:00:00" --data-urlencode "until=${SUNDAY}T23:59:59" \
-        --data-urlencode "limit=200" \
-        https://api.todoist.com/api/v1/tasks/completed/by_completion_date \
-        | jq '[.items[]? | {content, completed_at, project_id, labels}]' > "$WORK/todoist.json" \
-        || { echo "todoist: pull failed (continuing without it)"; echo '[]' > "$WORK/todoist.json"; }
-    echo "todoist: $(jq length "$WORK/todoist.json") completed tasks"
-}
-
 # ---------- HubSpot (the Atelic week) ----------
 # The joins behind these tables have traps that a model reading raw JSON would
 # get wrong quietly, so the arithmetic is done here and the prompt is handed
@@ -304,7 +292,7 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
     # Reusing the last run's pulls is what makes prompt iteration cheap, but a
     # missing file would reach Claude as an empty week rather than an error, so
     # every input the prompt names is checked before the call.
-    for cached in strava.json takeout.jsonl todoist.json atelic.json; do
+    for cached in strava.json takeout.jsonl atelic.json; do
         [[ -f "$WORK/$cached" ]] || { fail_reason="SKIP_PULLS is set but $WORK/$cached is missing; run once without it"; exit 1; }
     done
     [[ -f "$EUDY/$BLOCK_DOC" ]] || { fail_reason="SKIP_PULLS is set but the Eudaimonia clone at $EUDY has no $BLOCK_DOC; run once without it"; exit 1; }
@@ -313,7 +301,6 @@ else
     eudy_pull || exit 1
     strava_pull || exit 1
     gmail_pull || exit 1
-    todoist_pull
     atelic_pull || exit 1
 fi
 
