@@ -128,8 +128,9 @@ const weekIds = week.map((e) => e.id);
 const aCoWeek = await assoc("emails", "companies", weekIds);
 const aCtWeek = await assoc("emails", "contacts", weekIds);
 const aCoPrior = await assoc("emails", "companies", prior.map((e) => e.id));
+const aCtPrior = await assoc("emails", "contacts", prior.map((e) => e.id));
 
-const ctIds = [...new Set([...aCtWeek.values()].flat())];
+const ctIds = [...new Set([...aCtWeek.values(), ...aCtPrior.values()].flat())];
 const contacts = new Map((await batch("contacts", ctIds,
     ["firstname", "lastname", "hs_lead_status", "associatedcompanyid"])).map((c) => [c.id, c.properties]));
 
@@ -155,7 +156,10 @@ for (const e of prior) {
     // A touch is something Forni sent. Inbound rides along in `prior` only so
     // that `answered` can see it.
     if (e.properties.hs_email_direction !== "EMAIL") continue;
-    for (const c of (aCoPrior.get(e.id) || []).filter((c) => c !== SELF_COMPANY)) {
+    // Same fallback the week's sends get: a company link is no more reliable on
+    // an old send than a new one, and without this the lifetime count silently
+    // undercounts exactly the sends the fallback exists to find.
+    for (const c of companiesFor(e.id, aCoPrior, aCtPrior)) {
         const key = `${c}|${normSubject(e.properties.hs_email_subject)}`;
         if (priorSeen.has(key)) continue;
         priorSeen.add(key);
