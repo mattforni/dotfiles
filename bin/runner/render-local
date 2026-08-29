@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Re-render a runner's saved draft through its renderer.
+#
+# Usage: render-local <runner-name> [--week YYYY-Www] [--json <file>] [--no-open]
+#
+# No network, no model, no credentials: this reads the JSON a previous run left
+# in out/ and pushes it back through render.jq. It is the loop to use while
+# iterating on how the email looks, and it turns a two minute round trip into
+# an instant one. Editing what the email says is the other loop, run-local
+# --reuse, which re-asks Claude over the same cached pulls.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name=""; week=""; json=""; open_it=1
+while (( $# )); do
+    case "$1" in
+        --week)    week="${2:-}"; shift 2 ;;
+        --json)    json="${2:-}"; shift 2 ;;
+        --no-open) open_it=0; shift ;;
+        -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)        die "unknown option $1" ;;
+        *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+
+dir="$(runner_dir "$name")"
+render="$dir/render.jq"
+[[ -r "$render" ]] || die "$name has no render.jq"
+
+work="$dir/out"
+json="${json:-$work/retro.json}"
+[[ -s "$json" ]] || die "no draft at $json; run 'bin/runner/run-local $name' once first"
+
+# The week the saved draft belongs to, left behind by run-local. An explicit
+# --week wins, and today's week is the last resort.
+monday=""; sunday=""
+if [[ -r "$work/week.env" ]]; then
+    # shellcheck source=/dev/null
+    . "$work/week.env"
+    [[ -n "$week" ]] && WEEK="$week"
+    monday="${MONDAY:-}"; sunday="${SUNDAY:-}"
+fi
+WEEK="${week:-${WEEK:-$(date +%G-W%V)}}"
+if [[ -z "$monday" || -n "$week" ]]; then
+    iso_year="${WEEK%-W*}"; iso_week="${WEEK#*-W}"
+    jan4_dow="$(date -j -f %Y-%m-%d "${iso_year}-01-04" +%u 2>/dev/null || date -d "${iso_year}-01-04" +%u)"
+    if date -d 2026-01-04 +%F >/dev/null 2>&1; then
+        w1="$(date -d "${iso_year}-01-04 -$((jan4_dow - 1)) days" +%F)"
+        monday="$(date -d "$w1 +$(( (10#$iso_week - 1) * 7 )) days" +%F)"
+        sunday="$(date -d "$monday +6 days" +%F)"
+    else
+        w1="$(date -j -v-$((jan4_dow - 1))d -f %Y-%m-%d "${iso_year}-01-04" +%F)"
+        monday="$(date -j -v+$(( (10#$iso_week - 1) * 7 ))d -f %Y-%m-%d "$w1" +%F)"
+        sunday="$(date -j -v+6d -f %Y-%m-%d "$monday" +%F)"
+    fi
+fi
+
+html="$work/retro.html"
+jq -r --arg week "$WEEK" --arg monday "$monday" --arg sunday "$sunday" -f "$render" "$json" > "$html"
+[[ -s "$html" ]] || die "render produced nothing"
+echo "$WEEK ($monday to $sunday): $(wc -c < "$html" | tr -d ' ') bytes -> $html"
+if (( open_it )) && command -v open >/dev/null 2>&1; then
+    open "$html"
+fi
