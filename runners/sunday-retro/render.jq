@@ -127,12 +127,12 @@ def opp_table(rows):
   + (rows | map(opp_row(.)) | join(""))
   + "</table>";
 
-def opp_block($label; rows; $empty):
-  sub_label($label)
+def opp_block($heading; rows; $empty):
+  sub_label($heading)
   + (if (rows|length) > 0 then opp_table(rows) else empty_line($empty) end);
 
-def atelic_block($label; rows; $empty):
-  sub_label($label)
+def atelic_block($heading; rows; $empty):
+  sub_label($heading)
   + (if (rows|length) > 0 then atelic_table(rows) else empty_line($empty) end);
 
 def mark:
