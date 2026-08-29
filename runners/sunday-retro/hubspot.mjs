@@ -308,8 +308,14 @@ for (const [cid, r] of rows) {
     // with it was still moving.
     const closed = CLOSED.has(status);
     if (stage === "opportunity" || stage === "customer") {
-        const money = (v) => (v === null || v === undefined || v === ""
-            ? "-" : `$${Number(v).toLocaleString("en-US")}`);
+        // Money carries its sign. A trade credit is money not collected, so it
+        // reads as negative and the renderer colours it accordingly; without
+        // the sign the column looked like another thing being earned.
+        const money = (v) => {
+            if (v === null || v === undefined || v === "") return "-";
+            const n = Number(v);
+            return `${n < 0 ? "-" : ""}$${Math.abs(n).toLocaleString("en-US")}`;
+        };
         const build = deal?.build_price;
         const operate = deal?.operate_price;
         const months = deal?.operate_length;
@@ -338,7 +344,8 @@ for (const [cid, r] of rows) {
             // The term rides with the operate figure rather than taking a
             // column of its own; the table is already wide.
             operate: (operate && months) ? `${money(operate)} x${months}` : money(operate),
-            trade: trade ? money(trade) : "-",
+            trade: trade ? money(-trade) : "-",
+            total: money(total),
             cash: money(cash),
             last_send: entry.last_send,
         });
