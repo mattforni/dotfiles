@@ -71,9 +71,13 @@ Claude Code has no profiles and one config dir (the `~/bin/claude` wrapper retir
 
 Never hard code a username in tracked config or documentation. Homebase deploys to several machines, and `/Users/forni/...` breaks on every one that does not match. Use `$HOME` in shell scripts and JSON, `~` in markdown and aliases. If a tool reads a value literally and does not expand either, surface that as a `setup.sh` templating gap rather than working around it with a username.
 
-## Code Review Bots
+## Code Review
 
-CodeRabbit is the sole review bot on `mattforni/homebase` (Gemini Code Assist reviewed here until 2026-07-17, when Google sunset the consumer app). It posts a check suite within seconds of a PR opening, does not re review on a bare push (trigger with `@coderabbitai review`), and leaves a stale "Changes requested" status until it does; dismiss the stale review through the API once every comment is addressed. When it is in its rate limit cooldown ("Review limit reached"), land on CI plus your own read, because this repo's checks are real (markdown, shell, reconciler) and must be green; a repo with no CI checks waits the cooldown out instead. Paying to skip the wait is Forni's call, never assumed. Triage guidance lives in GC's Code Review section. The two house standards (chill for client sites, assertive for own code) live in [coderabbit/](coderabbit/README.md); this repo's root `.coderabbit.yaml` is the assertive canonical.
+**`coderabbit review --base origin/main --committed --agent` on the branch is the gate, here and everywhere else** (adopted 2026-08-29). It runs locally in a couple of minutes, needs no trigger comment, has no PR queue, and returns real findings. Run it before a merge and read what it says; `~/Eudaimonia/Admin/Tools/coderabbit.md` carries the mechanics, the JSONL shape, the rate limits, and why the CLI needs a cwd wrapper.
+
+Homebase is **public**, so it is one of the repos where the PR bot also works: the free Open Source plan gives CodeRabbit full inline review on pull requests here, unlike the private repos where it can only summarize. That makes the bot a genuine second look on this repo and it stays enabled, but it is the fallback, not the thing to wait on. It posts within seconds of a PR opening, does not re review on a bare push (trigger with `@coderabbitai review`), and leaves a stale "Changes requested" status until it does; dismiss that through the API once every comment is addressed. Gemini Code Assist reviewed here until 2026-07-17, when Google sunset the consumer app.
+
+The two house standards (chill for client sites, assertive for own code) live in [coderabbit/](coderabbit/README.md); this repo's root `.coderabbit.yaml` is the assertive canonical. Triage guidance lives in GC's Code Review section.
 
 ## Landing Changes: Decide by the Heuristic
 

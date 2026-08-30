@@ -55,7 +55,9 @@ git push -u origin HEAD
 
 ## Review Command Lookup
 
-Get the configured review command for requesting re-review:
+**The review gate is the CodeRabbit CLI, run locally on the branch, and it needs no configuration.** This lookup feeds only the optional PR bot trigger, which is a fallback on public repos and is never waited on (2026-08-29).
+
+Get the configured trigger comment:
 
 ```bash
 ../../scripts/get-review-command.sh

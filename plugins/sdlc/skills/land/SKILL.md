@@ -1,12 +1,13 @@
 ---
 name: land
-description: Drive the back half of SDLC autonomously — open the PR if needed, iterate with the bot reviewer until feedback is addressed, merge (squash), then clean up. The agent (not GitHub) judges when feedback is addressed. Bails to the user on human review, hard CI failure, merge conflict, or time budget exceeded. Default next step after implementation; use when the user says "land it", "ship this", "merge when ready", or invokes /sdlc:land.
+description: Drive the back half of SDLC autonomously. Run the CodeRabbit CLI review as the gate, watch CI, triage findings, merge (squash), then clean up. The agent (not GitHub) judges when feedback is addressed. Bails to the user on human review, hard CI failure, merge conflict, or time budget exceeded. Default next step after implementation; use when the user says "land it", "ship this", "merge when ready", or invokes /sdlc:land.
 argument-hint: "[PR number - auto-detected if on feature branch]"
 allowed-tools:
   - Bash(git *)
   - Bash(gh *)
+  - Bash(coderabbit *)
+  - Bash(*cr-review.sh*)
   - Bash(*get-base-branch.sh*)
-  - Bash(*get-review-command.sh*)
   - Read
   - Edit
   - Monitor
@@ -17,17 +18,19 @@ allowed-tools:
 
 # Land a PR
 
-Take an implementation from "ready for review" through "merged and cleaned up". Wraps `sdlc:review` → poll → (`sdlc:iterate`)* → merge → `sdlc:complete`. The agent owns the feedback-completeness judgment because GitHub's `mergeStateStatus: CLEAN` only reflects branch protection and required checks, not whether bot suggestions have been addressed.
+Take an implementation from "ready for review" through "merged and cleaned up". Wraps `sdlc:review` → CLI review → watch CI → (`sdlc:iterate`)* → merge → `sdlc:complete`. The agent owns the feedback-completeness judgment because GitHub's `mergeStateStatus: CLEAN` only reflects branch protection and required checks, not whether the review's findings have been addressed.
 
-In all bash steps below, substitute placeholder names (like PR_NUMBER, HEAD_SHA, BOT_LOGINS) with the actual values you stored earlier.
+In all bash steps below, substitute placeholder names (like PR_NUMBER, HEAD_SHA) with the actual values you stored earlier.
 
 ## Workflow
 
 1. **Identify PR or open one** (call `sdlc:review` if no PR exists for the branch)
-2. **Detect bot reviewers** proactively (HEAD check/status probe + recent-PR history); supports more than one bot per repo
-3. **Poll** for state changes via Monitor — exits on bot re-review, CI failure, human review, or timeout
-4. **Decide and act**: merge / address feedback / bail
-5. **Merge and complete** when ready — invoke `sdlc:complete` for cleanup
+2. **Review the branch yourself with the CodeRabbit CLI.** This is the gate.
+3. **Watch CI** on a bounded poll, exiting on settled checks, CI failure, human review, or timeout
+4. **Decide and act**: merge / address findings / bail
+5. **Merge and complete** when ready, invoking `sdlc:complete` for cleanup
+
+Never wait on the CodeRabbit PR bot. On a private repo the free plan posts a walkthrough comment and never a review object, so a loop that polls for one polls forever while gating on nothing. On a public repo the free Open Source plan does review properly, so read its findings if they have already arrived, but merge on your own CLI review plus CI regardless. Adopted 2026-08-29; the full reasoning and mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 
 ## Step 1: Identify PR or Open One
 
@@ -36,10 +39,14 @@ If `$ARGUMENTS` is provided, use it as PR_NUMBER and skip to Step 2.
 Otherwise try to detect from the current branch:
 
 ```bash
-gh pr view --json number --jq '.number' 2>/dev/null
+PR_NUMBER=$(gh pr view --json number --jq '.number' 2>/dev/null); LOOKUP=$?
 ```
 
-If empty, no PR exists yet — invoke `sdlc:review` to open one, then re-run the detection. Store the result as PR_NUMBER. If still empty after `sdlc:review`, stop with error: "No PR could be opened for the current branch".
+**Separate the lookup's exit status from its output.** An auth failure, a network blip, or a missing remote all return empty just like "no PR exists", and treating those as a missing PR opens a duplicate against a repo you could not even read. Only a *successful* lookup that came back empty means no PR yet.
+
+- `LOOKUP` non-zero → stop and report the failure. Do not open anything.
+- `LOOKUP` zero and PR_NUMBER empty → no PR exists, so invoke `sdlc:review` to open one, then re-run the detection. If still empty after that, stop with error: "No PR could be opened for the current branch".
+- `LOOKUP` zero and PR_NUMBER set → carry on to Step 2.
 
 Get the repo identifier:
 
@@ -49,86 +56,65 @@ gh repo view --json nameWithOwner --jq '.nameWithOwner'
 
 Store as REPO (format: `owner/repo`).
 
-## Step 2: Detect Bot Reviewers
+## Step 2: Run the CodeRabbit CLI Review
 
-Build the **set** of review bots configured on this repo, and do it without waiting for any bot to review the current PR. A repo can run more than one (homebase runs both CodeRabbit and Gemini), so this stores a list, `BOT_LOGINS`, which may hold zero, one, or several logins.
-
-GitHub's installed-apps API would be the authoritative source, but it needs app-level auth: a normal user or `gh` token gets a 401 on `repos/REPO/installation` and a 404 on the plural form. So detection unions two signals that a user token can read, neither of which waits on the current review.
-
-Each bot leaves a different footprint, which dictates how it is found:
-
-| Bot | Footprint on HEAD before it reviews | Found via |
-|---|---|---|
-| CodeRabbit | check-suite (`app.slug == coderabbitai`) + a pending `CodeRabbit` commit status, both within seconds | Signal A (instant) |
-| Gemini | none — its only artifact is the review itself | Signal B (history) |
+This is the review gate, and it runs against the branch's current HEAD in the PR's worktree or checkout:
 
 ```bash
-HEAD_SHA=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha')
-
-# Signal A — live HEAD probe. Instant; catches any bot that posts a check suite or
-# commit status (CodeRabbit and most check-based bots). No review needed.
-PROBE=$(
-  { gh api "repos/REPO/commits/$HEAD_SHA/check-suites" --jq '.check_suites[].app.slug' 2>/dev/null
-    gh api "repos/REPO/commits/$HEAD_SHA/statuses"      --jq '.[].context'            2>/dev/null
-  } | tr 'A-Z' 'a-z' \
-    | sed -n 's/.*coderabbit.*/coderabbitai[bot]/p; s/.*gemini.*/gemini-code-assist[bot]/p'
-)
-
-# Signal B — historical roster. Reads PAST PRs (not the current review), so it catches
-# review-only bots like Gemini that leave no footprint on the commit.
-HIST=$(
-  gh api "repos/REPO/pulls?state=closed&per_page=10&sort=updated&direction=desc" --jq '.[].number' 2>/dev/null \
-  | while read -r pr; do
-      gh api "repos/REPO/pulls/$pr/reviews" \
-        --jq '.[].user.login | select(test("(?i)gemini|coderabbit"))' 2>/dev/null
-    done
-)
-
-BOT_LOGINS=$(printf '%s\n%s\n' "$PROBE" "$HIST" | grep -v '^$' | sort -u | tr '\n' ' ')
-echo "BOT_LOGINS: ${BOT_LOGINS:-<none>}"
+coderabbit review --base origin/main --committed --agent
 ```
 
-Store the space-separated result as BOT_LOGINS. If empty, the repo has no review bot (or, for a review-only bot, no PR history yet) — the loop still works, it just skips the iterate cycles and merges as soon as CI passes.
+Substitute the repo's real base branch (`scripts/get-base-branch.sh`) when it is not `main`, and fetch first so `origin/main` is current. The command needs a working directory and offers no flag that selects one, so drive it through a small wrapper script that changes directory internally and echoes `pwd` back for confirmation. Name that wrapper `cr-review.sh`, which is the name this skill's `allowed-tools` permits.
 
-**Residual gap:** a brand-new repo whose first-ever PR is the one being landed has no history for Signal B, so a review-only bot (Gemini) stays invisible until it posts. There is no per-commit signal for it and the app API is closed to us, so accept the early merge there. It is rare and self-corrects on the second PR.
+It returns in a couple of minutes, needs no trigger comment, and has no PR queue. Parse the JSONL it emits: `finding` lines carry `severity` and `fileName`, and the closing `complete` line carries the count. Do not gate on the exit code, which is undocumented. Free tier allows three CLI reviews per hour, so spend them on real HEADs rather than on speculative re-runs.
 
-## Step 3: Poll for State Changes
+Store the findings for Step 4, and record the SHA you reviewed as REVIEWED_SHA, which Step 5 compares against HEAD before merging. **A run counts as clean only when the closing `complete` line arrives carrying zero findings.** A stream that stops before it, on a rate limit, a network drop, or any other error, did not finish, and an unfinished review gates nothing.
 
-Always resolve HEAD fresh inside the loop. Your own iterate pushes will move it, and a snapshot taken at start will silently miss the bot's reviews on the new SHA.
+## Step 3: Watch CI
 
-Run via Monitor (one notification per terminal event):
+Always resolve HEAD fresh inside the loop. Your own iterate pushes will move it, and a snapshot taken at start will silently miss the checks on the new SHA.
 
-READY requires that **every** bot in BOT_LOGINS has weighed in on the current HEAD: either a review submitted on HEAD_SHA, or, for a bot whose footprint is a check rather than a review (CodeRabbit), its owned commit status resolved on HEAD_SHA. Waiting on all of them is the fuller-coverage default; the doc-only carve-out in Step 4's learned rules still lets low-risk PRs merge on green CI without the wait.
+The loop waits for CI and for the human signals that force a bail. It does not wait on any bot.
 
-Run via Monitor (one notification per terminal event):
+**The loop must fail closed.** Every query below is unset on error rather than defaulted to zero, and an unset value sends the loop back to sleep instead of releasing it. Defaulting a failed query to `0` is how a gate says "go" when it cannot see: a transient API error would read as no pending checks and no failures, and emit `READY` on a PR nobody had looked at.
 
 ```bash
-END=$(($(date +%s) + 2700))   # 45 min cap per polling window
+END=$(($(date +%s) + 1800))   # 30 min cap per polling window
+AUTHOR=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.user.login' 2>/dev/null)
+
 while [ $(date +%s) -lt $END ]; do
-  HEAD_SHA=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha' 2>/dev/null)
-  HUMAN=$(gh api repos/REPO/pulls/PR_NUMBER/reviews \
-    --jq "[.[] | select(.user.type != \"Bot\" and .commit_id == \"$HEAD_SHA\")] | length" 2>/dev/null)
+  HEAD_SHA=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha' 2>/dev/null) || HEAD_SHA=""
+  if [ -z "$HEAD_SHA" ]; then sleep 60; continue; fi
+
+  # A human REVIEW on the current head, or a human COMMENT from anyone but the
+  # PR author. Excluding the author matters: your own decline replies post as
+  # the author and would otherwise trip your own bail on the next cycle.
+  HUMAN_R=$(gh api repos/REPO/pulls/PR_NUMBER/reviews \
+    --jq "[.[] | select(.user.type != \"Bot\" and .user.login != \"$AUTHOR\" and .commit_id == \"$HEAD_SHA\")] | length" 2>/dev/null) || HUMAN_R=""
+  HUMAN_C=$(gh api repos/REPO/issues/PR_NUMBER/comments \
+    --jq "[.[] | select(.user.type != \"Bot\" and .user.login != \"$AUTHOR\")] | length" 2>/dev/null) || HUMAN_C=""
   FAILED=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
-    --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out")] | length' 2>/dev/null || echo 0)
+    --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out")] | length' 2>/dev/null) || FAILED=""
+  PENDING_CI=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
+    --jq '[.check_runs[] | select(.status!="completed")] | length' 2>/dev/null) || PENDING_CI=""
+  COMPLETED=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
+    --jq '[.check_runs[] | select(.status=="completed")] | length' 2>/dev/null) || COMPLETED=""
 
-  if [ "${HUMAN:-0}" -gt 0 ];  then echo "HUMAN_REVIEW head=$HEAD_SHA";   exit 3; fi
-  if [ "${FAILED:-0}" -gt 0 ]; then echo "CHECKS_FAILED head=$HEAD_SHA";  exit 2; fi
+  # Any blind query means wait, never release.
+  if [ -z "$HUMAN_R" ] || [ -z "$HUMAN_C" ] || [ -z "$FAILED" ] || [ -z "$PENDING_CI" ] || [ -z "$COMPLETED" ]; then
+    sleep 60; continue
+  fi
 
-  # Which detected bots have NOT yet weighed in on HEAD?
-  PENDING=""
-  for bot in $BOT_LOGINS; do
-    REVIEWED=$(gh api repos/REPO/pulls/PR_NUMBER/reviews \
-      --jq "[.[] | select(.user.login==\"$bot\" and .commit_id==\"$HEAD_SHA\")] | length" 2>/dev/null || echo 0)
-    [ "${REVIEWED:-0}" -gt 0 ] && continue
-    if [ "$bot" = "coderabbitai[bot]" ]; then          # clears via its commit status, not a review
-      CR=$(gh api repos/REPO/commits/$HEAD_SHA/statuses \
-        --jq '[.[] | select(.context=="CodeRabbit")] | sort_by(.updated_at) | last | .state' 2>/dev/null)
-      { [ "$CR" = "success" ] || [ "$CR" = "failure" ]; } && continue
-    fi
-    PENDING="$PENDING $bot"
-  done
+  if [ "$HUMAN_R" -gt 0 ] || [ "$HUMAN_C" -gt 0 ]; then echo "HUMAN_REVIEW head=$HEAD_SHA"; exit 3; fi
+  if [ "$FAILED" -gt 0 ]; then echo "CHECKS_FAILED head=$HEAD_SHA"; exit 2; fi
 
-  if [ -z "$BOT_LOGINS" ] || [ -z "$PENDING" ]; then
+  # An empty check-runs list is not a settled CI. On a repo that runs checks it
+  # means they have not registered yet, and releasing on it emits READY for a
+  # PR nothing has checked. Require at least one COMPLETED run before calling
+  # CI settled. A repo with genuinely no CI never satisfies this and times out,
+  # which is the correct outcome: land those by explicit human decision, not by
+  # a loop that mistook silence for success.
+  if [ "$COMPLETED" -gt 0 ] && [ "$PENDING_CI" -eq 0 ]; then
     echo "READY head=$HEAD_SHA"; exit 0
   fi
   sleep 60
@@ -136,32 +122,42 @@ done
 echo "TIMEOUT head=$HEAD_SHA"; exit 1
 ```
 
-Calibration: 60s poll interval and 45 min cap fit atelic-style repos (CI 1–2 min, bot latency 3–15 min). Re-tune per repo if needed.
+Calibration: a 60s poll interval and a 30 min cap fit atelic-style repos, whose CI settles in one to two minutes. The old 45 min window existed to absorb bot latency and is no longer needed. Re-tune per repo if CI is genuinely slower.
+
+Run this under Monitor when landing in the background, and stay resident until it reports a terminal state rather than arming it and returning.
 
 ## Step 4: Decide and Act on the Event
 
-- **`READY`**: fetch the latest bot review body and inline comments on HEAD_SHA.
-  - Triage each item: high/medium/low severity, actionable vs advisory.
-  - Read the actual code before treating any bot suggestion as authoritative. Bots can be wrong — Gemini in particular has been observed to manufacture concerns about control flow it hasn't traced (e.g., claiming a private helper redirects when it doesn't). When a suggestion is wrong, decline with reasoning in the iterate summary comment.
-  - Bots don't track resolved threads the same way humans do. Gemini re-raises advisory items every cycle; that's expected — decline again or merge through it. CodeRabbit tracks resolution and may need explicit dismissal via the GitHub API for stale reviews after fixes are pushed.
+- **`READY`**: triage the CLI findings from Step 2, plus any PR bot comments that happen to be sitting on HEAD if the repo is public.
+  - Read the actual code before treating any finding as authoritative. Reviewers can be wrong, the CLI included, and a finding that misreads control flow gets declined rather than obeyed.
+  - Sort by severity and by whether the item is actionable or advisory.
   - Decide:
-    - No comments / "no feedback" / all advisory you'd decline → **merge** (Step 5)
+    - A run that reached its closing `complete` line carrying zero findings, or whose only findings are advisory items you would decline → **merge** (Step 5). A run that did not reach `complete` is not a clean run, whatever it printed before it stopped.
     - Actionable items → **iterate** (next bullet)
-    - Mixed → address actionable, decline advisory with reasoning, push, then loop back to Step 3
-- **Iterate**: invoke `sdlc:iterate` with PR_NUMBER. It addresses comments and pushes. **Pushing alone does NOT re-trigger either Gemini Code Assist or CodeRabbit.** After each iterate push you must explicitly post the re-review comment for **every** bot in BOT_LOGINS — `/gemini review` for Gemini, `@coderabbitai review` for CodeRabbit (consult the repo's `sdlc.review-command` config). On a repo running both, post both, or the loop will wait out the timeout on whichever bot was never re-triggered. Then check `mergeStateStatus` and rebase if the PR went `DIRTY` while you were iterating (main can move under you, especially in active repos):
+    - Mixed → address the actionable ones, decline the advisory ones with reasoning, push, then loop back
+  - When a declined item came from the PR bot and is therefore visible to others, reply on that comment with the reasoning so the audit trail shows it was considered rather than ignored.
+- **Iterate**: invoke `sdlc:iterate` with PR_NUMBER. It addresses findings and pushes. **After any push, re-run the CLI review from Step 2 against the new HEAD.** A review of a stale SHA gates nothing, which is the whole reason the gate is a local run rather than a status colour. Then check `mergeStateStatus` and rebase if the PR went `DIRTY` while you were iterating, since main can move under you in an active repo:
 
   ```bash
   gh pr view PR_NUMBER --json mergeStateStatus --jq '.mergeStateStatus'
   ```
 
-  If `DIRTY`, fetch main, rebase, resolve conflicts, force-push with `--force-with-lease`, then post the re-review trigger. Loop back to Step 3.
-- **`CHECKS_FAILED`**: fetch failing job logs. If the failure is something you introduced and can fix in place, fix and push; loop back to Step 3. Otherwise bail to the user with the failing job link.
-- **`HUMAN_REVIEW`**: bail to the user with the review body. Humans get the final word — never auto-merge over a human comment even if it looks like a nit.
+  If `DIRTY`, fetch main, rebase, resolve conflicts, force-push with `--force-with-lease`, then re-run the CLI review. Loop back to Step 3.
+- **`CHECKS_FAILED`**: fetch failing job logs. If the failure is something you introduced and can fix in place, fix and push; re-run the CLI review and loop back to Step 3. Otherwise bail to the user with the failing job link.
+- **`HUMAN_REVIEW`**: bail to the user with the review body. Humans get the final word, so never auto-merge over a human comment even if it looks like a nit.
 - **`TIMEOUT`**: bail to the user with the current state summary.
 
 ## Step 5: Merge and Complete
 
-Confirm merge readiness:
+Confirm merge readiness. **Re-resolve HEAD and compare it to the SHA the Step 2 review actually ran against.** CI can take minutes, and anything that pushed during the wait, your own rebase included, moved HEAD past the reviewed commit:
+
+```bash
+gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha'   # compare against REVIEWED_SHA from Step 2
+```
+
+If they differ, go back to Step 2 and review the new HEAD before going further. Merging here would ship a commit no review ever saw, which is the same hollow gate this skill exists to remove, just arrived at from the other end.
+
+The gate is met when the CLI review ran clean against a SHA equal to the current HEAD, CI is green, and:
 
 ```bash
 gh pr view PR_NUMBER --json mergeStateStatus --jq '.mergeStateStatus'
@@ -184,6 +180,7 @@ After successful merge, invoke `sdlc:complete` to clean up the worktree/branch. 
 ```text
 PR #<number> landed
 Cycles: <N> iterate, <M> decline
+Review: <N> CLI runs, <M> findings on <reviewed SHA>
 Merged: <SHA>
 Status: clean
 ```

@@ -52,6 +52,7 @@ claude plugin install sdlc@skillset
 
 - **Git** for version control
 - **GitHub CLI** (`gh`) for PR operations
+- **CodeRabbit CLI** (`coderabbit`) for the review gate used by land and iterate. Install via `brew install coderabbit`, then `coderabbit auth login`. It reviews the current git repository and has no flag that selects one, so call it from a `cr-review.sh` wrapper that changes directory internally. Mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 - **Linear CLI** (`linear`) for Linear integration (optional, used by plan/design/complete). Install via `brew install schpet/tap/linear`.
 
 ## Skill Details
@@ -103,7 +104,7 @@ Creates a PR and requests review:
 1. Detects and removes dead code
 2. Creates commit with proper attribution
 3. Pushes and creates PR
-4. Requests code review (configurable command, defaults to `/gemini review`)
+4. Requests a PR bot review with the configured trigger. This is the optional public repo fallback, not the gate: the gate is the CodeRabbit CLI run by land and iterate.
 
 **Usage:** `/sdlc:review`
 
@@ -114,7 +115,7 @@ Addresses PR review feedback:
 1. Fetches all review comments
 2. Addresses each issue
 3. Commits and pushes
-4. Requests re-review (configurable command)
+4. Re reviews the new HEAD with the CodeRabbit CLI, and posts the configured trigger as an optional public repo fallback
 
 **Usage:** `/sdlc:iterate` or `/sdlc:iterate 123`
 
@@ -136,16 +137,18 @@ Finishes work and resets environment:
 Drives the back half of SDLC autonomously, from "ready for review" through "merged and cleaned up":
 
 1. **Identifies PR or opens one** (calls `/sdlc:review` if no PR exists for the current branch)
-2. **Detects the bot reviewer** by walking the PR's reviews list (Gemini Code Assist or CodeRabbit)
-3. **Polls** for state changes via Monitor: bot re-review on HEAD, CI failure, human review, or timeout
+2. **Reviews the branch** with `coderabbit review --base origin/main --committed --agent`, run locally against the current HEAD. This is the gate.
+3. **Polls** for state changes via Monitor: CI settled, CI failure, human review, or timeout
 4. **Decides** per event:
-   - Bot caught up with no actionable feedback → merges
-   - Bot has actionable feedback → invokes `/sdlc:iterate`, loops back to polling
+   - Review clean, or only advisory findings → merges
+   - Actionable findings → invokes `/sdlc:iterate`, then re-runs the CLI review on the new HEAD
    - CI failure self-introduced → fixes in place and pushes
    - CI failure not self-introduced, human review, merge conflict, or timeout → bails to the user with state summary
 5. **Merges** (squash, with branch delete) and invokes `/sdlc:complete` for cleanup
 
-The agent (not GitHub) judges when feedback is addressed. `mergeStateStatus: CLEAN` only reflects branch protection and required checks, not bot opinion. Bot suggestions are not implemented blindly — when the agent disagrees, it replies on the thread with reasoning and merges through.
+The agent (not GitHub) judges when feedback is addressed. `mergeStateStatus: CLEAN` only reflects branch protection and required checks, not whether anyone read the diff. Findings are not implemented blindly: when the agent disagrees it declines with reasoning and merges through.
+
+The loop never waits on the CodeRabbit PR bot (adopted 2026-08-29). On a private repo the free plan posts a walkthrough and no review object at all, so waiting on it gates on nothing; on a public repo the free Open Source plan reviews properly, making the bot a genuine second look but still a fallback rather than a blocker. Mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 
 **Usage:** `/sdlc:land` or `/sdlc:land 248`
 
