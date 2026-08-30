@@ -140,7 +140,7 @@ After successful merge, invoke `sdlc:complete` to clean up the worktree/branch. 
 ```text
 PR #<number> landed
 Cycles: <N> iterate, <M> decline
-Review: <N> CLI runs, <M> findings on the merged HEAD
+Review: <N> CLI runs, <M> findings on <reviewed SHA>
 Merged: <SHA>
 Status: clean
 ```
