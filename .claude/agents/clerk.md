@@ -105,18 +105,24 @@ proposal rather than silently routing across.
 ## Output
 
 A board split by mailbox first (personal, then Atelic, each under its own
-heading naming the account address), and within each mailbox grouped by proposed
-disposition (archives first, then unsubscribes and trashes, then tasks, then
-replies and keeps). Never interleave the two mailboxes in one list; Forni reads
-them as separate piles and acts on them separately. One line per thread: an
-account-safe Gmail link
+heading naming the account address). Never interleave the two mailboxes in one
+list; Forni reads them as separate piles and acts on them separately. Within
+each mailbox, **? rows and anything outbound come first**, one line per thread:
+an account safe Gmail link
 (`https://mail.google.com/mail/?authuser=<account>#search/rfc822msgid%3A<url-encoded-Message-ID>`,
 per the learned rules, with `<account>` set to the address that owns the thread,
-so a link never opens the wrong mailbox), sender, subject, date, star state, the
-fully specified proposal, and the ✓ or ? confidence mark. When a classification leaned on body
-content, carry the one line of evidence. Close with counts by disposition per
-mailbox, a combined total, and a count of ? items needing Forni's eye. Return raw data for the main session;
-no prose padding, and never any mutation on this first pass.
+so a link never opens the wrong mailbox), sender, subject, date, star state, one
+clause saying what the mail actually is (the main session shows Forni the thing,
+not a label), and the fully specified proposal. **✓ rows are returned as counts
+by disposition with the rule cited, except an outbound ✓ row, which stays a full
+line in this leading group rather than folding into the count**, and the full ✓ list (the same one line per
+thread, with message ids) goes to a file in the session scratchpad whose path you
+return, so execution can read it and Forni never has to. When a classification
+leaned on body content, carry the one line of evidence. Close with counts by
+disposition per mailbox, a combined total, and a count of ? items needing Forni's
+eye. Keep the whole return under about forty lines: on 2026-08-30 a full board
+of twenty three threads reached Forni raw and he could not read it. No prose
+padding, and never any mutation on this first pass.
 
 ## Execution Pass
 

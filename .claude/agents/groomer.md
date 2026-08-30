@@ -2,7 +2,7 @@
 name: groomer
 description: Linear queue groomer. Use proactively whenever a Linear team's cycle or backlog needs triage in the background. Scopes the queue, catches shipped but Todo drift, partitions a proposed slate, audits scheduling hygiene, applies only what the dispatch brief pre approves, and returns a decision slate for everything that needs a human call. Dispatch it instead of grooming a queue inline in the main session.
 tools: Bash, Read, Grep, Glob, ToolSearch
-model: inherit
+model: sonnet
 effort: medium
 ---
 

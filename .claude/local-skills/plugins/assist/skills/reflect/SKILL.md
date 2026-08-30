@@ -122,7 +122,7 @@ The month boundary is also when the context architecture gets tidied. After the 
 
 The weekly retro. Lighter and faster than monthly. Called standalone, or by `assist:plan-week` before it plans the next week (the broader life retro that complements the training-specific retro `assist:plan-training` already runs).
 
-1. Optionally pull a quick movement glance for the week (Strava) if useful, but keep it light.
+1. Read the emailed retro (`YYYY-Www Retro` from `claude@atelic.me`, the runner's first pass with the movement week, the takeout tally, and the outreach week already graded) instead of pulling; pull a quick Strava glance only when it is missing or the subject arrives over a failure body.
 2. Ask the felt sense of the week.
 3. Three questions, conversational: what landed, what slipped, what is the one thing to carry into next week.
 4. Surface anything that wants to become a planning input (a task, a calendar guardrail, a measure to watch) and hand it back to `assist:plan-week` if invoked from there.

@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Planning brief assembler. Use proactively at the start of weekly planning, AFTER the retro dialogue closes, to gather and assemble the planning brief. Makes the four wide pulls (calendar week, Todoist slate, Strava week, overconsumption count), runs the transition and overlap lint on the calendar, and on resume with the clerk and groomer boards merges everything into one three tier brief (Decisions, Handled, FYI) that leads with decisions, never inventories. Read only; it never mutates any system.
+description: Planning brief assembler. Use proactively at the start of weekly planning, AFTER the retro dialogue closes, to gather and assemble the planning brief. Makes the wide pulls (all three calendars, the Todoist slate; Strava and the takeout count only when the emailed retro is missing or reports a failed run), runs the transition and overlap lint on the calendar, and on resume with the clerk and groomer boards merges everything into one three tier brief (Decisions, Handled, FYI) that leads with decisions, never inventories. Read only; it never mutates any system.
 tools: Bash, Read, Grep, Glob, ToolSearch
 effort: medium
 model: sonnet
@@ -26,30 +26,46 @@ Read these before pulling anything; they override your judgment.
 - **Calendar conventions**: `~/Eudaimonia/Admin/Tools/google-calendar.md`
   (label table, transition and travel conventions, Work Holds).
 
-## The Four Pulls
+## The Pulls
 
-1. **Calendar week**: every calendar in `gws calendar calendarList list`,
-   never only 🌱 Life, pulled Monday through Sunday of the week being
-   planned with `gws calendar events list` per calendar, with
-   `eventLabelVersion: 1` inside `--params` so labels come back (the TPF
-   calendar needs the tpf profile pinned; see the gws doc). A single
-   calendar pull reads other identities' busy time as free: on 2026-08-15
-   it missed the SkySpec audit call sitting on the TPF calendar and
-   outreach got slotted over it. Record the `transparency` of every event;
-   only opaque events block time.
+1. **Calendar week**: exactly three calendars, pulled Monday through Sunday
+   of the week being planned with `gws calendar events list` per calendar
+   on the `personal` profile: `🌱 Life` (`primary`), `💻 Atelic`
+   (`matt@atelic.me`), and the `📝 Todoist` sync feed
+   (`e673764afca2f4c2515eae6f102db4fe60e6cb6add06a133e912b7b9032b08c1@group.calendar.google.com`),
+   where every timed Todoist task renders. Pass `eventLabelVersion: 1`
+   inside `--params` on all three so labels come back; without it the
+   API omits `eventLabelId` and a labeled event reads as unlabeled. The TPF calendar left the sweep 2026-08-24. **Normalize every
+   `dateTime` to `America/Denver` before reading it**: the Todoist feed
+   carries a foreign offset (`-07:00`, some rows tagged
+   `America/Los_Angeles`), and the raw wall clock string reads an hour
+   early; on 2026-08-30 a two calendar pull plus that misread put a
+   placement board on top of the HSA sale, the UI payment request, and a
+   two hour estate block. Record the `transparency` of every event; only
+   opaque events block time.
 2. **Todoist**: via the `td` CLI, which replaced the MCP connector on
    2026-08-13. Pass the raw query with `td task list --filter '<query>' --json`.
    Two pulls: the Schedule filter's raw query
    `(!(@⏰ Scheduled | @⏲️ Recurring) | overdue | (@⏰ Scheduled & no time)) & due before: next monday`,
-   plus the Sunday drop date pull, the tasks due on the planning Sunday
-   where drops and deferrals accumulate.
-3. **Strava week**: the just closed ISO week via the claude.ai connector
-   (`mcp__claude_ai_Strava__list_activities`, loaded with ToolSearch).
-4. **Overconsumption count**: the week's delivery confirmations via
-   `gws gmail`, searching
+   plus the landing day pull, the tasks due on the planning Monday where
+   drops and deferrals accumulate. `td` is the truth for a task's fields;
+   the calendar feed is for presence and time.
+3. **Only when the dispatch brief says the emailed retro is missing or
+   reports a failed run**, the two pulls the runner would have made: the just closed ISO week from
+   Strava via the claude.ai connector
+   (`mcp__claude_ai_Strava__list_activities`, loaded with ToolSearch), and
+   the week's delivery confirmations via `GWS_FORCE_PROFILE=personal gws gmail`
+   (an agent shell inherits whichever profile launched it), searching
    `(Domino OR "Illegal Pete" OR DoorDash OR Grubhub OR "Uber Eats" OR Postmates)`
-   bounded by the week. Gmail's `before:` is exclusive, so bound with the
-   Monday after the week. Confirm each hit is a real order before counting.
+   bounded by the week (Gmail's `before:` is exclusive, so bound with the
+   Monday after the week; confirm each hit is a real order). Otherwise the
+   `YYYY-Www Retro` email already carries both and you skip them.
+
+Return the pulls compactly: counts, one line per lint finding, one line
+per task (id, title, due, priority, labels, project), the container list,
+and the banner check. Write the raw JSON to the session scratchpad and
+return the paths rather than the data; the main session presents, and a
+raw dump reaches Forni as noise.
 
 ## Calendar Lint
 
@@ -69,7 +85,7 @@ belong to the main session and Forni.
 The main session dispatches you in parallel with clerk (the inbox board)
 and groomer (the Linear slate) after the retro dialogue closes. When their
 boards return, it resumes you with both. Merge everything you hold (the
-four pulls, the lint findings, clerk's board, groomer's slate) into ONE
+pulls, the lint findings, clerk's board, groomer's slate) into ONE
 three tier brief:
 
 - **Decisions**: judgment calls only, one line each, ranked most

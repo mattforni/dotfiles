@@ -4,7 +4,7 @@ Headless Claude routines that run on a schedule as Cloud Run Jobs. One directory
 
 | Runner | What It Does |
 |---|---|
-| [sunday-retro/](sunday-retro/README.md) | Sunday 07:00 Denver. Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
+| [retro/](retro/README.md) | Monday 05:00 Denver. Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
 
 The runtime one pager (why Cloud Run over Routines and launchd, the service accounts and their secrets, the schedules, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
 
@@ -57,4 +57,4 @@ vault, because the vault copy belongs to the container.
 
 ## Adding a Runner
 
-A runner directory needs `entrypoint.sh` (executable) and a `Dockerfile`; `render.jq` and a `README.md` if it emails something. The entrypoint should honor `DRY_RUN` (render, do not send) and `SKIP_PULLS` (reuse what is already in `$WORK`), since those two flags are the whole local loop, and should find its own siblings relative to the script rather than at an absolute container path, so it runs unchanged in both places. Keep the date math portable: the image has GNU date and this machine has BSD date, and `sunday-retro/entrypoint.sh` carries the three helper shims that bridge them.
+A runner directory needs `entrypoint.sh` (executable) and a `Dockerfile`; `render.jq` and a `README.md` if it emails something. The entrypoint should honor `DRY_RUN` (render, do not send) and `SKIP_PULLS` (reuse what is already in `$WORK`), since those two flags are the whole local loop, and should find its own siblings relative to the script rather than at an absolute container path, so it runs unchanged in both places. Keep the date math portable: the image has GNU date and this machine has BSD date, and `retro/entrypoint.sh` carries the three helper shims that bridge them.

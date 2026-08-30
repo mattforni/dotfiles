@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Sunday Retro Runner. Fires Sunday 07:00 Denver from Cloud Scheduler.
+# The Retro Runner. Fires Monday 05:00 Denver from Cloud Scheduler.
 #
 # Shape: deterministic pulls first (curl, into /work/*.json), then one headless
 # Claude Code call that reads those files and writes the retrospective, then
@@ -21,7 +21,7 @@
 #   REPORT_RECIPIENT          where the retro goes
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
 #   STRAVA_SECRET_RESOURCE    defaults to projects/forni-keys/secrets/strava-refresh-token
-#   WEEK                      optional YYYY-Www override for a test fire; default is the ISO week of today
+#   WEEK                      optional YYYY-Www override for a test fire; default is the previous week, the ISO week that closed most recently
 #   DRY_RUN                   1 renders the email and skips the send; the local loop
 #   SKIP_PULLS                1 reuses the JSON already in $WORK instead of pulling again
 set -uo pipefail
@@ -30,7 +30,7 @@ DRY_RUN="${DRY_RUN:-0}"
 SKIP_PULLS="${SKIP_PULLS:-0}"
 
 # The runner directory, whichever it is: /home/runner inside the image, the
-# repo's runners/sunday-retro on a local run. The prompt and the renderer sit
+# repo's runners/retro on a local run. The prompt and the renderer sit
 # beside this script in both, so one expression finds them either way.
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -60,24 +60,31 @@ require() {
 
 # ---------- dates ----------
 # The image carries GNU date; a local run on macOS gets BSD date, which cannot
-# read GNU's relative expressions at all. Three helpers, one implementation
-# each way, so the week math below is written once and reads the same in both
+# read GNU's relative expressions at all. Four helpers, one implementation each
+# way, so the week math below is written once and reads the same in both
 # places. BSD's -f leaves unspecified fields at their current value, which is
-# why midnight has to name its seconds.
+# why midnight has to name its seconds. Every one of them reads the local
+# clock, and the image pins TZ to America/Denver, so a day here is a Denver day
+# and yesterday is Denver's yesterday.
 if date -d 2026-01-04 +%F >/dev/null 2>&1; then
-    day_of_week()    { date -d "$1" +%u; }
-    shift_days()     { date -d "$1 $2 days" +%F; }
-    midnight_epoch() { date -d "$1 00:00" +%s; }
+    day_of_week()       { date -d "$1" +%u; }
+    shift_days()        { date -d "$1 $2 days" +%F; }
+    midnight_epoch()    { date -d "$1 00:00" +%s; }
+    previous_week() { date -d yesterday +%G-W%V; }
 else
-    day_of_week()    { date -j -f %Y-%m-%d "$1" +%u; }
-    shift_days()     { local off="$2"; [[ "$off" == -* ]] || off="+$off"; date -j -v"${off}d" -f %Y-%m-%d "$1" +%F; }
-    midnight_epoch() { date -j -f '%Y-%m-%d %H:%M:%S' "$1 00:00:00" +%s; }
+    day_of_week()       { date -j -f %Y-%m-%d "$1" +%u; }
+    shift_days()        { local off="$2"; [[ "$off" == -* ]] || off="+$off"; date -j -v"${off}d" -f %Y-%m-%d "$1" +%F; }
+    midnight_epoch()    { date -j -f '%Y-%m-%d %H:%M:%S' "$1 00:00:00" +%s; }
+    previous_week() { date -v-1d +%G-W%V; }
 fi
 
 # ---------- the week ----------
-# The job fires Sunday morning, so the ISO week of today is the week that
-# ends today: Monday 00:00 through Sunday 07:00 Denver at fire time.
-WEEK="${WEEK:-$(date +%G-W%V)}"
+# The retro is for the previous week, the ISO week that closed most recently.
+# The job fires Monday 05:00 Denver, by which hour that week is over, so the
+# default is read off yesterday's date rather than today's. Yesterday shares its
+# ISO week with today on every day but Monday, so a test fire on any other day
+# still reads the week in progress.
+WEEK="${WEEK:-$(previous_week)}"
 iso_year="${WEEK%-W*}"
 iso_week="${WEEK#*-W}"
 # Monday of the ISO week, computed from January 4 (always in week 1).
@@ -88,7 +95,7 @@ NEXT_MONDAY="$(shift_days "$MONDAY" 7)"
 SUNDAY="$(shift_days "$MONDAY" 6)"
 AFTER_EPOCH="$(midnight_epoch "$MONDAY")"
 BEFORE_EPOCH="$(midnight_epoch "$NEXT_MONDAY")"
-echo "=== $(date -Iseconds) sunday-retro start: $WEEK ($MONDAY to $SUNDAY) ==="
+echo "=== $(date -Iseconds) retro start: $WEEK ($MONDAY to $SUNDAY) ==="
 
 # ---------- Resend ----------
 send_email() {
@@ -131,7 +138,7 @@ finish() {
             exit 1
         fi
         local body
-        body="<body style=\"margin:0;padding:40px 16px;background:#f6f1e7;font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;color:#151515;\"><div style=\"max-width:760px;margin:0 auto;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;padding:36px 40px;\"><div style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#55503f;\">Sunday Retro</div><div style=\"font-size:28px;font-weight:600;margin-top:18px;\">The retro did not run.</div><p style=\"font-size:15px;line-height:1.55;color:#55503f;\">$(printf '%s' "$fail_reason" | html_escape)</p><pre style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;white-space:pre-wrap;color:#55503f;border-top:1px solid #d9d4c8;padding-top:14px;\">$(tail -n 60 "$LOG" | html_escape)</pre></div></body>"
+        body="<body style=\"margin:0;padding:40px 16px;background:#f6f1e7;font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;color:#151515;\"><div style=\"max-width:760px;margin:0 auto;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;padding:36px 40px;\"><div style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#55503f;\">Retro</div><div style=\"font-size:28px;font-weight:600;margin-top:18px;\">The retro did not run.</div><p style=\"font-size:15px;line-height:1.55;color:#55503f;\">$(printf '%s' "$fail_reason" | html_escape)</p><pre style=\"font-family:'Geist Mono',Menlo,monospace;font-size:12px;white-space:pre-wrap;color:#55503f;border-top:1px solid #d9d4c8;padding-top:14px;\">$(tail -n 60 "$LOG" | html_escape)</pre></div></body>"
         send_email "$WEEK Retro" "$body" || true
         sleep 1
         exit 1

@@ -131,7 +131,7 @@ Google Calendar conventions (pillar color coding, transition vs travel, flanking
 
 ## Todoist Preferences
 
-Todoist conventions (Sunday scheduling, follow-ups always land on a Sunday, short Title Case task titles, details in a comment) live in `~/Eudaimonia/Admin/Tools/todoist.md`.
+Todoist conventions (follow ups land on the next planning Monday, short Title Case task titles, details in a comment) live in `~/Eudaimonia/Admin/Tools/todoist.md`.
 
 ## Code Project Conventions
 
