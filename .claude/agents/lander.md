@@ -106,3 +106,10 @@ beyond the PR you were given.
   separately from the merged SHA. A squash merge writes a new commit that no
   review ever saw, so attributing findings to it claims a review that did not
   happen. Then what you fixed, what you declined and why. Under 20 lines.
+- **Report any wait as the wall clock time it ends, in the machine's local
+  zone**, never as a duration. "Held until 18:34 MDT" rather than "an 18 minute
+  wait": a duration makes Forni do arithmetic against a start time he never saw,
+  and it rots the moment your report scrolls. Take the zone from `date +%Z`
+  rather than assuming Mountain, since he travels, and convert the CLI's
+  `metadata.waitTime` before it reaches him. Re-derive rather than repeat: a
+  hold you quoted earlier in a run is usually already over.
