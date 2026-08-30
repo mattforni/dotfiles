@@ -21,10 +21,10 @@ Help Forni plan his week: review the calendar, slot Todoist tasks into open time
 1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants planning to run
 2. Read the plugin-wide [learned-rules.md](../../learned-rules.md) for any schedule-specific corrections
 3. Read the weekly template: `~/Eudaimonia/schedule.md`
-4. Determine the ISO week being planned: the week that opens today. The session runs Monday 07:00 to 08:00, first thing in the deep work block (moved off Sunday mornings 2026-08-30), so the week that closed yesterday is the retro's subject (Review Week) and this week is the planning target
+4. Determine the ISO week being planned: the week that holds the coming planning Monday, which is today's week when the session runs on its Monday morning and the week starting tomorrow when it runs a day early on a Sunday. The session runs Monday 07:00 to 08:00, first thing in the deep work block (moved off Sunday mornings 2026-08-30), so the ISO week that closed most recently is the retro's subject (Review Week) and the week ahead is the planning target
 5. **Cut and enter a `wk-<ISO week>` worktree** in each repo the session will touch (Eudaimonia for planning artifacts, homebase for skill or config edits). Planning runs in an isolated worktree, never on a shared branch, so a branch switch in another terminal cannot move the ground under the session. All planning edits land in the worktree copy.
 6. **Start the session timer** per Session Timers in `~/Eudaimonia/Admin/Tools/toggl.md`: project `🗺️ Planning`, description `🗺️ Weekly Planning`.
-7. **Find the emailed retro.** The retro runner (homebase `runners/retro/`, a Cloud Run Job fired Monday 05:00 Denver; `~/Eudaimonia/Admin/Tools/cloud-run.md`) mails `YYYY-Www Retro` from `Claude <claude@atelic.me>` to the personal mailbox, where `YYYY-Www` is the week that closed yesterday (Review Week's subject from step 4), not the planning target. Find it by subject (`gws gmail users messages list` on the personal profile with `q` set to `subject:"YYYY-Www Retro" from:claude@atelic.me`) and read it with `gws gmail +read --id <id>`. It is Review Week's first pass; when it is missing, or the subject arrives over a failure body, Review Week falls back to its own pulls.
+7. **Find the emailed retro.** The retro runner (homebase `runners/retro/`, a Cloud Run Job fired Monday 05:00 Denver; `~/Eudaimonia/Admin/Tools/cloud-run.md`) mails `YYYY-Www Retro` from `Claude <claude@atelic.me>` to the personal mailbox, where `YYYY-Www` is the week that closed yesterday (Review Week's subject from step 4), not the planning target. Find it by subject (`GWS_FORCE_PROFILE=personal gws gmail users messages list` with `q` set to `subject:"YYYY-Www Retro" from:claude@atelic.me`; the explicit override, because a Bash shell inherits whichever profile launched it) and read it with `GWS_FORCE_PROFILE=personal gws gmail +read --id <id>`. It is Review Week's first pass; when it is missing, or the subject arrives over a failure body, Review Week falls back to its own pulls.
 
 **Calendar access:** reads and writes go through the `gws` CLI via Bash, not a Google Calendar MCP. Find calendar IDs with `gws calendar calendarList list`. Pull with `gws calendar events list`, patch a recurring series with `gws calendar events patch` (only the fields you change), create with `events insert`, delete a whole series by its `recurringEventId`. The `gws` output is prefixed with a `Using keyring backend` line, so strip it before parsing JSON. See `~/Eudaimonia/Admin/Tools/gws.md` for the exact invocation syntax: `calendarId` goes inside `--params`, the event body (and any array fields) go in `--json`.
 
@@ -228,7 +228,7 @@ Google Calendar is still used directly for non task events: meetings, transition
 
 A recurring catch up that gets deferred instead of slotted lands on the next planning Monday, like every other deferral.
 
-**Email outreach as slotting**: For some recurring catch ups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs. Always confirm with the user before executing the send command.
+**Email outreach as slotting**: For some recurring catch ups, the right action is not scheduling a time block but sending an email with a scheduling link. Use `GWS_FORCE_PROFILE=personal gws gmail +send` (via Bash) to send outreach. Check previous email threads for tone and format. The gws-gmail-send skill has full usage docs. Always confirm with the user before executing the send command.
 
 **Deferred tasks land on the next planning Monday**: When deferring tasks to next week or further out, schedule them, date only, for the Monday that opens the target week, the morning this session runs. Monday is the landing zone where tasks get triaged during the planning session. (Replaced the Sunday landing zone 2026-08-30 when the session moved; Sunday had replaced Monday on 2026-08-09. The landing zone follows the session.)
 
@@ -332,7 +332,7 @@ When slotting tasks, respect Todoist priorities:
 
 ## Gmail Integration
 
-Use the `gws` CLI tool (via Bash) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catch ups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting. Confirm with the user before executing send commands.
+Use the `gws` CLI tool (via Bash, always with `GWS_FORCE_PROFILE=personal` so the call cannot inherit another profile) for Gmail operations during planning. Common use case: sending scheduling link emails for recurring catch ups. Reference the gws-gmail-send skill for full usage. Always check previous email threads for tone and context before drafting. Confirm with the user before executing send commands.
 
 ## Learned Rules
 
