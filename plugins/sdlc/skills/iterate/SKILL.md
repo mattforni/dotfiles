@@ -6,6 +6,7 @@ allowed-tools:
   - Bash(git *)
   - Bash(gh *)
   - Bash(coderabbit *)
+  - Bash(*cr-review.sh*)
   - Bash(*get-review-command.sh*)
   - Grep
   - Read
@@ -99,26 +100,28 @@ The gate is a local CodeRabbit CLI run against the SHA you just pushed, not a re
 coderabbit review --base origin/main --committed --agent
 ```
 
-Substitute the repo's real base branch when it is not `main`, and fetch first so the base is current. Free tier allows three CLI runs an hour, so batch your fixes into one push rather than pushing per comment. Full mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
+Substitute the repo's real base branch when it is not `main`, and fetch first so the base is current. As in `land`, the run counts as clean only when the closing `complete` line arrives with zero findings; a stream that stops short of it did not finish and settles nothing. Free tier allows three CLI runs an hour, so batch your fixes into one push rather than pushing per comment. Full mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 
-Post a summary comment on the PR listing what was addressed. This helps a human reviewer see what changed without re-reading the entire diff:
+Then post a summary comment on the PR listing what was addressed. This helps a human reviewer see what changed without re-reading the entire diff.
+
+On a **public** repo the PR bot is a genuine second look, since the free Open Source plan reviews properly there, and it does not re-review on a bare push. Appending the repo's configured trigger to that same comment is a cheap fallback, so **read the trigger before posting** and send one complete comment rather than posting and then trying to append:
+
+```bash
+../../scripts/get-review-command.sh
+```
+
+Store the output as REVIEW_CMD. On a public repo make it the comment's last line; on a private repo leave it out entirely, since the bot produces no review there. Either way, never wait on the result: it is a fallback, not the gate.
 
 ```bash
 gh pr comment PR_NUMBER --body "$(cat <<'EOF'
 ## Feedback Addressed
 
 - bullet list of changes made per comment
+
+REVIEW_CMD
 EOF
 )"
 ```
-
-On a **public** repo the PR bot is a genuine second look, since the free Open Source plan reviews properly there, and it does not re-review on a bare push. Appending the repo's configured trigger to that comment is a cheap fallback:
-
-```bash
-../../scripts/get-review-command.sh
-```
-
-Store the output as REVIEW_CMD and add it as the comment's last line. Never wait on the result: it is a fallback, not the gate, and on a private repo it produces no review at all.
 
 ## Output
 

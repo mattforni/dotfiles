@@ -6,6 +6,7 @@ allowed-tools:
   - Bash(git *)
   - Bash(gh *)
   - Bash(coderabbit *)
+  - Bash(*cr-review.sh*)
   - Bash(*get-base-branch.sh*)
   - Read
   - Edit
@@ -59,11 +60,11 @@ This is the review gate, and it runs against the branch's current HEAD in the PR
 coderabbit review --base origin/main --committed --agent
 ```
 
-Substitute the repo's real base branch (`scripts/get-base-branch.sh`) when it is not `main`, and fetch first so `origin/main` is current. The command needs a working directory and offers no flag that selects one, so drive it through a small wrapper script that changes directory internally and echoes `pwd` back for confirmation.
+Substitute the repo's real base branch (`scripts/get-base-branch.sh`) when it is not `main`, and fetch first so `origin/main` is current. The command needs a working directory and offers no flag that selects one, so drive it through a small wrapper script that changes directory internally and echoes `pwd` back for confirmation. Name that wrapper `cr-review.sh`, which is the name this skill's `allowed-tools` permits.
 
 It returns in a couple of minutes, needs no trigger comment, and has no PR queue. Parse the JSONL it emits: `finding` lines carry `severity` and `fileName`, and the closing `complete` line carries the count. Do not gate on the exit code, which is undocumented. Free tier allows three CLI reviews per hour, so spend them on real HEADs rather than on speculative re-runs.
 
-Store the findings for Step 4. A run that produces no findings is a clean gate.
+Store the findings for Step 4. **A run counts as clean only when the closing `complete` line arrives carrying zero findings.** A stream that stops before it, on a rate limit, a network drop, or any other error, did not finish, and an unfinished review gates nothing.
 
 ## Step 3: Watch CI
 

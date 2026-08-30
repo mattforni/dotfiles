@@ -52,6 +52,7 @@ claude plugin install sdlc@skillset
 
 - **Git** for version control
 - **GitHub CLI** (`gh`) for PR operations
+- **CodeRabbit CLI** (`coderabbit`) for the review gate used by land and iterate. Install via `brew install coderabbit`, then `coderabbit auth login`. It reviews the current git repository and has no flag that selects one, so call it from a `cr-review.sh` wrapper that changes directory internally. Mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 - **Linear CLI** (`linear`) for Linear integration (optional, used by plan/design/complete). Install via `brew install schpet/tap/linear`.
 
 ## Skill Details
@@ -103,7 +104,7 @@ Creates a PR and requests review:
 1. Detects and removes dead code
 2. Creates commit with proper attribution
 3. Pushes and creates PR
-4. Requests code review (configurable command, defaults to `/gemini review`)
+4. Requests a PR bot review with the configured trigger. This is the optional public repo fallback, not the gate: the gate is the CodeRabbit CLI run by land and iterate.
 
 **Usage:** `/sdlc:review`
 
@@ -114,7 +115,7 @@ Addresses PR review feedback:
 1. Fetches all review comments
 2. Addresses each issue
 3. Commits and pushes
-4. Requests re-review (configurable command)
+4. Re reviews the new HEAD with the CodeRabbit CLI, and posts the configured trigger as an optional public repo fallback
 
 **Usage:** `/sdlc:iterate` or `/sdlc:iterate 123`
 

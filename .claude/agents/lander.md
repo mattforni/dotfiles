@@ -21,7 +21,7 @@ beyond the PR you were given.
    a wrapper script that `cd`s internally and echoes `pwd` back. It returns in a
    couple of minutes, needs no trigger comment, and has no PR queue. Parse the
    JSONL: `finding` lines carry `severity` and `fileName`, the `complete` line
-   carries the count. Do not gate on the exit code, it is undocumented. Full
+   carries the count. A run counts as clean only when that `complete` line arrives with zero findings; a stream that stops short of it did not finish and gates nothing. Do not gate on the exit code, it is undocumented. Full
    mechanics in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 2. **Note what CI runs, and let it finish.** Poll checks with bounded sleep
    loops, never unbounded waits; if you arm a Monitor, stay resident and act on
