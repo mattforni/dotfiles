@@ -39,10 +39,14 @@ If `$ARGUMENTS` is provided, use it as PR_NUMBER and skip to Step 2.
 Otherwise try to detect from the current branch:
 
 ```bash
-gh pr view --json number --jq '.number' 2>/dev/null
+PR_NUMBER=$(gh pr view --json number --jq '.number' 2>/dev/null); LOOKUP=$?
 ```
 
-If empty, no PR exists yet, so invoke `sdlc:review` to open one, then re-run the detection. Store the result as PR_NUMBER. If still empty after `sdlc:review`, stop with error: "No PR could be opened for the current branch".
+**Separate the lookup's exit status from its output.** An auth failure, a network blip, or a missing remote all return empty just like "no PR exists", and treating those as a missing PR opens a duplicate against a repo you could not even read. Only a *successful* lookup that came back empty means no PR yet.
+
+- `LOOKUP` non-zero → stop and report the failure. Do not open anything.
+- `LOOKUP` zero and PR_NUMBER empty → no PR exists, so invoke `sdlc:review` to open one, then re-run the detection. If still empty after that, stop with error: "No PR could be opened for the current branch".
+- `LOOKUP` zero and PR_NUMBER set → carry on to Step 2.
 
 Get the repo identifier:
 
@@ -64,7 +68,7 @@ Substitute the repo's real base branch (`scripts/get-base-branch.sh`) when it is
 
 It returns in a couple of minutes, needs no trigger comment, and has no PR queue. Parse the JSONL it emits: `finding` lines carry `severity` and `fileName`, and the closing `complete` line carries the count. Do not gate on the exit code, which is undocumented. Free tier allows three CLI reviews per hour, so spend them on real HEADs rather than on speculative re-runs.
 
-Store the findings for Step 4. **A run counts as clean only when the closing `complete` line arrives carrying zero findings.** A stream that stops before it, on a rate limit, a network drop, or any other error, did not finish, and an unfinished review gates nothing.
+Store the findings for Step 4, and record the SHA you reviewed as REVIEWED_SHA, which Step 5 compares against HEAD before merging. **A run counts as clean only when the closing `complete` line arrives carrying zero findings.** A stream that stops before it, on a rate limit, a network drop, or any other error, did not finish, and an unfinished review gates nothing.
 
 ## Step 3: Watch CI
 
@@ -93,15 +97,26 @@ while [ $(date +%s) -lt $END ]; do
     --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out")] | length' 2>/dev/null) || FAILED=""
   PENDING_CI=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
     --jq '[.check_runs[] | select(.status!="completed")] | length' 2>/dev/null) || PENDING_CI=""
+  COMPLETED=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
+    --jq '[.check_runs[] | select(.status=="completed")] | length' 2>/dev/null) || COMPLETED=""
 
   # Any blind query means wait, never release.
-  if [ -z "$HUMAN_R" ] || [ -z "$HUMAN_C" ] || [ -z "$FAILED" ] || [ -z "$PENDING_CI" ]; then
+  if [ -z "$HUMAN_R" ] || [ -z "$HUMAN_C" ] || [ -z "$FAILED" ] || [ -z "$PENDING_CI" ] || [ -z "$COMPLETED" ]; then
     sleep 60; continue
   fi
 
   if [ "$HUMAN_R" -gt 0 ] || [ "$HUMAN_C" -gt 0 ]; then echo "HUMAN_REVIEW head=$HEAD_SHA"; exit 3; fi
-  if [ "$FAILED" -gt 0 ];     then echo "CHECKS_FAILED head=$HEAD_SHA"; exit 2; fi
-  if [ "$PENDING_CI" -eq 0 ]; then echo "READY head=$HEAD_SHA";         exit 0; fi
+  if [ "$FAILED" -gt 0 ]; then echo "CHECKS_FAILED head=$HEAD_SHA"; exit 2; fi
+
+  # An empty check-runs list is not a settled CI. On a repo that runs checks it
+  # means they have not registered yet, and releasing on it emits READY for a
+  # PR nothing has checked. Require at least one COMPLETED run before calling
+  # CI settled. A repo with genuinely no CI never satisfies this and times out,
+  # which is the correct outcome: land those by explicit human decision, not by
+  # a loop that mistook silence for success.
+  if [ "$COMPLETED" -gt 0 ] && [ "$PENDING_CI" -eq 0 ]; then
+    echo "READY head=$HEAD_SHA"; exit 0
+  fi
   sleep 60
 done
 echo "TIMEOUT head=$HEAD_SHA"; exit 1
@@ -134,7 +149,15 @@ Run this under Monitor when landing in the background, and stay resident until i
 
 ## Step 5: Merge and Complete
 
-Confirm merge readiness. The gate is met when the CLI review ran clean against the current HEAD, CI is green, and:
+Confirm merge readiness. **Re-resolve HEAD and compare it to the SHA the Step 2 review actually ran against.** CI can take minutes, and anything that pushed during the wait, your own rebase included, moved HEAD past the reviewed commit:
+
+```bash
+gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha'   # compare against REVIEWED_SHA from Step 2
+```
+
+If they differ, go back to Step 2 and review the new HEAD before going further. Merging here would ship a commit no review ever saw, which is the same hollow gate this skill exists to remove, just arrived at from the other end.
+
+The gate is met when the CLI review ran clean against a SHA equal to the current HEAD, CI is green, and:
 
 ```bash
 gh pr view PR_NUMBER --json mergeStateStatus --jq '.mergeStateStatus'
