@@ -27,7 +27,7 @@ claude plugin install linear-lifecycle@skillset
 
 #### Per clone config
 
-`sdlc:review` and `sdlc:iterate` read the re review trigger from `git config sdlc.review-command`. The plugin default is `/gemini review`, but this repo uses CodeRabbit. `setup.sh` sets the local config automatically, or you can run it by hand:
+The review gate is `coderabbit review --base origin/main --committed --agent`, run locally on the branch, and it needs no configuration. `git config sdlc.review-command` only feeds the **public repo fallback**: the trigger comment `sdlc:review` and `sdlc:iterate` post so the PR bot takes a second look, which is worth having here because homebase is public and the free Open Source plan reviews properly on it. Nothing waits on that trigger. The plugin default is `/gemini review`, which is dead since Google sunset the consumer app, so `setup.sh` sets the local config automatically, or you can run it by hand:
 
 ```bash
 git config sdlc.review-command "@coderabbitai review"

@@ -1,10 +1,11 @@
 ---
 name: iterate
-description: Address PR review feedback and request re-review. Use this when the user needs to handle PR comments, respond to code review, or iterate on feedback from reviewers.
+description: Address PR review feedback and re-run the CodeRabbit CLI review on the new HEAD. Use this when the user needs to handle PR comments, respond to code review, or iterate on feedback from reviewers.
 argument-hint: [PR number - auto-detected if on feature branch]
 allowed-tools:
   - Bash(git *)
   - Bash(gh *)
+  - Bash(coderabbit *)
   - Bash(*get-review-command.sh*)
   - Grep
   - Read
@@ -13,7 +14,7 @@ allowed-tools:
 
 # Iterate on PR Feedback
 
-Fetch review comments, address each issue, and request re-review.
+Fetch review comments, address each issue, and re-review the branch with the CodeRabbit CLI.
 
 In all bash steps below, substitute placeholder names (like PR_NUMBER, REVIEW_CMD, etc.) with the actual values you stored earlier.
 
@@ -23,7 +24,7 @@ In all bash steps below, substitute placeholder names (like PR_NUMBER, REVIEW_CM
 2. **Fetch review comments** focusing on new and unresolved feedback
 3. **Address each comment** with fixes
 4. **Commit and push** changes
-5. **Request re-review** with a summary of what was addressed
+5. **Re-review** with the CodeRabbit CLI, and post a summary of what was addressed
 
 ## Step 1: Identify PR
 
@@ -90,35 +91,39 @@ If you disagree with a suggestion, still note it in the summary so the reviewer 
 
 Follow [Commit and Push](../../reference/common-patterns.md#commit-and-push).
 
-## Step 5: Request Re-Review
+## Step 5: Re-Review the New HEAD
 
-Get the configured review command:
+The gate is a local CodeRabbit CLI run against the SHA you just pushed, not a request to the PR bot. A review of a stale SHA gates nothing, so re-run it every time you push:
 
 ```bash
-../../scripts/get-review-command.sh
+coderabbit review --base origin/main --committed --agent
 ```
 
-Store the output as REVIEW_CMD.
+Substitute the repo's real base branch when it is not `main`, and fetch first so the base is current. Free tier allows three CLI runs an hour, so batch your fixes into one push rather than pushing per comment. Full mechanics live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
 
-Post a summary comment on the PR listing what was addressed. This helps the reviewer quickly see what changed without re-reading the entire diff:
+Post a summary comment on the PR listing what was addressed. This helps a human reviewer see what changed without re-reading the entire diff:
 
 ```bash
 gh pr comment PR_NUMBER --body "$(cat <<'EOF'
 ## Feedback Addressed
 
 - bullet list of changes made per comment
-
-REVIEW_CMD
 EOF
 )"
 ```
 
-Replace the bullet list content and REVIEW_CMD with actual values.
+On a **public** repo the PR bot is a genuine second look, since the free Open Source plan reviews properly there, and it does not re-review on a bare push. Appending the repo's configured trigger to that comment is a cheap fallback:
+
+```bash
+../../scripts/get-review-command.sh
+```
+
+Store the output as REVIEW_CMD and add it as the comment's last line. Never wait on the result: it is a fallback, not the gate, and on a private repo it produces no review at all.
 
 ## Output
 
 ```text
 PR #<number> updated
 Addressed <N> review comments
-Re-review requested via: <REVIEW_CMD>
+CLI re-review on <SHA>: <M> findings
 ```

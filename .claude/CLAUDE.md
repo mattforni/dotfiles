@@ -92,8 +92,8 @@ Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/for
 
 ## Code Review
 
-- During PR review iteration, only address NEW or UNRESOLVED review comments. Do not re-address comments that have already been resolved. Ask if unclear which comments are new.
-- **Triage bot review feedback, do not comply blindly.** Bots re-review fresh on every push, so "clean" is a moving target. Fix genuine bugs, adopt good suggestions, reason-decline false positives and suggestions that conflict with an explicit directive or tested behavior. Pick a convergence point with Forni rather than looping. The mechanics (re-review triggers, merge gating) are enforced by the merge-gate hook and `sdlc:land`; bot footprints per repo live in that repo's CLAUDE.md.
+- **`coderabbit review --base <base> --committed --agent` is the review gate, every repo, before a merge** (2026-08-29). Never wait on the PR bot: on a private repo it summarizes and never reviews. It stays a public repo fallback. Depth: `~/Eudaimonia/Admin/Tools/coderabbit.md`.
+- **Triage findings, do not comply blindly.** Fix genuine bugs, adopt good suggestions, reason-decline false positives and anything conflicting with an explicit directive or tested behavior. Address only NEW or UNRESOLVED comments; ask if unclear which are new. Converge rather than loop. The merge-gate hook and `sdlc:land` enforce it; per repo setup lives in that repo's CLAUDE.md.
 
 ## MCP Servers
 

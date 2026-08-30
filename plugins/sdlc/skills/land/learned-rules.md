@@ -10,47 +10,53 @@ Each rule states the rule, the reason, and how to apply it.
 
 ## Rules
 
-### Reply on the inline comment when declining a bot re-raise. Don't merge silently through it
+### The Gate Is the CodeRabbit CLI, Run Locally on the Branch
 
-When Gemini (or CodeRabbit) re-raises an inline comment after it has already been addressed, post a brief reply on the comment before merging. A reply that says "Re-raise: already addressed in <sha>" closes the loop in the PR's audit trail. Silent declines leave the PR looking like the bot's concerns went unanswered; future reviewers (human or another bot) can't tell the difference between "ignored" and "considered and declined."
+`coderabbit review --base origin/main --committed --agent`, run against the branch's current HEAD, is the review gate before any merge, on every repo. The PR bot is a fallback on public repos and nothing at all on private ones. Never hold a merge waiting for it.
 
-**Why:** Bots persist the original inline-comment IDs across review cycles, so the same item shows up again on the new SHA even though the code is fixed. Surfaced on ATE-367 app PR #36 (2026-05-25): two of three Gemini items on the second cycle were already-addressed re-raises. Replying to each kept the conversation honest.
+**Why:** On a private repo the free plan posts a walkthrough comment and never a review object, so a loop that polls for a review polls forever and a gate built on it reads green on nothing. Across `mattforni/pinole-app` PRs 69, 71, 72, and 73 the `reviews` array was empty every time. Free also allows only one PR review per developer per hour, which is what "CodeRabbit is slow" actually was: the first comment lands in about ten seconds, and the second look inside the hour is what waits. pinole-app #73 sat 39 minutes past green CI on exactly this, and the CLI reviewed the same diff in about two minutes and found a real bug the PR bot had not. Adopted by Forni 2026-08-29.
 
-**How to apply:** During step 4 of land, when triaging comments and identifying a re-raise (or any genuine decline where you disagree with the bot), post:
+**How to apply:** Run the CLI in Step 2 before you look at anything else, and again after every push, since a review of a stale SHA gates nothing. Parse the JSONL rather than the exit code, which is undocumented. The CLI needs a working directory and has no flag for one, so drive it through a wrapper script that changes directory internally. Free tier allows three CLI reviews an hour, so spend them on real HEADs. On a public repo, where the free Open Source plan reviews properly, read whatever bot findings have already arrived and triage them like any others, but merge on your own CLI run plus CI regardless. Mechanics, rate limits, and the JSONL shape live in `~/Eudaimonia/Admin/Tools/coderabbit.md`.
+
+### Reply on an Inline Comment When Declining a Bot Re-Raise, Don't Merge Silently Through It
+
+When the PR bot on a public repo re-raises an inline comment after it has already been addressed, post a brief reply before merging. A reply that says "Re-raise: already addressed in <sha>" closes the loop in the PR's audit trail. Silent declines leave the PR looking like the concern went unanswered, and a future reviewer cannot tell the difference between "ignored" and "considered and declined."
+
+**Why:** Bots persist the original inline-comment IDs across review cycles, so the same item shows up again on the new SHA even though the code is fixed. Surfaced on ATE-367 app PR #36 (2026-05-25): two of three items on the second cycle were already-addressed re-raises. Replying to each kept the conversation honest.
+
+**How to apply:** During Step 4, when triaging a re-raise or any genuine decline where you disagree, post:
 
 ```bash
 gh api -X POST repos/<owner>/<repo>/pulls/<PR>/comments/<comment_id>/replies \
   -f body="Re-raise: already addressed in <sha>."
 ```
 
-Cost is one reply per declined comment. Apply for genuine declines too (where the bot is actually wrong), explaining *why* you are declining, not just that you are. Then check CI and merge once green; do not wait for the bot to figure out resolution itself.
+Cost is one reply per declined comment. Apply it for genuine declines too, explaining *why* you are declining rather than just that you are. Findings that came from your own CLI run are private to you, so they need no reply; they need a line in your summary.
 
-### Detect review bots proactively and as a set, not from the current PR's reviews
+### Never Read a Green Check Suite as Evidence That a Review Happened
 
-Step 2 must learn which bots review the repo without waiting on the current PR, and must allow more than one. A just-opened PR has zero reviews, so reading only its reviews returns empty and the loop concludes "no bot configured," then merges on green CI, racing past the first pass. And a repo can run several bots at once.
+CodeRabbit posts a commit status and a check suite whether or not it produced a review, and it posts a passing one during a rate limit cooldown as well. A status colour therefore says nothing about whether anyone read the diff.
 
-**Why:** Surfaced on dev-tools PR #19 (2026-06-15). The repo has Gemini configured, but the PR was brand new with fast CI (one format check, green in under a minute). Detection read only PR #19's reviews (empty), so the loop merged on CLEAN and Gemini posted 10 seconds later. The merge was defensible (doc-only PR, see the doc-only rule below), but the agent wrongly reported "no bot configured" — a detection failure. Probing while fixing it revealed homebase runs BOTH CodeRabbit and Gemini, so single-bot detection was wrong in a second way.
+**Why:** This is the failure that made a bot shaped gate feel safe while gating on nothing, and it is why the gate is the CLI's own findings output rather than any signal GitHub renders.
 
-**How to apply:** Union two signals into a BOT_LOGINS set (see Step 2). Signal A is a live HEAD probe of check-suite app slugs and commit-status contexts — instant, and the only no-wait signal that catches CodeRabbit (it posts a `coderabbitai` check suite and a pending `CodeRabbit` status within seconds). Signal B scans recent PRs for reviewer logins — the only way to catch review-only bots like Gemini, which leave no footprint on the commit until they post. The installed-apps API would be authoritative but returns 401/404 to a user token. Step 3 then waits for every bot in the set to clear HEAD. Residual cold-start gap: a repo whose first-ever PR is the one being landed has no history for Signal B, so a review-only bot stays invisible until it posts — accept the early merge there (rare, self-corrects next PR).
+**How to apply:** Judge the gate on the CLI run against the current HEAD and on CI's own real checks. Treat every bot signal as informational.
 
-### Do not gate merge on the bot's first review when CI is green and merge_state is CLEAN
+### Merge on the CLI Review Plus CI, Regardless of Change Size
 
-The land workflow's READY condition requires `LATEST_BOT_SHA == HEAD_SHA`, which means it polls until the bot reviews the current SHA. For low-risk PRs (doc-only, codify changes, small config edits), waiting on the bot's first review is pure overhead with no signal value. For code PRs, the bot's first cycle catches real bugs and is worth waiting on, but subsequent cycles often just re-raise (see prior rule) and don't justify another polling window.
+Once the CLI review has run clean on the current HEAD and CI is green, merge. There is no separate wait to skip for a doc-only change and none to sit through for a code change, because the gate now costs a couple of minutes instead of an hour.
 
-**Why:** Surfaced twice in the same session (2026-05-25): on app PR #36 after iterate replies, and on doc-only PR #37. In both cases Forni asked "are we really still waiting?" while CI was already green and merge_state was CLEAN. The poll loop was waiting for Gemini to spin its review, not for any decision-relevant signal.
+**Why:** The old rule carved doc-only and follow-up cycles out of the bot poll because waiting was pure overhead with no signal value, which Forni called out twice in one session (2026-05-25) with CI green and merge_state CLEAN. The carve out existed to route around bot latency. The CLI removed the latency, so the exception is no longer needed and the review runs on everything, which is the stronger position.
 
-**How to apply:**
+**How to apply:** Run the CLI on every land. Do not wait for anything else. Kill the CI Monitor as soon as it reports READY rather than waiting a window out of habit.
 
-- **First cycle on a code PR:** wait for the bot review (real bug-catch value).
-- **Subsequent cycles after iterate:** if CI is green and merge_state is CLEAN, merge. Do not wait for the bot to re-bless the new SHA.
-- **Doc-only / config-only PRs:** merge as soon as CI is green and merge_state is CLEAN. Skip the bot poll entirely.
+### Branch Parity Checks Compare Against the Merge Base, Not Bare Main
 
-Operationally: kill the Monitor (TaskStop) and proceed to merge step. Don't wait the full timeout out of habit.
+After a squash merge, `git diff origin/main <branch>` shows phantom differences whenever main has moved past the branch.
 
-### Match the Review Bot by Its `[bot]`-Suffixed Login, Not the App Slug
+**Why:** The squash rewrites the change as a new commit on main, so the branch's own commits are no longer ancestors and a plain diff reads as unmerged work.
 
-A review's `.user.login` carries a `[bot]` suffix (`gemini-code-assist[bot]`, `coderabbitai[bot]`), but the check-suite **app slug** that Step 2's Signal A probe reads (`.check_suites[].app.slug`) is the bare `gemini-code-assist`. So a bot that lands in `BOT_LOGINS` via the slug probe never matches Step 3's `select(.user.login == "$bot")`: it stays stuck in `PENDING`, READY never fires, and the Monitor spins to timeout even though the review already landed on HEAD. Signal B (which reads `.user.login` from prior reviews) gets the suffix right; the slug path and any bare name hardcoded from a repo CLAUDE.md mention are the traps.
+**How to apply:** Verify that the PR merged your exact HEAD SHA rather than diffing against main.
 
-**Why:** Surfaced on public-web PR #383 (2026-06-15), running the then-installed single-`BOT_LOGIN` land flow hardcoded to `gemini-code-assist`. The poll matched nothing and the monitor ran on while Gemini's review sat on HEAD the whole time (Forni: "still waiting? seems wrong"). public-web's CLAUDE.md names the bot `gemini-code-assist` without the suffix, which seeds the mistake.
+### Gemini Code Assist (Consumer App) Was Sunset 2026-07-17
 
-**How to apply:** Before comparing against `.user.login`, normalize every `BOT_LOGINS` entry to the `[bot]` form (append `[bot]` to a bare slug, or strip `[bot]` from both sides of the comparison). If a poll loop is silent past the bot's normal latency, confirm the exact string with `gh api repos/<owner>/<repo>/pulls/<PR>/reviews --jq '.[].user.login'` before assuming "no review yet."
+Historical Gemini reviews sitting in a repo's closed PRs do not mean a live bot. Do not build a wait around one, and do not post `/gemini review`.
