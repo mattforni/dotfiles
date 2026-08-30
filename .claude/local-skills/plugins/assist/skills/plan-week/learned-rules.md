@@ -5,7 +5,7 @@ Corrections and calibration for how `assist:plan-week` should reason about sweep
 - Always schedule tasks for a minimum of 30 minutes. It looks better on the calendar and provides buffer. Even a quick phone call gets 30m.
 - Always include "Delete it" as a triage option. Not everything deserves to be relocated.
 - Add an appropriate emoji prefix to tasks that lack one. Shorten task names to fit well on a calendar.
-- When slotting a task, always set: date/time via `td task reschedule`, then duration + Scheduled label via `td task update` (remembering `--labels` replaces the whole set).
+- When slotting a task, always set: date/time via `td task reschedule`, then the Scheduled label via `td task update` (remembering `--labels` replaces the whole set). The duration is set in the app; see the `td` drops `--duration` rule below.
 - Todoist deadlineDate is Premium only. Note deadlines in the task description instead.
 - Transition and travel conventions are in `~/Eudaimonia/Admin/Tools/google-calendar.md`. Transition is *holding space* (context shift, destination in description). Travel is *explicit* (drive / transit, destination in title). Both carry the single 🚙 Travel label (Basil); the distinction lives in the title. Transitions are always 30 minutes, never 15.
 - When a Todoist bookmark is really an open question rather than an action (description phrased as a question, "Investigate" prefix, no clear next step), capture it as a koan under `~/Eudaimonia/Life-Design/Koans/<topic>.md` and delete the Todoist task. Don't punt to next Monday — questions don't get less true with time.
