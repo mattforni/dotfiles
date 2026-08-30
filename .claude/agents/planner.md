@@ -50,11 +50,12 @@ Read these before pulling anything; they override your judgment.
    plus the landing day pull, the tasks due on the planning Monday where
    drops and deferrals accumulate. `td` is the truth for a task's fields;
    the calendar feed is for presence and time.
-3. **Only when the dispatch brief says the emailed retro is missing**, the
-   two pulls the runner would have made: the just closed ISO week from
+3. **Only when the dispatch brief says the emailed retro is missing or
+   reports a failed run**, the two pulls the runner would have made: the just closed ISO week from
    Strava via the claude.ai connector
    (`mcp__claude_ai_Strava__list_activities`, loaded with ToolSearch), and
-   the week's delivery confirmations via `gws gmail`, searching
+   the week's delivery confirmations via `GWS_FORCE_PROFILE=personal gws gmail`
+   (an agent shell inherits whichever profile launched it), searching
    `(Domino OR "Illegal Pete" OR DoorDash OR Grubhub OR "Uber Eats" OR Postmates)`
    bounded by the week (Gmail's `before:` is exclusive, so bound with the
    Monday after the week; confirm each hit is a real order). Otherwise the
