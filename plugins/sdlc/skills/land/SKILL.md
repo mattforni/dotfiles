@@ -72,20 +72,36 @@ Always resolve HEAD fresh inside the loop. Your own iterate pushes will move it,
 
 The loop waits for CI and for the human signals that force a bail. It does not wait on any bot.
 
+**The loop must fail closed.** Every query below is unset on error rather than defaulted to zero, and an unset value sends the loop back to sleep instead of releasing it. Defaulting a failed query to `0` is how a gate says "go" when it cannot see: a transient API error would read as no pending checks and no failures, and emit `READY` on a PR nobody had looked at.
+
 ```bash
 END=$(($(date +%s) + 1800))   # 30 min cap per polling window
-while [ $(date +%s) -lt $END ]; do
-  HEAD_SHA=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha' 2>/dev/null)
-  HUMAN=$(gh api repos/REPO/pulls/PR_NUMBER/reviews \
-    --jq "[.[] | select(.user.type != \"Bot\" and .commit_id == \"$HEAD_SHA\")] | length" 2>/dev/null)
-  FAILED=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
-    --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out")] | length' 2>/dev/null || echo 0)
-  PENDING_CI=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
-    --jq '[.check_runs[] | select(.status!="completed")] | length' 2>/dev/null || echo 0)
+AUTHOR=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.user.login' 2>/dev/null)
 
-  if [ "${HUMAN:-0}" -gt 0 ];  then echo "HUMAN_REVIEW head=$HEAD_SHA";   exit 3; fi
-  if [ "${FAILED:-0}" -gt 0 ]; then echo "CHECKS_FAILED head=$HEAD_SHA";  exit 2; fi
-  if [ "${PENDING_CI:-0}" -eq 0 ]; then echo "READY head=$HEAD_SHA"; exit 0; fi
+while [ $(date +%s) -lt $END ]; do
+  HEAD_SHA=$(gh api repos/REPO/pulls/PR_NUMBER --jq '.head.sha' 2>/dev/null) || HEAD_SHA=""
+  if [ -z "$HEAD_SHA" ]; then sleep 60; continue; fi
+
+  # A human REVIEW on the current head, or a human COMMENT from anyone but the
+  # PR author. Excluding the author matters: your own decline replies post as
+  # the author and would otherwise trip your own bail on the next cycle.
+  HUMAN_R=$(gh api repos/REPO/pulls/PR_NUMBER/reviews \
+    --jq "[.[] | select(.user.type != \"Bot\" and .user.login != \"$AUTHOR\" and .commit_id == \"$HEAD_SHA\")] | length" 2>/dev/null) || HUMAN_R=""
+  HUMAN_C=$(gh api repos/REPO/issues/PR_NUMBER/comments \
+    --jq "[.[] | select(.user.type != \"Bot\" and .user.login != \"$AUTHOR\")] | length" 2>/dev/null) || HUMAN_C=""
+  FAILED=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
+    --jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out")] | length' 2>/dev/null) || FAILED=""
+  PENDING_CI=$(gh api repos/REPO/commits/$HEAD_SHA/check-runs \
+    --jq '[.check_runs[] | select(.status!="completed")] | length' 2>/dev/null) || PENDING_CI=""
+
+  # Any blind query means wait, never release.
+  if [ -z "$HUMAN_R" ] || [ -z "$HUMAN_C" ] || [ -z "$FAILED" ] || [ -z "$PENDING_CI" ]; then
+    sleep 60; continue
+  fi
+
+  if [ "$HUMAN_R" -gt 0 ] || [ "$HUMAN_C" -gt 0 ]; then echo "HUMAN_REVIEW head=$HEAD_SHA"; exit 3; fi
+  if [ "$FAILED" -gt 0 ];     then echo "CHECKS_FAILED head=$HEAD_SHA"; exit 2; fi
+  if [ "$PENDING_CI" -eq 0 ]; then echo "READY head=$HEAD_SHA";         exit 0; fi
   sleep 60
 done
 echo "TIMEOUT head=$HEAD_SHA"; exit 1
@@ -101,7 +117,7 @@ Run this under Monitor when landing in the background, and stay resident until i
   - Read the actual code before treating any finding as authoritative. Reviewers can be wrong, the CLI included, and a finding that misreads control flow gets declined rather than obeyed.
   - Sort by severity and by whether the item is actionable or advisory.
   - Decide:
-    - No findings, or only advisory items you would decline → **merge** (Step 5)
+    - A run that reached its closing `complete` line carrying zero findings, or whose only findings are advisory items you would decline → **merge** (Step 5). A run that did not reach `complete` is not a clean run, whatever it printed before it stopped.
     - Actionable items → **iterate** (next bullet)
     - Mixed → address the actionable ones, decline the advisory ones with reasoning, push, then loop back
   - When a declined item came from the PR bot and is therefore visible to others, reply on that comment with the reasoning so the audit trail shows it was considered rather than ignored.
