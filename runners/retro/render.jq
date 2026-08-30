@@ -1,8 +1,8 @@
-# Renders the retro JSON into the Sunday Retro email: the atelic.me voice
+# Renders the retro JSON into the Retro email: the atelic.me voice
 # (Geist, cream, one orange accent) as Gmail safe table markup with every
 # style inline. Invoked by entrypoint.sh as
 #   jq -r --arg week ... --arg monday ... --arg sunday ... -f render.jq retro.json
-# Design source: the Sunday Retro Email canvas, 2026-08-27.
+# Design source: the Retro Email canvas, 2026-08-27.
 
 def esc: tostring | gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
 
@@ -27,6 +27,21 @@ def money_ink($v):
   if ($v|tostring) == "-" or ($v|tostring) == "" then "#8a8272"
   elif ($v|tostring) | startswith("-") then "#b3705e"
   else "#6b8b64" end;
+
+# HubSpot shouts its own vocabulary (NOT_A_FIT) and the week's kinds arrive
+# lowercase. Both read as English here: split on underscores and spaces,
+# capitalize every word, and leave the small words lower unless they lead.
+def titlecase:
+  ["a", "an", "the", "of", "in", "to", "for", "by"] as $small
+  | (tostring | gsub("_"; " ") | split(" "))
+  | to_entries
+  | map(
+      (.value | ascii_downcase) as $w
+      | if $w == "" then ""
+        elif (.key > 0) and (($small | index($w)) != null) then $w
+        else ($w[0:1] | ascii_upcase) + ($w[1:])
+        end)
+  | join(" ");
 
 def mono: "font-family:'Geist Mono',Menlo,Consolas,monospace;";
 def sans: "font-family:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;";
@@ -58,20 +73,37 @@ def table3(rows):
 def coverage_head($text):
   "<td style=\"" + mono + "font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:#8a8272;padding:10px 8px 8px 0;\">" + $text + "</td>";
 
-def coverage_row($name; $logged; $target):
-  # The miss colour means a target was not met, so a row that carries no
-  # target never earns it. Clicks at zero is a fact, not a failure.
-  (if ($logged|tostring) == "0" and ($target|tostring) != "" then "#b3705e" else "#151515" end) as $ink
+# Two readings of the same shape. Ungraded, the miss colour marks only a target
+# missed outright, because a partial week is still a week, and a row with no
+# target never earns it at all. Graded, every row carrying a target is scored:
+# met or beaten reads green, short reads red. A value that is not a number
+# cannot be compared, so it stays neutral rather than inventing a verdict.
+def coverage_ink($logged; $target; $graded):
+  ($logged|tostring) as $l
+  | ($target|tostring) as $t
+  | (try ($l|tonumber) catch null) as $ln
+  | (try ($t|tonumber) catch null) as $tn
+  | if $t == "" then "#151515"
+    elif $graded then
+      (if $ln == null or $tn == null then "#151515"
+       elif $ln >= $tn then "#6b8b64"
+       else "#b3705e" end)
+    elif $l == "0" then "#b3705e"
+    else "#151515"
+    end;
+
+def coverage_row($name; $logged; $target; $graded):
+  coverage_ink($logged; $target; $graded) as $ink
   | "<tr>"
     + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + ($name|esc) + "</td>"
     + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:13px;font-weight:500;color:" + $ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($logged|esc) + "</td>"
     + "<td style=\"" + mono + "font-size:13px;color:#8a8272;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + ($target|esc) + "</td>"
     + "</tr>";
 
-def coverage_table($first_head; rows):
+def coverage_table($first_head; rows; $graded):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
   + "<tr>" + coverage_head($first_head) + coverage_head("Logged") + coverage_head("Target") + "</tr>"
-  + (rows | map(coverage_row(.a; .b; .c)) | join(""))
+  + (rows | map(coverage_row(.a; .b; .c; $graded)) | join(""))
   + "</table>";
 
 def done_row(r; $first):
@@ -97,28 +129,21 @@ def sub_label($text):
 def atelic_head($text; $w):
   "<td width=\"" + $w + "\" style=\"" + mono + "font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:#8a8272;padding:10px 8px 8px 0;\">" + $text + "</td>";
 
-# Opens carry three states, not two. A tracked send that was never opened is a
-# real negative and gets the miss colour; an untracked one is unknown and is
-# greyed, because rendering it as a zero would invent a fact.
 def atelic_row(r):
-  (if (r.opens|tostring) == "-" then "#8a8272"
-   elif (r.opens|tostring) == "0" then "#b3705e"
-   else "#151515" end) as $open_ink
-  | "<tr>"
-    + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
-    + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.status|esc)
-      + (if (r.reason // "") != "" then "<div style=\"color:#8a8272;font-size:11px;padding-top:3px;\">" + (r.reason|esc) + "</div>" else "" end)
-      + "</td>"
-    + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.kind|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.touches|tostring|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;color:" + $open_ink + ";padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.opens|tostring|esc) + "</td>"
-    + "<td style=\"" + mono + "font-size:13px;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + yesno(r.replied) + "</td>"
-    + "</tr>";
+  "<tr>"
+  + "<td width=\"" + col1 + "\" style=\"" + sans + "font-size:14px;font-weight:500;color:#151515;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.company|esc) + "</td>"
+  + "<td width=\"" + col2 + "\" style=\"" + mono + "font-size:12px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.status|titlecase|esc)
+    + (if (r.reason // "") != "" then "<div style=\"color:#8a8272;font-size:11px;padding-top:3px;\">" + (r.reason|titlecase|esc) + "</div>" else "" end)
+    + "</td>"
+  + "<td style=\"" + sans + "font-size:14px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;" + hair + "\">" + (r.kind|titlecase|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;color:#55503f;padding:10px 8px 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + (r.touches|tostring|esc) + "</td>"
+  + "<td style=\"" + mono + "font-size:13px;padding:10px 0 8px 0;vertical-align:top;white-space:nowrap;" + hair + "\">" + yesno(r.replied) + "</td>"
+  + "</tr>";
 
 def atelic_table(rows):
   "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:collapse;" + rule + "\">"
-  + "<tr>" + atelic_head("Company"; col1) + atelic_head("Status"; col2) + atelic_head("This week"; "16%")
-  + atelic_head("Touches"; "10%") + atelic_head("Opens"; "12%") + atelic_head("Heard back"; "10%") + "</tr>"
+  + "<tr>" + atelic_head("Company"; col1) + atelic_head("Status"; col2) + atelic_head("This week"; "22%")
+  + atelic_head("Touches"; "15%") + atelic_head("Heard back"; "15%") + "</tr>"
   + (rows | map(atelic_row(.)) | join(""))
   + "</table>";
 
@@ -161,16 +186,15 @@ def mark:
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"background:#f6f1e7;\"><tr><td align=\"center\" style=\"padding:40px 16px;\">"
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"760\" style=\"max-width:760px;width:100%;background:#fdfbf6;border:1px solid #ece8de;border-radius:20px;\"><tr><td style=\"padding:36px 44px;\">"
 
-  # header
+  # header: the week and the range it covers, on one line
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr>"
-  + "<td style=\"vertical-align:middle;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding-right:10px;vertical-align:middle;\">" + mark + "</td>"
-  + "<td style=\"" + mono + "font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#55503f;vertical-align:middle;\">Sunday Retro</td></tr></table></td>"
+  + "<td style=\"vertical-align:middle;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding-right:12px;vertical-align:middle;\">" + mark + "</td>"
+  + "<td style=\"" + sans + "font-size:40px;font-weight:600;line-height:1.05;letter-spacing:-1px;color:#151515;vertical-align:middle;\">Week <span style=\"color:#fc4a1a;\">" + ($weeknum|esc) + "</span></td></tr></table></td>"
   + "<td align=\"right\" style=\"" + mono + "font-size:12px;color:#8a8272;vertical-align:middle;\">" + ($monday|esc) + " to " + ($sunday|esc) + "</td>"
   + "</tr></table>"
 
-  # title
-  + "<div style=\"" + sans + "font-size:40px;font-weight:600;line-height:1.05;letter-spacing:-1px;color:#151515;padding-top:30px;\">Week <span style=\"color:#fc4a1a;\">" + ($weeknum|esc) + "</span></div>"
-  + "<div style=\"" + sans + "font-size:17px;font-weight:300;line-height:1.45;color:#55503f;margin-top:12px;\">" + ($r.headline|esc) + "</div>"
+  # headline
+  + "<div style=\"" + sans + "font-size:17px;font-weight:300;line-height:1.45;color:#55503f;margin-top:18px;\">" + ($r.headline|esc) + "</div>"
 
   # movement
   + section_label("Movement")
@@ -178,7 +202,7 @@ def mark:
      then table3($r.movement | map({a: .day, b: .session, c: .detail, muted: false}))
      else empty_line("Nothing logged in Strava this week.") end)
   + section_label("Coverage")
-  + coverage_table("Modality"; ($r.coverage | map({a: .modality, b: (.logged|tostring), c: (.target|tostring)})))
+  + coverage_table("Modality"; ($r.coverage | map({a: .modality, b: (.logged|tostring), c: (.target|tostring)})); false)
   + para($r.movement_read; "#151515")
 
   # overconsumption
@@ -194,7 +218,7 @@ def mark:
   + atelic_block("Open Leads"; ($r.atelic.open_leads // []); "No lead was touched this week.")
   + atelic_block("Closed Leads"; ($r.atelic.closed_leads // []); "Nothing closed this week.")
   + sub_label("The Week")
-  + coverage_table("Measure"; (($r.atelic.coverage // []) | map({a: .measure, b: (.logged|tostring), c: (.target|tostring)})))
+  + coverage_table("Measure"; (($r.atelic.coverage // []) | map({a: .measure, b: (.logged|tostring), c: (.target|tostring)})); true)
   + para($r.atelic_read; "#151515")
 
   # blind spots
@@ -203,7 +227,7 @@ def mark:
 
   # footer
   + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin-top:36px;border-top:1px solid #ece8de;\"><tr>"
-  + "<td style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Drafted by Claude for the Sunday session</td>"
+  + "<td style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Drafted by Claude for the planning session</td>"
   + "<td align=\"right\" style=\"" + mono + "font-size:11px;color:#8a8272;padding-top:16px;\">Strava, Gmail, HubSpot</td>"
   + "</tr></table>"
 

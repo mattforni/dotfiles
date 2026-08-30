@@ -1,4 +1,4 @@
-// The Atelic pull for the Sunday retro: what outreach went out this week and
+// The Atelic pull for the retro: what outreach went out this week and
 // what came back, as three finished tables.
 //
 // The arithmetic lives here rather than in the prompt on purpose. The joins
@@ -41,7 +41,7 @@ async function api(path, body) {
 }
 
 const EMAIL_PROPS = [
-    "hs_timestamp", "hs_email_subject", "hs_email_direction", "hs_email_open_count",
+    "hs_timestamp", "hs_email_subject", "hs_email_direction",
     "hs_email_click_count", "hs_not_tracking_opens_or_clicks", "hs_email_thread_id",
 ];
 
@@ -197,22 +197,20 @@ for (const e of week) {
         const r = row(c);
         for (const ct of aCtWeek.get(e.id) || []) r.contacts.add(ct);
         const key = `${c}|${normSubject(p.hs_email_subject)}`;
-        const opens = Number(p.hs_email_open_count || 0);
         const tracked = p.hs_not_tracking_opens_or_clicks !== "true";
 
-        // A copy of a touch already counted folds into it. Opens take the
-        // best copy, because the touch was opened if any copy of it was, and
+        // A copy of a touch already counted folds into it. Clicks take the
+        // best copy, because the touch was clicked if any copy of it was, and
         // tracking counts if any copy carried it.
         if (touchIndex.has(key)) {
             const t = touchIndex.get(key);
-            t.opens = Math.max(t.opens, opens);
             t.clicks = Math.max(t.clicks, Number(p.hs_email_click_count || 0));
             t.tracked = t.tracked || tracked;
             r.lastSend = (p.hs_timestamp || "").slice(0, 10) > r.lastSend
                 ? (p.hs_timestamp || "").slice(0, 10) : r.lastSend;
             continue;
         }
-        const t = { opens, clicks: Number(p.hs_email_click_count || 0), tracked };
+        const t = { clicks: Number(p.hs_email_click_count || 0), tracked };
         touchIndex.set(key, t);
         r.touchRefs.push(t);
         r.sends += 1;
@@ -229,7 +227,6 @@ for (const e of week) {
 
 // Fold each company's touches now that every copy has been merged into one.
 for (const r of rows.values()) {
-    r.opens = r.touchRefs.reduce((n, t) => n + t.opens, 0);
     r.clicks = r.touchRefs.reduce((n, t) => n + t.clicks, 0);
     r.tracked = r.touchRefs.filter((t) => t.tracked).length;
 }
@@ -291,12 +288,9 @@ for (const [cid, r] of rows) {
         kind: kinds.join(", ") || "none",
         sends: r.sends,
         touches: (priorTouches.get(cid) || 0) + r.sends,
-        // Opens are only readable on a send that carried tracking, so an
-        // untracked send reports as unknown rather than as a zero.
         // A send that carried no tracking cannot be read, which is not the
-        // same as a zero. It renders as a dash, the table's own way of saying
+        // same as a zero. It reports as a dash, the record's own way of saying
         // the question does not apply here.
-        opens: r.tracked ? String(r.opens) : "-",
         clicks: r.tracked ? String(r.clicks) : "-",
         tracked: `${r.tracked}/${r.sends}`,
         replied: r.replied ? "yes" : "no",
@@ -334,7 +328,7 @@ for (const [cid, r] of rows) {
                 : (deal?.amount ? Number(deal.amount) : null));
         // What is actually collectable. An engagement partly paid in goods is
         // worth its total to the business and less than that to the bank
-        // account, and the Sunday read wants the second number.
+        // account, and the retro wants the second number.
         const trade = deal?.trade_credit ? Number(deal.trade_credit) : 0;
         const cash = total === null ? null : total - trade;
         tables.opportunities.push({
@@ -374,19 +368,17 @@ const totals = {
     bumps: all.reduce((n, r) => n + r.bump, 0),
     replies_sent: all.reduce((n, r) => n + r.reply, 0),
     tracked: all.reduce((n, r) => n + r.tracked, 0),
-    opens: all.reduce((n, r) => n + r.opens, 0),
     clicks: all.reduce((n, r) => n + r.clicks, 0),
 };
 
 // The same logged against target shape the movement coverage table uses, so
-// the outreach week is read the same way the training week is. Only the two
-// the target actually names carry one; the rest are counts worth seeing.
+// the outreach week is read the same way the training week is. Both rows are
+// what the target names, and the renderer grades each against it.
 const TARGET_FIRST = Number(process.env.ATELIC_TARGET_FIRST || 5);
 const TARGET_BUMPS = Number(process.env.ATELIC_TARGET_BUMPS || 5);
 const coverage = [
     { measure: "First Sends", logged: String(totals.first), target: String(TARGET_FIRST) },
     { measure: "Follow Ups", logged: String(totals.bumps), target: String(TARGET_BUMPS) },
-    { measure: "Opens", logged: String(totals.opens), target: "" },
 ];
 
 console.log(JSON.stringify({ ...tables, coverage, totals }, null, 2));

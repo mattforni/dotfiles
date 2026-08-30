@@ -60,11 +60,11 @@ The named label table and title formats live in `~/Eudaimonia/Admin/Tools/google
 
 ## Mode: week (default)
 
-The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode (Phase 2), or standalone.
+The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode (Phase 5), or standalone.
 
 ### Phase 1: Retrospective on the Previous Week
 
-Run the full retro workflow on the just-closed ISO week (see Mode: retro). Retro precedes scheduling, always; drift compounds otherwise. If a retro subsection already exists for the just-closed week, skip to Phase 2.
+The emailed retro (the runner's `YYYY-Www Retro`, consumed by `assist:plan-week` Review Week) is the coverage read: lifts, social runs, the 4K, and yoga against the block doc, plus the takeout count. Add only what it cannot see, the Sunday weigh in and how the heel and body felt, collected in Review Week's blind spot ask. Retro precedes scheduling, always; drift compounds otherwise. Mode: retro below is the standalone form for a direct ask; do not rerun it here.
 
 ### Phase 2: Detect Existing Placeholders
 

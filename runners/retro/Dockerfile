@@ -1,4 +1,4 @@
-# The Sunday Retro Runner (ATE-471). A Cloud Run Job image: the entrypoint
+# The Retro Runner (ATE-471). A Cloud Run Job image: the entrypoint
 # pulls the week from Strava, Gmail, and HubSpot with curl, then headless
 # Claude Code writes the retrospective from those files and Resend delivers it.
 # Nothing here writes back to the world except the rotated Strava refresh
