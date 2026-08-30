@@ -19,5 +19,5 @@ bin/runner/fire retro                      # run production now
 | `Dockerfile` | `node:20-slim` plus curl, jq, tzdata, and a pinned Claude Code; runs as the non root `runner` user |
 | `entrypoint.sh` | The pulls, the `claude -p` call (Read as its only tool), the render, the send, and the Strava write back |
 | `hubspot.mjs` | The Atelic pull, called by `entrypoint.sh`: the HubSpot joins and the outreach arithmetic, handed to the prompt as finished tables |
-| `prompt.md` | The retro brief: the block's grading, the JSON shape, the voice rules; `{{WEEK}}`, `{{MONDAY}}`, `{{SUNDAY}}`, `{{TODAY}}`, `{{WORK}}` are filled at run time |
+| `prompt.md` | The retro brief: the block's grading, the JSON shape, the voice rules; `{{WEEK}}`, `{{MONDAY}}`, `{{SUNDAY}}`, `{{TODAY}}`, `{{WORK}}`, `{{EUDY}}` are filled at run time |
 | `render.jq` | The email template: Geist on cream with one orange accent, Gmail safe tables, every style inline |

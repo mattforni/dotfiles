@@ -320,7 +320,7 @@ All Todoist access goes through the `td` CLI via Bash; the MCP connector retired
 - `td task move <ref> --project "<name>"`: move a task out of Inbox into its pillar project.
 - `td task complete <ref>`: complete recurring tasks to fire the next occurrence (never `--forever`, which kills the recurrence).
 - `td task delete <ref> --yes`: delete notes/bookmarks that were never real tasks. Never complete these. The `--yes` flag is required or nothing is deleted.
-- `td task add "<title>" --project "<name>" --due "<date>" --priority p2 --labels "<a,b>"`: create one off tasks (e.g., a scheduled call from a recurring catch up); the duration goes on in the app afterwards.
+- `td task add "<title>" --project "<name>" --due "<date and time>" --priority p2 --labels "<a,b>"`: create one off tasks (e.g., a scheduled call from a recurring catch up); pass a full date and time value when the task carries a slot, not a date only value; the duration goes on in the app afterwards.
 - `td comment add <ref> --content "<text>"`: add detail to tasks when combining or enriching them.
 
 When slotting tasks, respect Todoist priorities:

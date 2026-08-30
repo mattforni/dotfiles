@@ -108,7 +108,7 @@ A board split by mailbox first (personal, then Atelic, each under its own
 heading naming the account address). Never interleave the two mailboxes in one
 list; Forni reads them as separate piles and acts on them separately. Within
 each mailbox, **? rows and anything outbound come first**, one line per thread:
-an account-safe Gmail link
+an account safe Gmail link
 (`https://mail.google.com/mail/?authuser=<account>#search/rfc822msgid%3A<url-encoded-Message-ID>`,
 per the learned rules, with `<account>` set to the address that owns the thread,
 so a link never opens the wrong mailbox), sender, subject, date, star state, one
