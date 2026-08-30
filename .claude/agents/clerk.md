@@ -114,7 +114,8 @@ per the learned rules, with `<account>` set to the address that owns the thread,
 so a link never opens the wrong mailbox), sender, subject, date, star state, one
 clause saying what the mail actually is (the main session shows Forni the thing,
 not a label), and the fully specified proposal. **✓ rows are returned as counts
-by disposition with the rule cited**, and the full ✓ list (the same one line per
+by disposition with the rule cited, except an outbound ✓ row, which stays a full
+line in this leading group rather than folding into the count**, and the full ✓ list (the same one line per
 thread, with message ids) goes to a file in the session scratchpad whose path you
 return, so execution can read it and Forni never has to. When a classification
 leaned on body content, carry the one line of evidence. Close with counts by

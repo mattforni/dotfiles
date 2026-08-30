@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Planning brief assembler. Use proactively at the start of weekly planning, AFTER the retro dialogue closes, to gather and assemble the planning brief. Makes the wide pulls (all three calendars, the Todoist slate; Strava and the takeout count only when the emailed retro is missing), runs the transition and overlap lint on the calendar, and on resume with the clerk and groomer boards merges everything into one three tier brief (Decisions, Handled, FYI) that leads with decisions, never inventories. Read only; it never mutates any system.
+description: Planning brief assembler. Use proactively at the start of weekly planning, AFTER the retro dialogue closes, to gather and assemble the planning brief. Makes the wide pulls (all three calendars, the Todoist slate; Strava and the takeout count only when the emailed retro is missing or reports a failed run), runs the transition and overlap lint on the calendar, and on resume with the clerk and groomer boards merges everything into one three tier brief (Decisions, Handled, FYI) that leads with decisions, never inventories. Read only; it never mutates any system.
 tools: Bash, Read, Grep, Glob, ToolSearch
 effort: medium
 model: sonnet
