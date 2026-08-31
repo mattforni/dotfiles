@@ -1,16 +1,37 @@
 # Runners
 
-Headless Claude routines that run on a schedule as Cloud Run Jobs. One directory per runner, each holding everything that runner is: its container, its pulls, its prompt, and its renderer.
+Headless Claude routines that run on a schedule. One directory per runner, each holding everything that runner is: its pulls, its prompt, its renderer, and its container if it has one.
 
-| Runner | What It Does |
-|---|---|
-| [retro/](retro/README.md) | Monday 05:00 Denver. Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
+| Runner | Runs On | What It Does |
+|---|---|---|
+| [retro/](retro/README.md) | Cloud Run | Monday 05:00 Denver. Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
+| [outreach/](outreach/README.md) | launchd | Monday 06:00 Denver. Runs the `outreacher` agent to rebuild the ATE-480 roster before the Tuesday desk block, and emails a report as `YYYY-Www Outreach`. |
 
-The runtime one pager (why Cloud Run over Routines and launchd, the service accounts and their secrets, the schedules, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
+The runtime one pager (why Cloud Run over Routines, the service accounts and their secrets, the schedules, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
+
+## Where a Runner Runs
+
+A runner is defined once and can be executed three ways. Which one it is in is never something the runner itself learns: whoever invokes it puts the secrets in the environment first, and `runners/lib/runner.sh` is deliberately pure with respect to that environment. It reads variables and writes files, and it never touches the Keychain, `~/.config`, or gcloud.
+
+| Mode | Command | Secrets from |
+|---|---|---|
+| By hand | `bin/runner/run-local <name>` | `.env.local` if fetched, then this machine's Keychain |
+| On a schedule, locally | `bin/runner/run-scheduled <name>`, from a LaunchAgent | the same |
+| Production | Cloud Run Job, fired by Cloud Scheduler | Secret Manager, injected by the job |
+
+**Who a runner reports to is a property of the runner**, so it may name its own
+recipient in `~/.config/headless-report/recipient-<name>`, falling back to the
+shared `recipient`. The retro is personal work and the outreach roster is Atelic
+work, and they go to different mailboxes. The addresses stay in `~/.config`
+rather than the repo, because homebase is public.
+
+**Local is not a lesser Cloud Run.** It is where every runner lives before it is promoted, and where some of them stay. A runner that drives the local CLIs (`hs`, `gws`, `linear`, each authenticated on this machine and each resolving its identity from an `.account` marker) or that needs a real browser cannot be containerised without work that has to be decided rather than assumed. Such a runner ships no Dockerfile, `bin/runner/promote` refuses it by name, and its README says what promoting it would take. `outreach/` is the current example.
+
+The driver side, which does know it is on Forni's Mac, is `bin/runner/lib.sh`: the Keychain reads, the recipient file, and the PATH a local runner needs. That PATH is longer than it looks like it needs to be, and `runner_local_path` carries the reason.
 
 ## Iterate Locally, Then Promote
 
-**Every change to a runner is developed and iterated on this machine first, and reaches Cloud Run only once the local result is right.** Editing a routine by rebuilding an image, waiting on Cloud Build, firing the job, and reading the result out of a logging query is a four minute round trip for a one line change, and it puts every experiment into production and into an inbox. The local loops below are seconds, and nothing they do is visible to anyone.
+**Every change to a runner is developed and iterated on this machine first, and reaches production only once the local result is right.** Editing a routine by rebuilding an image, waiting on Cloud Build, firing the job, and reading the result out of a logging query is a four minute round trip for a one line change, and it puts every experiment into production and into an inbox. The local loops below are seconds, and nothing they do is visible to anyone.
 
 Three loops, each answering a different question. Use the cheapest one that can answer yours.
 
@@ -39,7 +60,8 @@ vault, because the vault copy belongs to the container.
 | Command | Role |
 |---|---|
 | `fetch-env <name>` | Writes `runners/<name>/.env.local` from the **deployed job's own** secret mapping, pulling each value from the vault. Run it once per machine, and again whenever a runner gains a secret. |
-| `run-local <name>` | Runs the real `entrypoint.sh` against those real secrets, rendering to `out/retro.html` instead of sending. `--week` drafts another week, `--reuse` skips the pulls, `--send` actually delivers. |
+| `run-local <name>` | Runs the real `entrypoint.sh` against those real secrets, rendering the email into `out/` instead of sending. `--week` drafts another week, `--reuse` skips the pulls, `--send` actually delivers. A runner with no `.env.local` is fine and falls back to the Keychain. |
+| `run-scheduled <name>` | The same execution path, sending for real and logging to `~/.claude/debug/runner-<name>.log`. This is what a LaunchAgent points at, and the only thing a plist needs to know is the runner's name. |
 | `render-local <name>` | Pushes the saved `out/retro.json` back through `render.jq`. No network, no model. |
 | `promote <name>` | Cloud Build builds the image, the job is pointed at it. Refuses a dirty tree without `--dirty`. |
 | `fire <name>` | Executes the job now and prints its log. `--week` is applied, used, and cleared again. |
@@ -58,9 +80,13 @@ Get the real answer before promoting, by rendering the same draft through the ve
 ```bash
 curl -sSLo /tmp/jq16 https://github.com/jqlang/jq/releases/download/jq-1.6/jq-osx-amd64 && chmod +x /tmp/jq16
 /tmp/jq16 -r --arg week 2026-W35 --arg monday 2026-08-24 --arg sunday 2026-08-30 \
-    -f runners/<name>/render.jq runners/<name>/out/retro.json > /tmp/jq16.html
-diff /tmp/jq16.html runners/<name>/out/retro.html
+    -f runners/retro/render.jq runners/retro/out/retro.json > /tmp/jq16.html
+diff /tmp/jq16.html runners/retro/out/retro.html
 ```
+
+Named for the retro because it is the only runner that renders from JSON, and
+the only one still on the old `retro.html` artifact name; a new renderer writes
+`$WORK/email.html` and its draft alongside.
 
 The two steps stay separate because a pipeline reports only its last command's status, which would hand a compile error back wearing diff's exit code. A non zero exit from the render is the failure the cloud would have hit; a non zero exit from the diff means both versions parsed but disagree on the bytes. Clean on both is the answer you want. The binary is x86 and runs under Rosetta on Apple silicon.
 
@@ -68,4 +94,8 @@ The two steps stay separate because a pipeline reports only its last command's s
 
 ## Adding a Runner
 
-A runner directory needs `entrypoint.sh` (executable) and a `Dockerfile`; `render.jq` and a `README.md` if it emails something. The entrypoint should honor `DRY_RUN` (render, do not send) and `SKIP_PULLS` (reuse what is already in `$WORK`), since those two flags are the whole local loop, and should find its own siblings relative to the script rather than at an absolute container path, so it runs unchanged in both places. Keep the date math portable: the image has GNU date and this machine has BSD date, and `retro/entrypoint.sh` carries the three helper shims that bridge them.
+A runner directory needs `entrypoint.sh` (executable) and a `README.md`, plus a `Dockerfile` if it is meant for Cloud Run and `render.jq` if it renders its email from JSON.
+
+Source `../lib/runner.sh` first and take the shared pieces from there rather than writing them again: `require`, `html_escape`, `send_email`, the GNU versus BSD date shims, and the three builders that assemble a status email (`build_summary_block`, `build_meta_block`, `build_report_html`). Look for it at both `$SELF_DIR/lib/runner.sh` and `$SELF_DIR/../lib/runner.sh`, since it sits beside the entrypoint inside an image and one level up in the repo.
+
+The entrypoint should honor `DRY_RUN` (render, do not send) and `SKIP_PULLS` (reuse what is already in `$WORK`), since those two flags are the whole local loop, and it should write its rendered email to `$WORK/email.html`, which is what `run-local` opens and `mail` sends. It should find its siblings relative to the script rather than at an absolute container path, so it runs unchanged wherever it is.

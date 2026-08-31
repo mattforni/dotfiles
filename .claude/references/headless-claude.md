@@ -2,16 +2,28 @@
 
 Build recurring `claude -p` automations that run on launchd, survive sleep, auth
 from Keychain, and fail visibly. Based on the 2026-04-23 implementation of
-L7 mise; see Eudy's `LEVELS.md` for the story. The first reference
-implementation, `bin/run-mise`, was pruned 2026-07-23 along with the rest of
-the mise automation (the plist went 2026-07-16). **The live reference is
-`bin/run-outreacher`** with `launchagents/com.mattforni.outreacher.plist`
-(added 2026-08-26): a Monday routine that runs the `outreacher` agent through
-`claude -p --agent outreacher` to rebuild the Atelic outreach roster. Cloud
-scheduling drawing credentials from the Secret Manager vault
-(`~/Eudaimonia/Admin/Tools/secret-manager.md`) is the direction for routines
-whose credentials can leave the machine; this one reads Gmail through gws,
-whose tokens are local by design, so it stays on launchd.
+L7 mise; see Eudy's `LEVELS.md` for the story.
+
+**A scheduled routine is a runner, and this file is the macOS half of how one
+is executed.** `runners/README.md` owns the pattern itself and is the place to
+start; this one carries what is specific to launchd, the Keychain, and
+`claude -p`. The reference implementation is [`runners/outreach/`](../../runners/outreach/README.md),
+fired Monday 06:00 by `launchagents/com.mattforni.outreacher.plist`, which
+points at `bin/runner/run-scheduled outreach` and nothing else.
+
+**There is no per routine wrapper script any more** (2026-08-31). `bin/run-mise`
+was pruned 2026-07-23 and `bin/run-outreacher` followed, roughly three hundred
+lines that reimplemented what an entrypoint plus `runners/lib/runner.sh` gives
+for free. What replaced it is one generic command taking a runner's name. Two
+copies of the Resend send and two of `html_escape` went with it.
+
+**Local execution is not a lesser Cloud Run.** It is where every runner lives
+before it is promoted, and where some stay: a runner reading through the local
+CLIs (`hs`, `gws`, `linear`, each resolving its identity from an `.account`
+marker) or needing a real browser cannot be containerised without work that has
+to be decided rather than assumed. Cloud scheduling drawing credentials from the
+Secret Manager vault (`~/Eudaimonia/Admin/Tools/secret-manager.md`) is the
+direction for routines whose credentials can leave the machine.
 
 **Running an agent, not a skill.** `claude -p "<prompt>" --agent <name>`
 makes a user level agent definition (`~/.claude/agents/<name>.md`) the main
@@ -35,8 +47,10 @@ run: morning syncs, weekly triage, nightly build checks.
 
 ## The three pieces
 
-1. **LaunchAgent plist** at `~/Library/LaunchAgents/com.<user>.<label>.plist`
-2. **Wrapper script** at `~/bin/run-<something>` (bash, handles auth and invocation)
+1. **LaunchAgent plist** at `~/Library/LaunchAgents/com.<user>.<label>.plist`,
+   rendered from `launchagents/` by `setup.sh`
+2. **The runner** at `runners/<name>/entrypoint.sh`, executed by
+   `bin/runner/run-scheduled <name>`
 3. **OAuth token in Keychain** (or gitignored file as fallback)
 
 ### LaunchAgent
@@ -48,7 +62,8 @@ fire time, launchd catches up on next wake (one catch up per missed window).
 Plists do not expand `$HOME` or `~`. Template with placeholders and substitute
 at install time:
 
-    <string>{{HOME}}/bin/run-something</string>
+    <string>{{HOME}}/bin/runner/run-scheduled</string>
+    <string><runner-name></string>
 
 Install flow (in your setup script):
 
@@ -58,41 +73,38 @@ Install flow (in your setup script):
 - Skip the bootout+bootstrap cycle if the rendered content is unchanged AND
   the agent is already loaded, else every setup run kills an in flight job.
 
-### Wrapper script
+### The runner
 
-Sets PATH (launchd's env is empty), loads auth, invokes claude, parses JSON,
-fires a macOS notification on failure. Skeleton:
+`bin/runner/run-scheduled <name>` is everything a plist points at. It sets the
+PATH, fills the environment from this machine's vaults, runs
+`runners/<name>/entrypoint.sh`, and appends to
+`~/.claude/debug/runner-<name>.log`. Write the routine as an entrypoint; do not
+write a wrapper.
 
-    #!/usr/bin/env bash
-    set -uo pipefail
-    export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+The split that makes one entrypoint run in three places is worth stating
+plainly, because breaking it is the easy mistake:
 
-    LOG="$HOME/.claude/debug/<name>.log"
-    mkdir -p "$(dirname "$LOG")"
+- **`runners/lib/runner.sh` is pure with respect to the environment.** It reads
+  variables and writes files. No Keychain, no `~/.config`, no gcloud. An
+  entrypoint never learns which of the three modes it is in.
+- **`bin/runner/lib.sh` is the half that knows it is on Forni's Mac.** The
+  Keychain reads, the recipient file, and the PATH. Cloud Run reaches none of
+  it, because there the same variables arrive from Secret Manager instead.
 
-    notify_failure() {
-      osascript -e "display notification \"$1\" with title \"<Name>\"" 2>/dev/null || true
-    }
+**The PATH is longer than it looks like it needs to be, and it is stated in two
+places that cannot read each other**: `runner_local_path` in `bin/runner/lib.sh`
+and the plist's own `EnvironmentVariables`. Keep them identical.
 
-    {
-      # Auth: Keychain first, file fallback.
-      token=$(security find-generic-password -s "<service-name>" -w 2>/dev/null) || token=""
-      [[ -n "$token" ]] && export CLAUDE_CODE_OAUTH_TOKEN="$token"
+    $HOME/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-      result=$(claude -p "/<plugin>:<skill>" \
-        --allowedTools "Bash(git:*)" "Read" "Skill" \
-        --output-format json)
-      rc=$?
-      echo "$result"
-
-      [[ $rc -ne 0 ]] && notify_failure "exit $rc" && exit "$rc"
-
-      # Positive confirmation: require the skill's expected success string.
-      if ! echo "$result" | jq -e '.subtype == "success" and .is_error == false and ((.result // "") | contains("<expected>"))' >/dev/null 2>&1; then
-        notify_failure "skill did not complete"
-        exit 1
-      fi
-    } >> "$LOG" 2>&1
+`$HOME/bin` carries the `gws` and `hs` shims and has to win, the same precedence
+`.zshrc` finalizes with. `$HOME/.local/share/mise/shims` is how a non
+interactive shell reaches what `mise activate` wires for an interactive one, and
+the real `hs` lives there as an npm global under mise managed node. The
+Outreacher shipped with neither and every Monday run died in preflight on `hs
+not on PATH` (2026-08-31); fixing only the first would have found the shim and
+then failed one layer down. launchd starts a job with an empty environment and
+never sources a shell, so none of this can be inherited.
 
 ### Auth via Keychain
 
@@ -107,10 +119,15 @@ Flags:
   `-A` (any app) per the 2026-04-23 Gemini review on Eudy PR #19.
 - `-U` updates in place so the item is not briefly deleted.
 
-Retrieve in wrapper via `security find-generic-password -s <name> -w`.
+`runner_local_credentials` in `bin/runner/lib.sh` does the retrieval, and only
+ever fills a gap: anything already exported wins, so a `.env.local` fetched from
+a deployed job keeps production parity and a command line override always
+survives. It reads `claude-code-oauth` and `resend-api-key`, falling back to a
+gitignored `~/.claude/.oauth-token` for environments without a Keychain.
 
-Keep a gitignored `~/.claude/.oauth-token` as a fallback for environments
-without Keychain (CI, containers). Wrapper should try Keychain first.
+Missing credentials are not fatal there. What a run needs depends on what it
+will do, and the entrypoint's own `require` is what knows; failing in the driver
+would make a dry run over cached results impossible.
 
 ## Permissions: --allowedTools over --dangerously-skip-permissions
 
@@ -175,52 +192,62 @@ macOS notifications are best effort: silenced by Focus, get truncated, and
 have no click through to a record. Treat them as a redundant fallback, not
 the source of truth. The source of truth is an email per run.
 
-Shared library: `bin/lib/email-report.sh`. Routine-agnostic. Wrappers source
-it and set `ROUTINE` and `LOG` before calling `email_report`.
+Shared library: `runners/lib/runner.sh`, sourced by every entrypoint. It holds
+one `send_email` and the three builders that assemble a status email
+(`build_summary_block`, `build_meta_block`, `build_report_html`), so a runner
+whose email is a report on an agent run writes no HTML of its own. A runner
+that renders its own document, like the retro, builds its body with a renderer
+and never calls the builders.
 
-    ROUTINE="Mise"
-    LOG="$HOME/.claude/debug/mise.log"
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    source "$SCRIPT_DIR/lib/email-report.sh"
+`bin/lib/email-report.sh` was the previous home and was deleted 2026-08-31: it
+and `runners/retro/entrypoint.sh` had each grown a Resend send, and two senders
+is one too many.
 
-Reads:
+Reads, all from the environment, because the library is not allowed to know
+whether it is on this Mac or in a container:
 
-- API key from macOS Keychain (service `resend-api-key`, sending-only scope).
-- Recipient from `~/.config/headless-report/recipient` (one line, gitignored,
-  shared across all routines).
-- Sender hardcoded to `Claude <claude@atelic.me>` (override via
-  `EMAIL_REPORT_SENDER` env var if a routine needs a distinct identity).
+- `RESEND_API_KEY`. Locally `runner_local_credentials` fills it from the
+  Keychain (service `resend-api-key`, sending only scope); in Cloud Run it
+  arrives from Secret Manager.
+- `REPORT_RECIPIENT`. Locally from `~/.config/headless-report/recipient-<name>`
+  if the runner has one, otherwise the shared `recipient`. Who a runner reports
+  to is a property of the runner and not of the machine: the retro is personal
+  and goes to the Gmail account, the outreach roster is Atelic work and goes to
+  `matt@atelic.me`. The addresses live in `~/.config` rather than the repo
+  because homebase is public.
+- `REPORT_SENDER`, defaulting to `Claude <claude@atelic.me>`.
 
 Output:
 
-- Subject is always `[<Routine>] YYYY-MM-DD` regardless of status. Status
-  and any failure reason live in the body so the inbox stays calm and date
-  sortable; filter to a Gmail label by routine prefix.
-- **The bracketed routine tag is load bearing** (2026-07-17): Gmail filters
-  archive report mail by subject tag while interactive <claude@atelic.me> mail
-  (review asks, anything needing action) stays in the inbox. When adding a
-  new routine, add its `[Tag]` to the archive filter's subject terms, and
-  never give an interactive email a bracketed subject prefix. Full
+- **A weekly runner subjects its email `YYYY-Www <Name>`**, which is what both
+  live runners do: `2026-W36 Retro` and `2026-W36 Outreach`. A weekly briefing
+  is read on the morning it lands, so the week is the handle worth carrying and
+  the send date is noise.
+- **A daily status routine uses `[<Routine>] YYYY-MM-DD` instead**, and the
+  bracketed tag is load bearing (2026-07-17): Gmail filters archive report mail
+  by subject tag while interactive <claude@atelic.me> mail (review asks,
+  anything needing action) stays in the inbox. That is precisely why the weekly
+  briefings drop it, since they are meant to be read rather than filed. When
+  adding a daily routine, add its `[Tag]` to the archive filter's subject
+  terms, and never give an interactive email a bracketed subject prefix. Full
   convention: `~/Eudaimonia/Admin/Tools/resend.md`.
 - Body: status heading, optional reason note, `<pre>` block with the
   skill's `.result` text (HTML escaped), metadata table (duration, cost,
   turns, exit code, session id).
-- On any failure (missing key, missing recipient, curl error, Resend HTTP
-  non-2xx): sets `email_error` and returns non-zero. Wrapper falls back to
-  osascript notification carrying the email error.
+- On any failure (missing key, missing recipient, curl error, a Resend HTTP
+  status outside the 200s): `send_email` prints the reason and returns non zero. Treat a failed
+  delivery as a failed run and exit non zero, since at 06:00 the log is the only
+  place left that could show it.
 
 Tool entry: `Eudy/Admin/Tools/resend.md` for vendor context, alternatives
 considered, and pricing. JSON payload assembled via `jq -n --arg ...` to
 dodge bash escaping pitfalls; HTML escaping via `sed`.
 
-Wrapper sourcing trick: `BASH_SOURCE != $0` short circuits the main block
-in each wrapper, so `source ~/bin/run-<routine>` exposes the lib helpers
-for ad hoc testing without firing the routine.
-
-Adding a new headless routine: recover `bin/run-mise` from git history as
-the starting template, swap `ROUTINE`, `LOG`, the slash command, the
-`--allowedTools` set, and the success predicate. Email path is reused
-unchanged.
+Adding a new headless routine: read `runners/README.md`, copy the shape of
+`runners/outreach/entrypoint.sh`, and add a plist pointing at
+`bin/runner/run-scheduled <name>`. Swap the subject, the success predicate, the
+`--allowedTools` set, and what the runner actually does. Everything else,
+including the whole email path, comes from `runners/lib/runner.sh`.
 
 ## Reference
 

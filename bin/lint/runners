@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Checks the two things about a runner that no other gate can see and that
+# drift silently when they go wrong.
+#
+# Both exist because of the 2026-08-31 Outreacher outage, where the Monday job
+# had never once reached its agent. A rule written in a comment is the weakest
+# form of a rule; this is the same rule, enforced.
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+failed=0
+
+fail() { printf "${RED}[x]${NC} %s\n" "$1" >&2; failed=1; }
+
+# shellcheck source=../runner/lib.sh
+. "$ROOT/bin/runner/lib.sh"
+
+expected_path="$(runner_local_path)"
+# The plists are templates, so compare in their own vocabulary rather than
+# rendering: {{HOME}} is what setup.sh substitutes at install time.
+expected_template="${expected_path//$HOME/\{\{HOME\}\}}"
+
+shopt -s nullglob
+for plist in "$ROOT"/launchagents/*.plist; do
+    label="$(basename "$plist" .plist)"
+
+    # 1. The PATH is stated in two places that cannot read each other:
+    #    runner_local_path, and the plist's own EnvironmentVariables. launchd
+    #    starts a job with an empty environment and never sources a shell, so
+    #    the plist cannot inherit it, and a plist whose PATH has fallen behind
+    #    fails in preflight at 06:00 on a morning nobody is watching.
+    actual_path="$(sed -n '/<key>PATH<\/key>/{n;s/.*<string>\(.*\)<\/string>.*/\1/p;}' "$plist")"
+    if [[ -z "$actual_path" ]]; then
+        fail "$label sets no PATH; launchd hands a job an empty environment"
+    elif [[ "$actual_path" != "$expected_template" ]]; then
+        fail "$label PATH has drifted from runner_local_path in bin/runner/lib.sh"
+        printf "      plist: %s\n" "$actual_path" >&2
+        printf "      lib:   %s\n" "$expected_template" >&2
+    fi
+
+    # 2. A plist driving run-scheduled has to name a runner that exists. The
+    #    argument is a bare string in XML, so a rename or a typo is invisible
+    #    until the job fires and dies.
+    if grep -q 'run-scheduled' "$plist"; then
+        name="$(sed -n '/run-scheduled<\/string>/{n;s/.*<string>\(.*\)<\/string>.*/\1/p;}' "$plist")"
+        if [[ -z "$name" ]]; then
+            fail "$label calls run-scheduled with no runner name"
+        elif [[ ! -x "$ROOT/runners/$name/entrypoint.sh" ]]; then
+            fail "$label names runner '$name', which has no executable runners/$name/entrypoint.sh"
+        fi
+    fi
+done
+
+if [[ $failed -eq 0 ]]; then
+    printf "${GREEN}[+]${NC} Runner checks clean\n"
+fi
+exit "$failed"

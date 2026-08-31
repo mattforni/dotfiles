@@ -17,6 +17,10 @@
     // .claude/local-skills/plugins/assist, so without this the same files get
     // linted twice, once through each path, and every finding is reported
     // double. The real files are covered under local-skills.
-    ".claude/skills/assist/**"
+    ".claude/skills/assist/**",
+    // A runner's work directory. It is gitignored, but markdownlint globs the
+    // filesystem rather than the index, so an agent that writes a roster there
+    // turns the markdown gate red on prose nobody wrote and nobody ships.
+    "runners/*/out/**"
   ]
 }
