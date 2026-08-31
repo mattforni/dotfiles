@@ -5,7 +5,7 @@ Headless Claude routines that run on a schedule. One directory per runner, each 
 | Runner | Runs On | What It Does |
 |---|---|---|
 | [retro/](retro/README.md) | Cloud Run | Monday 05:00 Denver. Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
-| [outreach/](outreach/README.md) | launchd | Monday 06:00 Denver. Runs the `outreacher` agent to rebuild the ATE-480 roster before the Tuesday desk block, and emails a report as `YYYY-Www Outreach`. |
+| [outreach/](outreach/README.md) | by hand | Runs the `outreacher` agent to rebuild the ATE-480 roster before the Tuesday desk block, and emails a report as `YYYY-Www Outreach`. Deliberately unscheduled: one pass is about $7.50, which is worth paying on purpose and not on a timer. |
 
 The runtime one pager (why Cloud Run over Routines, the service accounts and their secrets, the schedules, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
 
@@ -18,6 +18,13 @@ A runner is defined once and can be executed three ways. Which one it is in is n
 | By hand | `bin/runner/run-local <name>` | `.env.local` if fetched, then this machine's Keychain |
 | On a schedule, locally | `bin/runner/run-scheduled <name>`, from a LaunchAgent | the same |
 | Production | Cloud Run Job, fired by Cloud Scheduler | Secret Manager, injected by the job |
+
+**No runner is on a LaunchAgent right now**, and `launchagents/` is empty. The
+outreach runner was scheduled for one morning and unscheduled the same day
+(2026-08-31): a pass costs about $7.50, which is a real number to spend every
+Monday whether or not the week needs it. The middle row is kept because it is
+where a runner goes when the schedule earns its cost, and because it is the
+only thing a plist has to name. Adding one back is a plist and nothing else.
 
 **Who a runner reports to is a property of the runner**, so it may name its own
 recipient in `~/.config/headless-report/recipient-<name>`, falling back to the
