@@ -25,10 +25,14 @@
   <key>RunAtLoad</key>
   <false/>
 
+  <!-- Must match the PATH bin/run-outreacher exports. {{HOME}}/bin holds the
+       gws and hs shims and {{HOME}}/.local/share/mise/shims is how a non
+       interactive shell reaches mise managed tools; without both, preflight
+       fails on "hs not on PATH" before the agent ever starts. -->
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>{{HOME}}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <string>{{HOME}}/bin:{{HOME}}/.local/bin:{{HOME}}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
 
   <key>StandardOutPath</key>

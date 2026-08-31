@@ -40,6 +40,10 @@ EMAIL_REPORT_RESEND_KEY_SERVICE="${EMAIL_REPORT_RESEND_KEY_SERVICE:-resend-api-k
 EMAIL_REPORT_RECIPIENT_FILE="${EMAIL_REPORT_RECIPIENT_FILE:-$HOME/.config/headless-report/recipient}"
 EMAIL_REPORT_SENDER="${EMAIL_REPORT_SENDER:-Claude <claude@atelic.me>}"
 EMAIL_REPORT_API_URL="${EMAIL_REPORT_API_URL:-https://api.resend.com/emails}"
+# Overrides the default "[<ROUTINE>] YYYY-MM-DD" subject. A daily routine wants
+# the date; a weekly one wants its week, so the Outreacher sets this to
+# "YYYY-Www Outreach" and matches the retro runner's "YYYY-Www Retro".
+EMAIL_REPORT_SUBJECT="${EMAIL_REPORT_SUBJECT:-}"
 
 # Usage: html_escape (reads from stdin, writes escaped HTML to stdout)
 # Escapes &, <, > so untrusted text can be safely embedded in HTML body or
@@ -47,6 +51,43 @@ EMAIL_REPORT_API_URL="${EMAIL_REPORT_API_URL:-https://api.resend.com/emails}"
 # element-content insertion, not for unquoted attribute values.
 html_escape() {
   sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
+# Usage: build_report_html <status> <summary_html> <full_text> <meta_block_html>
+# Assembles the email body and writes it to stdout, sending nothing.
+#
+# email_report used to build this inline. It was pulled out so a local run can
+# render exactly what production would mail and open it in a browser, which is
+# the cheap half of the iterate-locally loop the Cloud Run runners already have
+# (runners/README.md, "Iterate Locally, Then Promote"). Reads $ROUTINE.
+build_report_html() {
+  local status="$1"
+  local summary_html="$2"
+  local full_text="$3"
+  local meta_block_html="$4"
+
+  local emoji
+  if [[ "$status" == "success" ]]; then emoji="✅"; else emoji="❌"; fi
+
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M')
+
+  local routine_html
+  routine_html=$(printf '%s' "${ROUTINE:-Routine}" | html_escape)
+
+  local full_html=""
+  if [[ -n "$full_text" ]]; then
+    local escaped
+    escaped=$(printf '%s' "$full_text" | html_escape)
+    full_html="<details style=\"margin:0 0 12px 0;\"><summary style=\"cursor:pointer;color:#666;font-size:12px;padding:4px 0;\">Full output</summary><pre style=\"background:#f5f5f7;padding:12px;border-radius:6px;font-size:12px;line-height:1.4;overflow-x:auto;white-space:pre-wrap;margin:8px 0 0 0;\">$escaped</pre></details>"
+  fi
+
+  printf '%s' "<!DOCTYPE html><html><body style=\"font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px;color:#1d1d1f;line-height:1.5;\">
+<h2 style=\"margin:0 0 8px 0;font-size:18px;\">$emoji $routine_html — $timestamp</h2>
+$summary_html
+$full_html
+$meta_block_html
+</body></html>"
 }
 
 # Usage: email_report <status> <summary_html> <full_text> <meta_block_html>
@@ -57,9 +98,10 @@ html_escape() {
 #                     a collapsed <details><pre> block.
 #   meta_block_html:  raw HTML appended after the full output (run metadata).
 #
-# Subject is always "[<ROUTINE>] YYYY-MM-DD" so the inbox stays calm and the
-# user can scan by date. Status and reason live in the body, where there is
-# room to be expressive.
+# Subject defaults to "[<ROUTINE>] YYYY-MM-DD" so the inbox stays calm and the
+# user can scan by date; EMAIL_REPORT_SUBJECT replaces it outright for a
+# routine whose natural unit is not the day. Status and reason live in the
+# body either way, where there is room to be expressive.
 #
 # On success: returns 0.
 # On failure: sets $email_error to a one-line reason and returns non-zero.
@@ -109,32 +151,10 @@ email_report() {
     return 4
   fi
 
-  local emoji
-  if [[ "$status" == "success" ]]; then emoji="✅"; else emoji="❌"; fi
-
-  local date_only timestamp
+  local date_only subject html
   date_only=$(date '+%Y-%m-%d')
-  timestamp=$(date '+%Y-%m-%d %H:%M')
-
-  local subject="[$ROUTINE] $date_only"
-
-  local routine_html
-  routine_html=$(printf '%s' "$ROUTINE" | html_escape)
-
-  local full_html=""
-  if [[ -n "$full_text" ]]; then
-    local escaped
-    escaped=$(printf '%s' "$full_text" | html_escape)
-    full_html="<details style=\"margin:0 0 12px 0;\"><summary style=\"cursor:pointer;color:#666;font-size:12px;padding:4px 0;\">Full output</summary><pre style=\"background:#f5f5f7;padding:12px;border-radius:6px;font-size:12px;line-height:1.4;overflow-x:auto;white-space:pre-wrap;margin:8px 0 0 0;\">$escaped</pre></details>"
-  fi
-
-  local html
-  html="<!DOCTYPE html><html><body style=\"font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px;color:#1d1d1f;line-height:1.5;\">
-<h2 style=\"margin:0 0 8px 0;font-size:18px;\">$emoji $routine_html — $timestamp</h2>
-$summary_html
-$full_html
-$meta_block_html
-</body></html>"
+  subject="${EMAIL_REPORT_SUBJECT:-[$ROUTINE] $date_only}"
+  html=$(build_report_html "$status" "$summary_html" "$full_text" "$meta_block_html")
 
   local payload
   payload=$(jq -n \

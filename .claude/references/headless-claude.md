@@ -61,11 +61,23 @@ Install flow (in your setup script):
 ### Wrapper script
 
 Sets PATH (launchd's env is empty), loads auth, invokes claude, parses JSON,
-fires a macOS notification on failure. Skeleton:
+fires a macOS notification on failure.
+
+**Copy the PATH below verbatim; it is longer than it looks like it needs to
+be.** `$HOME/bin` carries the `gws` and `hs` shims, and
+`$HOME/.local/share/mise/shims` is how a non interactive shell reaches what
+`mise activate` wires for an interactive one, which is where the real `hs`
+lives as an npm global under mise managed node. The Outreacher shipped without
+either and every Monday run died in preflight on `hs not on PATH` (2026-08-31),
+loudly and correctly, but a routine whose preflight is thinner would have run
+half a job instead. Keep the wrapper and its plist in step: launchd reads its
+own `EnvironmentVariables` and never sources a shell.
+
+Skeleton:
 
     #!/usr/bin/env bash
     set -uo pipefail
-    export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+    export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
     LOG="$HOME/.claude/debug/<name>.log"
     mkdir -p "$(dirname "$LOG")"
@@ -93,6 +105,31 @@ fires a macOS notification on failure. Skeleton:
         exit 1
       fi
     } >> "$LOG" 2>&1
+
+### Iterating locally
+
+A launchd routine that can only be exercised by waiting for its next window is
+a routine nobody changes. `bin/run-outreacher` carries the same three loop
+shape the Cloud Run runners have (`runners/README.md`), scaled down to a
+wrapper script:
+
+| Loop | Command | Costs | Use it when |
+|---|---|---|---|
+| Render | `run-outreacher --dry-run --reuse` | nothing, no network | changing the subject, the summary block, the email body |
+| Draft | `run-outreacher --dry-run` | one agent run | changing the prompt, the allowlist, the success predicate |
+| Real | `run-outreacher` | one agent run, one send | what launchd does, and the last check before trusting it |
+
+`--dry-run` renders the email to the scratch dir and opens it instead of
+sending, `--reuse` replays the JSON the last real run saved to
+`$SCRATCH/result.json`, `--week` drafts another week, and `--no-open` leaves
+the file alone. The local loops also tee to the terminal rather than only the
+log, since a run being watched should be visible.
+
+Two pieces of the wrapper exist to make this work and are worth keeping in any
+new routine: the result JSON is saved on every real run, successes and failures
+alike, and every reporting path goes through one `deliver` function rather than
+calling `email_report` directly. Failure reports matter most here, because a
+failure email is the one nobody has ever looked at before it is trusted.
 
 ### Auth via Keychain
 
@@ -151,7 +188,9 @@ Where `<expected>` is the distinctive success string the skill emits.
 
 - **Two claude binaries**: `~/.local/bin/claude` (user install, has plugins)
   vs `/opt/homebrew/bin/claude` (brew, lacks plugin context). Put
-  `$HOME/.local/bin` first in PATH or skills resolve to "Unknown skill".
+  `$HOME/.local/bin` ahead of `/opt/homebrew/bin` or skills resolve to
+  "Unknown skill". Entries before it are fine as long as they hold no
+  `claude`, which is why `$HOME/bin` can lead.
 - **Do not merge stderr into stdout** when capturing JSON. `claude -p ...
   --output-format json 2>&1` corrupts the JSON with any stderr byte, and `jq`
   silently fails via `// empty`. Redirect stderr to the surrounding log block.
@@ -193,15 +232,22 @@ Reads:
 
 Output:
 
-- Subject is always `[<Routine>] YYYY-MM-DD` regardless of status. Status
+- Subject defaults to `[<Routine>] YYYY-MM-DD` regardless of status. Status
   and any failure reason live in the body so the inbox stays calm and date
   sortable; filter to a Gmail label by routine prefix.
+- **A routine whose unit is the week sets `EMAIL_REPORT_SUBJECT` instead**, to
+  `YYYY-Www <Name>`. The Cloud Run retro has always mailed `2026-W36 Retro`
+  and the Outreacher joined it on 2026-08-31 with `2026-W36 Outreach`. A
+  weekly briefing is read on the morning it lands, so the week is the handle
+  worth carrying and the send date is noise. Daily status routines keep the
+  bracketed default.
 - **The bracketed routine tag is load bearing** (2026-07-17): Gmail filters
   archive report mail by subject tag while interactive <claude@atelic.me> mail
-  (review asks, anything needing action) stays in the inbox. When adding a
-  new routine, add its `[Tag]` to the archive filter's subject terms, and
-  never give an interactive email a bracketed subject prefix. Full
-  convention: `~/Eudaimonia/Admin/Tools/resend.md`.
+  (review asks, anything needing action) stays in the inbox. That is precisely
+  why the weekly briefings drop it: they are meant to be read, not filed. When
+  adding a daily status routine, add its `[Tag]` to the archive filter's
+  subject terms, and never give an interactive email a bracketed subject
+  prefix. Full convention: `~/Eudaimonia/Admin/Tools/resend.md`.
 - Body: status heading, optional reason note, `<pre>` block with the
   skill's `.result` text (HTML escaped), metadata table (duration, cost,
   turns, exit code, session id).

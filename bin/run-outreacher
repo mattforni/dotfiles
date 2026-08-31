@@ -19,9 +19,28 @@
 # allows only the tools the agent needs. Each entry matches a single plain
 # command; the agent is told to keep every Bash call that shape and to put
 # multi step logic in a python script under the scratch dir.
+#
+# Usage: run-outreacher [--dry-run] [--reuse] [--week YYYY-Www] [--no-open]
+#
+#   --dry-run  render the email to the scratch dir and open it, sending nothing
+#   --reuse    skip the agent and reuse the JSON the last run saved
+#   --week     draft another week instead of the current one
+#   --no-open  leave the rendered email on disk without opening a browser
+#
+# launchd passes no flags and gets the full run. The flags above are the local
+# iterate loop, the same shape the Cloud Run runners have (runners/README.md,
+# "Iterate Locally, Then Promote"): --dry-run --reuse re-renders the saved
+# result in about a second with no network and no inbox, --dry-run alone runs
+# the real agent and still sends nothing, and no flags at all is production.
 set -uo pipefail
 
-export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+# $HOME/bin comes first because it holds the gws and hs shims, exactly the
+# precedence .zshrc finalizes with; the mise shims directory is how a non
+# interactive shell reaches what `mise activate` wires for an interactive one,
+# and hs is an npm global under mise-managed node. Both were missing, so the
+# 2026-08-31 run died in preflight on "hs not on PATH" and never reached the
+# agent. Keep launchagents/com.mattforni.outreacher.plist in step with this.
+export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 ROUTINE="Outreacher"
 LOG="$HOME/.claude/debug/outreacher.log"
@@ -88,8 +107,8 @@ fatal_report() {
   local reason="$1"
   echo "FATAL: $reason"
   local summary="<div style=\"background:#ffebee;border-left:4px solid #c62828;padding:10px 14px;border-radius:4px;margin:0 0 12px 0;\"><strong style=\"color:#b71c1c;\">$reason</strong></div>"
-  if email_report "failure" "$summary" "" ""; then
-    echo "email: report sent ($reason)"
+  if deliver "failure" "$summary" "" ""; then
+    echo "email: report $delivery_verb ($reason)"
   else
     echo "email: failed: $email_error"
     notify_failure "$reason; email also failed: $email_error"
@@ -98,8 +117,8 @@ fatal_report() {
 
 runtime_failure_report() {
   local reason="$1"
-  if email_report "failure" "$summary_block" "$result_text" "$meta_block"; then
-    echo "email: report sent ($reason)"
+  if deliver "failure" "$summary_block" "$result_text" "$meta_block"; then
+    echo "email: report $delivery_verb ($reason)"
   else
     echo "email: report failed: $email_error"
     notify_failure "$ROUTINE $reason; email also failed: $email_error"
@@ -126,7 +145,49 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
   return 0 2>/dev/null || true
 fi
 
-{
+DRY_RUN=0
+REUSE=0
+OPEN_IT=1
+week_override=""
+while (( $# )); do
+  case "$1" in
+    --dry-run) DRY_RUN=1; shift ;;
+    --reuse)   REUSE=1; shift ;;
+    --no-open) OPEN_IT=0; shift ;;
+    --week)    week_override="${2:-}"; shift 2 ;;
+    -h|--help) sed -n '/^# Usage:/,/^set -uo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit 0 ;;
+    *)         echo "run-outreacher: unknown option $1" >&2; exit 2 ;;
+  esac
+done
+
+week="${week_override:-$(date +%G-W%V)}"
+# The retro runner mails "YYYY-Www Retro". This is its sibling and reads the
+# same way: both are weekly, so the week is the handle worth carrying, not the
+# day the send happened to go out.
+export EMAIL_REPORT_SUBJECT="$week Outreach"
+
+delivery_verb="sent"
+RESULT_FILE="$SCRATCH/result.json"
+REPORT_FILE="$SCRATCH/report.html"
+
+# In a dry run the email is rendered and opened rather than sent, so the local
+# loop can look at the thing before an inbox does. Every reporting path goes
+# through here, failures included, because a failure report is the one most
+# worth reading before it is trusted.
+deliver() {
+  if (( DRY_RUN )); then
+    build_report_html "$1" "$2" "$3" "$4" > "$REPORT_FILE" || return 1
+    echo "dry run: subject \"$EMAIL_REPORT_SUBJECT\""
+    echo "dry run: rendered $REPORT_FILE"
+    (( OPEN_IT )) && command -v open >/dev/null 2>&1 && open "$REPORT_FILE"
+    delivery_verb="rendered"
+    return 0
+  fi
+  delivery_verb="sent"
+  email_report "$1" "$2" "$3" "$4"
+}
+
+run_routine() {
   echo ""
   echo "=== $(date -Iseconds) run-outreacher start ==="
 
@@ -148,38 +209,52 @@ fi
     echo "auth: no token found in keychain or file; relying on claude default"
   fi
 
-  week="$(date +%G-W%V)"
   prompt="Prep the ATE-480 Weekly Outreach roster for ISO week $week. Scratch directory for scripts and the roster file: $SCRATCH. Run the full method in your definition and end with the success line."
 
-  stderr_file="$(dirname "$LOG")/outreacher-claude-stderr.txt"
-  attempt=1
-  while :; do
-    echo "=== $(date -Iseconds) claude attempt $attempt/$MAX_ATTEMPTS (timeout $ATTEMPT_TIMEOUT) ==="
-    result=$(timeout "$ATTEMPT_TIMEOUT" claude -p "$prompt" \
-      --agent outreacher \
-      --allowedTools "${ALLOWED_TOOLS[@]}" \
-      --output-format json 2>"$stderr_file")
-    rc=$?
-
-    [[ $rc -eq 0 ]] && break
-
-    transient=false
-    if [[ $rc -eq 124 ]]; then
-      transient=true
-      echo "claude attempt $attempt timed out after $ATTEMPT_TIMEOUT"
-    elif { printf '%s' "$result"; cat "$stderr_file" 2>/dev/null; } | grep -qiE "$TRANSIENT_SIGNATURE"; then
-      transient=true
-      echo "claude attempt $attempt hit a transient API error (exit $rc)"
+  if (( REUSE )); then
+    if [[ ! -s "$RESULT_FILE" ]]; then
+      fatal_report "--reuse needs a saved result at $RESULT_FILE; run without it once"
+      exit 1
     fi
+    echo "reuse: reading the agent result saved at $RESULT_FILE"
+    result="$(cat "$RESULT_FILE")"
+    rc=0
+  else
 
-    if [[ "$transient" == true && $attempt -lt $MAX_ATTEMPTS ]]; then
-      echo "retrying in ${RETRY_BACKOFF_SECONDS}s"
-      attempt=$((attempt + 1))
-      sleep "$RETRY_BACKOFF_SECONDS"
-      continue
-    fi
-    break
-  done
+    stderr_file="$(dirname "$LOG")/outreacher-claude-stderr.txt"
+    attempt=1
+    while :; do
+      echo "=== $(date -Iseconds) claude attempt $attempt/$MAX_ATTEMPTS (timeout $ATTEMPT_TIMEOUT) ==="
+      result=$(timeout "$ATTEMPT_TIMEOUT" claude -p "$prompt" \
+        --agent outreacher \
+        --allowedTools "${ALLOWED_TOOLS[@]}" \
+        --output-format json 2>"$stderr_file")
+      rc=$?
+
+      [[ $rc -eq 0 ]] && break
+
+      transient=false
+      if [[ $rc -eq 124 ]]; then
+        transient=true
+        echo "claude attempt $attempt timed out after $ATTEMPT_TIMEOUT"
+      elif { printf '%s' "$result"; cat "$stderr_file" 2>/dev/null; } | grep -qiE "$TRANSIENT_SIGNATURE"; then
+        transient=true
+        echo "claude attempt $attempt hit a transient API error (exit $rc)"
+      fi
+
+      if [[ "$transient" == true && $attempt -lt $MAX_ATTEMPTS ]]; then
+        echo "retrying in ${RETRY_BACKOFF_SECONDS}s"
+        attempt=$((attempt + 1))
+        sleep "$RETRY_BACKOFF_SECONDS"
+        continue
+      fi
+      break
+    done
+
+    # Saved on every real run, successes and failures alike, so --reuse can put
+    # the very same JSON back through the reporting path.
+    printf '%s' "$result" > "$RESULT_FILE"
+  fi
 
   echo "$result"
   echo "=== $(date -Iseconds) run-outreacher end (exit $rc) ==="
@@ -199,12 +274,19 @@ fi
     exit 1
   fi
 
-  if email_report "success" "$summary_block" "$result_text" "$meta_block"; then
-    echo "email: success report sent"
+  if deliver "success" "$summary_block" "$result_text" "$meta_block"; then
+    echo "email: success report $delivery_verb"
   else
     echo "email: success report failed: $email_error"
     notify_failure "$ROUTINE complete but email report failed: $email_error"
   fi
 
   echo "=== $(date -Iseconds) run-outreacher success confirmed ==="
-} >> "$LOG" 2>&1
+}
+
+if (( DRY_RUN || REUSE )); then
+  # A local run is being watched, so it goes to the terminal as well as the log.
+  run_routine 2>&1 | tee -a "$LOG"
+  exit "${PIPESTATUS[0]}"
+fi
+run_routine >> "$LOG" 2>&1
