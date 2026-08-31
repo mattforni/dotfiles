@@ -2,6 +2,9 @@
 
 Monday 06:00 Denver, from launchd. Runs the `outreacher` agent headlessly so the ATE-480 Weekly Outreach roster is rebuilt and drafted before the Tuesday desk block, then mails a status report as `YYYY-Www Outreach`.
 
+It reports to `matt@atelic.me`, not the personal Gmail account, because this is
+Atelic work. That comes from `~/.config/headless-report/recipient-outreach`.
+
 Prep only. The agent never emails anyone, never moves a Lead Status, and never posts to a client surface. Every send waits for Forni's explicit yes inside the Tuesday block, one at a time, through `/lead:handle-outbound`.
 
 ## Running It

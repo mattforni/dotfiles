@@ -104,8 +104,12 @@ runner_local_path() {
 # Missing credentials are not fatal here. What a run actually needs depends on
 # what it will do, and the entrypoint's own `require` is the place that knows;
 # failing here would make a dry run over cached pulls impossible.
+#
+# Usage: runner_local_credentials [runner-name]
+# The name is optional and only steers the recipient.
 runner_local_credentials() {
-    local recipient_file="${EMAIL_REPORT_RECIPIENT_FILE:-$HOME/.config/headless-report/recipient}"
+    local runner="${1:-}"
+    local config_dir="$HOME/.config/headless-report"
 
     if [[ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
         CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s claude-code-oauth -w 2>/dev/null)" || true
@@ -122,12 +126,30 @@ runner_local_credentials() {
         [[ -n "$RESEND_API_KEY" ]] && export RESEND_API_KEY || unset RESEND_API_KEY
     fi
 
-    if [[ -z "${REPORT_RECIPIENT:-}" && -r "$recipient_file" ]]; then
-        # First non empty, non comment line, with any stray whitespace stripped.
-        # Fails loud rather than sending to a Frankenstein recipient if the file
-        # ever grows comments or a second address.
-        REPORT_RECIPIENT="$(awk 'NF && !/^[[:space:]]*#/ {print; exit}' "$recipient_file" | tr -d '[:space:]')"
-        [[ -n "$REPORT_RECIPIENT" ]] && export REPORT_RECIPIENT || unset REPORT_RECIPIENT
+    # Who a runner reports to is a property of the runner, not of the machine:
+    # the retro is personal and the outreach roster is Atelic work, and they go
+    # to different mailboxes. So a runner may name its own recipient in
+    # recipient-<name>, and recipient is the shared fallback for the rest.
+    #
+    # The addresses live in ~/.config rather than in the repo because homebase
+    # is public. That was already true of the shared file and stays true here;
+    # a per runner file is the same convention, not a new one.
+    if [[ -z "${REPORT_RECIPIENT:-}" ]]; then
+        local candidates=() f
+        # An explicit file override wins outright, which is how a test run
+        # sends somewhere harmless.
+        [[ -n "${EMAIL_REPORT_RECIPIENT_FILE:-}" ]] && candidates+=("$EMAIL_REPORT_RECIPIENT_FILE")
+        [[ -n "$runner" ]] && candidates+=("$config_dir/recipient-$runner")
+        candidates+=("$config_dir/recipient")
+        for f in "${candidates[@]}"; do
+            [[ -r "$f" ]] || continue
+            # First non empty, non comment line, with any stray whitespace
+            # stripped. Fails loud rather than sending to a Frankenstein
+            # recipient if the file ever grows comments or a second address.
+            REPORT_RECIPIENT="$(awk 'NF && !/^[[:space:]]*#/ {print; exit}' "$f" | tr -d '[:space:]')"
+            [[ -n "$REPORT_RECIPIENT" ]] && break
+        done
+        [[ -n "${REPORT_RECIPIENT:-}" ]] && export REPORT_RECIPIENT || unset REPORT_RECIPIENT
     fi
 }
 
@@ -160,7 +182,7 @@ runner_execute() {
     else
         echo "env: no $envfile; this machine's vaults only"
     fi
-    runner_local_credentials
+    runner_local_credentials "$(basename "$dir")"
 
     WORK="${WORK:-$dir/out}"
     mkdir -p "$WORK"

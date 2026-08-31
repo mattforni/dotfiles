@@ -49,6 +49,6 @@ LIB_ENTRY="$(runner_entrypoint_lib)"
 [[ -r "$LIB_ENTRY" ]] || die "cannot read $LIB_ENTRY"
 # shellcheck source=../../runners/lib/runner.sh
 . "$LIB_ENTRY"
-runner_local_credentials
+runner_local_credentials "$name"
 
 send_email "$subject" "$(cat "$html")"

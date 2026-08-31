@@ -19,6 +19,12 @@ A runner is defined once and can be executed three ways. Which one it is in is n
 | On a schedule, locally | `bin/runner/run-scheduled <name>`, from a LaunchAgent | the same |
 | Production | Cloud Run Job, fired by Cloud Scheduler | Secret Manager, injected by the job |
 
+**Who a runner reports to is a property of the runner**, so it may name its own
+recipient in `~/.config/headless-report/recipient-<name>`, falling back to the
+shared `recipient`. The retro is personal work and the outreach roster is Atelic
+work, and they go to different mailboxes. The addresses stay in `~/.config`
+rather than the repo, because homebase is public.
+
 **Local is not a lesser Cloud Run.** It is where every runner lives before it is promoted, and where some of them stay. A runner that drives the local CLIs (`hs`, `gws`, `linear`, each authenticated on this machine and each resolving its identity from an `.account` marker) or that needs a real browser cannot be containerised without work that has to be decided rather than assumed. Such a runner ships no Dockerfile, `bin/runner/promote` refuses it by name, and its README says what promoting it would take. `outreach/` is the current example.
 
 The driver side, which does know it is on Forni's Mac, is `bin/runner/lib.sh`: the Keychain reads, the recipient file, and the PATH a local runner needs. That PATH is longer than it looks like it needs to be, and `runner_local_path` carries the reason.

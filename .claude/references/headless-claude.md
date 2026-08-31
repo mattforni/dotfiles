@@ -209,8 +209,12 @@ whether it is on this Mac or in a container:
 - `RESEND_API_KEY`. Locally `runner_local_credentials` fills it from the
   Keychain (service `resend-api-key`, sending only scope); in Cloud Run it
   arrives from Secret Manager.
-- `REPORT_RECIPIENT`. Locally from `~/.config/headless-report/recipient` (one
-  line, gitignored, shared across all routines).
+- `REPORT_RECIPIENT`. Locally from `~/.config/headless-report/recipient-<name>`
+  if the runner has one, otherwise the shared `recipient`. Who a runner reports
+  to is a property of the runner and not of the machine: the retro is personal
+  and goes to the Gmail account, the outreach roster is Atelic work and goes to
+  `matt@atelic.me`. The addresses live in `~/.config` rather than the repo
+  because homebase is public.
 - `REPORT_SENDER`, defaulting to `Claude <claude@atelic.me>`.
 
 Output:

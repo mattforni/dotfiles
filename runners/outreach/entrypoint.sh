@@ -23,7 +23,10 @@
 #   CLAUDE_CODE_OAUTH_TOKEN   Keychain claude-code-oauth
 #   RESEND_API_KEY            Keychain resend-api-key
 # Plain configuration:
-#   REPORT_RECIPIENT          where the report goes
+#   REPORT_RECIPIENT          where the report goes; locally this resolves to
+#                             ~/.config/headless-report/recipient-outreach,
+#                             which is the Atelic mailbox rather than the
+#                             personal one, because this is Atelic work
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
 #   ATELIC                    the practice repo, whose .account marker is what
 #                             points hs and gws at the right identity
