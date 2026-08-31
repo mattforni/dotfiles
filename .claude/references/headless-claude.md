@@ -7,9 +7,24 @@ L7 mise; see Eudy's `LEVELS.md` for the story.
 **A scheduled routine is a runner, and this file is the macOS half of how one
 is executed.** `runners/README.md` owns the pattern itself and is the place to
 start; this one carries what is specific to launchd, the Keychain, and
-`claude -p`. The reference implementation is [`runners/outreach/`](../../runners/outreach/README.md),
-fired Monday 06:00 by `launchagents/com.mattforni.outreacher.plist`, which
-points at `bin/runner/run-scheduled outreach` and nothing else.
+`claude -p`. The worked example is
+[`runners/outreach/`](../../runners/outreach/README.md), which is run by hand
+through `bin/runner/run-local`.
+
+**Nothing is on a LaunchAgent right now and `launchagents/` is empty.** The
+outreach runner was scheduled for one morning and unscheduled the same day
+(2026-08-31), because a pass is about $7.50 and a weekly timer spends that
+whether or not the week needs it. The machinery below is intact and a plist is
+all it takes to schedule something; the point is that a schedule is a cost
+decision, and an agent priced like this earns its timer or does not get one.
+
+**Removing a plist from `launchagents/` does not undeploy it.** `setup.sh`
+renders and bootstraps every plist it finds and prunes none, unlike the deploy
+table's reconciler, so a machine that already has one keeps firing it. Bootout
+and delete the rendered copy by hand:
+
+    launchctl bootout gui/$(id -u)/<label>
+    rm ~/Library/LaunchAgents/<label>.plist
 
 **There is no per routine wrapper script any more** (2026-08-31). `bin/run-mise`
 was pruned 2026-07-23 and `bin/run-outreacher` followed, roughly three hundred

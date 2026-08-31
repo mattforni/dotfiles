@@ -1,6 +1,11 @@
 # Outreach Runner
 
-Monday 06:00 Denver, from launchd. Runs the `outreacher` agent headlessly so the ATE-480 Weekly Outreach roster is rebuilt and drafted before the Tuesday desk block, then mails a status report as `YYYY-Www Outreach`.
+Run by hand, before the Tuesday desk block. Runs the `outreacher` agent headlessly so the ATE-480 Weekly Outreach roster is rebuilt and drafted, then mails a status report as `YYYY-Www Outreach`.
+
+**Not scheduled, on purpose.** It was on a Monday 06:00 LaunchAgent for exactly
+one morning. A full pass is about eighteen minutes and **$7.50**, and a weekly
+timer spends that whether or not the week needs it, so the trigger is a person
+deciding the week needs a roster (2026-08-31).
 
 It reports to `matt@atelic.me`, not the personal Gmail account, because this is
 Atelic work. That comes from `~/.config/headless-report/recipient-outreach`.
@@ -12,8 +17,13 @@ Prep only. The agent never emails anyone, never moves a Lead Status, and never p
 ```bash
 bin/runner/run-local outreach --reuse    # render the saved run again, no network
 bin/runner/run-local outreach            # run the agent, render, send nothing
-bin/runner/run-scheduled outreach        # what launchd does, send included
+bin/runner/run-local outreach --send     # the real thing: run, render, and mail it
 ```
+
+**`run-local` without `--send` is the safe default** and the one to reach for.
+`bin/runner/run-scheduled outreach` also works and always sends, but it is the
+unattended door: it logs to a file rather than the terminal, so a run started
+by hand through it looks like nothing is happening.
 
 `--week YYYY-Www` drafts another week. The work directory is `runners/outreach/out/`, which is also the agent's scratch directory and the only path it is allowed to write.
 
