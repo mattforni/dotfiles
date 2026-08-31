@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# The Outreach Runner. Fires Monday 06:00 Denver from launchd, so the ATE-480
-# Weekly Outreach roster is rebuilt and drafted before the Tuesday desk block.
+# The Outreach Runner. Run by hand before the Tuesday desk block, so the week's
+# outreach roster is rebuilt and drafted before the block opens. It sat on a
+# Monday 06:00 LaunchAgent for exactly one morning: a weekly timer spends a
+# full pass whether or not the week needs one, so the trigger is a person
+# deciding it does (#217, 2026-08-31).
 #
 # Shape: one headless Claude Code call running the `outreacher` agent, which
 # does its own reads through the local CLIs, then one Resend send reporting
@@ -10,12 +13,12 @@
 #
 # This runner is local only, and that is a design position rather than a gap.
 # It reads HubSpot through `hs`, both mailboxes and the One Pager through
-# `gws`, and it writes the roster through `linear`, all authenticated on this
-# machine; and its customer path walk requires a real browser, because a
-# Cloudflare challenge, a per visit phone number and a lazy loaded form all lie
-# to a fetch. runners/outreach/README.md carries what promoting it to Cloud Run
-# would actually take. Until then `bin/runner/run-scheduled outreach` is
-# production and launchd is the scheduler.
+# `gws`, both authenticated on this machine, and it writes the roster as a file
+# in the Atelic checkout, which is also only here; and its customer path walk
+# requires a real browser, because a Cloudflare challenge, a per visit phone
+# number and a lazy loaded form all lie to a fetch. runners/outreach/README.md
+# carries what promoting it to Cloud Run would actually take. Until then
+# `bin/runner/run-local outreach --send`, started by hand, is production.
 #
 # Secrets arrive as environment variables, injected by bin/runner/run-scheduled
 # from this machine's vaults (and by Cloud Run from Secret Manager, if this
@@ -180,7 +183,7 @@ fi
 # check was right and the PATH was wrong. bin/runner/lib.sh owns that PATH now.
 if [[ "$SKIP_PULLS" != "1" ]]; then
     missing_tools=()
-    for tool in claude jq curl timeout hs gws linear agent-browser; do
+    for tool in claude jq curl timeout hs gws agent-browser; do
         command -v "$tool" &>/dev/null || missing_tools+=("$tool")
     done
     if (( ${#missing_tools[@]} )); then
@@ -212,7 +215,6 @@ ALLOWED_TOOLS=(
     # own entries.
     "Bash(GWS_FORCE_PROFILE=atelic gws:*)"
     "Bash(GWS_FORCE_PROFILE=personal gws:*)"
-    "Bash(linear:*)"
     "Bash(curl:*)"
     # The customer path walk runs in a real browser, never curl alone.
     "Bash(agent-browser:*)"
@@ -227,6 +229,14 @@ ALLOWED_TOOLS=(
     "WebFetch"
     "WebSearch"
     "Write($WORK/*)"
+    # The one write the agent makes outside its own work directory: this run's
+    # roster file in the Atelic repo. Pinned to $WEEK, which is validated above,
+    # so the rest of Outreach/ (the method, the CLAUDE.md, the Voice samples)
+    # and every prior week's roster stay out of reach; prose forbidding it is
+    # the weakest kind of rule. A pattern that fails to match shows up as a
+    # permission denial in the report's summary block, visible rather than
+    # silent.
+    "Write($ATELIC/Outreach/$WEEK-roster.md)"
 )
 
 ATTEMPT_TIMEOUT="${ATTEMPT_TIMEOUT:-45m}"
@@ -252,7 +262,7 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
     [[ "$rc" =~ ^[0-9]+$ ]] || rc=1
     echo "agent: replaying the run saved in $WORK (exit $rc)"
 else
-    prompt="Prep the ATE-480 Weekly Outreach roster for ISO week $WEEK. Scratch directory for scripts and the roster file: $WORK. Run the full method in your definition and end with the success line."
+    prompt="Prep the weekly outreach roster for ISO week $WEEK. Write the roster to $ATELIC/Outreach/$WEEK-roster.md, the one path outside the scratch directory you may write; do not stage it and do not commit it. Scratch directory for scripts and working files: $WORK. Run the full method in your definition and end with the success line."
     stderr_file="$WORK/claude-stderr.txt"
     attempt=1
     while :; do
