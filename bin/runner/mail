@@ -6,8 +6,8 @@
 #
 # A browser preview is not the artifact. Gmail collapses styles, rewrites some
 # markup, and renders on a phone, so a table that lines up in Chrome can still
-# arrive broken. This sends the exact bytes in out/retro.html through the same
-# Resend sender and to the same recipient the production runner uses.
+# arrive broken. This sends the exact bytes the runner rendered, through the
+# same Resend sender and to the same recipient a real run uses.
 #
 # It sends only what is already rendered; run render-local or run-local first.
 set -euo pipefail
@@ -21,30 +21,34 @@ name=""; subject=""
 while (( $# )); do
     case "$1" in
         --subject)  subject="${2:-}"; shift 2 ;;
-        -h|--help)  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help)  sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*)         die "unknown option $1" ;;
         *)          [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
     esac
 done
 
 dir="$(runner_dir "$name")"
-html="$dir/out/retro.html"
-[[ -s "$html" ]] || die "nothing rendered at $html; run 'bin/runner/render-local $name' first"
+work="$dir/out"
+html="$(runner_email_artifact "$work")" \
+    || die "nothing rendered in $work; run 'bin/runner/run-local $name' first"
 
 week=""
-[[ -r "$dir/out/week.env" ]] && week="$(sed -n 's/^WEEK=//p' "$dir/out/week.env" | head -1)"
+[[ -r "$work/week.env" ]] && week="$(sed -n 's/^WEEK=//p' "$work/week.env" | head -1)"
 # Every draft gets its own subject. Gmail threads messages that share one and
 # then hides the parts a later message repeats behind its trimmed content
 # button, so a second draft of the same week arrives with its tables collapsed
-# and reads as broken markup rather than as a repeat. The production runner
-# sends one email a week and never hits this.
-subject="${subject:-${week:-$(date +%G-W%V)} Retro (draft $(date +%H:%M))}"
+# and reads as broken markup rather than as a repeat. A real run sends one
+# email a week and never hits this.
+subject="${subject:-${week:-$(date +%G-W%V)} $name (draft $(date +%H:%M))}"
 
-REPORT_LIB="$(runner_repo_root)/bin/lib/email-report.sh"
-[[ -r "$REPORT_LIB" ]] || die "cannot read $REPORT_LIB"
-# shellcheck source=../lib/email-report.sh
-. "$REPORT_LIB"
+# The send itself comes from the entrypoint side library, so there is one
+# Resend implementation rather than one here and another in every runner. The
+# credentials come from the driver side, because that half is what is allowed
+# to know this machine has a Keychain.
+LIB_ENTRY="$(runner_entrypoint_lib)"
+[[ -r "$LIB_ENTRY" ]] || die "cannot read $LIB_ENTRY"
+# shellcheck source=../../runners/lib/runner.sh
+. "$LIB_ENTRY"
+runner_local_credentials
 
-if ! email_raw "$subject" "$html"; then
-    die "${email_error:-send failed}"
-fi
+send_email "$subject" "$(cat "$html")"

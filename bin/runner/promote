@@ -29,6 +29,13 @@ while (( $# )); do
 done
 
 dir="$(runner_dir "$name")"
+
+# A runner without a Dockerfile is local only, which is a design position and
+# not an unfinished one: it may drive the local CLIs or a real browser, and
+# neither survives a container without work that has to be decided rather than
+# assumed. Say so plainly instead of failing inside Cloud Build.
+[[ -f "$dir/Dockerfile" ]] || die "$name has no Dockerfile, so it is a local only runner and production for it is launchd. runners/$name/README.md says what promoting it would take."
+
 command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
 
 root="$(runner_repo_root)"

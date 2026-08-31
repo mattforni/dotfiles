@@ -67,14 +67,21 @@ is_bash_read() {
     # The character class matters: a bare `(bash|sh)$` also matches a zsh
     # shebang, since "zsh" ends in "sh". That sent bin/checkout-branch.sh into
     # static analysis, which has no zsh mode and errors out on SC1071.
-    *) head -n1 "$ROOT/$1" 2>/dev/null | grep -qE '^#!.*[ /](bash|sh)$' ;;
+    #
+    # A sourced library correctly carries no shebang, so it declares itself
+    # with shellcheck's own directive instead. Without this second alternative
+    # both bin/runner/lib.sh and runners/lib/runner.sh were invisible to every
+    # gate, which is the worst place for a blind spot: they are the files the
+    # rest of the tree sources.
+    *) head -n1 "$ROOT/$1" 2>/dev/null | grep -qE '^#!.*[ /](bash|sh)$|^# shellcheck shell=bash$' ;;
   esac
 }
 
 discover() {
   git -C "$ROOT" ls-files -z \
     'setup.sh' '.aliases' '.functions' '.zshrc' '.zsh/*.zsh' \
-    'bin/*' 'bin/**/*' '.githooks/*' 2>/dev/null |
+    'bin/*' 'bin/**/*' '.githooks/*' \
+    'runners/*' 'runners/**/*' 2>/dev/null |
     while IFS= read -r -d '' f; do
       [[ -f "$ROOT/$f" ]] || continue
       if is_zsh_read "$f" || is_bash_read "$f"; then printf '%s\n' "$f"; fi

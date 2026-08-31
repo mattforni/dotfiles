@@ -2,12 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+  <!-- The label stays com.mattforni.outreacher even though the runner is
+       named outreach. setup.sh installs every plist it finds here but prunes
+       none, so renaming the label would leave the old agent loaded forever,
+       firing weekly at a script that no longer exists. A tidier name is not
+       worth an orphaned launchd job. -->
   <key>Label</key>
   <string>com.mattforni.outreacher</string>
 
+  <!-- One generic command, given a runner name. Everything about which
+       secrets, which work directory and which entrypoint is resolved from
+       runners/outreach/ rather than from a wrapper script per routine. -->
   <key>ProgramArguments</key>
   <array>
-    <string>{{HOME}}/bin/run-outreacher</string>
+    <string>{{HOME}}/bin/runner/run-scheduled</string>
+    <string>outreach</string>
   </array>
 
   <!-- Monday 06:00, so the ATE-480 roster is rebuilt and drafted before the
@@ -25,16 +34,30 @@
   <key>RunAtLoad</key>
   <false/>
 
+  <!-- launchd starts a job with an empty environment and never sources a
+       shell, so this cannot be inherited and has to be stated. It must match
+       runner_local_path in bin/runner/lib.sh, which cannot be read from here:
+       {{HOME}}/bin carries the gws and hs shims and has to win, and
+       {{HOME}}/.local/share/mise/shims is how a non interactive shell reaches
+       what `mise activate` wires for an interactive one, which is where the
+       real hs lives as an npm global. Both were missing until 2026-08-31 and
+       every Monday run died in preflight on "hs not on PATH".
+
+       run-scheduled sets the same PATH itself, so this is belt and braces:
+       it is what lets the command be found at all. -->
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>{{HOME}}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <string>{{HOME}}/bin:{{HOME}}/.local/bin:{{HOME}}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
 
+  <!-- The runner keeps its own log at ~/.claude/debug/runner-outreach.log.
+       This one catches anything that fails before the runner gets that far,
+       which is the class of failure that is otherwise invisible. -->
   <key>StandardOutPath</key>
-  <string>{{HOME}}/.claude/debug/outreacher-launchd.log</string>
+  <string>{{HOME}}/.claude/debug/outreach-launchd.log</string>
 
   <key>StandardErrorPath</key>
-  <string>{{HOME}}/.claude/debug/outreacher-launchd.log</string>
+  <string>{{HOME}}/.claude/debug/outreach-launchd.log</string>
 </dict>
 </plist>

@@ -9,6 +9,11 @@
 #   --send    actually deliver the email, off by default
 #   --no-open leave the rendered HTML on disk without opening a browser
 #
+# A runner that has never been promoted has no .env.local, and that is fine:
+# the secrets then come from this machine's Keychain alone. A runner that has
+# been promoted gets production parity by fetching its deployed job's own
+# secret mapping first (bin/runner/fetch-env).
+#
 # This runs the very entrypoint the container runs, against the very secrets
 # Cloud Run is injected with, so what passes here is what production will do.
 # The one deliberate difference is the send: a local run renders to out/ and
@@ -35,29 +40,17 @@ while (( $# )); do
 done
 
 dir="$(runner_dir "$name")"
-envfile="$dir/.env.local"
-[[ -r "$envfile" ]] || die "no $envfile; run 'bin/runner/fetch-env $name' first"
-
-# shellcheck source=/dev/null
-set -a
-# shellcheck source=/dev/null
-. "$envfile"
-set +a
-
-export WORK="$dir/out"
-mkdir -p "$WORK"
-export DRY_RUN=$(( send ? 0 : 1 ))
-export SKIP_PULLS="$reuse"
-[[ -z "$week" ]] || export WEEK="$week"
 
 if (( send )); then
-    echo "SENDING for real to ${REPORT_RECIPIENT:-the configured recipient}"
+    echo "SENDING for real"
 fi
 
-"$dir/entrypoint.sh"
+# One execution path, shared with run-scheduled, so iterating by hand and
+# firing under launchd differ in their flags rather than in their code.
+runner_execute "$dir" "$send" "$reuse" "$week"
 
-html="$WORK/retro.html"
-if [[ -s "$html" ]]; then
+html="$(runner_email_artifact "$WORK")" || html=""
+if [[ -n "$html" ]]; then
     # The week the run actually used, so render-local can re-render this draft
     # later without being told the week a second time.
     grep -Eo '^=== .* start: [0-9]{4}-W[0-9]{2} \([0-9-]+ to [0-9-]+\)' "$WORK/run.log" \

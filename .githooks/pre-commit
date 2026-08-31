@@ -52,6 +52,23 @@ if [[ ${#sh[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/shell" ]]; then
   fi
 fi
 
+# Runners, only when a plist or the library stating their PATH is staged. The
+# check is whole repo rather than per file, because the failure it catches is a
+# disagreement between two files and staging either one can create it.
+runners=()
+for f in "${staged[@]}"; do
+  case "$f" in
+    launchagents/*.plist|bin/runner/lib.sh|runners/*) runners+=("$f") ;;
+  esac
+done
+
+if [[ ${#runners[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/runners" ]]; then
+  if ! "$ROOT/bin/lint/runners"; then
+    printf "${RED}[x]${NC} runner checks failed. Fix, or re-run with --no-verify.\n" >&2
+    status=1
+  fi
+fi
+
 # Context size ratchet, only when an always loaded file is staged
 ctx=()
 for f in "${staged[@]}"; do

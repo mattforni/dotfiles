@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Run a runner on this machine on a schedule, for real.
+#
+# Usage: run-scheduled <runner-name> [--week YYYY-Www]
+#
+# This is the launchd door. A LaunchAgent's ProgramArguments points here, and
+# everything about which runner, which secrets and which PATH is resolved from
+# the runner's own directory rather than from a per routine wrapper script.
+# Before this existed, a scheduled routine meant three hundred lines of bespoke
+# bash that reimplemented what an entrypoint plus runners/lib/runner.sh already
+# gives it, and the two drifted apart in exactly the way two copies do.
+#
+# It sends for real, exactly as production does. `run-local` is the loop for
+# looking at a draft first; this one is what fires at 06:00 whether anyone is
+# watching or not, so its output goes to a log rather than a terminal and it
+# opens no browser.
+#
+# Local execution is not a lesser Cloud Run. It is where a runner lives until
+# it is promoted, and for a runner that drives the local CLIs (hs, gws, linear)
+# or a real browser it may be where it lives permanently. `promote` moves a
+# runner to Cloud Run when the runner can survive a container; nothing here
+# assumes it ever will.
+set -uo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+name=""; week=""
+while (( $# )); do
+    case "$1" in
+        --week)    week="${2:-}"; shift 2 ;;
+        -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)        die "unknown option $1" ;;
+        *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+
+dir="$(runner_dir "$name")"
+LOG="$HOME/.claude/debug/runner-$name.log"
+mkdir -p "$(dirname "$LOG")"
+
+# A scheduled run is read afterwards, so the log is the artifact. Appending
+# rather than truncating keeps the previous run available when this one raises
+# a question about it, and the banner is what makes one run findable inside a
+# file holding months of them.
+{
+    echo ""
+    echo "=== $(date -Iseconds) run-scheduled $name start ==="
+    runner_execute "$dir" 1 0 "$week"
+    rc=$?
+    echo "=== $(date -Iseconds) run-scheduled $name end (exit $rc) ==="
+    exit "$rc"
+} >> "$LOG" 2>&1
