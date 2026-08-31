@@ -41,6 +41,19 @@ Three loops, each answering a different question. Use the cheapest one that can 
 | Draft | `bin/runner/run-local <name> --reuse` | one Claude call | changing what the email says: `prompt.md`, the JSON shape, the reads |
 | Full | `bin/runner/run-local <name>` | every pull plus one Claude call | changing the pulls themselves, or a last check before promoting |
 
+**The cheapest loop needs an `out/` to read, and a fresh clone has none.** Do not
+reach for the Full loop to create one: it costs every pull and a model call, and
+it rotates the real Strava token. Rebuild the draft from the last email the
+runner actually sent instead, which costs nothing and changes nothing outside
+this machine. Pull the message with `gws`, decode its HTML part, and write a
+`retro.json` and a `week.env` back into `out/` by reading the rendered tables;
+`prompt.md` is the schema and the renderer itself says how each field was used.
+Then confirm the reconstruction before trusting it, by rendering it and diffing
+against the decoded original. On 2026-08-31 that diff came back byte for byte
+identical apart from a trailing newline, which is the standard to hold: a
+fixture that reproduces a shipped email is real ground truth, and one that
+merely looks plausible is invented data wearing a costume.
+
 Then, and only then:
 
 ```bash
