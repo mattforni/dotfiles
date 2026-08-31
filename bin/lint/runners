@@ -48,6 +48,25 @@ for plist in "$ROOT"/launchagents/*.plist; do
             fail "$label calls run-scheduled with no runner name"
         elif [[ ! -x "$ROOT/runners/$name/entrypoint.sh" ]]; then
             fail "$label names runner '$name', which has no executable runners/$name/entrypoint.sh"
+        else
+            # 3. The check above reads the repo directly. launchd does not: it
+            #    runs the path the plist names, and on a real machine $HOME/bin
+            #    is a symlink to this repo's bin/. A repo root computed with a
+            #    logical `..` then walks the symlink's parent instead of the
+            #    real one and every runner resolves against $HOME/runners,
+            #    which does not exist. That shipped in #215 and would have
+            #    failed on a Monday before writing a single line anyone reads.
+            #
+            #    So resolve the runner the way launchd will, through a symlink
+            #    to the tree under test rather than to whatever is deployed:
+            #    this has to fail on the branch that breaks it, not one release
+            #    later.
+            link_dir="$(mktemp -d)"
+            ln -s "$ROOT/bin" "$link_dir/bin"
+            if ! ( . "$link_dir/bin/runner/lib.sh" && runner_dir "$name" ) >/dev/null 2>&1; then
+                fail "$label names runner '$name', which does not resolve when reached through a symlink (as $HOME/bin is)"
+            fi
+            rm -rf "$link_dir"
         fi
     fi
 done

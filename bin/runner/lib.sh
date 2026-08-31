@@ -15,7 +15,19 @@ die() { echo "${0##*/}: $*" >&2; exit 1; }
 
 # The repository root, found from this library rather than from $PWD, so every
 # command works from anywhere.
-runner_repo_root() { cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd; }
+#
+# The -P is load bearing and its absence shipped broken. $HOME/bin is a symlink
+# to this repo's bin/, so a caller reached through it (the LaunchAgent names
+# $HOME/bin/runner/run-scheduled, and so does anyone typing the short path)
+# gets a logical $PWD, and `..` then walks the symlink's parent rather than the
+# real one: /Users/<user>/bin/runner/../.. is /Users/<user>, not the repo. Every
+# runner then resolved against $HOME/runners, which does not exist. Resolving
+# this directory physically first makes `..` walk the real tree.
+runner_repo_root() {
+    local here
+    here="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    cd "$here/../.." && pwd
+}
 
 # Resolve and validate a runner name into its source directory.
 runner_dir() {
