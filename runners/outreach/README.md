@@ -10,7 +10,7 @@ Prep only. The agent never emails anyone, never moves a Lead Status, and never p
 ## Running It
 
 ```bash
-bin/runner/run-local outreach --reuse    # re-render the saved run, no network
+bin/runner/run-local outreach --reuse    # render the saved run again, no network
 bin/runner/run-local outreach            # run the agent, render, send nothing
 bin/runner/run-scheduled outreach        # what launchd does, send included
 ```

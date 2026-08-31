@@ -30,7 +30,7 @@ done
 if [[ ${#md[@]} -gt 0 ]]; then
   if command -v npx &>/dev/null; then
     if ! (cd "$ROOT" && npx --yes markdownlint-cli2 "${md[@]}"); then
-      printf "${RED}[x]${NC} markdown lint failed. Fix, or re-run with --no-verify.\n" >&2
+      printf "${RED}[x]${NC} markdown lint failed. Fix, or run again with --no-verify.\n" >&2
       printf "    Most of it clears with: npx markdownlint-cli2 --fix %s\n" "${md[*]}" >&2
       status=1
     fi
@@ -47,7 +47,7 @@ done
 
 if [[ ${#sh[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/shell" ]]; then
   if ! "$ROOT/bin/lint/shell" "${sh[@]}"; then
-    printf "${RED}[x]${NC} shell lint failed. Fix, or re-run with --no-verify.\n" >&2
+    printf "${RED}[x]${NC} shell lint failed. Fix, or run again with --no-verify.\n" >&2
     status=1
   fi
 fi
@@ -64,7 +64,7 @@ done
 
 if [[ ${#runners[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/runners" ]]; then
   if ! "$ROOT/bin/lint/runners"; then
-    printf "${RED}[x]${NC} runner checks failed. Fix, or re-run with --no-verify.\n" >&2
+    printf "${RED}[x]${NC} runner checks failed. Fix, or run again with --no-verify.\n" >&2
     status=1
   fi
 fi
@@ -79,7 +79,7 @@ done
 
 if [[ ${#ctx[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/context-size" ]]; then
   if ! "$ROOT/bin/lint/context-size" "${ctx[@]}"; then
-    printf "${RED}[x]${NC} context size cap exceeded. Move depth into .claude/rules/ or a tool doc, or re-run with --no-verify.\n" >&2
+    printf "${RED}[x]${NC} context size cap exceeded. Move depth into .claude/rules/ or a tool doc, or run again with --no-verify.\n" >&2
     status=1
   fi
 fi

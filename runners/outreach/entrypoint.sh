@@ -57,18 +57,36 @@ DRY_RUN="${DRY_RUN:-0}"
 SKIP_PULLS="${SKIP_PULLS:-0}"
 
 WORK="${WORK:-$HOME/work}"
-mkdir -p "$WORK"
+# Checked rather than assumed. If either fails, the exec below sends the whole
+# run's output nowhere while the agent runs anyway and still costs money, so
+# this is the one place worth failing loudly before spending anything.
+if ! mkdir -p "$WORK"; then
+    echo "FATAL: cannot create the work directory $WORK" >&2
+    exit 1
+fi
 LOG="$WORK/run.log"
+if ! touch "$LOG"; then
+    echo "FATAL: cannot write the log at $LOG" >&2
+    exit 1
+fi
 exec > >(tee -a "$LOG") 2>&1
 
 WEEK="${WEEK:-$(current_week)}"
+if [[ ! "$WEEK" =~ ^[0-9]{4}-W[0-9]{2}$ ]]; then
+    echo "FATAL: WEEK must look like YYYY-Www, got \"$WEEK\"" >&2
+    exit 1
+fi
 MONDAY="$(week_monday "$WEEK")"
 SUNDAY="$(shift_days "$MONDAY" 6)"
+if [[ -z "$MONDAY" || -z "$SUNDAY" ]]; then
+    echo "FATAL: could not resolve the week bounds for $WEEK" >&2
+    exit 1
+fi
 ATELIC="${ATELIC:-$HOME/Eudaimonia/Craft/Vocation/Atelic}"
 
 # The banner shape is shared with the retro, and not only for the log's sake:
-# run-local parses the week out of it so a draft can be re-rendered and mailed
-# later without being told which week it belongs to a second time.
+# run-local parses the week out of it so a draft can be rendered again and
+# mailed later without being told which week it belongs to a second time.
 echo "=== $(date -Iseconds) outreach start: $WEEK ($MONDAY to $SUNDAY) ==="
 
 # The retro runner mails "2026-W36 Retro"; this is its sibling and reads the
@@ -92,9 +110,12 @@ result=""
 rc=0
 
 finish() {
-    local summary meta full body
+    local script_rc=$?
+    local summary meta full body reported_rc
+    # The agent's own code when it has one, the script's otherwise.
+    if [[ "$rc" -ne 0 ]]; then reported_rc="$rc"; else reported_rc="$script_rc"; fi
     summary="$(build_summary_block "$result" "$rc" "$SUCCESS_LINE")"
-    meta="$(build_meta_block "$result" "$rc")"
+    meta="$(build_meta_block "$result" "$reported_rc")"
     full="$(jq -r '.result // ""' <<<"$result" 2>/dev/null)"
     [[ -z "$full" ]] && full="$result"
 
@@ -263,9 +284,13 @@ fi
 # Exit zero is not enough: `claude -p` answers an unknown agent with exit 0 and
 # "Unknown skill" as text, so the success line the agent is told to end with is
 # what actually confirms the roster was written.
+if ! jq -e . <<<"$result" >/dev/null 2>"$WORK/jq-stderr.txt"; then
+    fail_reason="the agent returned output that is not JSON: $(head -c 300 <<<"$result")"
+    exit 1
+fi
 if ! jq -e --arg line "$SUCCESS_LINE" \
     '.subtype == "success" and .is_error == false and ((.result // "") | contains($line))' \
-    <<<"$result" >/dev/null 2>&1; then
+    <<<"$result" >/dev/null; then
     fail_reason="the agent did not confirm the roster: expected \"$SUCCESS_LINE\""
     exit 1
 fi

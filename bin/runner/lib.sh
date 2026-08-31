@@ -112,7 +112,7 @@ runner_local_credentials() {
     local config_dir="$HOME/.config/headless-report"
 
     if [[ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
-        CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s claude-code-oauth -w 2>/dev/null)" || true
+        CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s claude-code-oauth -w)" || true
         # The file fallback predates the Keychain entry and is still how a
         # freshly imaged machine gets going before `claude setup-token` runs.
         if [[ -z "$CLAUDE_CODE_OAUTH_TOKEN" && -r "$HOME/.claude/.oauth-token" ]]; then
@@ -122,7 +122,7 @@ runner_local_credentials() {
     fi
 
     if [[ -z "${RESEND_API_KEY:-}" ]]; then
-        RESEND_API_KEY="$(security find-generic-password -s resend-api-key -w 2>/dev/null)" || true
+        RESEND_API_KEY="$(security find-generic-password -s resend-api-key -w)" || true
         [[ -n "$RESEND_API_KEY" ]] && export RESEND_API_KEY || unset RESEND_API_KEY
     fi
 
