@@ -58,10 +58,11 @@ Get the real answer before promoting, by rendering the same draft through the ve
 ```bash
 curl -sSLo /tmp/jq16 https://github.com/jqlang/jq/releases/download/jq-1.6/jq-osx-amd64 && chmod +x /tmp/jq16
 /tmp/jq16 -r --arg week 2026-W35 --arg monday 2026-08-24 --arg sunday 2026-08-30 \
-    -f runners/<name>/render.jq runners/<name>/out/retro.json | diff - runners/<name>/out/retro.html
+    -f runners/<name>/render.jq runners/<name>/out/retro.json > /tmp/jq16.html
+diff /tmp/jq16.html runners/<name>/out/retro.html
 ```
 
-A non zero exit is the compile error the cloud would have hit; a clean diff means the two versions agree on the bytes, not merely that both parsed. The binary is x86 and runs under Rosetta on Apple silicon.
+The two steps stay separate because a pipeline reports only its last command's status, which would hand a compile error back wearing diff's exit code. A non zero exit from the render is the failure the cloud would have hit; a non zero exit from the diff means both versions parsed but disagree on the bytes. Clean on both is the answer you want. The binary is x86 and runs under Rosetta on Apple silicon.
 
 **A local run still rotates the real Strava token.** Strava invalidates a refresh token the moment it issues the next one, so a local run that pulls Strava has to write the new one back to the vault or the next cloud run cannot refresh at all. `entrypoint.sh` falls back to the operator's own gcloud credentials when there is no metadata server to ask. This is the one thing a local run changes in the outside world, and it is not optional.
 
