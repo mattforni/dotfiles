@@ -168,6 +168,11 @@ export EMAIL_REPORT_SUBJECT="$week Outreach"
 
 delivery_verb="sent"
 RESULT_FILE="$SCRATCH/result.json"
+# The exit status rides in its own file because the failure worth replaying
+# most often is a timeout, and a timeout leaves the result JSON empty. An
+# empty file can carry no status, and its mere existence cannot be trusted as
+# the marker that a run happened either, so this one is the marker.
+RESULT_RC_FILE="$SCRATCH/result.rc"
 REPORT_FILE="$SCRATCH/report.html"
 
 # In a dry run the email is rendered and opened rather than sent, so the local
@@ -212,13 +217,19 @@ run_routine() {
   prompt="Prep the ATE-480 Weekly Outreach roster for ISO week $week. Scratch directory for scripts and the roster file: $SCRATCH. Run the full method in your definition and end with the success line."
 
   if (( REUSE )); then
-    if [[ ! -s "$RESULT_FILE" ]]; then
-      fatal_report "--reuse needs a saved result at $RESULT_FILE; run without it once"
+    if [[ ! -f "$RESULT_RC_FILE" ]]; then
+      fatal_report "--reuse needs a saved run in $SCRATCH; run without it once"
       exit 1
     fi
-    echo "reuse: reading the agent result saved at $RESULT_FILE"
-    result="$(cat "$RESULT_FILE")"
-    rc=0
+    # Both halves come back, so a saved failure replays as that failure rather
+    # than as a success that fails the predicate a moment later. Rendering the
+    # wrong failure would be worse than rendering none: the whole reason to
+    # replay a run locally is that the failure email is the one nobody has
+    # ever read before trusting it.
+    result="$(cat "$RESULT_FILE" 2>/dev/null)" || result=""
+    rc="$(cat "$RESULT_RC_FILE")"
+    [[ "$rc" =~ ^[0-9]+$ ]] || rc=1
+    echo "reuse: replaying the run saved in $SCRATCH (exit $rc)"
   else
 
     stderr_file="$(dirname "$LOG")/outreacher-claude-stderr.txt"
@@ -251,9 +262,11 @@ run_routine() {
       break
     done
 
-    # Saved on every real run, successes and failures alike, so --reuse can put
-    # the very same JSON back through the reporting path.
+    # Saved on every real run, successes and failures alike, so --reuse can
+    # put the very same JSON and the very same exit status back through the
+    # reporting path.
     printf '%s' "$result" > "$RESULT_FILE"
+    printf '%s' "$rc" > "$RESULT_RC_FILE"
   fi
 
   echo "$result"
