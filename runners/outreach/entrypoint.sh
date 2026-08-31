@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# The Outreach Runner. Fires Monday 06:00 Denver from launchd, so the week's
-# outreach roster is rebuilt and drafted before the Tuesday desk block.
+# The Outreach Runner. Run by hand before the Tuesday desk block, so the week's
+# outreach roster is rebuilt and drafted before the block opens. It sat on a
+# Monday 06:00 LaunchAgent for exactly one morning: a weekly timer spends a
+# full pass whether or not the week needs one, so the trigger is a person
+# deciding it does (#217, 2026-08-31).
 #
 # Shape: one headless Claude Code call running the `outreacher` agent, which
 # does its own reads through the local CLIs, then one Resend send reporting
@@ -15,8 +18,7 @@
 # requires a real browser, because a Cloudflare challenge, a per visit phone
 # number and a lazy loaded form all lie to a fetch. runners/outreach/README.md
 # carries what promoting it to Cloud Run would actually take. Until then
-# `bin/runner/run-scheduled outreach` is production and launchd is the
-# scheduler.
+# `bin/runner/run-local outreach --send`, started by hand, is production.
 #
 # Secrets arrive as environment variables, injected by bin/runner/run-scheduled
 # from this machine's vaults (and by Cloud Run from Secret Manager, if this
@@ -260,7 +262,7 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
     [[ "$rc" =~ ^[0-9]+$ ]] || rc=1
     echo "agent: replaying the run saved in $WORK (exit $rc)"
 else
-    prompt="Prep the weekly outreach roster for ISO week $WEEK. Scratch directory for scripts and the roster file: $WORK. Run the full method in your definition and end with the success line."
+    prompt="Prep the weekly outreach roster for ISO week $WEEK. Write the roster to $ATELIC/Outreach/$WEEK-roster.md, the one path outside the scratch directory you may write; do not stage it and do not commit it. Scratch directory for scripts and working files: $WORK. Run the full method in your definition and end with the success line."
     stderr_file="$WORK/claude-stderr.txt"
     attempt=1
     while :; do

@@ -31,7 +31,7 @@ bin/runner/run-local outreach --send     # the real thing: run, render, and mail
 unattended door: it logs to a file rather than the terminal, so a run started
 by hand through it looks like nothing is happening.
 
-`--week YYYY-Www` drafts another week. The work directory is `runners/outreach/out/`, which is also the agent's scratch directory. The agent may write exactly two places: that directory, and this week's `Outreach/<ISO week>-roster.md` in the Atelic repo.
+`--week YYYY-Www` drafts another week. The work directory is `runners/outreach/out/`, which is also the agent's scratch directory. The agent may write exactly two places: that directory, and the requested week's `Outreach/<ISO week>-roster.md` in the Atelic repo. That second rule is pinned to the week being run, so a pass cannot touch a prior week's roster.
 
 ## Local Only, on Purpose
 
