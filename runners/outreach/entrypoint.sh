@@ -227,6 +227,13 @@ ALLOWED_TOOLS=(
     "WebFetch"
     "WebSearch"
     "Write($WORK/*)"
+    # The one write the agent makes outside its own work directory: this week's
+    # roster file in the Atelic repo. Narrowed to the roster name so the rest
+    # of Outreach/ (the method, the CLAUDE.md, the Voice samples) stays out of
+    # reach, since prose forbidding it is the weakest kind of rule. A pattern
+    # that fails to match shows up as a permission denial in the report's
+    # summary block, which is visible rather than silent.
+    "Write($ATELIC/Outreach/*-roster.md)"
 )
 
 ATTEMPT_TIMEOUT="${ATTEMPT_TIMEOUT:-45m}"

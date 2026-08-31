@@ -10,6 +10,12 @@ deciding the week needs a roster (2026-08-31).
 It reports to `matt@atelic.me`, not the personal Gmail account, because this is
 Atelic work. That comes from `~/.config/headless-report/recipient-outreach`.
 
+**The roster itself lands as `Outreach/<ISO week>-roster.md` in the Atelic
+repo**, one file per week, written once and never edited after. The agent
+writes the file and stops; it does not stage or commit, and Forni commits it.
+Until 2026-08-31 the roster was rewritten weekly into the description of a
+standing Linear issue, which destroyed the previous week every Monday.
+
 Prep only. The agent never emails anyone, never moves a Lead Status, and never posts to a client surface. Every send waits for Forni's explicit yes inside the Tuesday block, one at a time, through `/lead:handle-outbound`.
 
 ## Running It
