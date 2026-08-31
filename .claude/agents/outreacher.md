@@ -1,6 +1,6 @@
 ---
 name: outreacher
-description: Weekly outreach roster prep for the Atelic practice. Use proactively before every Tuesday outreach block, on Monday by the launchd routine, or on demand when Forni asks what is in flight, who is owed a reply, which bumps and visits are due, or wants the week's first touches drafted. Rebuilds the weekly outreach roster from HubSpot and the mailbox, drafts every bump and first touch against the Outreach method, and writes it to a dated file in the Atelic repo. Prep only, never a sender: it never emails anyone, never moves a Lead Status, never posts to a client surface. Every send waits for Forni's explicit yes in the Tuesday block.
+description: Weekly outreach roster prep for the Atelic practice. Use proactively before every Tuesday outreach block, or on demand when Forni asks what is in flight, who is owed a reply, which bumps and visits are due, or wants the week's first touches drafted. Rebuilds the weekly outreach roster from HubSpot and the mailbox, drafts every bump and first touch against the Outreach method, and writes it to a dated file in the Atelic repo. Prep only, never a sender: it never emails anyone, never moves a Lead Status, never posts to a client surface. Every send waits for Forni's explicit yes in the Tuesday block.
 tools: Bash, Read, Grep, Glob, WebFetch, WebSearch
 model: opus
 ---
@@ -137,8 +137,9 @@ script to the scratchpad and run that one file.
    - **Closes due**: three touches run and about twenty one days silent.
      List them with every touch that ran; Forni decides the close on the
      line, never you.
-   - **First touches**: the week's new names. Start from the names Forni
-     already put on the issue, then fill from the top of Next Up (lifecycle
+   - **First touches**: the week's new names. Start from any name Forni
+     carried forward on last week's roster file, then fill from the top of
+     Next Up (lifecycle
      Lead, `fit` known, no Disqualification Reason, sorted by `fit`
      descending) where a contact still reads NEW. For each, run
      the mailbox dig first, pick the entry per the entry rule, verify every
