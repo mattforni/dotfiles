@@ -234,8 +234,8 @@ Output:
 - Body: status heading, optional reason note, `<pre>` block with the
   skill's `.result` text (HTML escaped), metadata table (duration, cost,
   turns, exit code, session id).
-- On any failure (missing key, missing recipient, curl error, Resend HTTP
-  non-2xx): `send_email` prints the reason and returns non zero. Treat a failed
+- On any failure (missing key, missing recipient, curl error, a Resend HTTP
+  status outside the 200s): `send_email` prints the reason and returns non zero. Treat a failed
   delivery as a failed run and exit non zero, since at 06:00 the log is the only
   place left that could show it.
 

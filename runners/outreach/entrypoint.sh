@@ -76,6 +76,19 @@ if [[ ! "$WEEK" =~ ^[0-9]{4}-W[0-9]{2}$ ]]; then
     echo "FATAL: WEEK must look like YYYY-Www, got \"$WEEK\"" >&2
     exit 1
 fi
+# The shape alone is not enough: W00 and W99 parse, and week_monday would hand
+# back a confident date in the wrong year rather than failing. A year has 53
+# ISO weeks exactly when January 1st or December 31st falls on a Thursday.
+week_year="${WEEK%-W*}"
+week_number="10#${WEEK#*-W}"
+week_last=52
+if [[ "$(day_of_week "$week_year-01-01")" == "4" || "$(day_of_week "$week_year-12-31")" == "4" ]]; then
+    week_last=53
+fi
+if (( week_number < 1 || week_number > week_last )); then
+    echo "FATAL: $week_year has $week_last ISO weeks, so $WEEK is not one of them" >&2
+    exit 1
+fi
 MONDAY="$(week_monday "$WEEK")"
 SUNDAY="$(shift_days "$MONDAY" 6)"
 if [[ -z "$MONDAY" || -z "$SUNDAY" ]]; then

@@ -175,10 +175,28 @@ runner_execute() {
 
     if [[ -r "$envfile" ]]; then
         echo "env: $envfile"
+        # Only what is not already set. `set -a; . file` overwrites, which made
+        # the documented precedence a lie: an explicit override on the command
+        # line lost to the file, so a test run pointed at a harmless recipient
+        # would have mailed the real one. fetch-env writes one
+        # `export NAME='value'` per variable and single quotes the value, so a
+        # line beginning with export at column zero is a name and a newline
+        # inside a multi line value never is.
+        local saved names n
+        saved="$(mktemp)"
+        names="$(sed -n "s/^export \\([A-Za-z_][A-Za-z0-9_]*\\)=.*/\\1/p" "$envfile")"
+        for n in $names; do
+            [[ -n "${!n:-}" ]] && printf 'export %s=%q\n' "$n" "${!n}" >> "$saved"
+        done
         set -a
         # shellcheck source=/dev/null
         . "$envfile"
         set +a
+        if [[ -s "$saved" ]]; then
+            # shellcheck source=/dev/null
+            . "$saved"
+        fi
+        rm -f "$saved"
     else
         echo "env: no $envfile; this machine's vaults only"
     fi
