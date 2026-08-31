@@ -129,7 +129,23 @@ Standing likes, dislikes, and avoid foods. Read before drafting any plan, cross-
 
 ## Macro Rules
 
-(none yet)
+- **A recipe amount is always stated in the form that gets eaten, which is cooked.** Lentils, quinoa, rice, and beans are never eaten raw, so the ingredient line carries the cooked weight and the dry measure lives in the preparation note and the directions.
+  - Why: Pinole's `UsdaNutritionService` bonuses cooked and canned forms, so a shared consumable like Quinoa matches cooked nutrition. A line stating a dry amount against a cooked match undercounts by roughly three times. Caught on 2026-08-31 when the delicata salad reported 557 cal per serving instead of 657. Forni settled it: "I'm never gonna eat uncooked lentils... we are going to use the cooked nutrition always."
+  - How to apply: write the ingredient as the cooked weight, put "cooked, from N cups dry" in the preparation, and keep the dry measure in the directions where it is actually measured. Rough yields: quinoa and lentils both roughly triple from dry weight.
+
+- **Verify a recipe's macro panel after authoring it, and do not trust `is_complete` alone.** A recipe can report complete and still be wrong.
+  - Why: same session. The panel read complete while the quinoa line was undercounting by 800 calories, because every ingredient resolved; none of them resolved *correctly*.
+  - How to apply: hand calculate the per serving figure independently and compare. A gap over about 10 percent means a consumable is matched to the wrong form.
+
+## Unit Rules
+
+- **Weights metric, volumes imperial, oven temperature Fahrenheit.** Within weights, grams up to 1,000 and kilograms above, so a line reads 340 g or 1.75 kg, never 1,750 g.
+  - Why: settled 2026-08-31. Forni: "I do want it either all in imperial or all in metric and my thought is we should go metric," then scoped it after seeing that volumes cannot follow.
+  - How to apply: recipe 265, Delicata Squash and Green Lentil Grain Salad, is the reference implementation. Note this governs recipes; the *shopping list* stays in lb and oz for produce, because that is how it is bought.
+
+- **Never set a Pinole ingredient's unit to `ml`.** It is accepted and saved, and it silently destroys nutrition resolution for that ingredient.
+  - Why: converting six volume lines from cup/tbsp/tsp to exact ml equivalents on 2026-08-31 dropped the recipe from 657 to 586 cal per serving with no error. `ML_PER_VOLUME` maps cup, tbsp, and tsp but a raw `ml` measure has no path to grams. Tracked as item 5 of ATE-516.
+  - How to apply: use cup, tbsp, and tsp for volumes until that ticket lands.
 
 ## Plan Format Rules
 

@@ -46,6 +46,7 @@ Appended automatically when a plan introduces a new recipe. Forni fills in the r
 | 2026-W29 | Peanut Butter Date Oatmeal | — (Claude drafted, no site source) | | Draft scrapped; kept in library as a bare fridge fallback |
 | 2026-W29 | Lentil and Couscous Stuffed Peppers | Cookie and Kate (adapted) | | Feta swapped for kalamata olives, lentils bumped to 1.5 cups dry. Cook Night centerpiece |
 | 2026-W29 | Black Bean Tacos with Grilled Peach Salsa | Cookie and Kate (salsa adapted) | | Peaches grilled before dicing, TVP simmered into the beans. Stone fruit centerpiece |
+| 2026-W36 | Delicata Squash and Green Lentil Grain Salad | — (Claude drafted, no site source) | | Batch of 8, half earmarked for Carson. First fall dish: roasted delicata over cooked lentils and quinoa, finished raw with arugula, Granny Smith, and toasted pepitas. 657 cal / 33g P per serving |
 
 **Parked for W33 (vetted for W32 on 2026-08-02, deferred for a simple week):** [Ratatouille](https://cookieandkate.com/best-ratatouille-recipe/) (Cookie and Kate, adapted: white beans folded in, over quinoa; the redemption dish after a terrible Aspen ratatouille) and [Chimichurri Chickpea Salad](https://www.budgetbytes.com/chimichurri-chickpea-salad/) (Budget Bytes, feta omitted). Both passed house rules; offer them as the W33 starting candidates, pending Forni's approval of the menu.
 
