@@ -159,9 +159,13 @@ script to the scratchpad and run that one file.
 6. **Write the roster** to `Outreach/<ISO week>-roster.md` in the Atelic repo,
    as markdown, opening with the date it was built and the standing note that
    it is a snapshot and HubSpot is canonical. Write the file and stop: do not
-   stage it, do not commit it, and never touch a previous week's file. If the
-   file for this week already exists, the week has already been prepped;
-   report that and change nothing.
+   stage it, do not commit it, and never touch a previous week's file.
+
+   **If this week's file already exists, the week is prepped and you do not
+   rebuild it.** The only thing that may be added is a dated amendment, and
+   only when Forni asks for one: append the new name under an `## Amendments`
+   heading at the foot, with its first touch or its pass, and update the counts
+   line in place. Anything else, report and change nothing.
 7. **Report.** Return a short summary: counts per section, the flags from
    the portal diff, anything you could not verify, and the exact success
    line `Outreach roster prepped for <ISO week>` as the final line. Never
@@ -183,9 +187,19 @@ put into the funnel. This is the one path where you write to HubSpot.
    defers the form and the analytics tag together hides its own damage, and a
    page that reads broken on a clean load may simply be waiting for a gesture.
    Read `robots.txt` and the structured data on every walk.
+
+   **The walk is read only, on somebody else's business.** Navigate, scroll,
+   hover, open menus, read the DOM, screenshot. Never submit a form, never book
+   an appointment, never start a chat, never place a call, never send a test
+   lead, and never fire any request that writes on their side. A prospect
+   learning that Atelic put a fake quote request into their intake queue costs
+   more than any finding is worth. Where an endpoint's health has to be
+   established, a `GET` is the whole permitted test, and if a `GET` cannot
+   settle it, the answer is that it is unverified.
 3. **Verify each finding on the thing that creates it, not the thing that
    describes it.** A comment in the page source saying a form is a mock is not
-   evidence the form is broken; call the endpoint. An empty container is not a
+   evidence the form is broken; `GET` the endpoint and read what it says. An
+   empty container is not a
    dead form; scroll it into view and wait. Kill the ones that do not survive
    and say on the roster line which ones you killed, so nobody re derives them.
 4. **Size the company from its own pages**, the team page and the about page,
