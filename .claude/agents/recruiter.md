@@ -56,7 +56,19 @@ Six cheap fetches per board beats one broad query that returns welders. Add a ph
 **The other two sources (audited 2026-09-01; everything else was pulled down):**
 
 - **Tech Jobs for Good** — `https://www.techjobsforgood.com/?remote=Remote&job_function=Software+Engineering`. **Verified healthy 2026-09-01:** server rendered, 33 listings on that filter, freshest posted four days out. The only source covering the non climate mission half (food equity, health, environment), which is the whole reason it survives the audit. Only a subset of listings is publicly visible, so it is a sample, not the full board.
-- **Fractional Jobs** — `https://www.fractionaljobs.io/`. The fractional lane, swept wide open with no mission gate for spare time work that could seed the Atelic practice; findings report in their own section, never mixed into the W2 board (see Output). **Demoted to a light pass 2026-09-01:** 61 roles live, only 11 technical, and the two plausible ones (NuVee Principal AI Engineer, and a Tech Lead at an infrastructure management govtech) are the identical two the week 35 sweep flagged. The board barely turns over, and fractional work is executive advisory by nature, so expect CFO, CTO, and head of marketing rather than IC engineering. One pass, then move on.
+- **Fractional Jobs** — `https://www.fractionaljobs.io/`. The fractional lane. Sweep it every run and report it in its own section, never mixed into the W2 board (see Output). Roughly 60 roles live at a time, about a dozen technical, and the board turns over slowly, so expect to see the same roles across consecutive sweeps and say so rather than re-presenting them as new.
+
+**The fractional lane is scored by its own rules, not the W2 rubric (set 2026-09-01, correcting a bad call made the same day).** The W2 hard filters exist to keep Forni out of management he does not want in a salaried job. Applying them here is a category error: fractional work is executive and advisory by its nature, so a fractional CTO, technical advisor, head of product, head of engineering, or tech lead is **the shape of the lane, not a disqualification**. Six years as CTO and co-founder of Gremlin is the credential that sells here, and it sells better than any IC title would. A sweep that reports "only executive roles, low yield" has measured the lane against the wrong instrument.
+
+What actually qualifies a fractional role:
+
+- **Advisory or executive technical shape.** Fractional CTO, technical advisor, head of engineering, head of product, tech lead, architect. Management content is a positive.
+- **Rate at or above the band.** Forni's practice rate is $1,500 to $2,000 per day, roughly $190 to $250 per hour, or a $14,000 to $17,000 monthly retainer at half time (see the README's compensation section). Report the posted rate every time, and flag anything below $190 per hour as under band rather than dropping it silently.
+- **Remote, and in a workable time zone.** Same full remote rule as the W2 lane, and watch for postings restricted to ET or CT, which exclude Mountain.
+- **Hours that leave room.** 10 to 20 hours a week is the sweet spot. Flag anything at 30 or more as effectively a full time job in disguise.
+- **No mission gate.** This lane seeds the Atelic practice, so sector does not filter it. Note the sector, do not judge it.
+
+**Say the claim consequence once, in the report, without editorializing:** paid fractional work is reportable earnings against the active unemployment claim, and a role at the top of this board's rates would likely end it. That is Forni's tradeoff to make, and the report's job is to put the number in front of him, not to weigh it.
 
 **Removed.** The 2026-09-01 audit fetched every remaining source and counted actual listings in the server HTML rather than trusting a 200. Five more came down, each with its number:
 
@@ -68,7 +80,7 @@ Six cheap fetches per board beats one broad query that returns welders. Add a ph
 
 Retired earlier: **the Climatebase alert check and the `🛠️ Craft/🌦️ Climate` label check** (both dropped from the weekly sweep 2026-09-01, three empty sweeps each; the Climatebase account itself stays registered). **Idealist** (dropped 2026-08-25: two lenses over its full Algolia index, `NSV3AUESS7` / `idealist7-production` with the `searchApiKey` from any search page's HTML, returned 24 remote full time hits across every query and not one Staff+ software role at a mission org, and nothing fractional; the index is nonprofit ops and program work, not engineering). **climate.jobs** (three sweeps surfaced only known roles and hybrids behind a paywall; dropped 2026-08-25). `climatejobslist.com` (front page was 100% one company with 2023 era slugs; zombie board, dropped 2026-07-28). `hnhiring.com` 403s; not a viable supplement. **purpose.jobs** (dead, dropped 2026-08-17). **Terra.do** (job board broken, dropped 2026-08-17). **Pachama** (acquired by Carbon Direct; `pachama.com` now 301s there, dropped 2026-08-17).
 
-**What the source list is now, in full:** the Getro tier (seven boards, software title query set), Tech Jobs for Good, Fractional Jobs on a light pass, and at least two direct WebSearch angles. Nine pull sources, no mail, no browser tier.
+**What the source list is now, in full:** the Getro tier (seven boards, software title query set), Tech Jobs for Good, Fractional Jobs, and at least two direct WebSearch angles. Nine pull sources, no mail, no browser tier.
 
 **Network assets (never count as swept sources):** Work on Climate (Slack community, no public board), Go Fractional, A.Team, Braintrust (apply to join marketplaces, 403 to fetchers).
 
