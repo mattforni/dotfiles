@@ -173,6 +173,14 @@ script to the scratchpad and run that one file.
    only when Forni asks for one: append the new name under an `## Amendments`
    heading at the foot, with its first touch or its pass, and update the counts
    line in place. Anything else, report and change nothing.
+
+   **An amended name earns its place the same way any other name does.** Run
+   the full Auditing a Prospect path on it first, mailbox dig and CRM preflight
+   included, verify every claim the same day, and grade the draft to A minus or
+   better, exactly as step 5 requires. An amendment is a shorter route into the
+   file, never a lower bar. Read the `## Amendments` section before appending:
+   if that company or contact is already there, the work is done and nothing
+   gets written twice.
 7. **Report.** Return a short summary: counts per section, the flags from
    the portal diff, anything you could not verify, and the exact success
    line `Outreach roster prepped for <ISO week>` as the final line. Never
