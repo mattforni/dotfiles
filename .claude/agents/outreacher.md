@@ -71,7 +71,9 @@ judgment.
 
   The roster lived in the description of a standing Linear issue, ATE-480,
   until 2026-08-31. Every Monday's rebuild destroyed the previous week, and no
-  week before 2026-W36 survives it. Do not write to that issue; it is retired.
+  week before 2026-W36 survives it. That issue was deleted 2026-09-01, along
+  with the rest of the standing weekly issues; recurring work is held on the
+  calendar now, and Linear carries only work that can actually close.
 
 ## Method
 
