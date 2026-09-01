@@ -14,9 +14,13 @@ Skill-specific corrections that override SKILL.md. Populate as Forni corrects wr
 
 ## Work search sessions
 
-- **Never close the weekly work search issue, and never mint a replacement.** ATE-479 is a standing issue as of 2026-08-17, alongside ATE-480 (Weekly Outbound) and ATE-489 (Weekly Follow Ups). All three are permanent, and each is pointed at by a recurring Google Calendar block that names it by number, so closing one leaves its block aimed at a dead ticket. When a session finishes the week's slate (applications and supporting activities logged in `Craft/Vocation/FY27-work-search.md`), wrap posts the week's record as a **comment** on the issue and leaves it in Todo. Rebuild next week's slate in the body; do not open a new issue.
+- **The work search has no Linear issue. Do not open one.** `~/Eudaimonia/Craft/Vocation/FY27-work-search.md` is the log of record, and the cadence lives on the calendar as the recurring 💼 Weekly Work Search block. When a session finishes the week's slate, the applications and supporting activities get rows in that file and nothing else is minted.
 
-  **Supersedes the 2026-07-30 rule** that had wrap close the ticket and mint the following week's instance (the ATE-428 to ATE-435 to ATE-479 chain). That pattern predated the standing block shape and predated the recurring calendar series. The shape itself is codified in the Atelic repo's `README.md` under The Weekly Operating Rhythm, which is the authority; this rule only tells wrap not to undo it.
+  **Why:** a recurring block held in a tracker is a ticket that can never close, which means it is not tracking work, it is holding a cadence, and a calendar already does that better. The record has to survive a tracker anyway, for a MyUI+ audit that will ask for dates, employers, positions, and methods.
+
+  **How to apply:** write the rows, close nothing, open nothing. If a specific piece of work falls out of the search (a profile to finish, a network to register with), that is a real ticket and gets one.
+
+  **Supersedes two earlier rules.** The 2026-07-30 rule had wrap close the ticket and mint the following week's instance (the ATE-428 to ATE-435 to ATE-479 chain); the 2026-08-17 rule replaced that with three permanent standing issues, ATE-479, ATE-480, and ATE-489. Both are gone as of 2026-09-01, when the standing issues were deleted and recurring work moved onto the calendar outright. The outreach roster moved the same way, from the body of ATE-480 to `Outreach/<ISO week>-roster.md` in the Atelic repo.
 
 - **Business follow-ups go to Linear, never Todoist.** Anything in service of
   Atelic (prospect follow-ups, walk-ins, client work, template fixes) is
