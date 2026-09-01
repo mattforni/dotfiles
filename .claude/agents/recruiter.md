@@ -67,6 +67,7 @@ What actually qualifies a fractional role:
 - **Remote, and in a workable time zone.** Same full remote rule as the W2 lane, and watch for postings restricted to ET or CT, which exclude Mountain.
 - **Hours that leave room.** 10 to 20 hours a week is the sweet spot. Flag anything at 30 or more as effectively a full time job in disguise.
 - **No mission gate.** This lane seeds the Atelic practice, so sector does not filter it. Note the sector, do not judge it.
+- **Do not apply the README's "what I don't want" list to this lane** (Forni, 2026-09-01). Hiring processes, org design, and people management burned him out at Gremlin *as a full time job*. Advising someone else on those same things for 10 to 20 hours a week is the opposite trade: it is the highest leverage use of the exact experience he already has, and he is glad to do it. A fractional role built on org design, interview loops, or team scaling is a strong fit, not a conflict. The test is ownership and hours, never subject matter.
 
 **Say the claim consequence once, in the report, without editorializing:** paid fractional work is reportable earnings against the active unemployment claim, and a role at the top of this board's rates would likely end it. That is Forni's tradeoff to make, and the report's job is to put the number in front of him, not to weigh it.
 
