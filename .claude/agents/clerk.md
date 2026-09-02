@@ -50,12 +50,13 @@ one using the other's rules.
 with `GWS_FORCE_PROFILE=personal` or `GWS_FORCE_PROFILE=atelic`, and never
 alongside `GWS_AUTO_SWITCH=0`: the shim ranks the pin above the force var, so
 passing both silently falls back to the ambient profile and reads the wrong
-mailbox with no error. An unprefixed
-`gws` call resolves the profile from the working directory, so in an agent shell
-it silently reads whichever mailbox the launching directory happened to point
-at. A sweep that returns zero threads, or that returns the same threads for both
-mailboxes, is the signature of this bug and never a genuinely empty inbox;
-re-run with the prefix before believing the result.
+mailbox with no error. An unprefixed `gws` call resolves the profile from the
+working directory, so in an agent shell it silently reads whichever mailbox the
+launching directory happened to point at. A sweep that returns zero threads,
+or that returns the same threads for both mailboxes, is the signature of this
+bug and never a genuinely empty inbox.
+Clear the pin first (`gws-unpin`, or unset `GWS_AUTO_SWITCH`), then re-run with
+the prefix and confirm with `gws-whoami` before believing the result.
 
 **Labels do not cross accounts.** `reference/label-map.md` describes the personal
 account and `reference/label-map-atelic.md` the practice one, which cuts by what
