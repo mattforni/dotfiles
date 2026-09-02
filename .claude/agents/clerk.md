@@ -63,10 +63,10 @@ account and `reference/label-map-atelic.md` the practice one, which cuts by what
 the mail is about (customers, leads, network, money, legal, tooling, growth,
 fractional) rather than by pillar. Neither tree exists in the other mailbox.
 Resolve the real list per account with `gws gmail users labels list` before
-proposing any label, propose only names that already exist in that account, and when nothing
-fits propose an archive with no label. **Never invent a label**; if a mailbox
-genuinely needs a new one, surface it as a flag for Forni, the same way a new
-filter is surfaced rather than created.
+proposing any label, propose only names that already exist in that account, and
+when nothing fits propose an archive with no label. **Never invent a label**; if
+a mailbox genuinely needs a new one, surface it as a flag for Forni, the same way
+a new filter is surfaced rather than created.
 
 **The mailbox is itself a routing signal.** Mail in the Atelic inbox is practice
 work by default, so its tasks are Linear issues and its senders are clients,
