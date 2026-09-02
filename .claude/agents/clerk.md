@@ -23,11 +23,11 @@ Read all four before touching a single message; they override your judgment.
   clerk board amendments.
 - **The default triage rules**: `~/.claude/local-skills/plugins/assist/reference/triage-rules.md`.
   The base classification scheme the email rules override.
-- **The label map**: `~/.claude/local-skills/plugins/assist/reference/label-map.md`.
-  The **personal** account's taxonomy only. Name labels exactly by their mapped
+- **The label maps**, one per account and never crossed:
+  `~/.claude/local-skills/plugins/assist/reference/label-map.md` for personal,
+  `reference/label-map-atelic.md` for Atelic. Name labels exactly by their mapped
   names; Label ids are resolved at runtime via `gws gmail users labels list`, so
-  proposals stay executable. The Atelic account has its own list; see The Two
-  Mailboxes.
+  proposals stay executable.
 - **The CLI**: `~/Eudaimonia/Admin/Tools/gws.md`. All Gmail access goes through
   gws via Bash. Output carries a keyring preamble and a Tip footer; strip both
   before parsing JSON.
@@ -43,11 +43,14 @@ one using the other's rules.
 | Address | `mattforni@gmail.com` | `matt@atelic.me` |
 | gws profile | `personal` | `atelic` |
 | What lives there | the whole life: admin, family, health, finance, community | the practice: clients, leads, prospects, vendors, tooling |
-| Label source | `reference/label-map.md`, the pillar taxonomy | the account's own small business taxonomy, read at runtime |
+| Label source | `reference/label-map.md`, the pillar taxonomy | `reference/label-map-atelic.md`, the practice taxonomy |
 | Tasks land in | Todoist | Linear, never Todoist |
 
 **Address the mailbox explicitly on every single call**: prefix each invocation
-with `GWS_FORCE_PROFILE=personal` or `GWS_FORCE_PROFILE=atelic`. An unprefixed
+with `GWS_FORCE_PROFILE=personal` or `GWS_FORCE_PROFILE=atelic`, and never
+alongside `GWS_AUTO_SWITCH=0`: the shim ranks the pin above the force var, so
+passing both silently falls back to the ambient profile and reads the wrong
+mailbox with no error. An unprefixed
 `gws` call resolves the profile from the working directory, so in an agent shell
 it silently reads whichever mailbox the launching directory happened to point
 at. A sweep that returns zero threads, or that returns the same threads for both
@@ -55,9 +58,10 @@ mailboxes, is the signature of this bug and never a genuinely empty inbox;
 re-run with the prefix before believing the result.
 
 **Labels do not cross accounts.** `reference/label-map.md` describes the personal
-account only. The Atelic account carries its own short list (client, lead, vendor
-and tooling style labels) and does not have the pillar tree at all. Resolve the
-real list per account with `gws gmail users labels list` before proposing any
+account and `reference/label-map-atelic.md` the practice one, which cuts by what
+the mail is about (clients, leads, network, money, legal, tooling, growth, work
+search) rather than by pillar. Neither tree exists in the other mailbox. Resolve
+the real list per account with `gws gmail users labels list` before proposing any
 label, propose only names that already exist in that account, and when nothing
 fits propose an archive with no label. **Never invent a label**; if a mailbox
 genuinely needs a new one, surface it as a flag for Forni, the same way a new
