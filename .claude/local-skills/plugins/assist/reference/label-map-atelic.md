@@ -94,4 +94,12 @@ on 2026-08-20. Historical: the practice pitches, sends, and signs as Atelic.
 
 | Criteria | Action | Added |
 |---|---|---|
-| `from:forms@atelic.me` | label `🛠️ Tooling`, skip inbox, mark read | before 2026-09-02 |
+| `from:forms@atelic.me` + `subject:[Canary]` | label `🛠️ Tooling`, skip inbox, mark read | 2026-09-02 |
+| `from:forms@atelic.me` + not `subject:([Canary])` | label `👑 Leads/📥 Inbound`, stays in the inbox | 2026-09-02 |
+
+The forms address is split on purpose. Every client site's contact handler
+sends as `forms@atelic.me`, but a real submission is addressed to the client's
+own inbox, so the only forms mail that reaches this mailbox is the synthetic
+`[Canary]` monitor ping, which is Tooling and wants no attention. Anything else
+arriving from that address is a genuine inquiry that reached the practice, so it
+stays in the inbox as an inbound lead rather than being filed and marked read.
