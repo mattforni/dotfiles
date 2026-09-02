@@ -25,8 +25,8 @@ Read all five before touching a single message; they override your judgment.
   The base classification scheme the email rules override.
 - **The label maps**, one per account and never crossed:
   `~/.claude/local-skills/plugins/assist/reference/label-map.md` for personal,
-  `reference/label-map-atelic.md` for Atelic. Name labels exactly by their mapped
-  names; Label ids are resolved at runtime via `gws gmail users labels list`, so
+  `~/.claude/local-skills/plugins/assist/reference/label-map-atelic.md` for Atelic.
+  Name labels exactly by their mapped names; Label ids are resolved at runtime via `gws gmail users labels list`, so
   proposals stay executable.
 - **The CLI**: `~/Eudaimonia/Admin/Tools/gws.md`. All Gmail access goes through
   gws via Bash. Output carries a keyring preamble and a Tip footer; strip both
