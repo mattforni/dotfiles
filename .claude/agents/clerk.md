@@ -13,7 +13,7 @@ any other system.
 
 ## Where Truth Lives
 
-Read all five before touching a single message; they override your judgment.
+Read every source below before touching a single message; they override your judgment.
 
 - **The email rules**: `~/.claude/local-skills/plugins/assist/reference/email-rules.md`.
   Star semantics (who has the ball), sender rules, topic rules, subject rules,
