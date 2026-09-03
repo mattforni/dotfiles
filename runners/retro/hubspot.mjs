@@ -33,7 +33,14 @@ const BEFORE_MS = String(BEFORE_EPOCH * 1000);
 // 10,000 results for any one query, so an unbounded filter with no sort would
 // drop an arbitrary slice once the timeline grew past that; bounding it and
 // sorting newest first means the slice that falls off is the oldest.
+// A malformed override fails here rather than reaching HubSpot as NaN, and a
+// negative one is refused because it would move the lower bound past the upper
+// and silently empty the prior history.
 const LOOKBACK_DAYS = Number(process.env.ATELIC_LOOKBACK_DAYS || 365);
+if (!Number.isInteger(LOOKBACK_DAYS) || LOOKBACK_DAYS <= 0) {
+    console.error(`ATELIC_LOOKBACK_DAYS must be a positive integer, got ${JSON.stringify(process.env.ATELIC_LOOKBACK_DAYS)}`);
+    process.exit(2);
+}
 const LOOKBACK_MS = String((AFTER_EPOCH - LOOKBACK_DAYS * 86400) * 1000);
 
 // hs_timestamp comes back as a UTC instant; the date a send belongs to is the
