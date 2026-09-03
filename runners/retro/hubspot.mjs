@@ -44,10 +44,18 @@ if (!Number.isInteger(LOOKBACK_DAYS) || LOOKBACK_DAYS <= 0) {
 const LOOKBACK_MS = String((AFTER_EPOCH - LOOKBACK_DAYS * 86400) * 1000);
 
 // hs_timestamp comes back as a UTC instant; the date a send belongs to is the
-// Denver one, for the same reason the bounds are.
-const denverDate = (ts) => ts
-    ? new Date(ts).toLocaleDateString("en-CA", { timeZone: "America/Denver" })
-    : "";
+// Denver one, for the same reason the bounds are. Assembled from parts rather
+// than a locale's default pattern, because lastSend is compared as a string
+// and the en-CA shortcut to YYYY-MM-DD has flipped to M/d/yyyy under one ICU
+// release before.
+const DENVER_PARTS = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Denver", year: "numeric", month: "2-digit", day: "2-digit",
+});
+const denverDate = (ts) => {
+    if (!ts) return "";
+    const p = Object.fromEntries(DENVER_PARTS.formatToParts(new Date(ts)).map((x) => [x.type, x.value]));
+    return `${p.year}-${p.month}-${p.day}`;
+};
 
 const KEY = process.env.HUBSPOT_SERVICE_KEY || "";
 const ACCOUNT = process.env.HS_ACCOUNT || "hs-pat-atelic";
