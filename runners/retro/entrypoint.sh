@@ -223,12 +223,16 @@ vault_write_back() {
             secret_name="${STRAVA_SECRET_RESOURCE##*/}"
             secret_project="${STRAVA_SECRET_RESOURCE#projects/}"
             secret_project="${secret_project%%/*}"
-            if printf '%s' "$1" | gcloud secrets versions add "$secret_name" \
-                --project="$secret_project" --data-file=- >/dev/null 2>&1; then
+            # gcloud's stderr is the whole diagnosis (an expired login, a
+            # missing permission, the wrong project), and the failure line is
+            # all an operator has when the next cloud run cannot refresh.
+            local gcloud_err
+            if gcloud_err="$(printf '%s' "$1" | gcloud secrets versions add "$secret_name" \
+                --project="$secret_project" --data-file=- 2>&1 >/dev/null)"; then
                 echo "strava: rotated refresh token written back to $secret_project with gcloud"
                 return 0
             fi
-            echo "strava: gcloud write back to $secret_project/$secret_name failed"
+            echo "strava: gcloud write back to $secret_project/$secret_name failed: $(tr '\n' ' ' <<<"$gcloud_err" | head -c 300)"
         else
             echo "strava: no metadata server and no gcloud; cannot write the rotated token back"
         fi
@@ -288,7 +292,17 @@ gmail_pull() {
 # get wrong quietly, so the arithmetic is done here and the prompt is handed
 # three finished tables to write one sentence about. See hubspot.mjs.
 atelic_pull() {
-    if ! HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" node "$SELF_DIR/hubspot.mjs" "$MONDAY" "$NEXT_MONDAY" > "$WORK/atelic.json" 2>"$WORK/hubspot-stderr.txt"; then
+    # The same Denver midnight epochs the Strava pull uses, so both weeks close
+    # at the same instant; hubspot.mjs says why a date string would not do.
+    # Bounded like the other external steps, since a hung HubSpot call would
+    # otherwise hold the job until Cloud Run's own deadline killed it.
+    local rc
+    HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" timeout 10m node "$SELF_DIR/hubspot.mjs" "$AFTER_EPOCH" "$BEFORE_EPOCH" > "$WORK/atelic.json" 2>"$WORK/hubspot-stderr.txt"
+    rc=$?
+    if (( rc == 124 )); then
+        fail_reason="HubSpot pull timed out after 10m"
+        return 1
+    elif (( rc != 0 )); then
         fail_reason="HubSpot pull failed: $(head -c 300 "$WORK/hubspot-stderr.txt")"
         return 1
     fi

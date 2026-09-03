@@ -57,7 +57,7 @@ Then dispatch the two scouts in parallel, each for capability the scanner lacks,
 
 ### Phase 3: Board
 
-Synthesize the scan and both scout reports into a ranked board of three to five candidate moves. Each row: the move in one line, the level it pushes, the smallest rep this session, the evidence pointer, and whether it is session sized or plan sized. Rank by evidence strength first, then smallest rep size. Route context sprawl to a grooming flag rather than the board.
+Synthesize the scan and both scout reports into a ranked board of three to five candidate moves. Each row: the move in one line, the level it pushes, the smallest rep this session, the evidence pointer, and whether it is session sized or plan sized. Rank by evidence strength first, then smallest rep size; a row the aging term (Phase 4) has made the default pick ranks first regardless, marked as such. Route context sprawl to a grooming flag rather than the board.
 
 ### Phase 4: Pick
 
@@ -69,6 +69,8 @@ The main session surfaces the top one or two rows to Forni in his voice: tight, 
 - **Why now**: What in the recent activity triggered this proposal
 
 Ask one question: which move (if any) do we make this session? If Forni picks none, still log the proposals and the board's remaining rows so they persist for next time.
+
+**The aging term.** A board row deferred in two consecutive log entries is the default pick: the session takes it or explicitly retires it with the reason, and never carries it a third time. The counts come from the last entry's Background line, so a carry is a number the next Ground reads rather than a phrase it has to notice.
 
 ### Phase 5: Reduce
 
@@ -89,6 +91,7 @@ Resume the sharpener with the pick and the session outcome; it drafts the entry 
 **Level pushed:** [which dimension/level]
 **Implemented:** [what landed this session]
 **Deferred:** [what got queued, if anything]
+**Background:** [board rows carried forward, each with its deferral count; a row at two is next session's default pick]
 **Load:** [GC, ~/CLAUDE.md, Eudy CLAUDE.md, MEMORY.md as lines and KB, after this session's cut]
 **Next rep:** [one line hint for future sharpen]
 ```
