@@ -68,3 +68,11 @@ The sharpener runs on Bash, and once the main session has entered a worktree (En
 **Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the isolation refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
 
 **How to apply:** Step 4 of Before Every Invocation ("cut its worktree branch") happens at the top of Implement, never before the sharpener returns. If the worktree is already entered when a scout must run, exit with keep for the dispatch and re enter by path afterwards. A board built read only should say so in its Signals, as this one did.
+
+## Resume Before Redispatch After an Overload
+
+When a scout or the sharpener dies on a server side error (a 529, a dropped connection), resume the same agent by id rather than dispatching a fresh one, and give a scout exactly one retry before boarding without it and naming the gap in its paragraph.
+
+**Why:** 2026-09-03. Two server 529s killed the sharpener mid scan. Resumed by id each time, it kept its reads and its board came back complete on the third resume, once the interrupted session returned; socrates, redispatched fresh after its own 529, spent the same tokens again and never returned. The board was still complete because the gap was named instead of chased.
+
+**How to apply:** A dead agent's id is in the failure notice; `SendMessage` to it first. If the resume also fails, one fresh dispatch, then stop. A board without a scout says so in that scout's paragraph and ranks on the evidence it has; the log's Scan notes carry the miss so the next Ground rebriefs the same question.
