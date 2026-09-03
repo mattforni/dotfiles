@@ -1,6 +1,6 @@
 ---
 name: codify-context
-description: Codify knowledge from the current session into the appropriate location in the context architecture using progressive disclosure. Use this skill whenever the user says "codify" followed by a topic, wants to capture something they just figured out, asks to document a pattern or convention, or says something like "we should write this down" or "future me needs to know this." Also trigger when the user discovers a gotcha, foot-gun, or non-obvious behavior worth preserving. Works for both project directories (three-layer CLAUDE.md/README.md pattern) and skill directories (Learned Rules in SKILL.md). Named after the "plan, delegate, assess, codify" Level 4 compounding loop. This is the write-in counterpart to `assist:groom-context`, which audits and prunes the same context architecture.
+description: Codify knowledge from the current session into the right layer of the context architecture (GC, a repo CLAUDE.md, a path scoped rule, a skill's learned rules, a hook, a tool doc, or auto memory), routing by trigger and admitting to always loaded files only through the placement tests. Use this skill whenever the user says "codify" followed by a topic, wants to capture something they just figured out, asks to document a pattern or convention, or says something like "we should write this down" or "future me needs to know this." Also trigger when the user discovers a gotcha, foot gun, or non obvious behavior worth preserving. Named after the "plan, delegate, assess, codify" Level 4 compounding loop. This is the write in counterpart to `assist:groom-context`, which audits and prunes the same context architecture.
 argument-hint: "<topic> [in <directory>]"
 allowed-tools:
   - Bash
@@ -14,168 +14,69 @@ allowed-tools:
 
 # Codify Assist
 
-Codify knowledge from the current conversation into documentation that serves two audiences: humans (README.md) and Claude Code (CLAUDE.md). The goal is progressive disclosure where each layer adds depth without duplicating the others.
+Write one durable thing from the current session into the one place that owns it. A good codification often removes or moves a line rather than adding one; the architecture gets sharper, not longer.
 
 ## Placement Policy
 
-Human-authored rules and conventions live in repo files: the CLAUDE.md chain, tool docs (`~/Eudaimonia/Admin/Tools/<tool>.md`), and skill files. Claude-discovered learnings, corrections, and preferences may live in the Claude Code auto-memory store. This skill is the deliberate write-in path for the repo-file layers, invoked when Forni explicitly asks to codify. The owning statement of this division lives in GC (Persistence: Rules in Files, Learnings in Memory).
+The routing table and the three admission tests live in `~/.claude/rules/context-placement.md` (source: homebase `.claude/user-rules/`). It loads on its own whenever a context file is open; read it explicitly at the start of this skill anyway, because routing has to happen before any destination file is opened. GC's Context Architecture section is the one line pointer to it. The division of authorship is GC's Persistence section: human authored rules in repo files, Claude discovered learnings in auto memory.
 
 ## Before Every Invocation
 
-1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants codification to run
-2. Read the plugin-wide [learned-rules.md](../../learned-rules.md) for any prior corrections about documentation style or placement
-3. Identify the **topic** from the user's input or the current conversation
-4. Identify the **target directory** where the knowledge belongs. If the user specifies a directory, use it. If not, infer from context (the directory most closely related to the topic). Ask if ambiguous.
-
-## Determining the Target Type
-
-Before writing anything, determine whether the target is a **project directory** or a **skill directory**. The approach differs significantly.
-
-**Skill directory** (any path under `.claude/` containing a `SKILL.md`): Knowledge goes into the SKILL.md file's `## Learned Rules` section. Do not create README.md files in skill directories. SKILL.md is the single source of truth for a skill. If a Learned Rules section does not exist, create one at the end of the file.
-
-**Project directory** (everything else, e.g., Eudaimonia): Use the three-layer pattern described below.
-
-## The Three Layers (Project Directories Only)
-
-Knowledge is stored in three layers. Each layer has a distinct audience and level of detail. Never duplicate content across layers. Each layer references the next. This pattern applies to project directories only, not skill directories.
-
-### Layer 1: Root CLAUDE.md (Discovery)
-
-The root `CLAUDE.md` of the project. One line per topic, pointing to the deeper CLAUDE.md. This is what Claude Code reads at session start to know where knowledge lives.
-
-**Format:** Add a line under a relevant section (or create one) like:
-
-```markdown
-- **[Topic]**: See `path/to/CLAUDE.md` for conventions
-```
-
-### Layer 2: Directory CLAUDE.md (Conventions)
-
-A concise file in the target directory. Written for Claude Code. Contains only the rules and patterns needed to work correctly in this area.
-
-**What goes here:**
-
-- Do this, not that patterns
-- Key constraints or gotchas (one line each)
-- A pointer to README.md for full explanation
-
-**What does NOT go here:**
-
-- Explanations of why
-- Code examples longer than one line
-- Background or history
-
-**Format:**
-
-```markdown
-# [Directory/Topic Name]
-
-See [README.md](README.md) for full documentation.
-
-## Conventions
-
-- [Rule 1]
-- [Rule 2]
-- [Do this, not that pattern]
-```
-
-### Layer 3: README.md (Full Documentation)
-
-A thorough document in the target directory. Written for humans who encounter this topic for the first time.
-
-**What goes here:**
-
-- What the thing is and how it works
-- Code examples showing correct and incorrect usage (when applicable)
-- Gotchas, foot-guns, and lessons learned
-- A directory/reference table if the folder contains multiple related files
-- Context that helps someone understand *why* the conventions exist
-
-**Structure varies by topic, but a good default:**
-
-```markdown
-# [Topic]
-
-[1-2 paragraph explanation of what this is and why it matters]
-
-## How It Works
-
-[Core mechanics, with examples]
-
-## Common Patterns
-
-[Correct usage with code/examples]
-
-## Pitfalls
-
-[What goes wrong and why, with incorrect examples marked clearly]
-
-## Reference
-
-[Directory table, links, or related resources if applicable]
-```
+1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants codification to run.
+2. Read the plugin wide [learned-rules.md](../../learned-rules.md) for cross skill corrections.
+3. Read `~/.claude/rules/context-placement.md`.
+4. Identify the **topic** from the user's input or the current conversation.
 
 ## Workflow
 
-### Step 1: Gather context
+### Step 1: Gather
 
-Review the current conversation for relevant knowledge. Identify:
+Review the conversation for the durable thing. Name, in one line each: the rule, the incident that produced it (dated), and the correct approach. If the conversation does not carry enough, ask the user to fill the gap, one question at a time.
 
-- What was learned (the core insight)
-- Where it applies (which directory or domain)
-- What went wrong or was confusing (the foot-guns)
-- What the correct approach is
+### Step 2: Search Before Writing
 
-If the conversation does not contain enough context, ask the user to fill gaps. One question at a time.
+Grep every destination in Step 3 that could already hold the topic: the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the output style, any path scoped rule or nested CLAUDE.md that covers the files involved, the hooks in `settings.json`, the relevant tool doc under `~/Eudaimonia/Admin/Tools/`, the relevant skill's `learned-rules.md`, and the auto memory index. Three outcomes:
 
-### Step 2: Check existing documentation
+- **Already stated.** Say where, and stop, unless the incident shows the existing line was dropped; then the fix is placement or enforcement (scope it, move it to the point of use, propose a hook), never a restatement.
+- **Stated in conflict.** Two lines that cannot both be satisfied are the finding. Resolving the contradiction is the codification; adding a third statement is forbidden.
+- **Absent.** Route it in Step 3.
 
-**For skill directories:** Read the target SKILL.md. Look for an existing `## Learned Rules` section. If one exists, you will append to it. If not, you will create one at the end of the file.
+### Step 3: Route
 
-**For project directories:** Read the target directory's README.md and CLAUDE.md if they exist. The goal is to update rather than overwrite. If files exist, integrate the new knowledge into the existing structure. Also check the root CLAUDE.md for any existing pointer to this directory.
+Apply the placement rule: name the trigger, read the destination off the routing table, and, only when the destination is an always loaded file, run the three admission tests and name the line the new one outranks. State the destination and the reason in one sentence before drafting. Destinations:
 
-### Step 3: Draft the changes
+- **GC** (`~/.claude/CLAUDE.md`, homebase `.claude/CLAUDE.md`): how I work, everywhere, with no trigger. Lands as a homebase change and counts against the byte ratchet.
+- **The output style** (homebase `.claude/output-styles/forni.md`): how responses to Forni read. GC keeps only what subagents, which never see the style, must also obey.
+- **A repo's root CLAUDE.md**: that repo's facts every session there needs.
+- **A nested directory**: the project directory pattern below.
+- **A path scoped rule** (`.claude/rules/<topic>.md` with `paths:` frontmatter, project or user level): depth that matters only when a particular file is being edited.
+- **A skill's `learned-rules.md`**: a correction to how a skill decides. Never learned rule content inside SKILL.md; every skill carries the separate file, and SKILL.md's own `## Learned Rules` section holds only the pointer to it.
+- **A hook**: anything that must happen every time or must never happen. Propose the hook; writing `settings.json` is `update-config` work and needs its own yes.
+- **A tool doc** (`~/Eudaimonia/Admin/Tools/<tool>.md`): a tool's mechanics, gotchas, costs, and the reason we picked it, in the one pager shape of `Admin/Tools/CLAUDE.md`.
+- **Auto memory**: a Claude discovered learning that need not survive a machine swap. Usually already saved by the time Forni says codify; check before duplicating.
+- **Nowhere**: anything derivable from the code, git history, or the tool's own help.
 
-**For skill directories:** Draft the new learned rules as bullet points and present them to the user. Show only what you are adding, not the full file. The user wants to see the delta.
+### Step 4: Draft and Present
 
-**For project directories:** Write a draft of the README.md content and **present it to the user for review**. Do not write it to a file yet. If a README.md already exists, present the proposed changes (additions or modifications) rather than the full file.
+Draft the delta only, never the full file, and print it as the final text of the turn so it renders (see learned rules). Rule first, incident after, dated. For an always loaded destination, the delta includes the line being displaced or the reason nothing is.
 
-### Step 4: Write the files
+**The project directory pattern** (a nested directory in Eudy or a repo): the directory's `README.md` holds the full account for humans, the what and the why with examples; the directory's `CLAUDE.md` holds the conventions for Claude in under 20 lines and points to the README; the root CLAUDE.md gets a one line pointer only when the directory is not already in its map, since a nested CLAUDE.md loads on its own the moment a file in that directory is read. Never duplicate across the three; each layer points to the next.
 
-After the user approves:
+### Step 5: Write
 
-**For skill directories:**
+After approval, write the destination from the session worktree, never a primary checkout. When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
 
-1. **Add to or create the `## Learned Rules` section** in the target SKILL.md
+### Step 6: Confirm
 
-**For project directories:**
+Paths written, and anything removed or moved in the process. Keep it to a few lines.
 
-1. **Write or update the README.md** in the target directory
-2. **Write or update the CLAUDE.md** in the target directory (extract conventions from the README, keep it concise, point back to README)
-3. **Update the root CLAUDE.md** with a discovery pointer if one does not already exist
+## What Makes Good Codification
 
-### Step 5: Confirm
-
-Tell the user what was created or updated, with file paths. Keep it brief.
-
-## Adapting to Context
-
-Not every topic involves code. The three layer structure works for any domain:
-
-- **Codebase pattern**: README explains the architecture, CLAUDE.md lists the conventions, root CLAUDE.md points to it
-- **Workflow or process**: README documents the full process with rationale, CLAUDE.md captures the key steps and rules, root CLAUDE.md points to it
-- **Tool or technology**: README is a getting started guide, CLAUDE.md has the "use this, not that" patterns, root CLAUDE.md points to it
-- **Personal knowledge**: README captures the full context and reasoning, CLAUDE.md has the actionable takeaways, root CLAUDE.md points to it
-
-The principle is the same regardless of domain: essentials where they are always visible, depth one step away, discovery at the root.
-
-## What Makes Good Documentation Here
-
-- **README should stand alone.** Someone who has never seen the conversation should be able to read it and understand the topic.
-- **CLAUDE.md should be skimmable in seconds.** If Claude Code has to read more than 20 lines to understand the conventions, it is too long.
-- **Root pointer should be one line.** It exists only so the knowledge is discoverable.
-- **Examples beat abstractions.** Show the right way and the wrong way side by side when possible.
-- **Date the knowledge when it matters.** If a gotcha is version specific or likely to change, note when it was learned so future readers can assess freshness.
+- **One place.** Pointer at the top layer, depth one hop down, never a third copy.
+- **Skimmable.** A CLAUDE.md that takes more than 20 lines to state its conventions is too long; move the why to the README or a rule.
+- **Examples beat abstractions.** Right way and wrong way side by side when the topic allows.
+- **Dated.** The incident carries its date so a future reader can judge freshness, and the rule reads correctly with the incident deleted.
+- **One emphasis per file at most.** Emphasize many lines and none stands out.
 
 ## Learned Rules
 
