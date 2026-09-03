@@ -71,6 +71,16 @@ for plist in "$ROOT"/launchagents/*.plist; do
     fi
 done
 
+# 3. Every runner's entrypoint is executable in the tree, not only in its
+#    image. run-local and run-scheduled exec it directly and git tracks the
+#    bit, so a 100644 entrypoint works inside the Dockerfile (which chmods its
+#    copy) and fails on every fresh clone with "Permission denied". The retro's
+#    was tracked without the bit until 2026-09-03, and the check above only
+#    reached runners a plist named.
+for entry in "$ROOT"/runners/*/entrypoint.sh; do
+    [[ -x "$entry" ]] || fail "${entry#"$ROOT"/} is not executable; fix with git update-index --chmod=+x"
+done
+
 if [[ $failed -eq 0 ]]; then
     printf "${GREEN}[+]${NC} Runner checks clean\n"
 fi

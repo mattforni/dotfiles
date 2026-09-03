@@ -36,6 +36,26 @@ job="$(gcloud run jobs describe "$name" --project="$RUNNER_PROJECT" --region="$R
 env_json="$(jq -c '[.. | objects | select(has("image") and has("env"))] | first | .env // []' <<<"$job")"
 [[ "$env_json" != "null" && "$env_json" != "[]" ]] || die "the job describes no environment variables"
 
+# A secret from another project never appears in the env under its own name.
+# Cloud Run stores a generated alias (claud-<uuid>) in secretKeyRef.name and
+# keeps the real reference in the template's run.googleapis.com/secrets
+# annotation, as comma separated alias:projects/<number>/secrets/<name> pairs.
+# Every vault secret is cross project by design (the vault projects are not the
+# runner's), so without this map each alias would be looked up in the runner's
+# own project, where nothing exists, and the fetch would fail on the first one.
+# A same project secret keeps its bare name in both places and never aliases.
+aliases="$(jq -r '[.. | objects | .["run.googleapis.com/secrets"]? // empty] | first // ""' <<<"$job")"
+resolve_alias() {
+    # $1 the secretKeyRef.name; prints the annotation's target when $1 is an
+    # alias, and $1 unchanged otherwise.
+    local ref="$1" pair
+    local IFS=','
+    for pair in $aliases; do
+        [[ "${pair%%:*}" == "$ref" ]] && { printf '%s' "${pair#*:}"; return 0; }
+    done
+    printf '%s' "$ref"
+}
+
 tmp="$(mktemp)"
 # The file is sourced, not passed as a docker --env-file, because two of these
 # values (the deploy key, the Google token JSON) are multi line and --env-file
@@ -57,8 +77,9 @@ while IFS= read -r entry; do
         count_plain=$((count_plain + 1))
     else
         version="$(jq -r '.valueFrom.secretKeyRef.key // "latest"' <<<"$entry")"
-        # A cross project reference arrives as projects/<number>/secrets/<name>;
-        # a same project one is the bare name.
+        secret="$(resolve_alias "$secret")"
+        # A cross project reference, once its alias is resolved, reads
+        # projects/<number>/secrets/<name>; a same project one is the bare name.
         if [[ "$secret" == projects/* ]]; then
             secret_project="${secret#projects/}"
             secret_project="${secret_project%%/*}"
