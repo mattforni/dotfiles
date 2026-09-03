@@ -35,7 +35,7 @@ Review the conversation for the durable thing. Name, in one line each: the rule,
 
 ### Step 2: Search Before Writing
 
-Grep the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the relevant tool doc under `~/Eudaimonia/Admin/Tools/`, the relevant skill's `learned-rules.md`, and the auto memory index for the topic. Three outcomes:
+Grep every destination in Step 3 that could already hold the topic: the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the output style, any path scoped rule or nested CLAUDE.md that covers the files involved, the hooks in `settings.json`, the relevant tool doc under `~/Eudaimonia/Admin/Tools/`, the relevant skill's `learned-rules.md`, and the auto memory index. Three outcomes:
 
 - **Already stated.** Say where, and stop, unless the incident shows the existing line was dropped; then the fix is placement or enforcement (scope it, move it to the point of use, propose a hook), never a restatement.
 - **Stated in conflict.** Two lines that cannot both be satisfied are the finding. Resolving the contradiction is the codification; adding a third statement is forbidden.
@@ -46,6 +46,7 @@ Grep the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the
 Apply the placement rule: name the trigger, read the destination off the routing table, and, only when the destination is an always loaded file, run the three admission tests and name the line the new one outranks. State the destination and the reason in one sentence before drafting. Destinations:
 
 - **GC** (`~/.claude/CLAUDE.md`, homebase `.claude/CLAUDE.md`): how I work, everywhere, with no trigger. Lands as a homebase change and counts against the byte ratchet.
+- **The output style** (homebase `.claude/output-styles/forni.md`): how responses to Forni read. GC keeps only what subagents, which never see the style, must also obey.
 - **A repo's root CLAUDE.md**: that repo's facts every session there needs.
 - **A nested directory**: the project directory pattern below.
 - **A path scoped rule** (`.claude/rules/<topic>.md` with `paths:` frontmatter, project or user level): depth that matters only when a particular file is being edited.
@@ -63,7 +64,7 @@ Draft the delta only, never the full file, and print it as the final text of the
 
 ### Step 5: Write
 
-After approval, write the destination. When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines goes direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
+After approval, write the destination from the session worktree, never a primary checkout. When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
 
 ### Step 6: Confirm
 
