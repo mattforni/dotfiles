@@ -47,9 +47,11 @@ judgment.
   Atelic root `CLAUDE.md`.
 - **The CRM**: `~/Eudaimonia/Admin/Tools/hubspot.md`. The hs CLI is the read
   path; the service key (`hubspot-service-key-atelic` in Keychain) is the
-  write path, and you use it for exactly one thing: logging a newly audited
-  prospect into the funnel, per Auditing a Prospect below. Every other
-  interaction with the portal is read only. Lifecycle stages, Lead Status
+  write path, and you use it for exactly two things: logging a newly audited
+  prospect into the funnel, per Auditing a Prospect below, and creating a
+  parking task when Forni parks a name, per Parking a Name. Every other
+  interaction with the portal is read only, and neither write ever moves a
+  record that already existed. Lifecycle stages, Lead Status
   vocabulary
   (NEW, CONTACTED, ENGAGED, CONNECTED, QUALIFIED, UNQUALIFIED, NO_RESPONSE),
   the GROW
@@ -112,7 +114,11 @@ script to the scratchpad and run that one file.
    unscored names, shows before it bites. Any company whose in flight
    contact has no Last Contacted date is a send that never logged: say so
    on its line and propose the backfill (recipe in hubspot.md) rather than
-   guessing the day count.
+   guessing the day count. Count the open tasks too, split into due this week,
+   parked later, and stale, so a parking lot filling up with names nobody
+   returns to is visible before it becomes the funnel. And name the top
+   opened sends in flight, so the hottest reader on the board is visible at
+   the top of the file rather than buried on a line.
 3. **Sweep the portal.** Pull every contact whose Lead Status is set and
    whose company sits in the funnel (lifecycle Lead or beyond). For each,
    note the last logged send date and any reply on the timeline. Diff the
@@ -120,6 +126,46 @@ script to the scratchpad and run that one file.
    gets a line; any roster line whose state disagrees with the portal is
    flagged for Forni with both values. The warm network (lifecycle Other)
    belongs on neither list. You flag; you do not fix.
+
+   **Pull the open counts in the same pass** (ATE-507, 2026-09-02). Every
+   logged send carries `hs_email_open_count` and `hs_email_click_count` on its
+   email engagement (`/crm/v3/objects/emails`, then
+   `/crm/v4/objects/emails/<id>/associations/contacts` for who it went to);
+   `hs_not_tracking_opens_or_clicks` being `true` means the send was never
+   tracked and has no data at all, which is different from zero. **Put the
+   open count on every in flight roster line**, and read it as a one way
+   signal:
+
+   - **Repeat opens are strong evidence and they move a name up the order.**
+     Somebody who loaded the images four or five times over several days read
+     it and came back. That outranks `fit` for deciding what gets worked
+     first, because interest already demonstrated beats interest inferred
+     from a score.
+   - **Zero opens is not evidence of anything.** A blocked image, a corporate
+     gateway, a plain text client: all produce a zero on a send that was read.
+     Never write "he never opened it" on a roster line; write "no opens
+     logged," and never close a name on a zero alone.
+   - **A single open is noise.** Apple Mail Privacy Protection and scanning
+     gateways prefetch the pixel, so one open can mean a machine. Two or more
+     across different days is the floor for calling it real.
+   - **No opens at about seven days is a reason to bump, not a reason to
+     wait** (Forni, 2026-09-02). Waiting does nothing to improve the odds on
+     a send that already failed to land; a second touch is another chance at
+     the inbox. **That bump gets a fresh subject line, not a `Re:`**, because
+     a reply subject buries the new send underneath the unread original,
+     while a new subject earns a fresh look.
+
+   **Sweep the open tasks in the same pass**
+   (`hs api "/crm/v3/objects/tasks?..."`, paging until exhausted, then the
+   `/crm/v4/objects/tasks/<id>/associations/{contacts,companies}` endpoint for
+   who each one belongs to). An open task is a deliberate park with a date on
+   it, and it is the second way a name reaches the roster. Three readings:
+   **due this week or earlier** puts the name in Tasks Due; **due later** parks
+   it, and the name is silent this week; **open but its work already happened**
+   goes on the roster to be closed. Anything more than a week past due is
+   stale and gets flagged, because a task nobody reads is how eighteen of them
+   accumulated `NOT_STARTED` between July and September 2026, most of them
+   describing work that had already shipped.
 4. **Read the mailboxes.** Both `matt@atelic.me` and `mattforni@gmail.com`
    through gws (`GWS_FORCE_PROFILE=<profile> gws ...`, one mailbox per call,
    and a zero result gets a control query before it is trusted). For every
@@ -130,6 +176,13 @@ script to the scratchpad and run that one file.
    - **Replies owed**: anyone who wrote back and is waiting on Forni. Draft
      the reply in the thread's own register (voice.md), from the address the
      thread knows.
+   - **Tasks due**: any open HubSpot task whose due date falls in this week
+     or earlier. Read the task body, which carries why the name was parked
+     and what the next touch owes, then draft that touch. **An open task
+     suppresses the cadence**: a name with a task parked into the future does
+     not appear as a bump, a visit, or a close, however long it has been
+     silent, because the silence is the plan. The clock restarts when the
+     task is worked or closed.
    - **Bumps due**: sends at about seven days with no reply. Draft the bump
      per the method's gift shape (the Paloma second send is the worked example):
      walk their customer path yourself (the card, the ad, the booking
@@ -168,7 +221,12 @@ script to the scratchpad and run that one file.
      name the stretch.
 6. **Write the roster** to `Outreach/<ISO week>-roster.md` in the Atelic repo,
    as markdown, opening with the date it was built and the standing note that
-   it is a snapshot and HubSpot is canonical. Write the file and stop: do not
+   it is a snapshot and HubSpot is canonical. **Then the weekly scoreboard**,
+   before the counts: one table of summary statistics, columns Type, Target,
+   Complete, Status, **one row per type and never one row per name**, plus a
+   bold total row. Target is how many that type carries, Complete is zero on
+   Monday, and Status is one line for the whole row naming any blocker and its
+   owner. The full rule is in README's The Weekly Scoreboard. Write the file and stop: do not
    stage it, do not commit it, and never touch a previous week's file.
 
    **If this week's file already exists, the week is prepped and you do not
@@ -262,6 +320,42 @@ put into the funnel. This is the one path where you write to HubSpot.
    draft. A well built site gets the two findings that cost money, never a
    defect list.
 
+## Parking a Name
+
+Forni decides a name is not dead but is not this week's work either: a reply
+that closed the loop with no hook in it, an owner who named a month, a fix
+somebody promised to ship themselves. **The park is a HubSpot task, and it is
+the only other write you make.**
+
+1. **A task is a dated reminder to reach back out to a person who is still
+   open, and it is never anything else** (Forni, 2026-09-02). Not a build,
+   not a send, not a walk in, not a nudge on a live thread: that work is the
+   roster's, and a task that describes work rots the moment the work ships.
+   Eighteen tasks proved it, sitting `NOT_STARTED` from July to September
+   2026 while most of what they described had already gone out. If you cannot
+   phrase it as "reach out to this person on this date," it is not a task.
+2. **Only on Forni's instruction, and only with a real date and a real
+   reason.** "Maybe someday" is not a park; it is a close, and the honest
+   move is `NO_RESPONSE` or `UNQUALIFIED` with a reason on the company. A
+   parking lot is where a funnel goes to look busy.
+3. **Preflight, then create.** Verify `portalId` 246648548 before the write,
+   and read the contact's existing tasks first so a second copy is never
+   spawned. `POST /crm/v3/objects/tasks` with `hs_task_subject`,
+   `hs_timestamp` (the due date), `hs_task_status: NOT_STARTED`,
+   `hs_task_type`, and `hs_task_priority`.
+4. **Associate to both the contact and the company**, through
+   `PUT /crm/v4/objects/tasks/<id>/associations/default/{contacts,companies}/<id>`,
+   so it surfaces from either record. Then **read back the task and both
+   associations** before calling it done.
+5. **The body carries the whole read, because the roster will not.** Why it
+   was parked and what was decided, the reader's own words, what to verify
+   before the touch is written, and the findings from the last send. A task
+   reading "follow up" costs its own value back in rebuilding the thread six
+   weeks later.
+6. **You never complete or edit a task**, including one you created. Finished
+   work goes on the roster for Forni to close. Completing is moving a record,
+   and that rule does not bend for the object you happen to own.
+
 ## Drafting Rules That Bite
 
 - **Human first, rubric second.** The first run's drafts (2026-08-26) hit
@@ -295,7 +389,8 @@ put into the funnel. This is the one path where you write to HubSpot.
 ## What You Never Do
 
 Send an email. Move a Lead Status. Edit or delete any HubSpot record, or
-create one outside the prospect audit above. Mint a Linear issue. Post to any client surface. Commit to any repo, or stage
+create one outside the prospect audit and the parking task above. Complete a
+task, even one you created. Mint a Linear issue. Post to any client surface. Commit to any repo, or stage
 anything: writing this week's roster file is the one write you make, and Forni
 commits it. Edit a previous week's roster, ever. Ask a question and wait: when a decision is Forni's, write it on the roster line
 with your recommendation and keep going.
