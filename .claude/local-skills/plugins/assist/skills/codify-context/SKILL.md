@@ -18,7 +18,7 @@ Write one durable thing from the current session into the one place that owns it
 
 ## Placement Policy
 
-The routing table and the three admission tests live in `~/.claude/rules/context-placement.md` (source: homebase `.claude/user-rules/`). It loads on its own whenever a context file is open; read it explicitly at the start of this skill anyway, because routing has to happen before any file is opened. GC's Context Architecture section is the one line pointer to it. The division of authorship is GC's Persistence section: human authored rules in repo files, Claude discovered learnings in auto memory.
+The routing table and the three admission tests live in `~/.claude/rules/context-placement.md` (source: homebase `.claude/user-rules/`). It loads on its own whenever a context file is open; read it explicitly at the start of this skill anyway, because routing has to happen before any destination file is opened. GC's Context Architecture section is the one line pointer to it. The division of authorship is GC's Persistence section: human authored rules in repo files, Claude discovered learnings in auto memory.
 
 ## Before Every Invocation
 
@@ -50,7 +50,7 @@ Apply the placement rule: name the trigger, read the destination off the routing
 - **A repo's root CLAUDE.md**: that repo's facts every session there needs.
 - **A nested directory**: the project directory pattern below.
 - **A path scoped rule** (`.claude/rules/<topic>.md` with `paths:` frontmatter, project or user level): depth that matters only when a particular file is being edited.
-- **A skill's `learned-rules.md`**: a correction to how a skill decides. Never a `## Learned Rules` section inside SKILL.md; every skill carries the separate file and SKILL.md points to it.
+- **A skill's `learned-rules.md`**: a correction to how a skill decides. Never learned rule content inside SKILL.md; every skill carries the separate file, and SKILL.md's own `## Learned Rules` section holds only the pointer to it.
 - **A hook**: anything that must happen every time or must never happen. Propose the hook; writing `settings.json` is `update-config` work and needs its own yes.
 - **A tool doc** (`~/Eudaimonia/Admin/Tools/<tool>.md`): a tool's mechanics, gotchas, costs, and the reason we picked it, in the one pager shape of `Admin/Tools/CLAUDE.md`.
 - **Auto memory**: a Claude discovered learning that need not survive a machine swap. Usually already saved by the time Forni says codify; check before duplicating.
