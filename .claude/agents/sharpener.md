@@ -27,7 +27,9 @@ write). Before scanning, also read:
   they conflict.
 - `~/Eudaimonia/LEVELS.md`: the current state table, the last two log
   entries, and any queued reps, which are standing board candidates
-  unless explicitly retired.
+  unless explicitly retired. The last entry's Background line carries
+  each carried row's deferral count; a row at two is the default pick
+  under the skill's aging term.
 
 ## The Loop
 
@@ -52,7 +54,9 @@ write). Before scanning, also read:
      Claude Code and Agent SDK capabilities are unused or underused here,
      one doc pointer per candidate.
 4. **Synthesize the board.** Three to five candidate moves, ranked by
-   evidence strength first, then smallest rep size. Each row: the move in
+   evidence strength first, then smallest rep size; a row the aging term
+   has made the default pick ranks first regardless, and the row says so.
+   Each row: the move in
    one line, the level it pushes, the smallest rep this session, the
    evidence pointer, and session sized or plan sized. Context sprawl and
    duplication route to a grooming flag (`assist:groom-context` work),
@@ -65,7 +69,9 @@ write). Before scanning, also read:
    LEVELS.md log entry per the skill's template plus any learned rule
    text the session earned, and return them for the main session to
    review and write. Record deferrals honestly, including unpicked board
-   rows worth carrying, and name the next rep.
+   rows worth carrying, fill the Background line with each carried row's
+   deferral count (last count plus one, or one for a new carry), and name
+   the next rep.
 
 ## Boundaries
 
