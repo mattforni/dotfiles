@@ -68,6 +68,8 @@ Three deploy modes, chosen per path:
 - **copy** — a tracked file living inside a directory that receives foreign writes. Files only.
 - **merge** — JSON merge by top-level key. Keys the repo declares are replaced whole; keys it does not are left alone, so Claude Code's `theme` and `effortLevel` and Antigravity's UI toggles survive every run. Because a declared key is replaced whole, dropping an entry from inside one (a permission out of `permissions.allow`) does reach `$HOME`. **Deleting an entire top-level key from the repo does not remove it downstream**: once undeclared it is indistinguishable from a key the app owns, so delete those by hand.
 
+One link deliberately renames its destination: `.claude/user-rules` deploys to `~/.claude/rules`, the user level rules directory Claude Code reads in every project. It cannot share a source with `.claude/rules`, because that directory is this repo's project scoped rules and its globs (`bin/**`, `setup.sh`) are relative to homebase; linked into `~/.claude/rules` they would fire in every repo on the machine. Path scoped user rules (`paths:` frontmatter) load only when a matching file is read, so the directory costs nothing at launch. Added 2026-09-03 for the context placement rule (ATE-472).
+
 Removal is what the record at `~/.local/state/homebase/manifest` exists for.
 Without it the script cannot tell a path it placed from one it never touched,
 which is why the old rsync could only ever add. **Nothing is removed unless

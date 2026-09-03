@@ -11,7 +11,7 @@ Three standing questions (what genuinely feels like reward; die in the morning s
 ## Communication
 
 - **How I respond to Forni is the `Forni` output style** (homebase `.claude/output-styles/forni.md`, selected by `outputStyle` in settings): concision by default, one self contained question at a time with the default stated, iterative decisions, tangents parked, plans in prose, no overstated results. That file is the seat for response rules and the place to iterate on them; GC keeps only what subagents, which never see the style, must also obey.
-- **No dashes of any kind, ever.** Hyphens, en dashes, em dashes: none, in any prose, emails, Slack, documents, or headings. Restructure the sentence instead (split it, use a comma, recast). An em dash is the same violation, not a stylistic exception. Hyphens inside code, file names, flags, and identifiers are code, not prose.
+- **No dashes of any kind in generated prose.** Hyphens, en dashes, em dashes: none, in any prose, email, Slack, document, or heading. Restructure the sentence instead (split it, use a comma, recast). Hyphens inside code, file names, flags, and identifiers are code, not prose. VOICE.md holds the two carve outs: verbatim quotes and hyphenated spellings.
 - Only run tests in the foreground and do not leave tests running. Unfettered long running test processes have ground the machine to a stop more than once.
 
 ## Writing Style
@@ -22,7 +22,7 @@ Three standing questions (what genuinely feels like reward; die in the morning s
 
 ## General Behavior
 
-- When the user asks you to do something specific, act on that request immediately. Do not start autonomous codebase exploration unless explicitly asked to explore. If you need context, ask a targeted question rather than broadly reading files.
+- When asked to do something specific, act on it; do not explore beyond the checks the request's own rules require (the voice canon, search before build, an agent's diff, the creating instrument). Need context? Ask a targeted question rather than reading broadly.
 - **A permission classifier block on an outward action (email send, publish, post, deploy) is a hard stop.** Come back with what was attempted and why, and let Forni decide. Never accomplish the blocked action through an adjacent route (draft then dispatch, alternate API). Codified 2026-07-20.
 - **Verify transformed outputs before publishing them.** When the work involves a transform (cropping, rotating, OCR, merging, format conversion) and the destination is shared (Drive upload, email attachment, content replacement), read the produced file or render a preview first. A 5 second check catches mistakes that are awkward to undo once published.
 - **Search before build; standardize on what exists.** Before building anything new (a skill, a tool, a workflow), check whether an official Claude Code plugin, a well maintained community plugin, or an established tool already covers it, and report what was found before writing anything custom. Personal skills that overlap a standard skill become thin layers holding Forni's context and delegating the method. House rules (worktree gate, per repo landing rules, sdlc flow) still govern on conflict. Codified 2026-07-22.
@@ -34,7 +34,7 @@ Three standing questions (what genuinely feels like reward; die in the morning s
 
 ## Agents
 
-- **Delegate matching work to the user level roster in `~/.claude/agents/` proactively**, without waiting for explicit invocation: recon to explore, verification and methodology critique to socrates, tests and builds to runner, mechanical sweeps to migrator (three writers at most), web research to researcher. Agents return summaries with pointers, never transcripts. This governs how requested work gets executed, not whether to start work.
+- **Delegate matching work to the user level roster in `~/.claude/agents/` proactively**, without waiting for explicit invocation: recon to explore, verification and methodology critique to socrates, tests and builds to runner, mechanical sweeps to migrator (three writers at most, each in its own worktree on a disjoint file set), web research to researcher. Agents return summaries with pointers, never transcripts. This governs how requested work gets executed, not whether to start work.
 - **Landing a PR is the lander agent's job, dispatched first.** Never `/sdlc:land` or a Monitor or Bash loop watching a PR from the main session; lander bails back on human reviews, CI failures, and merge conflicts, and its status line gets relayed to Forni.
 - **Never run concurrent writers against one resource.** Fanning out is for reading; writers to a shared calendar week, branch, or issue set go strictly in sequence. Codified 2026-08-10.
 - **Read what a background agent changed, not just what it says it changed.** Read the diff before relaying or building on an agent's result, and scrutinize any change to a documented convention or public interface as you would a human's PR. Codified 2026-08-07.
@@ -42,14 +42,14 @@ Three standing questions (what genuinely feels like reward; die in the morning s
 
 ## Bash Commands
 
-- **Never use `cd` in Bash tool calls.** Compound commands like `cd path && cmd` defeat the single command allowlist entries (`Bash(git:*)`) and trigger prompts. Use path aware flags (`git -C`, `gh --repo`, absolute paths); when a toolchain genuinely needs cwd, use a wrapper script that does the `cd` internally. The substitution table, the wrapper recipe, and the silent `rbenv init` failure live in `~/Eudaimonia/Admin/Tools/bash.md`.
-- **Use the Monitor tool for long waits, not Bash sleep.** For CI checks, deploy polling, and any "wait until state X" flow, use Monitor with an `until <check>; do sleep N; done` loop. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes.
+- **Never use `cd` in Bash tool calls.** Compound commands like `cd path && cmd` defeat the single command allowlist entries (`Bash(git:*)`) and trigger prompts. Use path aware flags (`git -C`, `gh --repo`, absolute paths); when a toolchain genuinely needs cwd, use a wrapper script that does the `cd` internally. A prompt is friction; a classifier block is a hard stop, never routed around. The substitution table, the wrapper recipe, and the silent `rbenv init` failure live in `~/Eudaimonia/Admin/Tools/bash.md`.
+- **Use the Monitor tool for long waits, not Bash sleep.** Deploy polling and any "wait until state X" flow outside a PR run in Monitor with an `until <check>; do sleep N; done` loop; PR waits belong to lander. The harness blocks leading sleeps over ~270s, and Monitor emits events the moment the condition changes.
 
 ## Workflow Conventions
 
 - **Work in worktrees, not primary checkouts.** The first action in any session that will touch a tracked repo is to cut a dedicated worktree (EnterWorktree), before the first edit, for every tracked repo, Eudy included, with no exception for small or "just notes" edits. The only work on a primary checkout is a deliberate landing step (merging, pulling main, deleting a merged branch). The worktree gate hook (`~/.claude/hooks/worktree-gate.sh`) denies mutating git on a primary outright; its carve outs, the worktree mechanics, and the squash merge and stacked PR gotchas live in `~/Eudaimonia/Admin/Tools/github.md`.
-- When creating plans or documents, ALWAYS present them to the user for review before writing to a file. Never write plans directly to files unless explicitly asked.
-- When editing existing files, never overwrite the original without explicit permission. Create a new version file (e.g., v2, draft) instead of modifying the original in place.
+- Present plans and documents meant for Forni or an outside reader before writing them to a file; never write a plan to a file unasked. Auto memory and log entries are outside this.
+- Outside version control (Google Docs, Drive files, delivered PDFs), never overwrite an original without explicit permission; save a new version instead. Tracked files are edited in place under the worktree gate.
 
 ### Plan to Codify Bridge
 
@@ -63,12 +63,11 @@ Human authored rules and conventions live in repo files (project CLAUDE.md, home
 
 ### Context Architecture
 
-The stores above are the layers of the context architecture (GC, the Eudy CLAUDE.md chain, repo CLAUDE.md, skill files, tool docs, auto memory). Principles, grounded in Anthropic's context engineering guidance, audited by `assist:groom-context`:
+The stores above are the layers of the context architecture (GC, `~/CLAUDE.md`, the output style, rules, the Eudy and repo CLAUDE.md chains, skill files, hooks, tool docs, auto memory). Principles, grounded in Anthropic's guidance, audited by `assist:groom-context`:
 
-- **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it, stated once, with other layers pointing to it rather than repeating it.
-- **Load bearing process gates belong at the point of use, and must be enforced there.** Prose is the weakest form of a rule; a flow skill step is stronger; a hook is strongest and is the only deterministic guarantee.
-- **Trim before adding.** When a rule keeps getting dropped, the first response is shrinking and scoping the file it lives in, not restating it louder. Anthropic's guidance targets under 200 lines per CLAUDE.md; homebase's `bin/lint/context-size` ratchet holds GC and `~/CLAUDE.md` at their last measured size.
-- **Depth that matters only when a particular file is being edited belongs in a path scoped rule.** A `.claude/rules/<topic>.md` with `paths:` frontmatter loads the moment Claude reads a matching file and never otherwise, so it carries the mechanics, the why paragraphs, and the dated incidents; the always loaded CLAUDE.md keeps the one line rule and a pointer. Adopted 2026-08-27.
+- **The placement test is `~/.claude/rules/context-placement.md`** (homebase `.claude/user-rules/`), loaded whenever a context file is open: route a rule by its trigger, admit it to an always loaded file only through the three tests there, and treat a contradiction between two rules, not file length, as the expensive failure. Adopted 2026-09-03 (ATE-472).
+- **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it, stated once, with other layers pointing to it rather than repeating it. Prose is a request; a flow skill step is stronger; a hook is the only guarantee, so load bearing gates are enforced at the point of use.
+- **Trim before adding.** A rule that keeps getting dropped gets scoped or enforced, not restated louder. Homebase's `bin/lint/context-size` ratchet holds GC and `~/CLAUDE.md` at their last measured size; every line admitted to either is paid for with a cut.
 
 When context sprawls or duplicates, run `assist:groom-context` (also run monthly via `assist:reflect`).
 
@@ -80,20 +79,20 @@ When context sprawls or duplicates, run `assist:groom-context` (also run monthly
 
 ## External App Integration
 
-Preferred methods for connecting Claude to outside apps, in order: native Claude connectors, then officially supported CLIs (especially those with skills or plugins), then MCP servers. Choose the highest available option. Per directory tooling goes in a `.mcp.json` at the subtree root (inherited downward), per repo behavior in that repo's `.claude/settings.json`, and per directory CLI identity through `.account` markers plus an invocation time shim; Claude Code itself has one config dir and no profiles (`~/Eudaimonia/Admin/Tools/claude-code.md`).
+A tool doc's named method wins. Absent one, connect to outside apps by an officially supported CLI, then a native Claude connector, then an MCP server. Per directory tooling goes in a `.mcp.json` at the subtree root (inherited downward), per repo behavior in that repo's `.claude/settings.json`, and per directory CLI identity through `.account` markers plus an invocation time shim; Claude Code itself has one config dir and no profiles (`~/Eudaimonia/Admin/Tools/claude-code.md`).
 
 ### gws Profiles
 
-The `gws` CLI switches identity per directory subtree via `.account` marker files. Active profiles: `personal` (<mattforni@gmail.com>, the ambient default) and `tpf` (The Product Forge, <matt@theproductforge.com>, covering the TPF Vocation subtree); an `atelic` profile (<matt@atelic.me>) is in flight. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in homebase `CLAUDE.md` (Account Profiles) and `~/Eudaimonia/Admin/Tools/gws.md`.
+The `gws` CLI switches identity per directory subtree via `.account` marker files. Active profiles: `personal` (<mattforni@gmail.com>, the ambient default) and `tpf` (The Product Forge, <matt@theproductforge.com>, covering the TPF Vocation subtree); an `atelic` profile (<matt@atelic.me>) is in flight. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in `~/Eudaimonia/Admin/Tools/gws.md`.
 
 ### Google Workspace (reading links, Docs, Gmail)
 
-Always read Google Workspace links (Docs/Sheets/Slides/Drive) and send/reply/forward/draft Gmail through the `gws` CLI, never WebFetch or the Gmail MCP. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc from markdown recipe, reply targeting, self reply handling, and the gotchas live in `~/Eudaimonia/Admin/Tools/gws.md`.
+Read Google Workspace links (Docs/Sheets/Slides/Drive) and work Gmail through the `gws` CLI, never WebFetch or the Gmail MCP; which identity sends is Email Preferences. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc from markdown recipe, reply targeting, self reply handling, and the gotchas live in `~/Eudaimonia/Admin/Tools/gws.md`.
 
 ## Code Review
 
 - **`coderabbit review --base <base> --committed --agent` is the review gate, every repo, before a merge** (2026-08-29). Never wait on the PR bot: on a private repo it summarizes and never reviews. It stays a public repo fallback. Depth: `~/Eudaimonia/Admin/Tools/coderabbit.md`.
-- **Triage findings, do not comply blindly.** Fix genuine bugs, adopt good suggestions, reason-decline false positives and anything conflicting with an explicit directive or tested behavior. Address only NEW or UNRESOLVED comments; ask if unclear which are new. Converge rather than loop. The merge-gate hook and `sdlc:land` enforce it; per repo setup lives in that repo's CLAUDE.md.
+- **Triage findings, do not comply blindly.** Fix genuine bugs, adopt good suggestions, decline false positives with a reason and anything conflicting with an explicit directive or tested behavior. Address only NEW or UNRESOLVED comments; ask if unclear which are new. Converge rather than loop. The merge gate hook and `sdlc:land` enforce it; per repo setup lives in that repo's CLAUDE.md.
 
 ## MCP Servers
 
@@ -112,12 +111,12 @@ When creating new Linear tickets:
 - Always set status to **Todo**
 - Always assign to **Forni** (me)
 - Always place the issue in a cycle, and **never set a due date**. Cycles are the whole schedule (2026-08-21). New issues default into the active cycle, so anything meant for later needs its cycle set explicitly at create time
-- No emojis in issue titles or bodies, plain Title Case only (2026-08-18). Emoji led titles are a Todoist convention; the team's cognitive load labels keep their emoji names
+- No emojis in issue titles or bodies (2026-08-18); the team's cognitive load labels keep their emoji names
 
 ## Email Preferences
 
 - **Outbound email to a prospective or current client requires explicit approval of the final email, every time.** Show the exact artifact (to, subject, full body) and get a yes on that artifact in that moment. "Send it," "go ahead," or "fire away" is not approval of an unseen send, and can mean "schedule it"; when wording and context disagree, stop and ask. Codified 2026-07-20.
-- **A send never carries a fact Claude inferred that Forni has not seen.** "Go ahead and send" authorizes the content Forni specified, not details filled in while drafting. Verify every inferred specific against the record that creates it, or show the draft first. Codified 2026-08-15.
+- **A send never carries a fact Claude inferred that Forni has not seen.** "Go ahead and send" authorizes the content Forni specified, not details filled in while drafting. Verify each inferred specific per Problem Solving, or show the draft first. Codified 2026-08-15.
 - **Two sender identities, routed by audience.** Email to another human goes through gws as Forni. Email whose recipient is Forni himself (agent reports, review docs, session artifacts) sends from `Claude <claude@atelic.me>` via Resend (`~/Eudaimonia/Admin/Tools/resend.md`).
 - Tone, greetings, sign off, threading and attachment mechanics, scheduling links, the draft grading rubric, and the phone contact preferences to include on vendor forms live in `~/Eudaimonia/Admin/Tools/email.md`.
 
@@ -135,7 +134,7 @@ Todoist conventions (follow ups land on the next planning Monday, short Title Ca
 
 ## Code Project Conventions
 
-- Root level directories should be 3-4 characters that clearly identify contents (e.g., `src/`, `docs/`, `adr/`, `lib/`)
+- Root level directories should be 3 to 4 characters that clearly identify contents (e.g., `src/`, `docs/`, `adr/`, `lib/`)
 
 ## Growth Engineering
 
@@ -143,12 +142,12 @@ Any SEO, GEO, or growth engineering work, Atelic client or personal, follows `~/
 
 ## Problem Solving Approach
 
-- Always be problem-first. Understand the problem deeply before jumping to solutions or tooling. Technology serves the problem, not the other way around.
+- Always be problem first. Understand the problem deeply before jumping to solutions or tooling. Technology serves the problem, not the other way around.
 - **Read the instrument that creates a fact, not the documents that reference it.** Deeds, executed agreements, and declarations pages define; commitments, settlement statements, quotes, and summaries reference, and they abbreviate. When a value has to be exact (a legal name, a titling string, a term), read the creating instrument before asserting it, and name the document you read. Codified 2026-08-11.
 
 ## Research Documentation
 
-- Research outputs should be one-pagers. Brevity is the soul of wit.
+- Research outputs should be one pagers. Brevity is the soul of wit.
 - Capture the essential insights, not everything learned along the way.
 - If it can't fit on one page, it needs to be split into multiple focused topics.
 
@@ -159,4 +158,4 @@ Any SEO, GEO, or growth engineering work, Atelic client or personal, follows `~/
 
 # Compact instructions
 
-When compacting, preserve in full: the current task and the pick or decision it serves; every open question Forni has not answered; live worktree paths and branch names; open PR numbers and their state; background agent ids still running; the file paths edited this session; and the session's verified facts (versions, sizes, ids) with their numbers. Drop tool output, exploration that led nowhere, and anything already landed and summarized. The summary itself keeps the response contract (no dashes of any kind, one self contained question at a time, iterative decisions) and the no hard coded username rule.
+When compacting, preserve in full: the current task and the pick or decision it serves; every open question Forni has not answered; live worktree paths and branch names; open PR numbers and their state; background agent ids still running; the file paths edited this session; and the session's verified facts (versions, sizes, ids) with their numbers. Drop tool output, exploration that led nowhere, and anything already landed and summarized. The summary itself keeps the response contract and the no hard coded username rule.

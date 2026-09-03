@@ -71,6 +71,10 @@ DEPLOY_TABLE=(
   "link|.claude/skills"
   "link|.claude/statusline.sh"
   "link|.claude/workflows"
+  # User level rules. Sourced from a directory of its own because .claude/rules
+  # is this repo's project scoped rules with homebase relative globs; linking
+  # that into ~/.claude/rules would fire them in every repo on the machine.
+  "link|.claude/user-rules|$HOME/.claude/rules"
   # Claude Code adds its own keys here (theme, language, and whatever it
   # gains next), so the repo owns only the keys it declares.
   "merge|.claude/settings.json"
