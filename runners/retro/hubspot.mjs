@@ -6,7 +6,14 @@
 // wrong quietly, and the retro would read as authoritative anyway. The model's
 // job is the sentence underneath; this file's job is the numbers.
 //
-// Usage: node hubspot.mjs <monday> <next-monday> > atelic.json
+// Usage: node hubspot.mjs <after-epoch> <before-epoch> > atelic.json
+//
+// The two bounds are Denver midnight on Monday and on the next Monday as Unix
+// seconds, computed once by entrypoint.sh and shared with the Strava pull, so
+// the Atelic week and the movement week close at the same instant. HubSpot
+// filters on hs_timestamp take epoch milliseconds; a date string with a Z
+// suffix would put the boundary at UTC midnight, six hours early in Denver, and
+// hand Sunday evening's sends to the following week.
 //
 // Credentials: HUBSPOT_SERVICE_KEY, which Cloud Run injects from the vault.
 // Without it, and only then, this falls back to shelling out to the `hs` shim,
@@ -14,11 +21,26 @@
 
 import { execFileSync } from "node:child_process";
 
-const [MONDAY, NEXT_MONDAY] = process.argv.slice(2);
-if (!MONDAY || !NEXT_MONDAY) {
-    console.error("usage: node hubspot.mjs <YYYY-MM-DD monday> <YYYY-MM-DD next monday>");
+const [AFTER_EPOCH, BEFORE_EPOCH] = process.argv.slice(2).map(Number);
+if (!Number.isInteger(AFTER_EPOCH) || !Number.isInteger(BEFORE_EPOCH) || AFTER_EPOCH >= BEFORE_EPOCH) {
+    console.error("usage: node hubspot.mjs <after-epoch-seconds> <before-epoch-seconds>");
     process.exit(2);
 }
+const AFTER_MS = String(AFTER_EPOCH * 1000);
+const BEFORE_MS = String(BEFORE_EPOCH * 1000);
+
+// How far back the prior history reaches. HubSpot search returns at most
+// 10,000 results for any one query, so an unbounded filter with no sort would
+// drop an arbitrary slice once the timeline grew past that; bounding it and
+// sorting newest first means the slice that falls off is the oldest.
+const LOOKBACK_DAYS = Number(process.env.ATELIC_LOOKBACK_DAYS || 365);
+const LOOKBACK_MS = String((AFTER_EPOCH - LOOKBACK_DAYS * 86400) * 1000);
+
+// hs_timestamp comes back as a UTC instant; the date a send belongs to is the
+// Denver one, for the same reason the bounds are.
+const denverDate = (ts) => ts
+    ? new Date(ts).toLocaleDateString("en-CA", { timeZone: "America/Denver" })
+    : "";
 
 const KEY = process.env.HUBSPOT_SERVICE_KEY || "";
 const ACCOUNT = process.env.HS_ACCOUNT || "hs-pat-atelic";
@@ -104,8 +126,8 @@ const assoc = async (from, to, ids) => {
 
 const rawWeek = await searchAll("emails", {
     filterGroups: [{ filters: [
-        { propertyName: "hs_timestamp", operator: "GTE", value: `${MONDAY}T00:00:00Z` },
-        { propertyName: "hs_timestamp", operator: "LT", value: `${NEXT_MONDAY}T00:00:00Z` },
+        { propertyName: "hs_timestamp", operator: "GTE", value: AFTER_MS },
+        { propertyName: "hs_timestamp", operator: "LT", value: BEFORE_MS },
     ] }],
     properties: EMAIL_PROPS,
     sorts: [{ propertyName: "hs_timestamp", direction: "ASCENDING" }],
@@ -116,9 +138,11 @@ const rawWeek = await searchAll("emails", {
 // Monday and misclassify exactly the case it exists to catch.
 const rawPrior = await searchAll("emails", {
     filterGroups: [{ filters: [
-        { propertyName: "hs_timestamp", operator: "LT", value: `${MONDAY}T00:00:00Z` },
+        { propertyName: "hs_timestamp", operator: "GTE", value: LOOKBACK_MS },
+        { propertyName: "hs_timestamp", operator: "LT", value: AFTER_MS },
     ] }],
     properties: EMAIL_PROPS,
+    sorts: [{ propertyName: "hs_timestamp", direction: "DESCENDING" }],
 });
 
 const week = rawWeek.filter((e) => !isNoise(e.properties));
@@ -206,15 +230,15 @@ for (const e of week) {
             const t = touchIndex.get(key);
             t.clicks = Math.max(t.clicks, Number(p.hs_email_click_count || 0));
             t.tracked = t.tracked || tracked;
-            r.lastSend = (p.hs_timestamp || "").slice(0, 10) > r.lastSend
-                ? (p.hs_timestamp || "").slice(0, 10) : r.lastSend;
+            r.lastSend = denverDate(p.hs_timestamp) > r.lastSend
+                ? denverDate(p.hs_timestamp) : r.lastSend;
             continue;
         }
         const t = { clicks: Number(p.hs_email_click_count || 0), tracked };
         touchIndex.set(key, t);
         r.touchRefs.push(t);
         r.sends += 1;
-        r.lastSend = (p.hs_timestamp || "").slice(0, 10);
+        r.lastSend = denverDate(p.hs_timestamp);
 
         // Reply is tested first: a message into a thread they have answered is
         // a reply even when it is this company's first send of the week, which
