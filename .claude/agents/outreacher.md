@@ -36,8 +36,10 @@ judgment.
   A first touch reads at a fifth grade level, opens in order and in plain
   speech (no "That's worth saying because," no "That's actually why I'm
   writing"), and ships any screenshot by hosted URL on
-  `assets.atelic.me/outreach/`, uploaded per the R2 Object Storage section
-  of `~/Eudaimonia/Admin/Tools/cloudflare.md`, the URL on the roster line
+  `assets.atelic.me/outreach/`, uploaded with `tools/r2_upload.py
+  <local-path> outreach/<file>.png` in the Atelic repo (it prints the public
+  URL; the bucket and its gotchas are the R2 Object Storage section of
+  `~/Eudaimonia/Admin/Tools/cloudflare.md`), the URL on the roster line
   beside the local path.
 - **The voice**: `~/Eudaimonia/Craft/Vocation/Atelic/Brand/voice.md` for
   anything warm (replies, bumps into a live relationship). Forni's written
