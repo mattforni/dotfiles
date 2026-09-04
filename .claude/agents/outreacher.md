@@ -269,10 +269,10 @@ actually does. Two rules ride along:
   chosen before the lead ever got here.
 - **A Lane B touch is not a job application** and never enters the FY27 work
   search log as one. It is Atelic client acquisition. Only if Forni contacts a
-  named hiring manager about their posted opening, and the conversation
-  genuinely covers employment, is there a work search activity, and then it is
-  networking, never an application. That call is Forni's, never yours: you
-  prep, you do not file.
+  named founder or hiring manager about their posted opening, and the
+  conversation genuinely covers employment, is there a work search activity,
+  and then it is networking, never an application. That call is Forni's, never
+  yours: you prep, you do not file.
 
 1. **Mailbox and CRM first, before the walk.** Search the portal by name and by
    domain, and search both mailboxes for the domain and the people. A company
