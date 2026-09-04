@@ -2,7 +2,7 @@
 
 ## About This File
 
-This is "GC" (Global Claude): the user's private global instructions for every project. When Forni says "GC", he means this file. It loads on every session everywhere, so it holds behavioral conventions and pointers; depth lives one hop away, in `~/Eudaimonia/Admin/Tools/<tool>.md` for a tool, in a repo's CLAUDE.md or `.claude/rules/` for a repo.
+This is "GC" (Global Claude), and when Forni says "GC" he means this file: his private global instructions, loaded in every session everywhere. It holds behavioral conventions and pointers; depth lives one hop away, in `~/Eudaimonia/Admin/Tools/<tool>.md` for a tool, in a repo's CLAUDE.md or `.claude/rules/` for a repo.
 
 ## Koans
 
@@ -67,7 +67,7 @@ The stores above are the layers of the context architecture (GC, `~/CLAUDE.md`, 
 
 - **The placement test is `~/.claude/rules/context-placement.md`** (homebase `.claude/user-rules/`), loaded whenever a context file is open: route a rule by its trigger, admit it to an always loaded file only through the three tests there, and treat a contradiction between two rules, not file length, as the expensive failure. Adopted 2026-09-03 (ATE-472).
 - **Placement and enforcement beat volume.** A rule belongs at the single layer that owns it, stated once, with other layers pointing to it rather than repeating it. Prose is a request; a flow skill step is stronger; a hook is the only guarantee, so load bearing gates are enforced at the point of use.
-- **Trim before adding.** A rule that keeps getting dropped gets scoped or enforced, not restated louder. Homebase's `bin/lint/context-size` ratchet holds GC and `~/CLAUDE.md` at their last measured size; every line admitted to either is paid for with a cut.
+- **Trim before adding.** A rule that keeps getting dropped gets scoped or enforced, not restated louder, and a fact that stops being true gets deleted, never a dated paragraph layered over it saying so. Every line admitted to GC or `~/CLAUDE.md` is paid for with a cut; homebase's `bin/lint/context-size` holds both at their last measured size.
 
 When context sprawls or duplicates, run `assist:groom-context` (also run monthly via `assist:reflect`).
 
@@ -83,11 +83,11 @@ A tool doc's named method wins. Absent one, connect to outside apps by an offici
 
 ### gws Profiles
 
-The `gws` CLI switches identity per directory subtree via `.account` marker files. Active profiles: `personal` (<mattforni@gmail.com>, the ambient default) and `tpf` (The Product Forge, <matt@theproductforge.com>, covering the TPF Vocation subtree); an `atelic` profile (<matt@atelic.me>) is in flight. Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in `~/Eudaimonia/Admin/Tools/gws.md`.
+The `gws` CLI switches identity per directory subtree via `.account` marker files. Profiles: `personal` (<mattforni@gmail.com>, the ambient default), `atelic` (<matt@atelic.me>, the work identity), and `tpf` (<matt@theproductforge.com>, the TPF Vocation subtree). Use `gws-whoami` to confirm the active account before sending mail or modifying calendars; when ambiguous, ask. Mechanics live in `~/Eudaimonia/Admin/Tools/gws.md`.
 
 ### Google Workspace (reading links, Docs, Gmail)
 
-Read Google Workspace links (Docs/Sheets/Slides/Drive) and work Gmail through the `gws` CLI, never WebFetch or the Gmail MCP; which identity sends is Email Preferences. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc from markdown recipe, reply targeting, self reply handling, and the gotchas live in `~/Eudaimonia/Admin/Tools/gws.md`.
+Read Google Workspace links (Docs/Sheets/Slides/Drive) and work Gmail through the `gws` CLI, never WebFetch or the Gmail MCP; which identity sends is Email Preferences. WebFetch 401s on authenticated Google URLs; MCP `create_draft` loses real threading. The command tables, the Doc from markdown recipe, reply targeting, self reply handling, and the gotchas live in that same doc.
 
 ## Code Review
 
