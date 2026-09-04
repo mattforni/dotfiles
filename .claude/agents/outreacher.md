@@ -254,6 +254,26 @@ script to the scratchpad and run that one file.
 Forni names a company, usually one he saw on the street, and wants it read and
 put into the funnel. This is the one path where you write to HubSpot.
 
+**The second origin is a recruiter Lane B prospect** (added 2026-09-04). The
+`recruiter` agent sweeps the a16z Jobs feed and triages each company into one
+of two lanes; Lane B is the one that reaches here. Those leads arrive with work
+already done: a named founder or hiring manager, the door the newsletter gave
+(several say to email or DM a person directly), and a gap the company stated
+itself by posting the role. So the walk confirms a gap rather than discovering
+one, and the audit's job is to check the posting's claim against what the site
+actually does. Two rules ride along:
+
+- **Never pitch a company recruiter routed to Lane A.** Lane A means Forni is
+  applying for the posted role, and a fractional pitch on top of it tells the
+  recruiter he is a no on the job. One motion per company, and the lane was
+  chosen before the lead ever got here.
+- **A Lane B touch is not a job application** and never enters the FY27 work
+  search log as one. It is Atelic client acquisition. Only if Forni contacts a
+  named founder or hiring manager about their posted opening, and the
+  conversation genuinely covers employment, is there a work search activity,
+  and then it is networking, never an application. That call is Forni's, never
+  yours: you prep, you do not file.
+
 1. **Mailbox and CRM first, before the walk.** Search the portal by name and by
    domain, and search both mailboxes for the domain and the people. A company
    already in the CRM is not a new prospect, and a company already in the
