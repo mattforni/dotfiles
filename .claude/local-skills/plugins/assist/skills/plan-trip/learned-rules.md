@@ -28,6 +28,10 @@ Seeded from two runs: **2026 Summer Camp** (Buena Vista lodge, headcount 15) and
 
 - **Booking.com is closed to headless browsers; do not spend a fleet agent on it.** It detects automation, strips dated search params, and serves empty landing pages. Google Hotels with dates set is the workable OTA comparison, and its "Stay total" display is genuinely all in. *Why: on the Aspen run one fleet agent burned 20 minutes against Booking's walls and returned nothing, while the Google Hotels agent came back with checkout grade totals for three towns.*
 
+- **On a holiday weekend, search for first come pools, not open sites.** By the day before, every reservable site within two hours is gone; the decision is made by counting `Not Reservable` sites per campground in the recreation.gov data and picking the largest cluster with a fallback chain a few minutes apart. *Why: the 2026-09-05 Labor Day search found zero reservable sites across 30 campgrounds, and Olive Ridge plus Meeker Park Overflow, 57 first come sites five minutes apart, beat every drive up option.*
+
+- **Campground availability runs by the mechanics in `Adventure/CLAUDE.md`, and a captcha wall ends the check.** The rec.gov API, the cpwshop city search, and the ResNexus captcha are recorded there; when an engine puts up a captcha, report it and hand Forni the phone number. *Why: same run; solving a captcha from an agent session is disguise, which the stealth rule below already forbids.*
+
 - **Offseason shoulder weekends cut both ways.** Rates sit at the yearly low, but properties close for the season, amenities shut down, and inventory gets quirky (St. Moritz sells no dorm beds online in offseason). Confirm a property is open for the dates rather than assume it, and treat a budget lodge that is open as a find. *Why: the Aspen closure wave starts about Oct 20, so the wedding weekend was the last open weekend of fall, which is exactly why a $195 a night room existed.*
 
 ## Verifying
