@@ -33,7 +33,7 @@ if printf '%s' "$USER_PROMPT" | grep -qiE "$SIGNOFF_REGEX"; then
   jq -n '{
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: "The user appears to be winding down the session. Run /assist:wrap now (do not merely propose it) to surface any loose ends (git/PR state, external commitments, codify candidates), offload anything pending, and hand over the /rename and /compact lines. Wrap is the bookend to /assist:mise."
+      additionalContext: "The user appears to be winding down the session. Run /assist:wrap now (do not merely propose it). The skill surfaces loose ends (git/PR state, external commitments, codify candidates), triages what is pending, and decides on its own gates whether the session is ready to hand off. Wrap is the bookend to /assist:mise."
     }
   }'
 fi
