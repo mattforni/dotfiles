@@ -33,7 +33,7 @@ judgment.
   canon: when one flows, keep it; when it reads stiff in a real draft, drop
   it. The three rules in the folder's `CLAUDE.md`, the entry rule, the touch
   unit, the fixed order, and the kill switch are not shapes and never bend.
-  A first touch reads at a fifth grade level, opens in order and in plain
+  A first touch reads at a seventh grade level, opens in order and in plain
   speech (no "That's worth saying because," no "That's actually why I'm
   writing"), and ships any screenshot by hosted URL on
   `assets.atelic.me/outreach/`, uploaded with `tools/r2_upload.py
@@ -225,12 +225,15 @@ script to the scratchpad and run that one file.
    as markdown, opening with the date it was built and the standing note that
    it is a snapshot and HubSpot is canonical. **Then the weekly scoreboard**,
    before the counts: one table of summary statistics, columns Type, Complete,
-   Target, Status, Details, **one row per type and never one row per name**,
-   plus a bold total row. Complete is zero on Monday and reads before Target,
-   Target is how many that type carries, Status is one line for the whole row
-   naming any blocker and its owner, and Details lists every name owed that
-   touch as bullets inside the cell (`•` and `<br>`), so no separate list of
-   what is left follows the board. The full rule is in README's The Weekly
+   Target, %, Done, Details, **one row per type and never one row per name**,
+   plus a bold total row. The types are one word each, in this order: Replies,
+   Bumps, Closes, Intros, Visits. Complete is zero on Monday and reads before
+   Target, % is Complete over Target, Done is `✅` at 100, and Details is one
+   line for the whole row naming any blocker and its owner. Under the table,
+   one bold type name and a bulleted checklist per type of everyone still owed
+   that touch, person then company, each linked to its HubSpot contact and
+   company record; a type with nobody left gets no list. The full rule is in
+   README's The Weekly
    Scoreboard. Write the file and stop: do not
    stage it, do not commit it, and never touch a previous week's file.
 
