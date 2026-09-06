@@ -2,7 +2,7 @@
 # wrap-reminder.sh
 #
 # UserPromptSubmit hook. When Forni signals that the session is ending,
-# inject a brief reminder for Claude to propose /assist:wrap before exit.
+# inject a brief reminder for Claude to run /assist:wrap before exit.
 #
 # Wrap is the bookend to /assist:mise. It catches loose ends so nothing
 # leaves the session "in your head."
@@ -33,7 +33,7 @@ if printf '%s' "$USER_PROMPT" | grep -qiE "$SIGNOFF_REGEX"; then
   jq -n '{
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: "The user appears to be winding down the session. Before they exit, propose /assist:wrap to surface any loose ends (git/PR state, external commitments, codify candidates) and offload anything pending into Todoist. Wrap is the bookend to /assist:mise."
+      additionalContext: "The user appears to be winding down the session. Run /assist:wrap now (do not merely propose it). The skill surfaces loose ends (git/PR state, external commitments, codify candidates), triages what is pending, and decides on its own gates whether the session is ready to hand off. Wrap is the bookend to /assist:mise."
     }
   }'
 fi
