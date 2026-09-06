@@ -224,11 +224,14 @@ script to the scratchpad and run that one file.
 6. **Write the roster** to `Outreach/<ISO week>-roster.md` in the Atelic repo,
    as markdown, opening with the date it was built and the standing note that
    it is a snapshot and HubSpot is canonical. **Then the weekly scoreboard**,
-   before the counts: one table of summary statistics, columns Type, Target,
-   Complete, Status, **one row per type and never one row per name**, plus a
-   bold total row. Target is how many that type carries, Complete is zero on
-   Monday, and Status is one line for the whole row naming any blocker and its
-   owner. The full rule is in README's The Weekly Scoreboard. Write the file and stop: do not
+   before the counts: one table of summary statistics, columns Type, Complete,
+   Target, Status, Details, **one row per type and never one row per name**,
+   plus a bold total row. Complete is zero on Monday and reads before Target,
+   Target is how many that type carries, Status is one line for the whole row
+   naming any blocker and its owner, and Details lists every name owed that
+   touch as bullets inside the cell (`•` and `<br>`), so no separate list of
+   what is left follows the board. The full rule is in README's The Weekly
+   Scoreboard. Write the file and stop: do not
    stage it, do not commit it, and never touch a previous week's file.
 
    **If this week's file already exists, the week is prepped and you do not
