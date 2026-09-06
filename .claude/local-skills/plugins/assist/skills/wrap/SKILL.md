@@ -174,10 +174,13 @@ The session is ready to hand off only when every condition below holds:
 - **No PR the user authored this session is still open.** An open PR is not hand off state. Watch the PR through review (CodeRabbit, Gemini, human reviewers), chain to `/sdlc:iterate` when feedback lands, and to `/sdlc:complete` once merged.
 - **No ticket whose work merged this session is still open.** Closed in Step 2. A ticket left open behind a merged PR is the loose end the user keeps having to point out.
 
-When all conditions are met, end with the two built in commands Forni's ritual finishes on, in this order and ready to paste, each on its own line in a code block:
+When all conditions are met, end with the two built in commands Forni's ritual finishes on, in this order and ready to paste, **each in its own code block**. One block is one copy is one command; two lines in one block get pasted together and `/rename` swallows the second line into the name (it happened 2026-09-06, naming the session "... /compact").
 
 ```text
 /rename <the Step 8 name>
+```
+
+```text
 /compact
 ```
 
@@ -200,35 +203,71 @@ When a PR is still open, end instead with the current state of the PR and the ne
 
 ## Output Shape
 
+The wrap is a one pager Forni scans, not a log he reads: an H1 that is the session name, then H2 sections in this order, prose kept to a few sentences, tables where rows are what he scans, and a link on every artifact he might click through to (PRs, tickets, tasks, files). Shaped with him 2026-09-06 after the earlier text dump proved too much to read.
+
+Rendering rules, because his renderer collapses markdown whitespace: a table that follows a paragraph gets a `&nbsp;` line before it, and a `&nbsp;` line after it when a paragraph follows; a table directly under a heading gets neither. Emoji states (✅, ❌) over words in state columns. Repos the session did not touch are not listed.
+
+````markdown
+# NEO Loan Lock
+
+## TL;DR
+
+Two or three sentences on what the session did, scannable. Then the repo table: one row per PR, and one row per touched repo that had no PR.
+
+&nbsp;
+
+| Repo | PR | Merged | Deployed |
+| -- | -- | -- | -- |
+| pinole-api | [#314](https://github.com/mattforni/pinole-api/pull/314) components and serving weight | ✅ | ✅ |
+| homebase | [#234](https://github.com/mattforni/homebase/pull/234) wrap hand off | ✅ | n/a |
+
+&nbsp;
+
+One line on repo state: clean on main, anything unpushed, worktrees removed.
+
+### Data
+
+Optional H3 under the TL;DR, only when the session changed a data layer (a production repoint, a backfill, a compare). Say what moved and how it was verified.
+
+## Outstanding
+
+What is left open and why, in a few sentences: the deferrals, the blockers. Then the tracker table of anything new this session created, linked; "None" when nothing was.
+
+&nbsp;
+
+| Tracker | New item |
+| -- | -- |
+| Linear | [ATE-540](https://linear.app/atelic/issue/ATE-540) Curate the remaining per item weights |
+| Todoist | None |
+
+## Codified
+
+### Docs
+
+| Repo | File | What |
+| -- | -- | -- |
+| pinole-api | [CLAUDE.md](api/CLAUDE.md) | The component rule and the derived serving weight |
+
+### Memories
+
+- [Railway deploy old container window](/path/to/memory/railway-deploy-old-container-window.md)
+
+## Close Out
+
+| Tracker | Item | Done |
+| -- | -- | -- |
+| Linear | [ATE-527](https://linear.app/atelic/issue/ATE-527) Let a recipe be an ingredient of another recipe | ✅ |
+
 ```text
-Wrap complete ✓
-
-Git / PRs:
-  Eudaimonia (main): clean
-  homebase (assist-wrap): 3 unpushed commits → pushed
-
-Tickets:
-  ATE-464 → Done (PRs #168, #169 merged; closing comment posted)
-  ATE-470 → left open, schema migration still pending
-
-External commitments:
-  ⚠️ LBP waive form (sign today, due Monday)
-  🟡 Jeff CPA follow-up (slid from 5/14)
-  ✅ Bethany (Land Title) — awaiting her reply
-
-Codify: nothing new this session
-
-Logged to Todoist:
-  📝 Sign LBP form (today, 30m)
-  📞 Call Jeff re RYLLC 2024 (next Sunday, 30m)
-
-Summary: Locked the NEO loan at 6.375%, filed HOA Status Letter and Loan Estimate, shipped PRs #43 and #44. Two follow-ups in Todoist for Sunday planning.
-
-Session name: NEO Loan Lock
-
 /rename NEO Loan Lock
+```
+
+```text
 /compact
 ```
+````
+
+The Outstanding and Close Out tables carry every tracker the session wrote to; a section whose content is genuinely empty still appears with "None", so the absence is a statement rather than an omission. The Data section is the one optional piece.
 
 ## Anti-patterns
 
@@ -237,6 +276,8 @@ Session name: NEO Loan Lock
 - Do not wait to be asked to wrap once the terminal state is visible, and do not end a session by suggesting Forni run it.
 - Do not claim to have renamed or compacted. Hand the two lines over; the user pastes them.
 - Do not skip the summary even when there is "nothing to summarize." It is the re-entry breadcrumb.
+- Do not emit the wrap as a plain text block or a flat list. It is the one pager above, with links.
+- Do not put `/rename` and `/compact` in one code block.
 - Do not force codify. If the session did not produce a durable rule, say so and move on.
 - Do not maintain a fixed allowlist of repos. Repos to scan = repos touched in this session.
 - Do not hand off while a PR the user authored this session is still open. Watch it through review and merge before emitting the two lines.
