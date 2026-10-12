@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# The Pipeline Runner. Fired by hand before the Tuesday desk block (and by
-# Cloud Scheduler once the cost earns a timer), so the week's outreach roster
+# The Pipeline Runner. Fired by Cloud Scheduler on Sunday night (and by hand), so the week's outreach roster
 # is rebuilt and drafted before the block opens.
 #
 # Shape, the recruiter's (ATE-543): the repos first (the checkouts already
@@ -74,7 +73,7 @@
 #   EUDY                      the Eudaimonia checkout; defaults to $HOME/Eudaimonia
 #   ATELIC                    the Atelic checkout; defaults to its place inside Eudy
 #   ONE_PAGER_ID              the One Pager's Google Doc id
-#   WEEK                      optional YYYY-Www override; default is this week
+#   WEEK                      optional YYYY-Www override; default is the week tomorrow belongs to
 #   DRY_RUN                   1 renders the email and skips the send, and
 #                             fires no routine run (it prints what would fire)
 #   OUTREACH_ROUTINE_ID       the Outreach routine's id, the <routine id> in
@@ -110,7 +109,7 @@ if [[ -z "${RUNNER_LIB:-}" ]]; then
     exit 1
 fi
 
-runner_init plumber "Pipeline" current
+runner_init plumber "Pipeline" upcoming
 
 required=(CLAUDE_CODE_OAUTH_TOKEN)
 [[ "$DRY_RUN" == "1" ]] || required+=(RESEND_API_KEY REPORT_RECIPIENT)

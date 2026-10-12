@@ -3,7 +3,7 @@
 #
 # Usage: run-local <runner-name> [--week YYYY-Www] [--reuse] [--send] [--no-open] [--host]
 #
-#   --week    draft a past or future week instead of the current one
+#   --week    draft another week instead of the runner's own default week
 #   --reuse   skip the API pulls and reuse the JSON already in out/, which is
 #             the loop to use while iterating on the prompt
 #   --send    actually deliver the email, off by default
