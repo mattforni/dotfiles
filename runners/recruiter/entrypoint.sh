@@ -133,8 +133,9 @@ eudy_ready() {
 # ---------- the pulls ----------
 # Every source the recruiter's Sources section names as a fetch is pulled here
 # with curl before the model starts, so the sweep reads files: the Getro tier
-# (seven boards, six software title queries each), Tech Jobs for Good,
-# Fractional Jobs, and the a16z Jobs feed. text.mjs turns each page into what
+# (eight boards, the software title query set on each), the Built In and
+# Himalayas title searches, Tech Jobs for Good, Fractional Jobs, and the a16z
+# Jobs feed. text.mjs turns each page into what
 # the model actually needs (a board's listings out of its Next.js state, a
 # page as text with its links kept, a feed as one file per issue), and
 # listings.jq folds the Getro pulls into one deduplicated table with deny.txt
@@ -166,6 +167,7 @@ GETRO_BOARDS=(
     "Third Sphere|https://jobs.thirdsphere.com"
     "Energy Impact Partners|https://jobs.energyimpactpartners.com"
     "Prelude Ventures|https://jobs.preludeventures.com"
+    "Fast Forward|https://jobs.ffwd.org"
 )
 # The software title query set (set 2026-09-01). ?q= is a substring match on
 # the title and the board's only working lever; every filter parameter is
@@ -178,6 +180,28 @@ GETRO_QUERIES=(
     "staff platform engineer"
     "site reliability"
     "growth engineer"
+)
+
+# The title searches (added 2026-10-12), where a growth or GTM title actually
+# lives; the climate boards above almost never carry one. Built In is a page
+# per query, name|path and query string. The senior segment is left off the
+# GTM query because those titles are rarely leveled.
+BUILTIN_SEARCHES=(
+    "growth engineer|remote/dev-engineering/senior?search=growth+engineer&country=USA&allLocations=true"
+    "gtm engineer|remote/dev-engineering?search=gtm+engineer&country=USA&allLocations=true"
+    "site reliability engineer|remote/dev-engineering/senior?search=site+reliability+engineer&country=USA&allLocations=true"
+    "staff software engineer|remote/dev-engineering/senior?search=staff+software+engineer&country=USA&allLocations=true"
+    "platform engineer|remote/dev-engineering/senior?search=platform+engineer&country=USA&allLocations=true"
+    "denver software engineer|dev-engineering/senior?search=software+engineer&city=Denver&state=Colorado&country=USA"
+)
+# Himalayas is a JSON search API, query|seniority (empty for none). GTM titles
+# are mostly tagged mid level there, so that query carries no seniority.
+HIMALAYAS_SEARCHES=(
+    "growth engineer|Senior"
+    "gtm engineer|"
+    "staff software engineer|Senior"
+    "site reliability engineer|Senior"
+    "platform engineer|Senior"
 )
 
 # fetch <url> <out> <stderr-file>: prints the HTTP status, 000 when curl
@@ -227,6 +251,33 @@ pull_page() {
     fi
 }
 
+# pull_himalayas "<query>|<seniority>": one Himalayas search to
+# $PULLS/himalayas-<query>.md as a table of the first page (twenty results),
+# with the total the API reports so a deeper query is visible.
+pull_himalayas() {
+    local query seniority slug json md err code url
+    IFS='|' read -r query seniority <<<"$1"
+    slug="himalayas-${query// /-}"
+    json="$PULLS/$slug.json"; md="$PULLS/$slug.md"; err="$PULLS/$slug.err"
+    url="https://himalayas.app/jobs/api/search?q=${query// /%20}&country=US${seniority:+&seniority=$seniority}"
+    code="$(fetch "$url" "$json" "$err")"
+    if [[ "$code" == "200" ]] && jq -r '
+        def cell: tostring | gsub("[|\\n\\r]"; " ");
+        def list: if type == "array" then map(tostring) | join(", ") else (. // "" | tostring) end;
+        "Total matching: \(.totalCount // "unknown"); shown: \(.jobs | length).", "",
+        "| Title | Company | Seniority | Location | Salary | Published | Posting |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+        (.jobs[] | "| \(.title | cell) | \(.companyName | cell) | \(.seniority | list | cell) | \(.locationRestrictions | list | cell) | \(if .minSalary then "\(.minSalary) to \(.maxSalary // "?") \(.currency // "")" else "not shown" end) | \(try (.pubDate | todate | .[0:10]) catch "unknown") | \(.applicationLink // .guid // "" | cell) |")
+    ' "$json" > "$md.part" 2>>"$err" && mv "$md.part" "$md"; then
+        echo "- Himalayas / $query: pulled from $url; the first page as a table is $md. The posting link is the aggregator's page, so step 3a still chases it to the employer's own ATS." >> "$PULLS_MD"
+        echo "pull: Himalayas / $query: http 200, $(jq -r '.jobs | length' "$json") shown of $(jq -r '.totalCount // "?"' "$json")"
+    else
+        rm -f "$md" "$md.part"
+        echo "- Himalayas / $query: NOT pulled (http $code; $(head -c 160 "$err" | tr '\n' ' ')). Not swept this run; say so under sources." >> "$PULLS_MD"
+        echo "pull: Himalayas / $query: http $code, failed"
+    fi
+}
+
 # pull_feed <title> <url> <name>: an RSS feed to $PULLS/<name>/, one file per
 # issue and an index, newest first.
 pull_feed() {
@@ -268,6 +319,13 @@ pull_sources() {
         echo "Pulled $(date -Iseconds). The Getro tier is already reduced to $LISTINGS_MD (every board and query, deduplicated on job id, the deny list applied; the raw pull records are in $GETRO_DIR). The rest:"
         echo
     } > "$PULLS_MD"
+    local s
+    for s in "${BUILTIN_SEARCHES[@]}"; do
+        pull_page "Built In / ${s%%|*}" "https://builtin.com/jobs/${s#*|}" "builtin-$(tr ' ' '-' <<<"${s%%|*}")"
+    done
+    for s in "${HIMALAYAS_SEARCHES[@]}"; do
+        pull_himalayas "$s"
+    done
     pull_page "Tech Jobs for Good" "https://www.techjobsforgood.com/?remote=Remote&job_function=Software+Engineering" tech-jobs-for-good
     pull_page "Fractional Jobs" "https://www.fractionaljobs.io/" fractional-jobs
     pull_feed "a16z Jobs" "https://a16zjobs.substack.com/feed" a16z
@@ -404,7 +462,7 @@ log_sweep_activity() {
     esac
 
     sources="$(printf '%s\n' "${GETRO_BOARDS[@]}" | cut -d'|' -f1 | paste -sd ',' - | sed 's/,/, /g')"
-    sources="$sources, Tech Jobs for Good, Fractional Jobs, a16z Jobs"
+    sources="$sources, Built In, Himalayas, Tech Jobs for Good, Fractional Jobs, a16z Jobs"
     getro="$(jq -r '"\(.counts.fetches_ok) of \(.counts.fetches) Getro fetches answered"' "$LISTINGS_JSON")"
     swept="$(sed -n 's/^- \(.*\): pulled from.*/\1/p' "$PULLS_MD" | paste -sd ',' - | sed 's/,/, /g')"
     missed="$(sed -n 's/^- \(.*\): NOT pulled.*/\1/p' "$PULLS_MD" | paste -sd ',' - | sed 's/,/, /g')"
