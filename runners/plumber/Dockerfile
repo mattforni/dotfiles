@@ -32,6 +32,15 @@ RUN apt-get update \
 ARG CLAUDE_CODE_VERSION=2.1.247
 RUN npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
 
+# The Atelic repo's markdown gate, pinned the same way, so the entrypoint can
+# lint the roster before it pushes it to main (ATE-652) without fetching the
+# linter on every run. Keep it equal to MARKDOWNLINT_VERSION in entrypoint.sh,
+# which is the version a host run fetches through npx.
+ARG MARKDOWNLINT_VERSION=0.23.3
+RUN npm install -g "markdownlint-cli2@${MARKDOWNLINT_VERSION}"
+# One source for the pin: entrypoint.sh reads this instead of its own default.
+ENV MARKDOWNLINT_VERSION=${MARKDOWNLINT_VERSION}
+
 # Non root, its own home so Claude Code has a writable config dir.
 RUN useradd --create-home --shell /bin/bash runner
 USER runner

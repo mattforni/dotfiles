@@ -17,7 +17,9 @@
 # attachment (Forni, 2026-09-29: the roster rode as an attachment for two
 # weeks and never got placed). Without the push key, or when the checkout is
 # this machine's own (a local run), the roster stays in the work directory and
-# rides as the attachment it used to be, so a rehearsal still delivers it.
+# rides as the attachment it used to be, so a rehearsal still delivers it. A
+# roster that fails the Atelic repo's markdownlint takes the same path and is
+# never pushed (ATE-652: the W42 roster turned main red).
 #
 # Then it fires the Outreach cloud routine once for every first touch and bump
 # payload the agent placed, a short pause between fires, so the Tuesday desk
@@ -175,16 +177,57 @@ checkout_ready() {
     CLONED_PATHS="${CLONED_PATHS:-} $path"
 }
 
+# ---------- linting the roster ----------
+# The Atelic repo's own markdown gate, run on the roster before it is placed:
+# its CI runs `npx markdownlint-cli2` at the root with the root
+# .markdownlint-cli2.jsonc, so this is that config held to the one file.
+# --no-globs keeps the config's own `**/*.md` from linting the whole checkout
+# beside it. The image carries the pinned version; a host run without it
+# fetches the same one through npx. The W42 roster went to main with two bare
+# email addresses (MD034) and a street address line opening with `#100`
+# (MD018), and main went red on push (ATE-652). Prints the reason and the
+# first lines of the lint's own output, and returns non zero, on any failure,
+# a lint that could not run included: an unchecked roster never goes to main.
+MARKDOWNLINT_VERSION="${MARKDOWNLINT_VERSION:-0.23.3}"
+lint_roster() {
+    local config="$ATELIC/.markdownlint-cli2.jsonc" out="$WORK/markdownlint.txt" rc lint
+    if [[ ! -f "$config" ]]; then
+        echo "roster: markdownlint could not run: no .markdownlint-cli2.jsonc at $ATELIC"
+        return 1
+    fi
+    if command -v markdownlint-cli2 >/dev/null 2>&1; then lint=(markdownlint-cli2)
+    else lint=(npx --yes "markdownlint-cli2@$MARKDOWNLINT_VERSION"); fi
+    timeout 3m "${lint[@]}" --no-globs --config "$config" "$ROSTER_MD" >"$out" 2>&1
+    rc=$?
+    (( rc == 0 )) && { echo "roster: markdownlint clean"; return 0; }
+    # The findings are the lines naming a rule; when there are none the lint
+    # itself failed, and its own last lines say why.
+    local first
+    first="$(grep -E 'MD[0-9]{3}' "$out" | head -n 5)"
+    [[ -n "$first" ]] || first="$(tail -n 5 "$out")"
+    # Only a lint that ran and found something marks the file as the problem.
+    if (( rc == 1 )); then
+        echo "roster: markdownlint failed, so the roster is not placed on main:"
+        ROSTER_LINT_FAILED=1
+    else
+        echo "roster: markdownlint could not run (exit $rc), so the roster is not placed on main:"
+    fi
+    printf '%s\n' "$first" | sed 's/^/  /'
+    return 1
+}
+
 # ---------- placing the roster ----------
 # Commits the built roster into the Atelic checkout as Outreach/$WEEK-roster.md
 # and pushes it to main over the write capable deploy key, then names the
 # file's URL in ROSTER_URL for the report. Prose lands direct to main in that
-# repo by its own rules, and markdownlint runs on the push as an alarm, so a
-# roster the agent wrote badly shows up red there rather than blocking the
-# report. Returns non zero, with the reason on stdout, when the roster could
-# not be placed; the caller then falls back to attaching it.
+# repo by its own rules, and its markdownlint runs on the push only as an
+# alarm, so the roster is linted here first (lint_roster) and a roster that
+# fails is never pushed. Returns non zero, with the reason on stdout, when the
+# roster could not be placed; the caller then falls back to attaching it.
 place_roster() {
     local keyfile="$HOME/.ssh/atelic_push_key" target="$ATELIC/Outreach/$WEEK-roster.md" ssh_cmd
+    # First, on every run, so a local rehearsal reads the verdict too.
+    lint_roster || return 1
     if [[ -z "${ATELIC_PUSH_KEY:-}" ]]; then
         echo "roster: no ATELIC_PUSH_KEY in the environment; the roster stays in $WORK"
         return 1
@@ -647,6 +690,7 @@ echo "roster: $(wc -w < "$ROSTER_MD" | tr -d ' ') words in $ROSTER_MD"
 # The roster goes into the repo and the mail links it; only when it could not
 # be placed does it ride as an attachment, so the week is never lost.
 ROSTER_URL=""
+ROSTER_LINT_FAILED=0
 if place_roster; then
     if ! jq --arg url "$ROSTER_URL" '. + {roster_url: $url}' "$DRAFT_JSON" > "$WORK/draft-linked.json"; then
         fail_reason="could not add the roster link to the draft"
@@ -656,6 +700,14 @@ if place_roster; then
 else
     ATTACHMENT="$ROSTER_MD"
     echo "roster: riding as the attachment"
+    # A lint failure is the one placement failure the file itself has to be
+    # fixed for, so the mail says so under Left for You; the findings are in
+    # the log beside the push failures.
+    if [[ "$ROSTER_LINT_FAILED" == "1" ]] \
+        && jq '.flags = (.flags // []) + [{lead: "The roster failed markdownlint, so it rides as the attachment; fix it before placing it in Outreach/."}]' \
+            "$DRAFT_JSON" > "$WORK/draft-flagged.json"; then
+        mv "$WORK/draft-flagged.json" "$DRAFT_JSON"
+    fi
 fi
 
 # The roster is placed (or attached) first, so a fire never points at a week

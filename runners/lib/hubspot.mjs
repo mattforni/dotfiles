@@ -11,9 +11,10 @@
 //   node hubspot.mjs sweep <monday YYYY-MM-DD> <out-dir>
 //       The pipeline runner's portal sweep for the week that starts on that
 //       Monday: every funnel company and contact, every logged email with its
-//       opens, every open task, and the recent meetings and notes, with the
-//       day counts and the section each name falls into worked out here.
-//       Writes portal.json and portal.md into the directory.
+//       opens, every logged outbound call, every open task, and the recent
+//       meetings and notes, with the day counts and the section each name
+//       falls into worked out here. Writes portal.json and portal.md into the
+//       directory.
 //
 // The arithmetic lives here rather than in a prompt on purpose. The joins
 // below have traps that a model asked to eyeball a pile of JSON would get
@@ -30,8 +31,9 @@
 // so the same file runs on a laptop where the key lives in the Keychain.
 
 import { execFileSync } from "node:child_process";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, realpathSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 // ---------- shared: the client, the dates, the joins ----------
 
@@ -129,11 +131,20 @@ const searchAll = async (obj, body) => {
     return out;
 };
 
-const batch = async (obj, ids, properties) => {
+// `history`, when given, names properties to read with their history as well,
+// in the same request (HubSpot's batch read takes both lists at once).
+// HubSpot caps a batch read at 100 inputs, and at 50 once any property
+// history is asked for: a page of 100 comes back a 400 VALIDATION_ERROR
+// (found on the first read only sweep of ATE-652).
+const BATCH_INPUTS = 100;
+const HISTORY_BATCH_INPUTS = 50;
+const batch = async (obj, ids, properties, history) => {
     const out = [];
-    for (let i = 0; i < ids.length; i += 100) {
+    const size = history ? HISTORY_BATCH_INPUTS : BATCH_INPUTS;
+    for (let i = 0; i < ids.length; i += size) {
         const page = await api(`crm/v3/objects/${obj}/batch/read`, {
-            properties, inputs: ids.slice(i, i + 100).map((id) => ({ id: String(id) })),
+            properties, ...(history ? { propertiesWithHistory: history } : {}),
+            inputs: ids.slice(i, i + size).map((id) => ({ id: String(id) })),
         });
         out.push(...(page.results || []));
     }
@@ -145,9 +156,9 @@ const batch = async (obj, ids, properties) => {
 // Reason has no entered date the way a lifecycle stage does).
 const batchHistory = async (obj, ids, properties) => {
     const out = [];
-    for (let i = 0; i < ids.length; i += 100) {
+    for (let i = 0; i < ids.length; i += HISTORY_BATCH_INPUTS) {
         const page = await api(`crm/v3/objects/${obj}/batch/read`, {
-            propertiesWithHistory: properties, inputs: ids.slice(i, i + 100).map((id) => ({ id: String(id) })),
+            propertiesWithHistory: properties, inputs: ids.slice(i, i + HISTORY_BATCH_INPUTS).map((id) => ({ id: String(id) })),
         });
         out.push(...(page.results || []));
     }
@@ -640,6 +651,7 @@ const SWEEP_EMAIL_PROPS = [
 const TASK_PROPS = ["hs_task_subject", "hs_task_body", "hs_timestamp", "hs_task_status", "hs_task_type", "hs_task_priority"];
 const MEETING_PROPS = ["hs_meeting_title", "hs_meeting_body", "hs_meeting_start_time", "hs_meeting_outcome", "hs_internal_meeting_notes", "hs_timestamp"];
 const NOTE_PROPS = ["hs_note_body", "hs_timestamp"];
+const CALL_PROPS = ["hs_timestamp", "hs_call_title", "hs_call_direction", "hs_call_status", "hs_call_disposition", "hs_call_body"];
 
 // HubSpot bodies arrive as HTML. The model reads them as text, with the links
 // kept because a meeting body's Granola link is the point of pulling it.
@@ -672,6 +684,243 @@ const table = (headers, rows) => [
     `|${headers.map(() => "---").join("|")}|`,
     ...rows.map((r) => `| ${r.map(cell).join(" | ")} |`),
 ].join("\n");
+
+// ---------- sweep: the pure parts, exported for runners/tst ----------
+//
+// Everything below up to sweep() is a function of its arguments alone, so
+// runners/tst/hubspot.test.mjs hands it small invented records and reads what
+// comes back. The sweep itself is the reads around them.
+
+/**
+ * A Lead Status that is empty now and held a value before was cleared on
+ * purpose, and a clear is a decision (Atelic Outreach/README.md, Leaving the
+ * Funnel): the person left the business, or the business left the motion.
+ * Only a status that was never set reads as a send nobody logged. `history`
+ * is HubSpot's propertiesWithHistory list for hs_lead_status, newest first,
+ * the current value included. Jim Minter at Colorado Cleanup Services was
+ * cleared on 2026-10-08 and the W42 groom set him back to CONTACTED, which it
+ * would have done every week after.
+ */
+export function clearedOnPurpose(status, history) {
+    return !status && (history || []).some((h) => Boolean(h && h.value));
+}
+
+/** The value a cleared status held last, and the day it was cleared, from the same history. */
+export function clearOf(history) {
+    const { was, clearedAt } = clearEntries(history);
+    return { was: was?.value || "", cleared_at: clearedAt ? denverDate(clearedAt.timestamp) : "" };
+}
+
+/** The moment of the latest clear as epoch ms, or null when the status was never cleared; finer than clearOf's day, so a reply the same day is placed on the right side of it. */
+export function clearedAtMs(history) {
+    const { was, clearedAt } = clearEntries(history);
+    return was && clearedAt ? Date.parse(clearedAt.timestamp) : null;
+}
+
+/** The newest value the status held, and the newest empty entry at or after it. */
+function clearEntries(history) {
+    const sorted = [...(history || [])].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+    const was = sorted.find((h) => h.value);
+    const clearedAt = sorted.find((h) => !h.value && (!was || Date.parse(h.timestamp) >= Date.parse(was.timestamp)));
+    return { was, clearedAt };
+}
+
+// A call is a touch when Forni placed it and something reached them. A hand
+// logged call is COMPLETED whatever happened, and the outcome lives in
+// hs_call_disposition, so the test is three parts: OUTBOUND, COMPLETED, and a
+// disposition that reached them. These are the portal's default "reached"
+// dispositions (GET /calling/v1/dispositions lists them); No answer, Busy and
+// Wrong number, and any status other than COMPLETED (NO_ANSWER, BUSY, FAILED),
+// are attempts, not touches, so they never take a name out of replies owed or
+// advance its count of touches. A COMPLETED call with no disposition at all
+// counts as reached only when it carries a body, which says what happened;
+// with neither it is an attempt. Inbound calls stay out (they are theirs,
+// like a reply), and so do the QUEUED records with no direction that a dialer
+// import left on the portal in July: nobody dialled.
+const REACHED_DISPOSITIONS = new Set([
+    "f240bbac-87c9-4f6e-bf70-924b57d47db7", // Connected
+    "a4c4c377-d246-4b32-a13b-75a56a4cd0ff", // Left live message
+    "b2cf5968-551e-4856-9783-52b3da59a7d0", // Left voicemail (the Mini Splits call of 2026-10-08)
+    "2e7360c1-6b71-40e9-ab2b-30ae98a4678c", // Meeting booked
+]);
+export const isOutboundCall = (p) => {
+    if (p.hs_call_direction !== "OUTBOUND" || p.hs_call_status !== "COMPLETED") return false;
+    if (p.hs_call_disposition) return REACHED_DISPOSITIONS.has(p.hs_call_disposition);
+    return plain(p.hs_call_body) !== "";
+};
+
+/**
+ * Every contact's touches and replies, in time order, from the logged emails
+ * and the logged outbound calls. `emails` arrive newest first, as the search
+ * sorts them; `emailContacts` and `callContacts` map a record id to its
+ * contact ids; `known` says which contacts the sweep holds.
+ *
+ * An email touch is what it always was: one per contact per Denver day per
+ * subject, a copy folding its open and click counts into the first. A call is
+ * a touch of kind "call", one per contact per day (Mini Splits by Joseph's
+ * 2026-10-08 voicemail read as eleven days of silence in W42, because only
+ * email was ever read). A call carries no tracking, so its opens and clicks
+ * are null, the record's way of saying unknown and never a zero, and it has
+ * no thread, since a call is not a send.
+ */
+export function foldTouches({ emails = [], emailContacts = new Map(), calls = [], callContacts = new Map(), known = () => true }) {
+    const perContact = new Map();
+    const touchesOf = (id) => {
+        if (!perContact.has(id)) perContact.set(id, { touches: [], replies: [] });
+        return perContact.get(id);
+    };
+    const copyKey = new Map();
+    for (const e of [...emails].reverse()) {
+        const p = e.properties;
+        const day = denverDate(p.hs_timestamp);
+        for (const ct of emailContacts.get(e.id) || []) {
+            if (!known(ct)) continue;
+            const t = touchesOf(ct);
+            if (p.hs_email_direction === "INCOMING_EMAIL") {
+                t.replies.push({
+                    id: e.id, date: day, ts: Date.parse(p.hs_timestamp), subject: p.hs_email_subject || "", from: p.hs_email_from_email || p.hs_email_sender_email || "",
+                    snippet: plain(p.hs_email_text, 500), thread: p.hs_email_thread_id || "",
+                });
+                continue;
+            }
+            if (p.hs_email_direction !== "EMAIL") continue;
+            // A second copy of the same touch the same day folds into the first,
+            // keeping the best open and click counts.
+            const key = `${ct}|${day}|${normSubject(p.hs_email_subject)}`;
+            const tracked = p.hs_not_tracking_opens_or_clicks !== "true";
+            const opens = tracked ? Number(p.hs_email_open_count || 0) : null;
+            const clicks = tracked ? Number(p.hs_email_click_count || 0) : null;
+            if (copyKey.has(key)) {
+                const prev = copyKey.get(key);
+                if (opens !== null) prev.opens = Math.max(prev.opens ?? 0, opens);
+                if (clicks !== null) prev.clicks = Math.max(prev.clicks ?? 0, clicks);
+                prev.tracked = prev.tracked || tracked;
+                continue;
+            }
+            const touch = { id: e.id, kind: "email", date: day, ts: Date.parse(p.hs_timestamp), subject: p.hs_email_subject || "", tracked, opens, clicks, thread: p.hs_email_thread_id || "", status: p.hs_email_status || "" };
+            copyKey.set(key, touch);
+            t.touches.push(touch);
+        }
+    }
+    for (const c of calls) {
+        const p = c.properties;
+        if (!isOutboundCall(p)) continue;
+        const day = denverDate(p.hs_timestamp);
+        for (const ct of callContacts.get(c.id) || []) {
+            if (!known(ct)) continue;
+            const key = `${ct}|${day}\u0000call`;
+            if (copyKey.has(key)) continue;
+            const touch = {
+                id: c.id, kind: "call", date: day, ts: Date.parse(p.hs_timestamp), subject: p.hs_call_title || "",
+                tracked: false, opens: null, clicks: null, thread: "", status: p.hs_call_status || "", body: plain(p.hs_call_body, 300),
+            };
+            copyKey.set(key, touch);
+            touchesOf(ct).touches.push(touch);
+        }
+    }
+    // Calls arrive in their own order; every name reads its touches oldest first.
+    for (const t of perContact.values()) t.touches.sort((a, b) => a.ts - b.ts);
+    return perContact;
+}
+
+/**
+ * Step 3 of the groom (The Weekly Groom in Outreach/README.md): true up one
+ * contact's Lead Status against what happened. `next` equal to `status` means
+ * leave it; `cleared` says it was left because the status was cleared on
+ * purpose, which the groom reports so the mail can say so.
+ */
+export function statusTrueUp({ status = "", touches = [], replies = [], customer = false, history = [] }) {
+    // A clear is a decision and outranks the customer rule, unless a touch was
+    // logged on a later day: then the name is back in motion and reads as unset.
+    // A same day touch is the call that prompted the clear, logged after it.
+    const clearedDay = clearOf(history).cleared_at;
+    const stillCleared = clearedOnPurpose(status, history) && !touches.some((t) => t.date > clearedDay);
+    if (stillCleared) return { next: status, why: "", ...(touches.length ? { cleared: true } : {}) };
+    if (customer && status !== "QUALIFIED") return { next: "QUALIFIED", why: "the company is a customer" };
+    if (!status && touches.length) {
+        return { next: "CONTACTED", why: "a logged touch and no Lead Status" };
+    }
+    if (status === "NEW" && touches.length) return { next: "CONTACTED", why: "a first touch logged" };
+    if (status === "CONTACTED" && replies.length) return { next: "ENGAGED", why: "they wrote back" };
+    return { next: status, why: "" };
+}
+
+/**
+ * The section a name lands in, and why, read off its record: the cadence
+ * counts every touch, a call included, so a called name is not read as
+ * silent since its last email. `daysSince` turns a YYYY-MM-DD into whole days
+ * before the roster's reference day.
+ */
+export function sectionOf({ reason = "", status = "", lifecycle = "", fit = null, touches = [], replies = [], due = [], parked = [], history = [], daysSince }) {
+    const lastTouch = touches[touches.length - 1] || null;
+    const lastReply = replies[replies.length - 1] || null;
+    const lastDay = lastTouch?.date || "";
+    const lastReplyDay = lastReply?.date || "";
+    const dTouch = lastTouch ? daysSince(lastDay) : null;
+    const dFirst = touches[0] ? daysSince(touches[0].date) : null;
+    const emails = touches.filter((t) => t.kind !== "call");
+    const opens = emails.reduce((n, t) => n + (t.opens || 0), 0);
+    const tracked = emails.filter((t) => t.tracked).length;
+    const last = lastTouch?.kind === "call" ? "a call" : "a send";
+    // The company's Disqualification Reason is the whole closed test (Closing a
+    // Prospect in Atelic's Tools/hubspot.md); a contact's status alone never closes.
+    if (reason) return { section: "closed", why: reason };
+    const replyLatest = Boolean(lastReply && (!lastTouch || lastReply.ts >= lastTouch.ts));
+    // A contact cleared out of the motion who writes back after the clear is
+    // still owed a reply: their message is tested before the empty status, or
+    // it would never surface. Only a clear counts, and only a reply after it:
+    // a status never set (a vendor, a lawyer on a funnel company) stays out of
+    // the motion, and so does a reply the clear already answered. A
+    // customer's note stays client work.
+    const clearedMs = clearedOnPurpose(status, history) ? clearedAtMs(history) : null;
+    if (!status && replyLatest && lifecycle !== "customer" && clearedMs !== null && lastReply.ts > clearedMs) {
+        return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record, written after their Lead Status was cleared` };
+    }
+    if (!status) return { section: "not_in_motion", why: "no Lead Status" };
+    if (CLOSED_STATUSES.has(status)) return { section: "closed", why: `${status} with no reason on the company; set one` };
+    // A customer's contact is never owed a touch by this motion: a note from
+    // them is client work (Forni, 2026-09-29, when Kyle Pratt's thank you
+    // read as a reply owed).
+    if (lifecycle === "customer") return { section: "conversation", why: `a customer; their ${lastReplyDay || "last"} message is client work, not a reply owed` };
+    if (replyLatest) return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record` };
+    if (due.length) return { section: "tasks_due", why: `task due ${due[0].due}: ${due[0].subject}` };
+    if (parked.length) return { section: "parked", why: `task parked to ${parked[0].due}; silent until then` };
+    if (status === "NEW") {
+        return { section: lifecycle === "lead" && !reason ? "first_touch" : "new_off_queue", why: fit ? `fit ${fit}` : "unscored" };
+    }
+    if (status !== "CONTACTED") return { section: "conversation", why: `${status}, last touch ${lastDay || "none"}${lastTouch?.kind === "call" ? " (a call)" : ""}, their last reply ${lastReplyDay || "none"}` };
+    if (!lastTouch) return { section: "unlogged_send", why: "CONTACTED with no logged send; propose the backfill" };
+    if (dTouch < 6) return { section: "waiting", why: `${lastTouch.kind === "call" ? "called" : "sent"} ${dTouch} days ago; nothing due yet` };
+    if (touches.length === 1) return { section: "bumps_due", why: `one touch, ${last}, day ${dTouch}, ${tracked ? `${opens} opens` : "untracked"}` };
+    if (touches.length === 2) return { section: "visits_due", why: `two touches, the last ${last} on day ${dTouch}, ${dFirst} days since the first` };
+    return { section: "closes_due", why: `${touches.length} touches, the last ${last}, ${dFirst} days since the first, silent ${dTouch}` };
+}
+
+/**
+ * A name's row in portal.md's section tables. The clock is the last touch of
+ * any kind, marked "(call)" when it was one, and the touch count says how
+ * many were calls, so a called name never reads as silent since its email.
+ * Opens are the tracked sends' alone; a name with none reads untracked.
+ */
+export const PORTAL_HEADERS = ["Contact", "Company", "Status", "Fit", "Last touch", "Days", "Touches", "Opens", "Their last reply", "Read"];
+export function portalRow(r) {
+    const calls = r.calls || 0;
+    return [
+        `[${r.name}](${r.contact_url})`, `[${r.company}](${r.company_url})`, r.status, r.fit ?? "unscored",
+        r.last_touch ? `${r.last_touch}${r.last_touch_kind === "call" ? " (call)" : ""}` : "none",
+        r.days_since_touch ?? "", `${r.touches.length}${calls ? ` (${calls} by phone)` : ""}`,
+        r.tracked_sends ? String(r.opens) : "untracked",
+        r.last_reply || "", r.why,
+    ];
+}
+
+/** One touch in portal-detail.md: a send with its opens and thread, or a call with its outcome and no opens to read. */
+export function touchLine(t) {
+    if (t.kind === "call") {
+        return `- called ${t.date} "${t.subject}" (${t.status ? t.status.toLowerCase() : "logged"}; a call has no opens to read)${t.body ? `: ${t.body.replace(/\n/g, " ")}` : ""}`;
+    }
+    return `- sent ${t.date} "${t.subject}" ${t.tracked ? `(${t.opens} opens, ${t.clicks} clicks)` : "(untracked)"} thread ${t.thread || "?"}`;
+}
 
 async function sweep(argv) {
     const [monday, outDir] = argv;
@@ -714,8 +963,10 @@ async function sweep(argv) {
     });
     const coToCt = await assoc("companies", "contacts", [...companies.keys()]);
     const wanted = new Set([...statusRows.map((c) => c.id), ...[...coToCt.values()].flat()]);
-    const contactRows = await batch("contacts", [...wanted], CONTACT_PROPS);
-    const contacts = new Map(contactRows.map((c) => [c.id, { id: c.id, ...c.properties }]));
+    // The Lead Status comes with its history, which is how the groom tells a
+    // status cleared on purpose from one never set (clearedOnPurpose above).
+    const contactRows = await batch("contacts", [...wanted], CONTACT_PROPS, ["hs_lead_status"]);
+    const contacts = new Map(contactRows.map((c) => [c.id, { id: c.id, ...c.properties, status_history: c.propertiesWithHistory?.hs_lead_status || [] }]));
     // The association is the join; associatedcompanyid is the fallback, since
     // it lags and is not proof (the plumber's own rule for reading it back).
     const ctToCo = new Map();
@@ -735,6 +986,15 @@ async function sweep(argv) {
     })).filter((e) => !isNoise(e.properties));
     const emToCt = await assoc("emails", "contacts", emailRows.map((e) => e.id));
     log(`${emailRows.length} emails since ${denverDate(Number(lookbackMs))}`);
+
+    // ----- calls, over the same lookback: a call Forni placed is a touch -----
+    const callRows = (await searchAll("calls", {
+        filterGroups: [{ filters: [{ propertyName: "hs_timestamp", operator: "GTE", value: lookbackMs }] }],
+        properties: CALL_PROPS,
+        sorts: [{ propertyName: "hs_timestamp", direction: "DESCENDING" }],
+    })).filter((c) => isOutboundCall(c.properties));
+    const caToCt = await assoc("calls", "contacts", callRows.map((c) => c.id));
+    log(`${callRows.length} outbound calls since ${denverDate(Number(lookbackMs))}`);
 
     // ----- open tasks -----
     const taskRows = await searchAll("tasks", {
@@ -809,44 +1069,10 @@ async function sweep(argv) {
     log(`${dealRows.length} deals, ${closedIds.length} closed companies with a reason`);
 
     // ----- the join: every contact's touches, replies, opens, and section -----
-    const perContact = new Map();
-    const touchesOf = (id) => {
-        if (!perContact.has(id)) perContact.set(id, { touches: [], replies: [] });
-        return perContact.get(id);
-    };
-    const copyKey = new Map();
-    for (const e of [...emailRows].reverse()) {
-        const p = e.properties;
-        const day = denverDate(p.hs_timestamp);
-        for (const ct of emToCt.get(e.id) || []) {
-            if (!contacts.has(ct)) continue;
-            const t = touchesOf(ct);
-            if (p.hs_email_direction === "INCOMING_EMAIL") {
-                t.replies.push({
-                    id: e.id, date: day, ts: Date.parse(p.hs_timestamp), subject: p.hs_email_subject || "", from: p.hs_email_from_email || p.hs_email_sender_email || "",
-                    snippet: plain(p.hs_email_text, 500), thread: p.hs_email_thread_id || "",
-                });
-                continue;
-            }
-            if (p.hs_email_direction !== "EMAIL") continue;
-            // A second copy of the same touch the same day folds into the first,
-            // keeping the best open and click counts.
-            const key = `${ct}|${day}|${normSubject(p.hs_email_subject)}`;
-            const tracked = p.hs_not_tracking_opens_or_clicks !== "true";
-            const opens = tracked ? Number(p.hs_email_open_count || 0) : null;
-            const clicks = tracked ? Number(p.hs_email_click_count || 0) : null;
-            if (copyKey.has(key)) {
-                const prev = copyKey.get(key);
-                if (opens !== null) prev.opens = Math.max(prev.opens ?? 0, opens);
-                if (clicks !== null) prev.clicks = Math.max(prev.clicks ?? 0, clicks);
-                prev.tracked = prev.tracked || tracked;
-                continue;
-            }
-            const touch = { id: e.id, date: day, ts: Date.parse(p.hs_timestamp), subject: p.hs_email_subject || "", tracked, opens, clicks, thread: p.hs_email_thread_id || "", status: p.hs_email_status || "" };
-            copyKey.set(key, touch);
-            t.touches.push(touch);
-        }
-    }
+    const perContact = foldTouches({
+        emails: emailRows, emailContacts: emToCt, calls: callRows, callContacts: caToCt,
+        known: (ct) => contacts.has(ct),
+    });
 
     const taskIndex = new Map();
     for (const t of tasks) {
@@ -874,7 +1100,9 @@ async function sweep(argv) {
     // how a local iteration runs against the real portal without touching it.
     const GROOM = process.env.SWEEP_GROOM !== "0";
     const LIFECYCLE = ["lead", "marketingqualifiedlead", "salesqualifiedlead", "opportunity", "customer"];
-    const groom = { applied: GROOM, companies: [], contacts: [], proposed: [] };
+    // `cleared` is every contact step 3 left alone because its Lead Status was
+    // cleared on purpose, so the mail can say so rather than nothing.
+    const groom = { applied: GROOM, companies: [], contacts: [], proposed: [], cleared: [] };
     const write = async (obj, id, props) => { if (GROOM) await api(`crm/v3/objects/${obj}/${id}`, { properties: props }, "PATCH"); };
     const nowIso = new Date().toISOString();
     const ENTERED_PROP = { marketingqualifiedlead: "hs_v2_date_entered_marketingqualifiedlead", salesqualifiedlead: "hs_v2_date_entered_salesqualifiedlead", opportunity: "hs_v2_date_entered_opportunity", customer: "hs_v2_date_entered_customer" };
@@ -918,15 +1146,19 @@ async function sweep(argv) {
                 why: target === "customer" ? "a won deal" : target === "opportunity" ? "an open deal" : connected ? "a contact at Connected or beyond" : replied ? "a reply on the record" : "a tracked open" });
             co.lifecyclestage = target;
         }
-        // Step 3: true up the contacts against what happened.
+        // Step 3: true up the contacts against what happened. A status cleared
+        // on purpose stays cleared, and is reported as left that way.
         for (const c of cts) {
             const t = perContact.get(c.id) || { touches: [], replies: [] };
             const status = c.hs_lead_status || "";
-            let next = status, why = "";
-            if (co.lifecyclestage === "customer" && status !== "QUALIFIED") { next = "QUALIFIED"; why = "the company is a customer"; }
-            else if (!status && t.touches.length) { next = "CONTACTED"; why = "a logged send and no Lead Status"; }
-            else if (status === "NEW" && t.touches.length) { next = "CONTACTED"; why = "a first touch logged"; }
-            else if (status === "CONTACTED" && t.replies.length) { next = "ENGAGED"; why = "they wrote back"; }
+            const { next, why, cleared } = statusTrueUp({
+                status, touches: t.touches, replies: t.replies, customer: co.lifecyclestage === "customer", history: c.status_history,
+            });
+            if (cleared) {
+                const { was, cleared_at } = clearOf(c.status_history);
+                groom.cleared.push({ id: c.id, name: `${c.firstname || ""} ${c.lastname || ""}`.trim() || c.email || "", company: co.name, url: contactUrl(c.id), was, cleared_at,
+                    why: `Lead Status cleared${cleared_at ? ` on ${cleared_at}` : ""}${was ? ` from ${was}` : ""}; left cleared on purpose` });
+            }
             if (next !== status) {
                 await write("contacts", c.id, { hs_lead_status: next });
                 groom.contacts.push({ id: c.id, name: `${c.firstname || ""} ${c.lastname || ""}`.trim(), company: co.name, from: status || "(none)", to: next, why });
@@ -942,7 +1174,7 @@ async function sweep(argv) {
     for (const c of contacts.values()) if (c.email && c.in_funnel) { const e = c.email.toLowerCase(); byEmail.set(e, [...(byEmail.get(e) || []), c]); }
     for (const [e, list] of byEmail) if (list.length > 1) groom.proposed.push({ kind: "duplicate contact", name: e, company: companies.get(list[0].company_id)?.name || "", url: contactUrl(list[0].id), note: `two contacts on ${e}; merge them` });
     for (const c of contacts.values()) if (c.hs_lead_status && !c.in_funnel && !c.company_id) groom.proposed.push({ kind: "orphan contact", name: `${c.firstname || ""} ${c.lastname || ""}`.trim() || c.email || c.id, company: "", url: contactUrl(c.id), note: "a Lead Status with no company; associate or clear it" });
-    log(`groom${GROOM ? "" : " (read only)"}: ${groom.companies.length} stage moves, ${groom.contacts.length} status moves, ${groom.proposed.length} proposed`);
+    log(`groom${GROOM ? "" : " (read only)"}: ${groom.companies.length} stage moves, ${groom.contacts.length} status moves, ${groom.proposed.length} proposed, ${groom.cleared.length} left cleared on purpose`);
 
     const reads = [];
     for (const c of contacts.values()) {
@@ -951,41 +1183,29 @@ async function sweep(argv) {
         if (!co) continue;
         const status = c.hs_lead_status || "";
         const { touches, replies } = perContact.get(c.id) || { touches: [], replies: [] };
+        // Touches are every kind (an email send, a call); a send is an email
+        // alone, so the send fields stay honest about what went by mail and
+        // the touch fields carry the cadence.
+        const sends = touches.filter((t) => t.kind !== "call");
         const lastTouch = touches[touches.length - 1] || null;
+        const lastEmail = sends[sends.length - 1] || null;
         const lastReply = replies[replies.length - 1] || null;
-        const lastSend = lastTouch?.date || "";
+        const lastSend = lastEmail?.date || "";
         const lastReplyDay = lastReply?.date || "";
-        const dSend = lastTouch ? daysSince(`${lastSend}T12:00:00Z`) : null;
-        const dFirst = touches[0] ? daysSince(`${touches[0].date}T12:00:00Z`) : null;
-        const opens = touches.reduce((n, t) => n + (t.opens || 0), 0);
-        const tracked = touches.filter((t) => t.tracked).length;
+        const atNoon = (day) => daysSince(`${day}T12:00:00Z`);
+        const dSend = lastEmail ? atNoon(lastSend) : null;
+        const dTouch = lastTouch ? atNoon(lastTouch.date) : null;
+        const dFirst = touches[0] ? atNoon(touches[0].date) : null;
+        const opens = sends.reduce((n, t) => n + (t.opens || 0), 0);
+        const tracked = sends.filter((t) => t.tracked).length;
         const ownTasks = [...(taskIndex.get(c.id) || []), ...(tasksByCompany.get(c.company_id) || []).filter((t) => !t.contacts.includes(c.id))];
         const due = ownTasks.filter((t) => t.reading === "due" || t.reading === "stale");
         const parked = ownTasks.filter((t) => t.reading === "parked");
 
-        let section, why;
-        // The company's Disqualification Reason is the whole closed test (Closing a
-        // Prospect in Atelic's Tools/hubspot.md); a contact's status alone never closes.
-        if (co.disqualification_reason) { section = "closed"; why = co.disqualification_reason; }
-        else if (!status) { section = "not_in_motion"; why = "no Lead Status"; }
-        else if (CLOSED_STATUSES.has(status)) { section = "closed"; why = `${status} with no reason on the company; set one`; }
-        // A customer's contact is never owed a touch by this motion: a note from
-        // them is client work (Forni, 2026-09-29, when Kyle Pratt's thank you
-        // read as a reply owed).
-        else if (co.lifecyclestage === "customer") { section = "conversation"; why = `a customer; their ${lastReplyDay || "last"} message is client work, not a reply owed`; }
-        else if (lastReply && (!lastTouch || lastReply.ts >= lastTouch.ts)) { section = "replies_owed"; why = `their ${lastReplyDay} reply is the last message on the record`; }
-        else if (due.length) { section = "tasks_due"; why = `task due ${due[0].due}: ${due[0].subject}`; }
-        else if (parked.length) { section = "parked"; why = `task parked to ${parked[0].due}; silent until then`; }
-        else if (status === "NEW") {
-            section = co.lifecyclestage === "lead" && !co.disqualification_reason ? "first_touch" : "new_off_queue";
-            why = co.fit ? `fit ${co.fit}` : "unscored";
-        }
-        else if (status !== "CONTACTED") { section = "conversation"; why = `${status}, last send ${lastSend || "none"}, their last reply ${lastReplyDay || "none"}`; }
-        else if (!lastSend) { section = "unlogged_send"; why = "CONTACTED with no logged send; propose the backfill"; }
-        else if (dSend < 6) { section = "waiting"; why = `sent ${dSend} days ago; nothing due yet`; }
-        else if (touches.length === 1) { section = "bumps_due"; why = `one touch, day ${dSend}, ${tracked ? `${opens} opens` : "untracked"}`; }
-        else if (touches.length === 2) { section = "visits_due"; why = `two touches, last on day ${dSend}, ${dFirst} days since the first`; }
-        else { section = "closes_due"; why = `${touches.length} touches, ${dFirst} days since the first, silent ${dSend}`; }
+        const { section, why } = sectionOf({
+            reason: co.disqualification_reason || "", status, lifecycle: co.lifecyclestage, fit: co.fit,
+            touches, replies, due, parked, history: c.status_history, daysSince: atNoon,
+        });
 
         reads.push({
             contact_id: c.id, name: `${c.firstname || ""} ${c.lastname || ""}`.trim() || "(no name)", email: c.email || "", phone: c.phone || "",
@@ -995,9 +1215,12 @@ async function sweep(argv) {
             door: co.door || "", segment: co.segment || "", disqualification: co.disqualification_reason || "",
             address: [co.address, co.city].filter(Boolean).join(", "), company_phone: co.phone || "",
             touches, replies, last_send: lastSend, days_since_send: dSend, days_since_first: dFirst,
-            // The Company Cards strip on a person: every send day and the last
+            // The cadence's clock: the latest touch of any kind, and what it was.
+            last_touch: lastTouch?.date || "", last_touch_kind: lastTouch?.kind || "", days_since_touch: dTouch,
+            calls: touches.length - sends.length,
+            // The Company Cards strip on a person: every touch day and the last
             // known open as day counts back from today.
-            touch_days: touches.map((t) => daysSince(`${t.date}T12:00:00Z`)),
+            touch_days: touches.map((t) => atNoon(t.date)),
             open_days: (c.hs_sales_email_last_opened || c.hs_email_last_open_date) ? [daysSince(c.hs_sales_email_last_opened || c.hs_email_last_open_date)] : [],
             opens, tracked_sends: tracked, last_reply: lastReplyDay,
             // The extension stamps a sales email's opens on the contact as
@@ -1010,7 +1233,7 @@ async function sweep(argv) {
         });
     }
 
-    const order = (a, b) => (b.opens - a.opens) || ((b.fit || 0) - (a.fit || 0)) || ((b.days_since_send || 0) - (a.days_since_send || 0));
+    const order = (a, b) => (b.opens - a.opens) || ((b.fit || 0) - (a.fit || 0)) || ((b.days_since_touch || 0) - (a.days_since_touch || 0));
     const pick = (s) => reads.filter((r) => r.section === s).sort(order);
     const firstTouch = reads.filter((r) => r.section === "first_touch").sort((a, b) => ((b.fit || 0) - (a.fit || 0)));
     const sections = {
@@ -1056,13 +1279,21 @@ async function sweep(argv) {
     for (const r of reads) readsByCompany.set(r.company_id, [...(readsByCompany.get(r.company_id) || []), r]);
     const companyTouches = (co) => {
         const days = new Set();
-        let opens = 0, tracked = 0, lastSend = "", lastReply = "", lastOpen = "";
+        // Every touch day counts, a call included; the last send is the last
+        // email alone, and the last call is kept beside it so a row can name it.
+        let opens = 0, tracked = 0, lastSend = "", lastCall = "", lastReply = "", lastOpen = "";
         for (const r of readsByCompany.get(co.id) || []) {
-            for (const t of r.touches) { days.add(t.date); if (t.tracked) { tracked += 1; opens += t.opens || 0; } if (t.date > lastSend) lastSend = t.date; }
+            for (const t of r.touches) {
+                days.add(t.date);
+                if (t.tracked) { tracked += 1; opens += t.opens || 0; }
+                if (t.kind === "call") { if (t.date > lastCall) lastCall = t.date; }
+                else if (t.date > lastSend) lastSend = t.date;
+            }
             for (const x of r.replies) if (x.date > lastReply) lastReply = x.date;
             if (r.last_open && r.last_open > lastOpen) lastOpen = r.last_open;
         }
-        return { days: [...days].sort(), opens, tracked, lastSend, lastReply, lastOpen };
+        const sorted = [...days].sort();
+        return { days: sorted, opens, tracked, lastSend, lastCall, lastTouch: sorted.at(-1) || "", lastReply, lastOpen };
     };
     const ts = (v) => (v ? Date.parse(v) : null);
     const NOW_STAGE = { marketingqualifiedlead: "mql", salesqualifiedlead: "sql", opportunity: "opportunity", customer: "customer" };
@@ -1128,7 +1359,9 @@ async function sweep(argv) {
         // Colorado Cleanup Services' drop off as a Bump).
         const dropDay = (meetingsByCompany.get(co.id) || []).filter((m) => isDropOff({ hs_meeting_title: m.title }))
             .map((m) => m.date).sort().at(-1) || "";
-        const kind = dropDay && dropDay >= t.lastSend ? "Drop off"
+        // A call on or after the last email day is named the same way.
+        const kind = dropDay && dropDay >= t.lastTouch ? "Drop off"
+            : t.lastCall && t.lastCall >= t.lastSend ? "Call"
             : t.days.length === 0 ? "" : t.days.length === 1 ? "First" : t.days.length === 2 ? "Bump" : "Visit";
         return {
             id: co.id, name: co.name, url: companyUrl(co.id), fit: co.fit ? Number(co.fit) : null,
@@ -1138,6 +1371,7 @@ async function sweep(argv) {
             next: nextOf(co),
             opens: t.tracked ? t.opens : null, replied: t.lastReply,
             days_since_send: t.lastSend ? daysSince(`${t.lastSend}T12:00:00Z`) : null,
+            days_since_touch: t.lastTouch ? daysSince(`${t.lastTouch}T12:00:00Z`) : null,
             last_open: t.lastOpen, days_since_open: t.lastOpen ? daysSince(`${t.lastOpen}T12:00:00Z`) : null,
             days_since_reply: t.lastReply ? daysSince(`${t.lastReply}T12:00:00Z`) : null,
             // The next step on the record, for the callout under the name: the
@@ -1156,10 +1390,10 @@ async function sweep(argv) {
     }
     const stageSort = {
         new: (a, b) => ((b.fit || 0) - (a.fit || 0)),
-        lead: (a, b) => ((b.opens || 0) - (a.opens || 0)) || ((b.days_since_send || 0) - (a.days_since_send || 0)),
+        lead: (a, b) => ((b.opens || 0) - (a.opens || 0)) || ((b.days_since_touch || 0) - (a.days_since_touch || 0)),
         // Touches first, then opens (Forni, 2026-09-29): the most worked name
         // with the most opens is the one to follow up with.
-        mql: (a, b) => ((b.touches || 0) - (a.touches || 0)) || ((b.opens || 0) - (a.opens || 0)) || ((b.days_since_send || 0) - (a.days_since_send || 0)),
+        mql: (a, b) => ((b.touches || 0) - (a.touches || 0)) || ((b.opens || 0) - (a.opens || 0)) || ((b.days_since_touch || 0) - (a.days_since_touch || 0)),
         sql: (a, b) => (b.replied || "").localeCompare(a.replied || ""),
         opportunity: (a, b) => ((b.deal?.amount || 0) - (a.deal?.amount || 0)),
         customer: (a, b) => a.name.localeCompare(b.name),
@@ -1188,7 +1422,7 @@ async function sweep(argv) {
         }),
     };
     counts.funnel = Object.fromEntries(funnel.stages.map((st) => [st.key, { now: st.now, delta: st.delta }]));
-    counts.groom = { applied: GROOM, companies: groom.companies.length, contacts: groom.contacts.length, proposed: groom.proposed.length };
+    counts.groom = { applied: GROOM, companies: groom.companies.length, contacts: groom.contacts.length, proposed: groom.proposed.length, cleared: groom.cleared.length };
 
     // ----- the files -----
     mkdirSync(outDir, { recursive: true });
@@ -1213,16 +1447,10 @@ async function sweep(argv) {
     };
     writeFileSync(join(outDir, "portal.json"), JSON.stringify(json, null, 2));
 
-    const lineFor = (r) => [
-        `[${r.name}](${r.contact_url})`, `[${r.company}](${r.company_url})`, r.status, r.fit ?? "unscored",
-        r.last_send || "none", r.days_since_send ?? "", r.touches.length, r.tracked_sends ? String(r.opens) : "untracked",
-        r.last_reply || "", r.why,
-    ];
-    const headers = ["Contact", "Company", "Status", "Fit", "Last send", "Days", "Touches", "Opens", "Their last reply", "Read"];
-    const sectionMd = (title, list, note) => `## ${title}\n\n${note ? note + "\n\n" : ""}${list.length ? table(headers, list.map(lineFor)) : "None."}\n`;
-    const touchesMd = (r) => r.touches.map((t) => `- sent ${t.date} "${t.subject}" ${t.tracked ? `(${t.opens} opens, ${t.clicks} clicks)` : "(untracked)"} thread ${t.thread || "?"}`).join("\n");
+    const sectionMd = (title, list, note) => `## ${title}\n\n${note ? note + "\n\n" : ""}${list.length ? table(PORTAL_HEADERS, list.map(portalRow)) : "None."}\n`;
+    const touchesMd = (r) => r.touches.map(touchLine).join("\n");
     const repliesMd = (r) => r.replies.map((x) => `- reply ${x.date} from ${x.from} "${x.subject}"\n\n  > ${x.snippet.replace(/\n/g, "\n  > ")}`).join("\n");
-    const detailMd = (r) => `### ${r.name}, ${r.company} (${r.section})\n\n${r.email || "no email"}${r.phone ? ", " + r.phone : ""}; ${r.title || "no title"}. Company: ${r.lifecycle}, fit ${r.fit ?? "unscored"}${r.tags ? ", tags " + r.tags : ""}${r.vertical ? ", " + r.vertical : ""}${r.door ? ", door " + r.door : ""}${r.address ? "; " + r.address : ""}${r.company_phone ? "; " + r.company_phone : ""}. Contact [record](${r.contact_url}), company [record](${r.company_url}).\n\n${touchesMd(r) || "- no logged sends"}\n${repliesMd(r) ? repliesMd(r) + "\n" : ""}`;
+    const detailMd = (r) => `### ${r.name}, ${r.company} (${r.section})\n\n${r.email || "no email"}${r.phone ? ", " + r.phone : ""}; ${r.title || "no title"}. Company: ${r.lifecycle}, fit ${r.fit ?? "unscored"}${r.tags ? ", tags " + r.tags : ""}${r.vertical ? ", " + r.vertical : ""}${r.door ? ", door " + r.door : ""}${r.address ? "; " + r.address : ""}${r.company_phone ? "; " + r.company_phone : ""}. Contact [record](${r.contact_url}), company [record](${r.company_url}).\n\n${touchesMd(r) || "- no logged sends or calls"}\n${repliesMd(r) ? repliesMd(r) + "\n" : ""}`;
 
     const active = reads.filter((r) => !["closed", "not_in_motion"].includes(r.section)).sort((a, b) => a.company.localeCompare(b.company));
     const md = [
@@ -1249,7 +1477,7 @@ async function sweep(argv) {
         "",
         "## The Groom",
         "",
-        `${GROOM ? "Applied" : "Read only, nothing written"}: ${groom.companies.length} stage moves, ${groom.contacts.length} status moves, ${groom.proposed.length} proposed and left for Forni. The runner renders this into the email; your read may name a move that changes the week.`,
+        `${GROOM ? "Applied" : "Read only, nothing written"}: ${groom.companies.length} stage moves, ${groom.contacts.length} status moves, ${groom.proposed.length} proposed and left for Forni, ${groom.cleared.length} left cleared on purpose. The runner renders this into the email; your read may name a move that changes the week.`,
         "",
         groom.companies.length ? table(["Company", "From", "To", "Why"], groom.companies.map((m) => [m.name, m.from, m.to, m.why])) : "No stage moves.",
         "",
@@ -1257,16 +1485,20 @@ async function sweep(argv) {
         "",
         groom.proposed.length ? table(["Kind", "Who", "Company", "Note"], groom.proposed.map((m) => [m.kind, m.name, m.company, m.note])) : "Nothing proposed.",
         "",
+        // A touch on the record and an empty Lead Status that held a value
+        // before: a clear is a decision, so the groom left it, and says so.
+        groom.cleared.length ? `Left cleared on purpose (a touch on the record, and a Lead Status that held a value and was cleared; the groom does not set it back):\n\n${table(["Contact", "Company", "Was", "Cleared on"], groom.cleared.map((m) => [m.name, m.company, m.was || "", m.cleared_at || ""]))}` : "Nothing left cleared on purpose.",
+        "",
         sectionMd("Replies Owed", sections.replies_owed, "Their reply is the last message on the HubSpot record. The reply text is in the detail below; read the thread in the mailbox pull before drafting."),
         sectionMd("Tasks Due", sections.tasks_due, "An open task due this week or earlier, or stale. The task body is under Open Tasks."),
-        sectionMd("Bumps Due", sections.bumps_due, "One logged touch, six or more days ago, no reply."),
-        sectionMd("Visits Due", sections.visits_due, "Two touches, no reply."),
-        sectionMd("Closes Due", sections.closes_due, "Three or more touches, no reply. Forni decides the close."),
+        sectionMd("Bumps Due", sections.bumps_due, "One logged touch (a send or a call), six or more days ago, no reply."),
+        sectionMd("Visits Due", sections.visits_due, "Two touches, no reply. A call counts as a touch."),
+        sectionMd("Closes Due", sections.closes_due, "Three or more touches, a call counted among them, no reply. Forni decides the close."),
         sectionMd("First Touch Candidates", sections.first_touch, "Contact at NEW on a Next Up company, ordered by fit."),
         sectionMd("In Conversation", sections.conversation, "ENGAGED or beyond with Forni's message the last on the record; a reply is theirs to make."),
         sectionMd("Parked", sections.parked, "A task due later than this week suppresses the cadence."),
         sectionMd("Waiting", sections.waiting, "Sent fewer than six days ago."),
-        sectionMd("Sends Never Logged", sections.unlogged_send, "CONTACTED with no email on the record: the send happened and was not logged. Propose the backfill rather than guessing the day count."),
+        sectionMd("Sends Never Logged", sections.unlogged_send, "CONTACTED with no email or call on the record: the touch happened and was not logged. Propose the backfill rather than guessing the day count."),
         sectionMd("NEW but Off the Queue", sections.new_off_queue, "A NEW contact on a company that is disqualified, unscored, or past lead."),
         "Every active name's logged sends and replies in full, and the closed list, are in portal-detail.md beside this file, one `### Name, Company` heading per contact; read a name's block there when drafting for it.",
         "",
@@ -1321,10 +1553,16 @@ async function sweep(argv) {
 
 // ---------- dispatch ----------
 
-const [command, ...rest] = process.argv.slice(2);
-if (command === "week") await week(rest);
-else if (command === "sweep") await sweep(rest);
-else {
-    console.error("usage: node hubspot.mjs week <after-epoch> <before-epoch> | sweep <monday> <out-dir>");
-    process.exit(2);
+// Only when run as a script, so runners/tst can import the pure parts.
+const ranAsScript = () => {
+    try { return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href; } catch { return false; }
+};
+if (ranAsScript()) {
+    const [command, ...rest] = process.argv.slice(2);
+    if (command === "week") await week(rest);
+    else if (command === "sweep") await sweep(rest);
+    else {
+        console.error("usage: node hubspot.mjs week <after-epoch> <before-epoch> | sweep <monday> <out-dir>");
+        process.exit(2);
+    }
 }

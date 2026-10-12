@@ -805,6 +805,17 @@
         "why": "they wrote back"
       }
     ],
+    "cleared": [
+      {
+        "id": "4",
+        "name": "Dale Okonkwo",
+        "company": "Front Range Cleanup Crew",
+        "url": "https://app.example.test/contacts/1/record/0-1/504",
+        "was": "CONTACTED",
+        "cleared_at": "2026-01-22",
+        "why": "Lead Status cleared on 2026-01-22 from CONTACTED; left cleared on purpose"
+      }
+    ],
     "proposed": [
       {
         "kind": "duplicate company",
