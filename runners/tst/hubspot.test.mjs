@@ -73,11 +73,23 @@ test("a clear reports what the status was and the Denver day it was cleared", ()
 
 /* ---------- calls are touches ---------- */
 
-test("an outbound call that was placed is a touch; an inbound one or a queued record is not", () => {
-    assert.equal(isOutboundCall(call("1", "2026-10-08T15:31:50Z").properties), true);
+test("an outbound call is a touch only when something reached them; an attempt, an inbound call or a queued record is not", () => {
+    assert.equal(isOutboundCall(call("1", "2026-10-08T15:31:50Z").properties), true, "a conversation or a voicemail left is COMPLETED");
     assert.equal(isOutboundCall(call("2", "2026-10-08T15:31:50Z", { hs_call_direction: "INBOUND" }).properties), false);
     assert.equal(isOutboundCall(call("3", "2026-07-01T12:39:07Z", { hs_call_direction: null, hs_call_status: "QUEUED" }).properties), false);
-    assert.equal(isOutboundCall(call("4", "2026-10-08T15:31:50Z", { hs_call_status: "NO_ANSWER" }).properties), true, "an attempt nobody picked up is still a touch");
+    for (const status of ["NO_ANSWER", "BUSY", "FAILED", "CANCELED", "", null]) {
+        assert.equal(isOutboundCall(call("4", "2026-10-08T15:31:50Z", { hs_call_status: status }).properties), false, `${status} is an attempt, not a touch`);
+    }
+});
+
+test("an attempt nobody picked up never folds into the touches, so it cannot answer a reply or advance the count", () => {
+    const per = foldTouches({
+        emails: [email("e1", "2026-10-01T16:00:00Z")],
+        emailContacts: links([["e1", ["c1"]]]),
+        calls: [call("k1", "2026-10-08T15:00:00Z", { hs_call_status: "NO_ANSWER" }), call("k2", "2026-10-09T15:00:00Z", { hs_call_status: "BUSY" })],
+        callContacts: links([["k1", ["c1"]], ["k2", ["c1"]]]),
+    });
+    assert.deepEqual(per.get("c1").touches.map((x) => x.kind), ["email"]);
 });
 
 test("a call folds into the contact's touches in time order, as a call with nothing to read", () => {
@@ -151,4 +163,21 @@ test("a clear outranks the customer rule, but a touch logged after it brings the
     assert.equal(statusTrueUp({ status: "", touches, customer: true, history: clearedHistory }).cleared, true);
     const later = [...touches, { kind: "call", date: "2026-10-10", ts: ms("2026-10-10T17:00:00Z") }];
     assert.equal(statusTrueUp({ status: "", touches: later, history: clearedHistory }).next, "CONTACTED");
+});
+
+test("a contact with no Lead Status who writes back is owed a reply, and nobody else moves", () => {
+    const now = "2026-10-12T06:00:00Z";
+    const touches = [t("email", "2026-09-14")];
+    const reply = { date: "2026-10-09", ts: ms("2026-10-09T16:00:00Z") };
+    const cleared = sectionOf({ status: "", lifecycle: "lead", touches, replies: [reply], daysSince: daysSince(now) });
+    assert.equal(cleared.section, "replies_owed", "a cleared contact who replies surfaces");
+    assert.match(cleared.why, /2026-10-09 reply is the last message on the record/);
+    // Silent, or answered since: still out of the motion.
+    assert.equal(sectionOf({ status: "", lifecycle: "lead", touches, daysSince: daysSince(now) }).section, "not_in_motion");
+    const answered = [...touches, t("email", "2026-10-10")];
+    assert.equal(sectionOf({ status: "", lifecycle: "lead", touches: answered, replies: [reply], daysSince: daysSince(now) }).section, "not_in_motion");
+    // A closed company and a customer keep their own reading.
+    assert.equal(sectionOf({ reason: "Out of business", status: "", lifecycle: "lead", touches, replies: [reply], daysSince: daysSince(now) }).section, "closed");
+    assert.equal(sectionOf({ status: "", lifecycle: "customer", touches, replies: [reply], daysSince: daysSince(now) }).section, "not_in_motion");
+    assert.equal(sectionOf({ status: "CONTACTED", lifecycle: "lead", touches, replies: [reply], daysSince: daysSince(now) }).section, "replies_owed");
 });

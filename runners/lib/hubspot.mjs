@@ -713,11 +713,14 @@ export function clearOf(history) {
     return { was: was?.value || "", cleared_at: clearedAt ? denverDate(clearedAt.timestamp) : "" };
 }
 
-// A call is a touch when Forni placed it and it went somewhere. Inbound calls
-// stay out (they are theirs, like a reply), and so do the QUEUED records with
-// no direction that a dialer import left on the portal in July: nobody dialled.
-const CALL_NEVER_PLACED = new Set(["QUEUED", "CANCELED"]);
-export const isOutboundCall = (p) => p.hs_call_direction === "OUTBOUND" && !CALL_NEVER_PLACED.has(p.hs_call_status || "");
+// A call is a touch when Forni placed it and something reached them: status
+// COMPLETED, which is a conversation or a voicemail left (the Mini Splits
+// voicemail of 2026-10-08 is one). NO_ANSWER, BUSY, FAILED and the like are
+// attempts, not touches, so they never take a name out of replies owed or
+// advance its count of touches. Inbound calls stay out (they are theirs, like
+// a reply), and so do the QUEUED records with no direction that a dialer
+// import left on the portal in July: nobody dialled.
+export const isOutboundCall = (p) => p.hs_call_direction === "OUTBOUND" && p.hs_call_status === "COMPLETED";
 
 /**
  * Every contact's touches and replies, in time order, from the logged emails
@@ -835,13 +838,19 @@ export function sectionOf({ reason = "", status = "", lifecycle = "", fit = null
     // The company's Disqualification Reason is the whole closed test (Closing a
     // Prospect in Atelic's Tools/hubspot.md); a contact's status alone never closes.
     if (reason) return { section: "closed", why: reason };
+    const replyLatest = Boolean(lastReply && (!lastTouch || lastReply.ts >= lastTouch.ts));
+    // A contact out of the motion (a status cleared on purpose, or never set)
+    // who writes back is still owed a reply: their message is tested before
+    // the empty status, or a reply from someone cleared would never surface.
+    // Only the empty status case moves; a customer's note stays client work.
+    if (!status && replyLatest && lifecycle !== "customer") return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record, from a contact with no Lead Status` };
     if (!status) return { section: "not_in_motion", why: "no Lead Status" };
     if (CLOSED_STATUSES.has(status)) return { section: "closed", why: `${status} with no reason on the company; set one` };
     // A customer's contact is never owed a touch by this motion: a note from
     // them is client work (Forni, 2026-09-29, when Kyle Pratt's thank you
     // read as a reply owed).
     if (lifecycle === "customer") return { section: "conversation", why: `a customer; their ${lastReplyDay || "last"} message is client work, not a reply owed` };
-    if (lastReply && (!lastTouch || lastReply.ts >= lastTouch.ts)) return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record` };
+    if (replyLatest) return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record` };
     if (due.length) return { section: "tasks_due", why: `task due ${due[0].due}: ${due[0].subject}` };
     if (parked.length) return { section: "parked", why: `task parked to ${parked[0].due}; silent until then` };
     if (status === "NEW") {
