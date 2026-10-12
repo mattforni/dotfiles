@@ -26,9 +26,10 @@ import { pathToFileURL } from "node:url";
 // where the number is decided; this is its copy, and it moves when that does.
 export const FIRST_TOUCH_TARGET = 15;
 
-// The table shows this many send weeks, the current one included, and the
-// runner hands the renderer one more behind them, which is never drawn: it
-// is what the oldest row shown reads its change against.
+// The runner hands the renderer this many send weeks, the started one
+// included, and one more behind them. The renderer draws completed weeks
+// only, so on a Monday run the started week is dropped from the table; the
+// extra week is what the oldest row drawn reads its change against.
 export const HEALTH_WEEKS = 4;
 export const HEALTH_HANDED = HEALTH_WEEKS + 1;
 

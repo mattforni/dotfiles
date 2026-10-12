@@ -801,10 +801,11 @@ export function foldTouches({ emails = [], emailContacts = new Map(), calls = []
  */
 export function statusTrueUp({ status = "", touches = [], replies = [], customer = false, history = [] }) {
     // A clear is a decision and outranks the customer rule, unless a touch was
-    // logged after it: then the name is back in motion and reads as unset.
-    const clearTs = Math.max(0, ...(history || []).filter((h) => h && !h.value).map((h) => Date.parse(h.timestamp) || 0));
-    const stillCleared = clearedOnPurpose(status, history) && !touches.some((t) => t.ts > clearTs);
-    if (!status && touches.length && stillCleared) return { next: status, why: "", cleared: true };
+    // logged on a later day: then the name is back in motion and reads as unset.
+    // A same day touch is the call that prompted the clear, logged after it.
+    const clearedDay = clearOf(history).cleared_at;
+    const stillCleared = clearedOnPurpose(status, history) && !touches.some((t) => t.date > clearedDay);
+    if (stillCleared) return { next: status, why: "", ...(touches.length ? { cleared: true } : {}) };
     if (customer && status !== "QUALIFIED") return { next: "QUALIFIED", why: "the company is a customer" };
     if (!status && touches.length) {
         return { next: "CONTACTED", why: "a logged touch and no Lead Status" };
