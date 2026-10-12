@@ -1,6 +1,6 @@
 # The Pipeline Runner
 
-Pulls the portal, both mailboxes, the One Pager and the candidate sites, runs the `plumber` agent headlessly over what was pulled, so the week's roster is built before the Tuesday desk block opens, commits the roster into the Atelic repo, and mails a report as `YYYY-Www Pipeline` that links it. Runs on Cloud Run as the job `plumber`, Mondays 22:00 Denver; `bin/runner/run-local plumber` is the way to iterate on it.
+Pulls the portal, both mailboxes, the One Pager and the candidate sites, runs the `plumber` agent headlessly over what was pulled, so the week's roster is built before the Tuesday desk block opens, commits the roster into the Atelic repo, and mails a report as `YYYY-Www Pipeline` that links it. Runs on Cloud Run as the job `plumber`, Sundays 22:30 Denver; `bin/runner/run-local plumber` is the way to iterate on it.
 
 **The runner fetches; the model reads** (ATE-551, 2026-09-15, the recruiter's shape from ATE-543). Until then the agent did every read itself, one `hs` or `gws` command per model turn, walked sites in a browser, and a pass cost 7.54 USD on Opus; the fetching was most of the bill. Now the entrypoint pulls before `claude -p` starts:
 

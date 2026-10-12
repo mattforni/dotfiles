@@ -126,7 +126,7 @@ Supplement every sweep with direct WebSearch angles (e.g. "staff growth engineer
 
 ### Second Pass
 
-When the codified sweep returns fewer than three qualifying roles, the main session fans out two more recruiter instances on disjoint angles, and medium fit is accepted on this pass because the slate needs it. One instance runs direct ATS probes over a seed list of climate companies; the other runs the general boards plus search angles (LinkedIn via search snippets, Built In, Otta, Climatebase, Remote OK, We Work Remotely). On 2026-09-08 the direct probe of more than 90 companies found nothing and the general boards found Kevala. Before declaring a role email only or unverifiable, visit the company's own openings page in a browser; it beats every aggregator's claim about how to apply.
+When the codified sweep returns fewer than three qualifying roles, the main session fans out two more recruiter instances on disjoint angles, and medium fit is accepted on this pass because the slate needs it. One instance runs direct ATS probes over a seed list of climate companies; the other runs the general boards plus search angles (LinkedIn via search snippets, Built In by the Sources title searches since the runner's pulls are not available by hand, Otta, Climatebase, Remote OK, We Work Remotely). On 2026-09-08 the direct probe of more than 90 companies found nothing and the general boards found Kevala. Before declaring a role email only or unverifiable, visit the company's own openings page in a browser; it beats every aggregator's claim about how to apply.
 
 ## Output
 

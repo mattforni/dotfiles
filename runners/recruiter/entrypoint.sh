@@ -471,7 +471,7 @@ log_sweep_activity() {
     if ! pinole work activities log --on "$TODAY" --kind listings_review \
             --employer "$sources" \
             --position "Week $week_number job board sweep and shortlist review" \
-            --url "https://jobs.climatedraft.org/jobs" \
+            --url "https://lowercarbon.getro.com/jobs" \
             --channel "$channel" \
             --notes "$WEEK sweep: $judged postings judged" > "$ACTIVITY_JSON" 2>"$PINOLE_ERR"; then
         fail_reason="could not log the sweep activity: $(head -c 300 "$PINOLE_ERR")"
