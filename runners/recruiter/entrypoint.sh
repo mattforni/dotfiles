@@ -263,14 +263,16 @@ pull_himalayas() {
     code="$(fetch "$url" "$json" "$err")"
     if [[ "$code" == "200" ]] && jq -r '
         def cell: tostring | gsub("[|\\n\\r]"; " ");
+        def list: if type == "array" then map(tostring) | join(", ") else (. // "" | tostring) end;
         "Total matching: \(.totalCount // "unknown"); shown: \(.jobs | length).", "",
         "| Title | Company | Seniority | Location | Salary | Published | Posting |",
         "| --- | --- | --- | --- | --- | --- | --- |",
-        (.jobs[] | "| \(.title | cell) | \(.companyName | cell) | \((.seniority // []) | join(", ") | cell) | \((.locationRestrictions // []) | join(", ") | cell) | \(if .minSalary then "\(.minSalary) to \(.maxSalary // "?") \(.currency // "")" else "not shown" end) | \((.pubDate // 0) | todate | .[0:10]) | \(.applicationLink // .guid // "" | cell) |")
-    ' "$json" > "$md" 2>>"$err"; then
+        (.jobs[] | "| \(.title | cell) | \(.companyName | cell) | \(.seniority | list | cell) | \(.locationRestrictions | list | cell) | \(if .minSalary then "\(.minSalary) to \(.maxSalary // "?") \(.currency // "")" else "not shown" end) | \(try (.pubDate | todate | .[0:10]) catch "unknown") | \(.applicationLink // .guid // "" | cell) |")
+    ' "$json" > "$md.part" 2>>"$err" && mv "$md.part" "$md"; then
         echo "- Himalayas / $query: pulled from $url; the first page as a table is $md. The posting link is the aggregator's page, so step 3a still chases it to the employer's own ATS." >> "$PULLS_MD"
         echo "pull: Himalayas / $query: http 200, $(jq -r '.jobs | length' "$json") shown of $(jq -r '.totalCount // "?"' "$json")"
     else
+        rm -f "$md" "$md.part"
         echo "- Himalayas / $query: NOT pulled (http $code; $(head -c 160 "$err" | tr '\n' ' ')). Not swept this run; say so under sources." >> "$PULLS_MD"
         echo "pull: Himalayas / $query: http $code, failed"
     fi
@@ -460,7 +462,7 @@ log_sweep_activity() {
     esac
 
     sources="$(printf '%s\n' "${GETRO_BOARDS[@]}" | cut -d'|' -f1 | paste -sd ',' - | sed 's/,/, /g')"
-    sources="$sources, Tech Jobs for Good, Fractional Jobs, a16z Jobs"
+    sources="$sources, Built In, Himalayas, Tech Jobs for Good, Fractional Jobs, a16z Jobs"
     getro="$(jq -r '"\(.counts.fetches_ok) of \(.counts.fetches) Getro fetches answered"' "$LISTINGS_JSON")"
     swept="$(sed -n 's/^- \(.*\): pulled from.*/\1/p' "$PULLS_MD" | paste -sd ',' - | sed 's/,/, /g')"
     missed="$(sed -n 's/^- \(.*\): NOT pulled.*/\1/p' "$PULLS_MD" | paste -sd ',' - | sed 's/,/, /g')"
