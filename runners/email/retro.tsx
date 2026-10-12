@@ -136,7 +136,7 @@ const KINDS: Record<string, string> = {
  * and graded against its own target (Forni, W41, when the retro counted a PT
  * session as the week's one lift).
  */
-const PT_NAME = /^(\d{4}\s+)?PT\b/i;
+const PT_NAME = /^(\d{4}\s+)?PT\b(?!\.)/;
 
 function kindOf(activity: Activity): string {
 	if (PT_NAME.test(cleanName(activity).trim())) return "PT";
@@ -220,9 +220,10 @@ type Target = { label: string; logged: number; target: number | null; note: stri
 /** A label as Title Case, an acronym (PT) kept in capitals. */
 function modalityLabel(value: unknown): string {
 	const raw = jqToString(alt(value, ""));
-	return raw
+	const acronyms = raw.split(" ");
+	return titlecase(raw)
 		.split(" ")
-		.map((word) => (/^[A-Z]{2,}$/.test(word) ? word : titlecase(word)))
+		.map((word, index) => (/^[A-Z]{2,}$/.test(acronyms[index] ?? "") ? acronyms[index] : word))
 		.join(" ");
 }
 
@@ -350,7 +351,7 @@ function lastTouchOf(row: FunnelRow): string {
 function leadRecord(row: FunnelRow): RecordStackItem {
 	const kind = lastTouchOf(row);
 	const touches = row.touches === null || row.touches === undefined ? null : Number(row.touches);
-	const opens = row.opens === null || row.opens === undefined ? null : Number(row.opens);
+	const opens = row.opens === null || row.opens === undefined || row.opens === "-" ? null : Number(row.opens);
 	const replied = replyDay(row);
 	return recordCard({
 		title: row.company,
@@ -384,6 +385,7 @@ function closedRecord(row: FunnelRow): RecordStackItem {
 		title: row.company,
 		badge: row.stage === "Closed Lost" ? "Closed Lost" : row.status,
 		closed: reason === "-" ? null : { reason },
+		note: replyDay(row) === "" ? undefined : `Replied ${replyDay(row)}`,
 	});
 }
 
