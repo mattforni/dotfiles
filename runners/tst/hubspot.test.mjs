@@ -36,6 +36,7 @@ const DISPOSITION = {
     connected: "f240bbac-87c9-4f6e-bf70-924b57d47db7",
     liveMessage: "a4c4c377-d246-4b32-a13b-75a56a4cd0ff",
     voicemail: "b2cf5968-551e-4856-9783-52b3da59a7d0",
+    meetingBooked: "2e7360c1-6b71-40e9-ab2b-30ae98a4678c",
     noAnswer: "73a0d17f-1163-4015-bdd5-ec830791da20",
     busy: "9d9162e7-6cf3-4944-bf63-4dff82258764",
     wrongNumber: "17b47fee-58de-441e-a44c-c6300d46f273",
@@ -96,7 +97,7 @@ test("an outbound call is a touch only when something reached them; an attempt, 
 
 test("a hand logged call reached them only when its disposition says so", () => {
     const logged = (extra) => isOutboundCall(call("5", "2026-10-08T15:31:50Z", extra).properties);
-    for (const reached of ["connected", "liveMessage", "voicemail"]) assert.equal(logged({ hs_call_disposition: DISPOSITION[reached] }), true, reached);
+    for (const reached of ["connected", "liveMessage", "voicemail", "meetingBooked"]) assert.equal(logged({ hs_call_disposition: DISPOSITION[reached] }), true, reached);
     // COMPLETED is what HubSpot stamps on every hand logged call, an answer or not.
     for (const attempt of ["noAnswer", "busy", "wrongNumber"]) assert.equal(logged({ hs_call_disposition: DISPOSITION[attempt] }), false, attempt);
     assert.equal(logged({ hs_call_disposition: "a-custom-outcome" }), false, "an outcome the portal does not call reached is an attempt");

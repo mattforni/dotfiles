@@ -741,6 +741,7 @@ const REACHED_DISPOSITIONS = new Set([
     "f240bbac-87c9-4f6e-bf70-924b57d47db7", // Connected
     "a4c4c377-d246-4b32-a13b-75a56a4cd0ff", // Left live message
     "b2cf5968-551e-4856-9783-52b3da59a7d0", // Left voicemail (the Mini Splits call of 2026-10-08)
+    "2e7360c1-6b71-40e9-ab2b-30ae98a4678c", // Meeting booked
 ]);
 export const isOutboundCall = (p) => {
     if (p.hs_call_direction !== "OUTBOUND" || p.hs_call_status !== "COMPLETED") return false;
