@@ -33,7 +33,7 @@ export type TouchLine = {
 	tracked?: number | null;
 	/** Opens across the tracked sends; null when no send carried tracking. */
 	opens?: number | null;
-	/** "First", "Bump" or "Visit": the kind of the last touch. */
+	/** "First", "Bump", "Visit" or "Drop off": the kind of the last touch. */
 	lastTouch?: unknown;
 	daysSinceSend?: number | null;
 	daysSinceOpen?: number | null;

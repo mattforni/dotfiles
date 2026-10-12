@@ -91,6 +91,8 @@ type FunnelRow = {
 	stage?: string | null;
 	cash?: string | null;
 	reason?: unknown;
+	last_touch?: unknown;
+	last_reply?: unknown;
 };
 
 export type RetroDraft = {
@@ -128,7 +130,16 @@ const KINDS: Record<string, string> = {
 	Swim: "Swim",
 };
 
+/**
+ * PT is not a lift. It is logged as WeightTraining under the name "2026 PT"
+ * or "2026 PT Achilles", so it is matched on the name, never the sport type,
+ * and graded against its own target (Forni, W41, when the retro counted a PT
+ * session as the week's one lift).
+ */
+const PT_NAME = /^(\d{4}\s+)?PT(\s+Achilles)?$/i;
+
 function kindOf(activity: Activity): string {
+	if (PT_NAME.test(cleanName(activity).trim())) return "PT";
 	const mapped = KINDS[alt(activity.sport_type, "")];
 	return mapped === undefined ? alt(activity.sport_type, "Session") : mapped;
 }
@@ -206,10 +217,16 @@ function rangeLine(monday: string, sunday: string): string {
 
 type Target = { label: string; logged: number; target: number | null; note: string };
 
+/** A label as Title Case, an acronym (PT) kept in capitals. */
+function modalityLabel(value: unknown): string {
+	const raw = jqToString(alt(value, ""));
+	return /^[A-Z]{2,}$/.test(raw) ? raw : titlecase(raw);
+}
+
 /** The model's coverage, with its note. */
 function movementTargets(draft: RetroDraft): Target[] {
 	return alt(draft.coverage, []).map((row) => ({
-		label: titlecase(row.modality),
+		label: modalityLabel(row.modality),
 		logged: num(row.logged),
 		target: num(row.target),
 		note: jqToString(alt(row.note, "")),
@@ -309,23 +326,51 @@ function funnel(draft: RetroDraft): Staged[] {
  * clock, so the card gets what the week table knows and nothing invented.
  */
 
+/** "Wed 10-07" from 2026-10-07, the way the retro writes a day; "" for none. */
+function replyDay(row: FunnelRow): string {
+	const date = jqToString(alt(row.last_reply, ""));
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
+	return `${weekdayName(fromDate(`${date}T00:00:00Z`))} ${slice(date, 5)}`;
+}
+
+/**
+ * The week's last touch, named by the pull (First, Bump, Reply, Drop off) and
+ * shown as it is; a draft from before the pull carried one falls back to the
+ * week's touch kinds, title cased the way it always was.
+ */
+function lastTouchOf(row: FunnelRow): string {
+	const named = jqToString(alt(row.last_touch, ""));
+	return named !== "" ? named : titlecase(alt(row.kind, ""));
+}
+
 function leadRecord(row: FunnelRow): RecordStackItem {
-	const kind = titlecase(alt(row.kind, ""));
+	const kind = lastTouchOf(row);
 	const touches = row.touches === null || row.touches === undefined ? null : Number(row.touches);
 	const opens = row.opens === null || row.opens === undefined ? null : Number(row.opens);
+	const replied = replyDay(row);
 	return recordCard({
 		title: row.company,
 		badge: row.status,
-		touch: { touches, opens, replied: row.replied === "yes" },
+		// A dated reply rides on the clock ("replied Wed 10-07"); the bare
+		// word is only for a row that says yes with no day.
+		touch: { touches, opens, replied: replied === "" && row.replied === "yes", lastReply: replied },
 		note: kind === "" ? undefined : `Last touch: ${kind}`,
 	});
 }
 
+/**
+ * A deal that heard back this week says so on the funnel, a Replied pill and
+ * the day, rather than reading as a stage that held (Wynkoop Athletics at
+ * Proposal in W41, with its 10-07 reply on the record).
+ */
 function dealRecord(row: FunnelRow): RecordStackItem {
 	const cash = alt(row.cash, "-");
+	const replied = replyDay(row);
 	return recordCard({
 		title: row.company,
+		badge: replied !== "" || row.replied === "yes" ? "Replied" : undefined,
 		deal: { stage: alt(row.stage, ""), amount: null, cash: cash === "-" ? "" : cash },
+		note: replied === "" ? undefined : `Replied ${replied}`,
 	});
 }
 
@@ -387,13 +432,15 @@ function sessionsTable(week: Session[]): ReactNode {
 		{ value: numberString(session.minutes), mono: true },
 		{ value: session.miles === null ? "" : two(session.miles), mono: true },
 	]);
-	rows.push([
-		{ value: "" },
-		{ value: "Total" },
-		{ value: "" },
-		{ value: numberString(totalMinutes(week)), mono: true },
-		{ value: two(totalMiles(week)), mono: true },
-	]);
+	for (const line of totalLines(week)) {
+		rows.push([
+			{ value: "" },
+			{ value: line.label },
+			{ value: "" },
+			{ value: numberString(line.minutes), mono: true },
+			{ value: two(line.miles), mono: true },
+		]);
+	}
 	return <Records columns={columns} rows={rows} />;
 }
 
@@ -403,6 +450,40 @@ function totalMinutes(week: Session[]): number {
 
 function totalMiles(week: Session[]): number {
 	return week.reduce((sum, session) => sum + alt(session.miles, 0), 0);
+}
+
+/** "runs, rides, workouts": every kind that carried miles, in the order the week met them. */
+function mileageKinds(week: Session[]): string[] {
+	const kinds: string[] = [];
+	for (const session of week) {
+		if (session.miles === null || kinds.includes(session.kind)) continue;
+		kinds.push(session.kind);
+	}
+	return kinds.map((kind) => (kind === "PT" ? kind : `${asciiDowncase(kind)}s`));
+}
+
+type TotalLine = { label: string; minutes: number; miles: number };
+
+/**
+ * The week's mileage is every session's miles, rides and workouts as much as
+ * runs, and the total says what it holds so it is never read as running
+ * alone (the W41 narrative did, past a 4.93 mile ride). When anything but a
+ * run carried miles, the run only figure sits on the line under it.
+ */
+function totalLines(week: Session[]): TotalLine[] {
+	const kinds = mileageKinds(week);
+	const lines: TotalLine[] = [
+		{
+			label: kinds.length === 0 ? "Total" : `Total: ${kinds.join(", ")}`,
+			minutes: totalMinutes(week),
+			miles: totalMiles(week),
+		},
+	];
+	if (kinds.some((kind) => kind !== "runs")) {
+		const runs = week.filter((session) => session.kind === "Run");
+		lines.push({ label: "Runs only", minutes: totalMinutes(runs), miles: totalMiles(runs) });
+	}
+	return lines;
 }
 
 export function retroHTML(input: unknown, context: RenderContext): string {
@@ -569,7 +650,13 @@ export function retroText(input: unknown, context: RenderContext): string {
 							numberString(session.minutes),
 							session.miles === null ? "" : two(session.miles),
 						]),
-						["", "Total", "", numberString(totalMinutes(week)), two(totalMiles(week))],
+						...totalLines(week).map((line) => [
+							"",
+							line.label,
+							"",
+							numberString(line.minutes),
+							two(line.miles),
+						]),
 					],
 					[3, 4],
 				);

@@ -118,6 +118,16 @@ Payee corrections (session 2026-10-05):
 - On Personal, `ACH Deposit: 261003712 ... MONEYLINE` is still the HSA premium reimbursement; the MONEYLINE suffix marks a funding move only on Atelic.
 - The small monthly `Anthem Blue Cross Blue Shield` charge is the dental premium. The health premium is `Elevate Health Plans`, the one the HSA reimburses.
 
+Payee corrections (session 2026-10-12):
+
+- `Altra` -> `💪 Fitness`, never Outdoorsman (Forni: "Altra is an athlete").
+- `Pacific Mercantile` (the Japanese grocery at Sakura Square) -> `🛒 Groceries`.
+- `Chase Annual CC Fee` ANNUAL FEE REFUND -> `💳 Card Fees`, cancelling the fee it refunds.
+- `Alzheimer's Association` -> `🤲 Giving`.
+- A BofA `DES:CASHREWARD` deposit -> `Inflow: Ready to Assign`.
+- Atelic: the `Anthropic Claude` descriptor is reassigned to the existing `Anthropic` payee, `🤖 AI Tools`; `ChatGPT` (OPENAI) -> `🤖 AI Tools`.
+- Atelic: an `Improper City` charge with no memo gets its attendee from Forni while it is fresh (2026-10-08 was `🤝 w/ Kendall, Gnar Nights`).
+
 Payee cleanup mechanics (session 2026-07-18, hard-won):
 
 - **Renaming a payee to an existing name does NOT merge them via the API.** It just creates a second payee with the same display name (verified: renamed `Illegalpetes` -> `Illegal Pete's` and ended with two `Illegal Pete's` records). The app merges on rename; the public API does not.

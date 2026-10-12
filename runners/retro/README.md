@@ -18,7 +18,7 @@ bin/runner/fire retro                      # run production now
 |---|---|
 | `Dockerfile` | `node:24-slim` plus curl, jq, tzdata, and a pinned Claude Code; runs as the non root `runner` user |
 | `entrypoint.sh` | The pulls and the Strava write back, on the shared scaffold in `runners/lib/runner.sh` (the week, the `claude -p` call with Read as its only tool, the draft check, the render, the send) |
-| `hubspot.mjs` | The Atelic pull, called by `entrypoint.sh`: the HubSpot joins and the outreach arithmetic, handed to the prompt as finished tables |
+| `../lib/hubspot.mjs` | The Atelic pull (its `week` command), called by `entrypoint.sh`: the HubSpot joins and the outreach arithmetic, handed to the prompt as finished tables. Each row carries the day of any reply this week, deals included, and the kind of its last touch, where a paper drop off (a meeting titled as one) is its own kind and never a bump |
 | `prompt.md` | The retro brief: the block's grading, the JSON shape, the voice rules; `{{WEEK}}`, `{{MONDAY}}`, `{{SUNDAY}}`, `{{TODAY}}`, `{{WORK}}`, `{{EUDY}}` are filled at run time |
 
 The page lands at `out/email.html` and the draft at `out/retro.json`, the names every runner uses.
