@@ -1116,7 +1116,7 @@ async function sweep(argv) {
     const md = [
         `# Portal sweep for ${monday} to ${sunday}, read on ${stampDay}`,
         "",
-        "Pulled from the Atelic portal by the runner before the model started. Every section is the pull's suggestion from the record; the mailbox and the thread decide. Days count from the build day.",
+        "Pulled from the Atelic portal by the runner before the model started. Every section is the pull's suggestion from the record; the mailbox and the thread decide. Days count from the opening of the week the roster is for (Monday 00:00 Denver, or the run itself on a replay), as they will read on Monday morning.",
         "",
         "## Counts",
         "",
@@ -1128,7 +1128,7 @@ async function sweep(argv) {
         "",
         "## The Funnel",
         "",
-        `Seven buckets read off the portal as it stands, now against ${funnel.from} (seven days before the build). The runner renders this strip and every company in the four listed stages into the email itself; your read names what moved and why.`,
+        `Seven buckets read off the portal as it stands, now against ${funnel.from} (seven days before the week opens). The runner renders this strip and every company in the four listed stages into the email itself; your read names what moved and why.`,
         "",
         table(["Stage", "Now", "A week ago", "Change", "Entered this week", "Left this week"], funnel.stages.map((st) => [
             st.label, st.now, st.then, `${st.delta >= 0 ? "+" : ""}${st.delta}${st.pct === null ? "" : ` (${st.pct >= 0 ? "+" : ""}${st.pct}%)`}`,

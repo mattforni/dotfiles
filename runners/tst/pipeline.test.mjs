@@ -270,7 +270,8 @@ test("a Sunday night run for the week ahead ends the table at the closing week a
     assert.deepEqual(ahead.weeks, monday.weeks);
     assert.equal(ahead.weeks.at(-1).week, "2026-W41");
     assert.equal(ahead.weeks.at(-1).tracked, 10);
-    assert.equal(ahead.flag, monday.flag);
+    // The closing week is complete by Sunday night, so it is the week judged.
+    assert.match(ahead.flag, /^W41 opened at 0% on 10 tracked sends/);
 });
 
 /* ---------- the named lines ---------- */
