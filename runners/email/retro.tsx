@@ -138,8 +138,11 @@ const KINDS: Record<string, string> = {
  */
 const PT_NAME = /^(\d{4}\s+)?PT\b(?!\.)/;
 
+/** The sport types a PT session is logged under; a Run named "PT Reyes" stays a run. */
+const PT_SPORTS = new Set(["WeightTraining", "Workout"]);
+
 function kindOf(activity: Activity): string {
-	if (PT_NAME.test(cleanName(activity).trim())) return "PT";
+	if (PT_SPORTS.has(alt(activity.sport_type, "")) && PT_NAME.test(cleanName(activity).trim())) return "PT";
 	const mapped = KINDS[alt(activity.sport_type, "")];
 	return mapped === undefined ? alt(activity.sport_type, "Session") : mapped;
 }
@@ -219,9 +222,9 @@ type Target = { label: string; logged: number; target: number | null; note: stri
 
 /** A label as Title Case, an acronym (PT) kept in capitals. */
 function modalityLabel(value: unknown): string {
-	const raw = jqToString(alt(value, ""));
-	const acronyms = raw.split(" ");
-	return titlecase(raw)
+	// Split the way titlecase does (underscores are spaces) so the words line up.
+	const acronyms = jqToString(alt(value, "")).replace(/_/g, " ").split(" ");
+	return titlecase(value)
 		.split(" ")
 		.map((word, index) => (/^[A-Z]{2,}$/.test(acronyms[index] ?? "") ? acronyms[index] : word))
 		.join(" ");
@@ -494,8 +497,8 @@ function totalLines(week: Session[]): TotalLine[] {
 			miles: totalMiles(week),
 		},
 	];
-	if (kinds.some((kind) => kind !== "runs")) {
-		const runs = week.filter((session) => session.kind === "Run");
+	const runs = week.filter((session) => session.kind === "Run");
+	if (runs.length > 0 && kinds.some((kind) => kind !== "runs")) {
 		lines.push({ label: "Runs only", minutes: totalMinutes(runs), miles: totalMiles(runs) });
 	}
 	return lines;
