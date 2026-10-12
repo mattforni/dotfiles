@@ -85,10 +85,10 @@ Opens and Responses by Week
   sends, which is too few to call a trend and enough to watch.
 
   Week   Tracked   Opened   Open Rate  Responded  Respond Rate
-  W5     8 (-22)  3 (-15)  38% (-22%)
   W4    30 (+10)  18 (+6)    60% (0%)     5 (+3)     17% (+7%)
   W3     20 (+8)  12 (+3)  60% (-15%)      2 (0)     10% (-7%)
   W2     12 (+2)   9 (+3)  75% (+15%)     2 (+1)     17% (+7%)
+  W1          10        6         60%          1           10%
 
 
 ================================================================
@@ -113,7 +113,8 @@ THE GROOM
 ================================================================
 
   The groom moved 2 companies and 1 contact to match what the record
-  already showed.
+  already showed. Left cleared on purpose: Dale Okonkwo, Front Range
+  Cleanup Crew.
 
 Left for you · 3
   Native Roofing and Native Roofing and Solar,

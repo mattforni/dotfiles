@@ -109,6 +109,8 @@ function pastOutreach(company, sentMs) {
  *   new run and counts again; cutting at the first reply anywhere in the
  *   lookback meant a fresh first touch after a dead conversation never did.
  * - A send to a company already at Opportunity or Customer is out (above).
+ * - A logged call is a touch on the sweep's record and not a send, so it is
+ *   out too (ATE-652).
  * - A company's day is tracked when any copy that day carried tracking and
  *   opened when a tracked copy shows an open.
  * - The reply that ends a run is credited to exactly one send, the latest
@@ -127,6 +129,10 @@ export function outreachSends(portal) {
         if (!byCompany.has(c.company_id)) byCompany.set(c.company_id, []);
         const events = byCompany.get(c.company_id);
         for (const t of c.touches || []) {
+            // A call is a touch for the cadence and never a send: it has no
+            // open to read and no thread a reply could answer, so it stays out
+            // of the send weeks and can never take a reply's credit.
+            if (t.kind === "call") continue;
             const ts = typeof t.ts === "number" ? t.ts : Date.parse(`${t.date}T18:00:00Z`);
             if (!Number.isNaN(ts)) events.push({ send: { ...t, ts, day: typeof t.ts === "number" ? denverDay(t.ts) : t.date }, ts });
         }

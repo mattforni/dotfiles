@@ -206,6 +206,17 @@ test("a send to a company already at Opportunity or Customer is not outreach", (
     assert.deepEqual(outreachSends(portal).map((s) => `${s.company}|${s.day}`), ["1|2026-10-05"]);
 });
 
+test("a logged call is a touch and never a send, so it is out of the weeks and takes no reply's credit", () => {
+    const portal = portalOf({
+        companies: [company("1")],
+        contacts: [contact("a", "1",
+            [touch("2026-10-06T15:00:00Z", { kind: "email", opens: 1 }), touch("2026-10-08T15:30:00Z", { kind: "call", tracked: false, opens: null })],
+            [reply("2026-10-08T20:00:00Z")])],
+    });
+    const sends = outreachSends(portal);
+    assert.deepEqual(sends.map((s) => [s.day, s.responded]), [["2026-10-06", true]], "the email drew the reply, the call is not a send");
+});
+
 /* ---------- the flag ---------- */
 
 /** Four weeks of sends, each `[tracked, opened]`, the last one the week before the run's. */

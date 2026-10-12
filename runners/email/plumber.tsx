@@ -104,7 +104,11 @@ type Groom = {
 	companies?: unknown[] | null;
 	contacts?: unknown[] | null;
 	proposed?: Proposed[] | null;
+	/** The contacts the groom left alone because their Lead Status was cleared on purpose (ATE-652); the mail names them. */
+	cleared?: Cleared[] | null;
 } | null;
+/** A contact with a touch on the record and a Lead Status cleared by hand: `was` is the value it held, `cleared_at` the day it was cleared. */
+type Cleared = { name?: unknown; company?: unknown; url?: string | null; was?: unknown; cleared_at?: unknown };
 
 /**
  * One named line of the list, a sentence in four parts: who, what is owed,
@@ -543,16 +547,44 @@ function weekRows(weeks: SendWeek[]): WeekCell[][] {
 const WEEK_COLUMNS = ["Week", "Tracked", "Opened", "Open Rate", "Responded", "Respond Rate"];
 
 /**
- * How many of the weeks handed over are drawn: all but the oldest, which is
- * there only to give the last row drawn its change, since a row with no week
- * beneath it has none to show. Read off what arrived rather than off a number
- * of its own, so the runner's count of weeks and the table's cannot drift
- * apart; a lone week is drawn as it is, and the cap is a guard on a runner
- * that sends a year by mistake, not a setting.
+ * The weeks the table may draw: completed weeks only, never the week the
+ * mail is for nor any after it (Forni, 2026-10-12, "only include completed
+ * weeks"). A Monday run is handed the week it runs in, still empty, and the
+ * W42 mail drew it as its first row, "0 (-31)". A Sunday night run for the
+ * week ahead is handed only completed weeks, so nothing is dropped there. A
+ * week the renderer cannot read as YYYY-Www is kept, since it cannot be
+ * judged. `weeks` is newest first, so what is dropped is always its head.
+ */
+function completedWeeks(weeks: SendWeek[], current: string): SendWeek[] {
+	return weeks.filter((week) => {
+		const raw = jqToString(alt(week.week, ""));
+		return !/^\d{4}-W\d{2}$/.test(raw) || !/^\d{4}-W\d{2}$/.test(current) || raw < current;
+	});
+}
+
+/**
+ * How many of the completed weeks are drawn, newest first. As many as were
+ * handed over less one, the one the runner adds so the oldest row drawn has a
+ * week beneath it to read its change against; and never more than were
+ * completed. Until 2026-10-12 this was all but the oldest of whatever
+ * arrived, so on a Monday run the current week took the first row and the
+ * oldest completed week fell off the foot. Now the current week is dropped
+ * and the completed weeks keep their rows: on a Monday run the oldest of them
+ * is drawn with no change, since nothing completed sits beneath it. Read off
+ * what arrived rather than off a number of its own, so the runner's count of
+ * weeks and the table's cannot drift apart; a lone week is drawn as it is,
+ * and the cap is a guard on a runner that sends a year by mistake, not a
+ * setting.
  */
 const WEEKS_DRAWN_AT_MOST = 12;
-function weeksDrawn(weeks: SendWeek[]): number {
-	return Math.min(Math.max(weeks.length - 1, 1), WEEKS_DRAWN_AT_MOST);
+function weeksDrawn(handed: SendWeek[], completed: SendWeek[]): number {
+	return Math.min(Math.max(handed.length - 1, 1), completed.length, WEEKS_DRAWN_AT_MOST);
+}
+
+/** The table's rows: the completed weeks, newest first, each change read off the completed week beneath it. */
+function drawnWeekRows(handed: SendWeek[], current: string): WeekCell[][] {
+	const completed = completedWeeks(handed, current);
+	return weekRows(completed).slice(0, weeksDrawn(handed, completed));
 }
 
 /* ---------- cloud routines ---------- */
@@ -601,11 +633,27 @@ function groomLine(groom: Groom): string {
 	const stages = alt(groom?.companies, []).length;
 	const contacts = alt(groom?.contacts, []).length;
 	if (groom === null || groom === undefined) return "The groom did not run this week.";
+	const cleared = clearedSentence(groom);
 	if (groom.applied === false) {
-		return `Read only this run: ${plural(stages, "stage move")} and ${plural(contacts, "status move")} were computed and nothing was written.`;
+		return `Read only this run: ${plural(stages, "stage move")} and ${plural(contacts, "status move")} were computed and nothing was written.${cleared}`;
 	}
-	if (stages === 0 && contacts === 0) return "The portal already said what was true; nothing moved.";
-	return `The groom moved ${plural(stages, "company")} and ${plural(contacts, "contact")} to match what the record already showed.`;
+	if (stages === 0 && contacts === 0) return `The portal already said what was true; nothing moved.${cleared}`;
+	return `The groom moved ${plural(stages, "company")} and ${plural(contacts, "contact")} to match what the record already showed.${cleared}`;
+}
+
+/**
+ * The contacts the groom left alone because their Lead Status was cleared on
+ * purpose, as one sentence after the groom's own: a clear is a decision, and
+ * until ATE-652 the groom undid it every week without saying so. Empty when
+ * there are none.
+ */
+function clearedSentence(groom: Groom): string {
+	const names = alt(groom?.cleared, []).map((c) =>
+		[jqToString(alt(c.name, "")), jqToString(alt(c.company, ""))].filter((part) => part !== "").join(", "),
+	);
+	const shown = names.filter((name) => name !== "");
+	if (shown.length === 0) return "";
+	return ` Left cleared on purpose: ${shown.join("; ")}.`;
 }
 
 /* ---------- html ---------- */
@@ -615,7 +663,7 @@ export function pipelineHTML(input: unknown, context: RenderContext): string {
 	const funnel = draft.funnel ?? null;
 	const named = namedGroups(draft);
 	const needs = [...named, ...countGroup(draft)];
-	const weeks = healthWeeks(draft.health ?? null);
+	const weekTable = drawnWeekRows(healthWeeks(draft.health ?? null), context.week);
 	const flag = jqToString(alt(draft.health?.flag, ""));
 	const left = leftForYou(draft);
 	const rosterUrl = jqToString(alt(draft.roster_url, ""));
@@ -674,13 +722,13 @@ export function pipelineHTML(input: unknown, context: RenderContext): string {
 					)}
 				</Card>
 
-				{weeks.length === 0 ? null : (
+				{weekTable.length === 0 ? null : (
 					<>
 						<Eyebrow text="Opens and Responses by Week" />
 						<Card>
 							{flag === "" ? null : <Note eyebrowText="Flag" text={flag} accented={true} last={false} />}
 							<Row last={true}>
-								<WeekTable columns={WEEK_COLUMNS} rows={weekRows(weeks).slice(0, weeksDrawn(weeks))} />
+								<WeekTable columns={WEEK_COLUMNS} rows={weekTable} />
 							</Row>
 						</Card>
 					</>
@@ -751,7 +799,7 @@ export function pipelineText(input: unknown, context: RenderContext): string {
 	const funnel = draft.funnel ?? null;
 	const named = namedGroups(draft);
 	const needs = [...named, ...countGroup(draft)];
-	const weeks = healthWeeks(draft.health ?? null);
+	const weekTable = drawnWeekRows(healthWeeks(draft.health ?? null), context.week);
 	const flag = jqToString(alt(draft.health?.flag, ""));
 	const left = leftForYou(draft);
 
@@ -778,12 +826,10 @@ export function pipelineText(input: unknown, context: RenderContext): string {
 		]);
 		out += `${textTable(["Stage", "Now", "Change", "In", "Out"], rows, [1, 3, 4])}\n`;
 	}
-	if (weeks.length > 0) {
+	if (weekTable.length > 0) {
 		out += "\nOpens and Responses by Week\n";
 		if (flag !== "") out += `${wrap(`Flag: ${flag}`)}\n\n`;
-		const rows = weekRows(weeks)
-			.slice(0, weeksDrawn(weeks))
-			.map((cells) => cells.map((cell) => `${cell.value}${cell.change ? ` ${cell.change}` : ""}`));
+		const rows = weekTable.map((cells) => cells.map((cell) => `${cell.value}${cell.change ? ` ${cell.change}` : ""}`));
 		out += `${textTable(WEEK_COLUMNS, rows, [1, 2, 3, 4, 5])}\n`;
 	}
 

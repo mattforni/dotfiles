@@ -118,26 +118,66 @@ test("a fire is one draft, spent on one name, never claimed by two people at one
 	]);
 });
 
-test("the week table draws four weeks and reads the oldest one's change off the fifth", () => {
+/*
+ * Completed weeks only (ATE-652, Forni 2026-10-12). Every golden renders for
+ * 2026-W05, so W05 is the week the mail is for and is never a row; the
+ * fixture hands it over the way a Monday run did, W01 to W05.
+ */
+const weekRowsOf = (draft) =>
+	renderRaw("plumber", "text", JSON.stringify(draft))
+		.stdout.split("\n")
+		.filter((line) => /^\s+W\d+\s/.test(line))
+		.map((line) => line.trim().split(/\s+/)[0]);
+const sendWeek = (year, n) => ({ week: `${year}-W${String(n).padStart(2, "0")}`, tracked: 10 + n, opened: n, rate: null, responded: 0, respond_rate: null });
+
+test("the week table never draws the week the mail is for, and keeps the oldest completed week", () => {
 	const text = renderRaw("plumber", "text", JSON.stringify(plumberDraft())).stdout;
 	const rows = text.split("\n").filter((line) => /^\s+W\d+\s/.test(line));
-	assert.equal(rows.length, 4);
-	assert.match(rows[3], /^\s+W2\s+12 \(\+2\)\s+9 \(\+3\)\s+75% \(\+15%\)/);
-	assert.ok(!/^\s+W1\s/m.test(text), "the fifth week is never drawn");
+	assert.deepEqual(weekRowsOf(plumberDraft()), ["W4", "W3", "W2", "W1"]);
+	assert.ok(!/^\s+W5\s/m.test(text), "the current week is never a row");
+	assert.match(rows[0], /^\s+W4\s+30 \(\+10\)\s+18 \(\+6\)\s+60% \(0%\)/, "the newest completed week reads its change off the one before");
+	assert.match(rows[3], /^\s+W1\s+10\s+6\s+60%\s+1\s+10%$/, "the oldest completed week is drawn, with no change since nothing completed sits beneath it");
 });
 
-test("the week table draws every week it is handed but the oldest, however many arrive", () => {
-	const weekRowsOf = (draft) => renderRaw("plumber", "text", JSON.stringify(draft)).stdout.split("\n").filter((line) => /^\s+W\d+\s/.test(line)).map((line) => line.trim().split(/\s+/)[0]);
-	const week = (n) => ({ week: `2026-W${String(n).padStart(2, "0")}`, tracked: 10 + n, opened: n, rate: null, responded: 0, respond_rate: null });
+test("a run handed only completed weeks draws all but the oldest, which gives the last row its change", () => {
+	// The Sunday night run for the week ahead: five completed weeks, four rows.
 	const draft = plumberDraft();
-	draft.health.weeks = [1, 2, 3, 4, 5, 6, 7].map(week);
-	assert.deepEqual(weekRowsOf(draft), ["W7", "W6", "W5", "W4", "W3", "W2"], "seven handed over, six drawn");
-	draft.health.weeks = [4, 5].map(week);
-	assert.deepEqual(weekRowsOf(draft), ["W5"]);
-	draft.health.weeks = [5].map(week);
-	assert.deepEqual(weekRowsOf(draft), ["W5"], "a lone week is drawn as it is");
-	draft.health.weeks = Array.from({ length: 30 }, (_, i) => week(i + 1));
+	draft.health.weeks = [sendWeek(2025, 52), ...[1, 2, 3, 4].map((n) => sendWeek(2026, n))];
+	assert.deepEqual(weekRowsOf(draft), ["W4", "W3", "W2", "W1"]);
+	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout;
+	assert.ok(!/^\s+W52\s/m.test(text), "the fifth completed week is never drawn");
+	assert.match(text, /^\s+W1\s+11 \(-51\)/m, "and the oldest row drawn reads its change off it");
+});
+
+test("the week table draws the completed weeks it is handed less one, however many arrive", () => {
+	const draft = plumberDraft();
+	draft.health.weeks = [40, 41, 42, 43, 44, 45, 46].map((n) => sendWeek(2025, n));
+	assert.deepEqual(weekRowsOf(draft), ["W46", "W45", "W44", "W43", "W42", "W41"], "seven handed over, six drawn");
+	draft.health.weeks = [3, 4].map((n) => sendWeek(2026, n));
+	assert.deepEqual(weekRowsOf(draft), ["W4"]);
+	draft.health.weeks = [4].map((n) => sendWeek(2026, n));
+	assert.deepEqual(weekRowsOf(draft), ["W4"], "a lone week is drawn as it is");
+	draft.health.weeks = [4, 5, 6].map((n) => sendWeek(2026, n));
+	assert.deepEqual(weekRowsOf(draft), ["W4"], "the week the mail is for and any after it are never drawn");
+	draft.health.weeks = Array.from({ length: 30 }, (_, i) => sendWeek(2025, i + 1));
 	assert.equal(weekRowsOf(draft).length, 12, "and a runner that sends a year by mistake is capped");
+});
+
+test("a run handed no completed week draws no table at all", () => {
+	const draft = plumberDraft();
+	draft.health.weeks = [sendWeek(2026, 5)];
+	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout;
+	assert.deepEqual(weekRowsOf(draft), []);
+	assert.ok(!text.includes("Opens and Responses by Week"));
+	assert.ok(!renderRaw("plumber", "html", JSON.stringify(draft)).stdout.includes("Opens and Responses by Week"));
+});
+
+test("the groom names who it left cleared on purpose", () => {
+	const text = renderRaw("plumber", "text", JSON.stringify(plumberDraft())).stdout;
+	assert.match(text.replace(/\s+/g, " "), /Left cleared on purpose: Dale Okonkwo, Front Range Cleanup Crew\./);
+	const none = plumberDraft();
+	delete none.groom.cleared;
+	assert.ok(!renderRaw("plumber", "text", JSON.stringify(none)).stdout.includes("cleared on purpose"));
 });
 
 test("an unknown runner fails loudly", () => {

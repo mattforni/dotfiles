@@ -45,11 +45,13 @@ jobs:
           node-version: "20"
 
       # The folds the Pipeline mail's named lines and send weeks come from
-      # (runners/lib/pipeline.mjs) and the Linear read beside them: pure
-      # functions over small invented portals with no dependency to install,
-      # so they run ahead of the install and fail in seconds.
+      # (runners/lib/pipeline.mjs) and the Linear read beside them, and the
+      # sweep's pure parts (runners/lib/hubspot.mjs: a cleared status, calls
+      # as touches): pure functions over small invented portals with no
+      # dependency to install, so they run ahead of the install and fail in
+      # seconds.
       - name: Runner lib tests
-        run: node --test ../tst/pipeline.test.mjs
+        run: node --test ../tst/pipeline.test.mjs ../tst/hubspot.test.mjs
 
       - name: Install
         run: npm ci
