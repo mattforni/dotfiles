@@ -579,8 +579,14 @@ async function sweep(argv) {
     // Day counts are measured from the day the roster is built. A rerun later
     // in the same week counts from that day; a rerun for a past week counts
     // from its Monday, so a replay does not drift.
+    // The clamp up to the target Monday is deliberate: the roster is read as
+    // of the opening midnight of the week it is for, about ninety minutes
+    // after a Sunday 22:30 fire, so day counts read as they will on Monday
+    // morning. The stamps below use the real clock, so a file never claims
+    // tomorrow's date.
     const refMs = Math.min(Math.max(Date.now(), mondayMs), sundayEndMs - 1);
     const refDay = denverDate(refMs);
+    const stampDay = denverDate(Date.now());
     const daysSince = (ts) => (ts ? Math.floor((refMs - Date.parse(ts)) / MS_DAY) : null);
     const lookbackMs = String(mondayMs - Number(process.env.SWEEP_LOOKBACK_DAYS || 120) * MS_DAY);
     const recentMs = String(mondayMs - 60 * MS_DAY);
@@ -914,7 +920,7 @@ async function sweep(argv) {
     const nextUpNew = nextUp.filter((c) => c.contacts.some((id) => contacts.get(id)?.hs_lead_status === "NEW"));
     const inFlight = reads.filter((r) => r.status === "CONTACTED" && !r.last_reply && r.tracked_sends > 0);
     const counts = {
-        built: refDay, week: { monday, sunday },
+        built: stampDay, week: { monday, sunday },
         next_up: nextUp.length, next_up_with_new: nextUpNew.length,
         unscored: leads.filter((c) => !c.fit).length,
         funnel_companies: companies.size,
@@ -1048,7 +1054,7 @@ async function sweep(argv) {
         closed: (a, b) => (b.closed?.date || "").localeCompare(a.closed?.date || ""),
     };
     const funnel = {
-        built: refDay, from: denverDate(weekAgoMs), to: refDay,
+        built: stampDay, from: denverDate(weekAgoMs), to: refDay,
         stages: STAGE_ORDER.map((key) => {
             const nowList = byStage.now.get(key) || [], thenList = byStage.then.get(key) || [];
             const thenIds = new Set(thenList.map((c) => c.id)), nowIds = new Set(nowList.map((c) => c.id));
@@ -1108,7 +1114,7 @@ async function sweep(argv) {
 
     const active = reads.filter((r) => !["closed", "not_in_motion"].includes(r.section)).sort((a, b) => a.company.localeCompare(b.company));
     const md = [
-        `# Portal sweep for ${monday} to ${sunday}, read on ${refDay}`,
+        `# Portal sweep for ${monday} to ${sunday}, read on ${stampDay}`,
         "",
         "Pulled from the Atelic portal by the runner before the model started. Every section is the pull's suggestion from the record; the mailbox and the thread decide. Days count from the build day.",
         "",

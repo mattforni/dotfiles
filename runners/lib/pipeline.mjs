@@ -204,7 +204,7 @@ export function healthFlag(rows, monday, nowMs) {
 }
 
 /**
- * The send weeks, oldest first, the week of `monday` last, and the flag. One
+ * The send weeks, oldest first, the latest started week last (the week of `monday`, or the one before it on a run ahead of it), and the flag. One
  * more week is handed over than the table draws (HEALTH_HANDED), so the
  * oldest row drawn has a week beneath it to read its change against.
  */
@@ -213,7 +213,10 @@ export function healthOf(portal, monday, nowMs) {
     // Enough weeks that the judged week has its three behind it whichever
     // week that turns out to be, and never fewer than are handed over.
     const span = Math.max(HEALTH_HANDED, 2 + FLAG_PRIOR_WEEKS);
-    const rows = Array.from({ length: span }, (_, i) => weekRow(isoWeek(addDays(monday, -7 * (span - 1 - i))), sends));
+    // The table ends at the latest week that has started: a Sunday night run
+    // for the week ahead ends it at the closing week, never an empty future row.
+    const last = denverDay(nowMs) < monday ? addDays(monday, -7) : monday;
+    const rows = Array.from({ length: span }, (_, i) => weekRow(isoWeek(addDays(last, -7 * (span - 1 - i))), sends));
     return { weeks: rows.slice(-HEALTH_HANDED), flag: healthFlag(rows, monday, nowMs) };
 }
 

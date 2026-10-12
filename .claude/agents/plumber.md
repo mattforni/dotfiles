@@ -105,7 +105,7 @@ judgment.
 
 ## Method
 
-**Read this week's file before step 1.** If
+**Read the target week's file before step 1** (the runner names the week; a Sunday night run is for the week that opens tomorrow). If
 `Outreach/<ISO week>-roster.md` opens with **Not yet built**, it is the
 skeleton: run every step, and in step 6 write the roster over everything above
 `## Placed Ahead`, giving each entry under that heading a fully worked line in
@@ -319,7 +319,7 @@ one file.
    weekly run the runner commits the file and pushes it to main once you have
    returned; on a run at the laptop it stays uncommitted for Forni.
 
-   **If this week's file is already built, the week is prepped and you do not
+   **If the target week's file is already built, the week is prepped and you do not
    rebuild it.** The only thing that may be added is a dated amendment, and
    only when Forni asks for one: append the new name under an `## Amendments`
    heading at the foot, with its first touch or its pass, and update the counts

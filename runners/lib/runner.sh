@@ -299,7 +299,8 @@ runner_init() {
         case "$week_default" in
             previous) WEEK="$(previous_week)" ;;
             upcoming) WEEK="$(upcoming_week)" ;;
-            *)        WEEK="$(current_week)" ;;
+            current)  WEEK="$(current_week)" ;;
+            *)        echo "runner_init: unknown week default '$week_default' (current, previous, or upcoming)" >&2; exit 1 ;;
         esac
     fi
     week_bounds "$WEEK" || exit 1

@@ -303,7 +303,7 @@ pull_ledger() {
 # Both are hard failures: the draft is already saved by then, so nothing the
 # model produced is lost (`render-local` replays it), and an unattended run
 # that silently kept its rows out of the ledger would chase every one of them
-# again next Monday.
+# again the next Sunday night.
 
 # The dedupe guard. The model is told to treat a key already in ledger.md as
 # a resurfaced dedupe, and it does for board cards, but a candidate found by

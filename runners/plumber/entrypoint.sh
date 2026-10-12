@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# The Pipeline Runner. Fired by hand before the Tuesday desk block (and by
-# Cloud Scheduler once the cost earns a timer), so the week's outreach roster
+# The Pipeline Runner. Fired by Cloud Scheduler on Sunday night (and by hand), so the week's outreach roster
 # is rebuilt and drafted before the block opens.
 #
 # Shape, the recruiter's (ATE-543): the repos first (the checkouts already
