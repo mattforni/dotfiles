@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# The Recruiter Runner. Meant for Monday 23:00 Denver from Cloud Scheduler, so the
-# Tuesday 07:00 work search block opens on a scored slate rather than a sweep.
+# The Recruiter Runner. Meant for Sunday 23:00 Denver from Cloud Scheduler, so the
+# week's work search block opens on a scored slate rather than a sweep.
 #
 # Shape: Eudaimonia first (the checkout already present, or a shallow clone over
 # the read only deploy key), then the pulls (every board the recruiter's
@@ -40,7 +40,7 @@
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
 #   EUDY                      the Eudaimonia checkout; defaults to $HOME/Eudaimonia,
 #                             which is where the agent's own paths resolve
-#   WEEK                      optional YYYY-Www override; default is this week
+#   WEEK                      optional YYYY-Www override; default is the week tomorrow belongs to
 #   DRY_RUN                   1 renders the email and skips the send; the
 #                             ledger read and writes still happen, since a
 #                             rehearsal that skips them proves nothing
@@ -71,7 +71,7 @@ if [[ -z "${RUNNER_LIB:-}" ]]; then
     exit 1
 fi
 
-runner_init recruiter "Recruiter" current
+runner_init recruiter "Recruiter" upcoming
 
 required=(CLAUDE_CODE_OAUTH_TOKEN PINOLE_API_TOKEN)
 [[ "$DRY_RUN" == "1" ]] || required+=(RESEND_API_KEY REPORT_RECIPIENT)

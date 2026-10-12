@@ -66,11 +66,13 @@ if date -d 2026-01-04 +%F >/dev/null 2>&1; then
     shift_days()     { date -d "$1 $2 days" +%F; }
     midnight_epoch() { date -d "$1 00:00" +%s; }
     previous_week()  { date -d yesterday +%G-W%V; }
+    upcoming_week()  { date -d tomorrow +%G-W%V; }
 else
     day_of_week()    { date -j -f %Y-%m-%d "$1" +%u; }
     shift_days()     { local off="$2"; [[ "$off" == -* ]] || off="+$off"; date -j -v"${off}d" -f %Y-%m-%d "$1" +%F; }
     midnight_epoch() { date -j -f '%Y-%m-%d %H:%M:%S' "$1 00:00:00" +%s; }
     previous_week()  { date -v-1d +%G-W%V; }
+    upcoming_week()  { date -v+1d +%G-W%V; }
 fi
 
 current_week() { date +%G-W%V; }
@@ -241,14 +243,16 @@ meta_line() {
 # mails the page or the failure. What it writes itself is its pulls, its
 # prompt, and the arguments to claude; the scaffold handles the rest.
 
-# Usage: runner_init <name> <Title> [current|previous]
+# Usage: runner_init <name> <Title> [current|previous|upcoming]
 # The name is the runner's directory name (retro, recruiter, pipeline), named
 # explicitly because inside an image the entrypoint lives at /home/runner and
 # its directory says nothing. Title is how the runner names itself everywhere
 # a reader sees it: the subject ("2026-W38 Retro"), the masthead, the failure
 # page. The third argument says which week is the default when WEEK is not
-# set: the week in progress, or the week yesterday belonged to (the retro
-# fires Sunday night about the week that is closing). Reads DRY_RUN, SKIP_PULLS,
+# set: the week in progress, the week yesterday belonged to (the retro
+# fires Sunday night about the week that is closing), or the week tomorrow
+# belongs to (the plumber and the recruiter fire Sunday night to prepare the
+# week that opens in the morning; any other day that is the week in progress). Reads DRY_RUN, SKIP_PULLS,
 # WORK and WEEK from the environment, and needs SELF_DIR (the entrypoint's
 # own directory) and RUNNER_LIB (this file's path) set by the entrypoint's
 # bootstrap. Sets:
@@ -292,7 +296,11 @@ runner_init() {
     exec > >(tee -a "$LOG") 2>&1
 
     if [[ -z "${WEEK:-}" ]]; then
-        if [[ "$week_default" == "previous" ]]; then WEEK="$(previous_week)"; else WEEK="$(current_week)"; fi
+        case "$week_default" in
+            previous) WEEK="$(previous_week)" ;;
+            upcoming) WEEK="$(upcoming_week)" ;;
+            *)        WEEK="$(current_week)" ;;
+        esac
     fi
     week_bounds "$WEEK" || exit 1
 
