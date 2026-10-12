@@ -188,9 +188,10 @@ one file.
    - **No opens at about seven days is a reason to bump, not a reason to
      wait** (Forni, 2026-09-02). Waiting does nothing to improve the odds on
      a send that already failed to land; a second touch is another chance at
-     the inbox. **That bump gets a fresh subject line, not a `Re:`**, because
-     a reply subject buries the new send underneath the unread original,
-     while a new subject earns a fresh look.
+     the inbox. **That bump is a reply in the first send's own thread, and
+     its payload carries new findings, never the first send's** (Forni,
+     2026-10-12; the fresh subject rule is retired). The payload may say in
+     one line that the first finding is still open.
 
    **Sweep the open tasks in the same pass**
    (`hs api "/crm/v3/objects/tasks?..."`, paging until exhausted, then the
