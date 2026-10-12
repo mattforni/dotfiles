@@ -166,10 +166,17 @@ test("the week table draws the completed weeks it is handed less one, however ma
 test("a run handed no completed week draws no table at all", () => {
 	const draft = plumberDraft();
 	draft.health.weeks = [sendWeek(2026, 5)];
+	const flag = draft.health.flag;
+	assert.ok(flag, "the fixture carries a health flag");
+	draft.health.flag = "";
 	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout;
 	assert.deepEqual(weekRowsOf(draft), []);
 	assert.ok(!text.includes("Opens and Responses by Week"));
 	assert.ok(!renderRaw("plumber", "html", JSON.stringify(draft)).stdout.includes("Opens and Responses by Week"));
+	// A flag still reaches the mail when no week is drawn.
+	draft.health.flag = flag;
+	assert.ok(renderRaw("plumber", "text", JSON.stringify(draft)).stdout.replace(/\s+/g, " ").includes(flag.slice(0, 30)));
+	assert.ok(renderRaw("plumber", "html", JSON.stringify(draft)).stdout.includes("Flag"));
 });
 
 test("the groom names who it left cleared on purpose", () => {

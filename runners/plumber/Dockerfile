@@ -38,6 +38,8 @@ RUN npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
 # which is the version a host run fetches through npx.
 ARG MARKDOWNLINT_VERSION=0.23.3
 RUN npm install -g "markdownlint-cli2@${MARKDOWNLINT_VERSION}"
+# One source for the pin: entrypoint.sh reads this instead of its own default.
+ENV MARKDOWNLINT_VERSION=${MARKDOWNLINT_VERSION}
 
 # Non root, its own home so Claude Code has a writable config dir.
 RUN useradd --create-home --shell /bin/bash runner

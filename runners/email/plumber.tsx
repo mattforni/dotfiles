@@ -722,14 +722,16 @@ export function pipelineHTML(input: unknown, context: RenderContext): string {
 					)}
 				</Card>
 
-				{weekTable.length === 0 ? null : (
+				{weekTable.length === 0 && flag === "" ? null : (
 					<>
 						<Eyebrow text="Opens and Responses by Week" />
 						<Card>
-							{flag === "" ? null : <Note eyebrowText="Flag" text={flag} accented={true} last={false} />}
-							<Row last={true}>
-								<WeekTable columns={WEEK_COLUMNS} rows={weekTable} />
-							</Row>
+							{flag === "" ? null : <Note eyebrowText="Flag" text={flag} accented={true} last={weekTable.length === 0} />}
+							{weekTable.length === 0 ? null : (
+								<Row last={true}>
+									<WeekTable columns={WEEK_COLUMNS} rows={weekTable} />
+								</Row>
+							)}
 						</Card>
 					</>
 				)}
@@ -826,9 +828,11 @@ export function pipelineText(input: unknown, context: RenderContext): string {
 		]);
 		out += `${textTable(["Stage", "Now", "Change", "In", "Out"], rows, [1, 3, 4])}\n`;
 	}
-	if (weekTable.length > 0) {
+	if (weekTable.length > 0 || flag !== "") {
 		out += "\nOpens and Responses by Week\n";
 		if (flag !== "") out += `${wrap(`Flag: ${flag}`)}\n\n`;
+	}
+	if (weekTable.length > 0) {
 		const rows = weekTable.map((cells) => cells.map((cell) => `${cell.value}${cell.change ? ` ${cell.change}` : ""}`));
 		out += `${textTable(WEEK_COLUMNS, rows, [1, 2, 3, 4, 5])}\n`;
 	}

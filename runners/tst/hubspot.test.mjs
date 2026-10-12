@@ -145,3 +145,10 @@ test("a called name shows the call on its line, and a call never reads as zero o
     assert.doesNotMatch(line, /0 opens/);
     assert.match(touchLine({ kind: "email", date: "2026-09-14", subject: "Hello", tracked: true, opens: 2, clicks: 0, thread: "t1" }), /^- sent 2026-09-14 "Hello" \(2 opens, 0 clicks\) thread t1$/);
 });
+
+test("a clear outranks the customer rule, but a touch logged after it brings the name back", () => {
+    const touches = [{ kind: "email", date: "2026-09-13", ts: ms("2026-09-13T17:00:00Z") }];
+    assert.equal(statusTrueUp({ status: "", touches, customer: true, history: clearedHistory }).cleared, true);
+    const later = [...touches, { kind: "call", date: "2026-10-10", ts: ms("2026-10-10T17:00:00Z") }];
+    assert.equal(statusTrueUp({ status: "", touches: later, history: clearedHistory }).next, "CONTACTED");
+});

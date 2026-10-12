@@ -31,7 +31,7 @@
 // so the same file runs on a laptop where the key lives in the Keychain.
 
 import { execFileSync } from "node:child_process";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -778,7 +778,7 @@ export function foldTouches({ emails = [], emailContacts = new Map(), calls = []
         const day = denverDate(p.hs_timestamp);
         for (const ct of callContacts.get(c.id) || []) {
             if (!known(ct)) continue;
-            const key = `${ct}|${day}|call`;
+            const key = `${ct}|${day}\u0000call`;
             if (copyKey.has(key)) continue;
             const touch = {
                 id: c.id, kind: "call", date: day, ts: Date.parse(p.hs_timestamp), subject: p.hs_call_title || "",
@@ -800,9 +800,13 @@ export function foldTouches({ emails = [], emailContacts = new Map(), calls = []
  * purpose, which the groom reports so the mail can say so.
  */
 export function statusTrueUp({ status = "", touches = [], replies = [], customer = false, history = [] }) {
+    // A clear is a decision and outranks the customer rule, unless a touch was
+    // logged after it: then the name is back in motion and reads as unset.
+    const clearTs = Math.max(0, ...(history || []).filter((h) => h && !h.value).map((h) => Date.parse(h.timestamp) || 0));
+    const stillCleared = clearedOnPurpose(status, history) && !touches.some((t) => t.ts > clearTs);
+    if (!status && touches.length && stillCleared) return { next: status, why: "", cleared: true };
     if (customer && status !== "QUALIFIED") return { next: "QUALIFIED", why: "the company is a customer" };
     if (!status && touches.length) {
-        if (clearedOnPurpose(status, history)) return { next: status, why: "", cleared: true };
         return { next: "CONTACTED", why: "a logged touch and no Lead Status" };
     }
     if (status === "NEW" && touches.length) return { next: "CONTACTED", why: "a first touch logged" };
@@ -1508,7 +1512,10 @@ async function sweep(argv) {
 // ---------- dispatch ----------
 
 // Only when run as a script, so runners/tst can import the pure parts.
-if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+const ranAsScript = () => {
+    try { return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href; } catch { return false; }
+};
+if (ranAsScript()) {
     const [command, ...rest] = process.argv.slice(2);
     if (command === "week") await week(rest);
     else if (command === "sweep") await sweep(rest);
