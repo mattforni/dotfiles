@@ -3,10 +3,11 @@
 //
 //   node hubspot.mjs week <after-epoch> <before-epoch> > atelic.json
 //       The retro's three finished tables for one ISO week: what outreach went
-//       out and what came back (ATE-471). Unchanged since it lived at
-//       runners/retro/hubspot.mjs; moved here 2026-09-15 (ATE-551) so the
-//       pipeline sweep below could reuse the client and the joins rather than
-//       grow a second copy of them.
+//       out and what came back (ATE-471). It lived at
+//       runners/retro/hubspot.mjs until 2026-09-15 (ATE-551), when it moved
+//       here so the pipeline sweep below could reuse the client and the joins
+//       rather than grow a second copy of them. Since W42 it also reads the
+//       week's paper drop offs and carries every reply's day, deals included.
 //   node hubspot.mjs sweep <monday YYYY-MM-DD> <out-dir>
 //       The pipeline runner's portal sweep for the week that starts on that
 //       Monday: every funnel company and contact, every logged email with its
@@ -99,6 +100,16 @@ const NOISE = [
     /^(do not reply|no-?reply)\b/i,
 ];
 const isNoise = (p) => NOISE.some((re) => re.test((p.hs_email_subject || "").trim()));
+
+// A paper drop off from the Thursday walkabout is logged as a HubSpot meeting
+// titled as a drop off (Atelic Outreach/README.md, The Visit), and it is a
+// touch of its own kind: not a bump, since no email went, and not a visit,
+// since nobody talked. The titles in the portal are not uniform yet, which is
+// why the front desk phrasing is matched too: Colorado Cleanup Services' W41
+// drop off is "writeup left at the front desk", and the retro printed its
+// last touch as a Bump because it never read meetings at all.
+const DROP_OFF = /\bdrop(ped|s)?[\s-]?offs?\b|\bleft (at|with) the (front )?(desk|reception)\b/i;
+const isDropOff = (p) => DROP_OFF.test((p.hs_meeting_title || "").trim());
 
 // A touch is one outreach at one company, not one message. The same first
 // touch can go to two addresses an hour apart and pick up a reply to an auto
@@ -205,13 +216,29 @@ const rawPrior = await searchAll("emails", {
 const week = rawWeek.filter((e) => !isNoise(e.properties));
 const prior = rawPrior.filter((e) => !isNoise(e.properties));
 
+// Drop offs over the same lookback and the same week, read off the meetings
+// and kept only when the title says drop off. A walk in or a sit down stays
+// out: this table has only ever counted email, and a drop off is the one
+// meeting the outreach cadence treats as a touch of its own (Forni, W41).
+const rawMeetings = await searchAll("meetings", {
+    filterGroups: [{ filters: [
+        { propertyName: "hs_timestamp", operator: "GTE", value: LOOKBACK_MS },
+        { propertyName: "hs_timestamp", operator: "LT", value: BEFORE_MS },
+    ] }],
+    properties: ["hs_timestamp", "hs_meeting_title"],
+    sorts: [{ propertyName: "hs_timestamp", direction: "DESCENDING" }],
+});
+const dropOffs = rawMeetings.filter((m) => isDropOff(m.properties));
+const aCoDrop = await assoc("meetings", "companies", dropOffs.map((m) => m.id));
+const aCtDrop = await assoc("meetings", "contacts", dropOffs.map((m) => m.id));
+
 const weekIds = week.map((e) => e.id);
 const aCoWeek = await assoc("emails", "companies", weekIds);
 const aCtWeek = await assoc("emails", "contacts", weekIds);
 const aCoPrior = await assoc("emails", "companies", prior.map((e) => e.id));
 const aCtPrior = await assoc("emails", "contacts", prior.map((e) => e.id));
 
-const ctIds = [...new Set([...aCtWeek.values(), ...aCtPrior.values()].flat())];
+const ctIds = [...new Set([...aCtWeek.values(), ...aCtPrior.values(), ...aCtDrop.values()].flat())];
 const contacts = new Map((await batch("contacts", ctIds,
     ["firstname", "lastname", "hs_lead_status", "associatedcompanyid"])).map((c) => [c.id, c.properties]));
 
@@ -233,6 +260,9 @@ const companiesFor = (eid, aCo, aCt) => {
 
 const priorSeen = new Set();
 const priorTouches = new Map();
+// Emails alone, so a paper drop off before the week never turns the first
+// email into a bump.
+const priorEmails = new Map();
 // Opens span every touch the Touches column counts, prior weeks included, so
 // the two columns describe the same sends. Keyed like the touches, a copy of
 // a touch keeps its best count, and a key with no tracked copy stays unread.
@@ -251,6 +281,18 @@ for (const e of prior) {
         }
         if (priorSeen.has(key)) continue;
         priorSeen.add(key);
+        priorEmails.set(c, (priorEmails.get(c) || 0) + 1);
+        priorTouches.set(c, (priorTouches.get(c) || 0) + 1);
+    }
+}
+// A drop off before the week is a touch too, one per company per day, so the
+// Touches column counts the walkabout the way the cadence does.
+for (const m of dropOffs) {
+    if (Date.parse(m.properties.hs_timestamp) >= AFTER_EPOCH * 1000) continue;
+    for (const c of companiesFor(m.id, aCoDrop, aCtDrop)) {
+        const key = `${c}|drop off|${denverDate(m.properties.hs_timestamp)}`;
+        if (priorSeen.has(key)) continue;
+        priorSeen.add(key);
         priorTouches.set(c, (priorTouches.get(c) || 0) + 1);
     }
 }
@@ -265,8 +307,11 @@ const answered = new Set([...week, ...prior]
 const rows = new Map();
 const row = (cid) => {
     if (!rows.has(cid)) rows.set(cid, {
-        sends: 0, first: 0, bump: 0, reply: 0,
-        replied: false, contacts: new Set(), lastSend: "", touchRefs: [],
+        sends: 0, first: 0, bump: 0, reply: 0, dropOff: 0,
+        replied: false, lastReply: "", contacts: new Set(), lastSend: "", touchRefs: [],
+        // Every touch of the week as {kind, ts}, a copy folded into the touch
+        // it copies, so the last one can be named by time and not by count.
+        events: [],
     });
     return rows.get(cid);
 };
@@ -277,7 +322,18 @@ for (const e of week) {
     const p = e.properties;
     const cids = companiesFor(e.id, aCoWeek, aCtWeek);
     if (p.hs_email_direction === "INCOMING_EMAIL") {
-        for (const c of cids) row(c).replied = true;
+        // A reply is news whatever stage the company sits at, an Opportunity
+        // included: W41 read Wynkoop Athletics as holding at Proposal while its
+        // 10-07 reply sat on this very record. The day travels with the flag,
+        // and whoever wrote in joins the row, so a company that only replied
+        // this week still finds its Lead Status below.
+        for (const c of cids) {
+            const r = row(c);
+            r.replied = true;
+            const day = denverDate(p.hs_timestamp);
+            if (day > r.lastReply) r.lastReply = day;
+            for (const ct of aCtWeek.get(e.id) || []) r.contacts.add(ct);
+        }
         continue;
     }
     if (p.hs_email_direction !== "EMAIL") continue;
@@ -308,10 +364,44 @@ for (const e of week) {
         // Reply is tested first: a message into a thread they have answered is
         // a reply even when it is this company's first send of the week, which
         // is what Galvant is. Only then does first outrank bump.
-        if (answered.has(p.hs_email_thread_id)) r.reply += 1;
-        else if (!priorTouches.get(c) && r.sends === 1) r.first += 1;
-        else r.bump += 1;
+        let kind;
+        if (answered.has(p.hs_email_thread_id)) { r.reply += 1; kind = "Reply"; }
+        else if (!priorEmails.get(c) && r.sends === 1) { r.first += 1; kind = "First"; }
+        else { r.bump += 1; kind = "Bump"; }
+        r.events.push({ kind, ts: Date.parse(p.hs_timestamp) });
     }
+}
+
+// The week's drop offs, one per company per day, each a touch of its own kind
+// and never a bump: it does not count toward the five bumps, and it is named
+// as the last touch when it came after the week's last email.
+const dropSeen = new Set();
+for (const m of dropOffs) {
+    const ts = Date.parse(m.properties.hs_timestamp);
+    if (ts < AFTER_EPOCH * 1000) continue;
+    for (const c of companiesFor(m.id, aCoDrop, aCtDrop)) {
+        const key = `${c}|${denverDate(m.properties.hs_timestamp)}`;
+        if (dropSeen.has(key)) continue;
+        dropSeen.add(key);
+        const r = row(c);
+        for (const ct of aCtDrop.get(m.id) || []) r.contacts.add(ct);
+        r.dropOff += 1;
+        r.events.push({ kind: "Drop off", ts });
+    }
+}
+
+// A row with no contact on any of its records (a drop off logged on the
+// company alone, a reply HubSpot linked only to the company) borrows the
+// company's own contacts, so its Lead Status is read rather than the row
+// being dropped as out of the motion.
+const bare = [...rows].filter(([, r]) => r.contacts.size === 0).map(([cid]) => cid);
+if (bare.length) {
+    const coContacts = await assoc("companies", "contacts", bare);
+    const missing = [...new Set([...coContacts.values()].flat())].filter((ct) => !contacts.has(ct));
+    for (const c of await batch("contacts", missing, ["firstname", "lastname", "hs_lead_status", "associatedcompanyid"])) {
+        contacts.set(c.id, c.properties);
+    }
+    for (const cid of bare) for (const ct of coContacts.get(cid) || []) rows.get(cid).contacts.add(ct);
 }
 
 // Fold each company's touches now that every copy has been merged into one.
@@ -392,14 +482,20 @@ for (const [cid, r] of rows) {
     if (r.first) kinds.push(r.first > 1 ? `${r.first} first` : "first");
     if (r.bump) kinds.push(r.bump > 1 ? `${r.bump} bumps` : "bump");
     if (r.reply) kinds.push(r.reply > 1 ? `${r.reply} replies` : "reply");
+    if (r.dropOff) kinds.push(r.dropOff > 1 ? `${r.dropOff} drop offs` : "drop off");
     counted.set(cid, r);
+    // The kind of the week's latest touch, by time: First, Bump, Reply (Forni
+    // answering their thread) or Drop off. Empty when nothing went out.
+    const lastTouch = [...r.events].sort((a, b) => a.ts - b.ts).at(-1)?.kind || "";
     const entry = {
         company: c.name || `(company ${cid})`,
         lifecycle: stage,
         status: status || "none",
         kind: kinds.join(", ") || "none",
+        last_touch: lastTouch,
         sends: r.sends,
-        touches: (priorTouches.get(cid) || 0) + r.sends,
+        drop_offs: r.dropOff,
+        touches: (priorTouches.get(cid) || 0) + r.sends + r.dropOff,
         // A send that carried no tracking cannot be read, which is not the
         // same as a zero. It reports as a dash, the record's own way of saying
         // the question does not apply here.
@@ -407,6 +503,8 @@ for (const [cid, r] of rows) {
         opens: r.opens === null ? "-" : String(r.opens),
         tracked: `${r.tracked}/${r.sends}`,
         replied: r.replied ? "yes" : "no",
+        // The Denver day of their latest reply this week, "" when none came.
+        last_reply: r.lastReply,
         last_send: r.lastSend,
     };
     // Closed is decided by the contact's status, never by the presence of a
@@ -455,6 +553,11 @@ for (const [cid, r] of rows) {
             trade: trade ? money(-trade) : "-",
             total: money(total),
             cash: money(cash),
+            // A deal's reply is carried the same way a lead's is, since a
+            // reply on an Opportunity is the week's news, not a held stage.
+            replied: entry.replied,
+            last_reply: entry.last_reply,
+            last_touch: entry.last_touch,
             last_send: entry.last_send,
         });
     }
@@ -481,6 +584,9 @@ const totals = {
     first: all.reduce((n, r) => n + r.first, 0),
     bumps: all.reduce((n, r) => n + r.bump, 0),
     replies_sent: all.reduce((n, r) => n + r.reply, 0),
+    // Companies that wrote back this week, whatever their stage.
+    replied: all.filter((r) => r.replied).length,
+    drop_offs: all.reduce((n, r) => n + r.dropOff, 0),
     tracked: all.reduce((n, r) => n + r.tracked, 0),
     clicks: all.reduce((n, r) => n + r.clicks, 0),
 };
@@ -1017,7 +1123,13 @@ async function sweep(argv) {
     const funnelRow = (co) => {
         const t = companyTouches(co);
         const deal = dealByCompany.get(co.id);
-        const kind = t.days.length === 0 ? "" : t.days.length === 1 ? "First" : t.days.length === 2 ? "Bump" : "Visit";
+        // A drop off on or after the last email day is the last touch, named
+        // as itself rather than read off the email count (the W41 retro read
+        // Colorado Cleanup Services' drop off as a Bump).
+        const dropDay = (meetingsByCompany.get(co.id) || []).filter((m) => isDropOff({ hs_meeting_title: m.title }))
+            .map((m) => m.date).sort().at(-1) || "";
+        const kind = dropDay && dropDay >= t.lastSend ? "Drop off"
+            : t.days.length === 0 ? "" : t.days.length === 1 ? "First" : t.days.length === 2 ? "Bump" : "Visit";
         return {
             id: co.id, name: co.name, url: companyUrl(co.id), fit: co.fit ? Number(co.fit) : null,
             status: warmest(co), last_touch: kind, last_send: t.lastSend, touches: t.days.length,

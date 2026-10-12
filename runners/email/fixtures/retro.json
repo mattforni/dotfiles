@@ -3,7 +3,8 @@
   "coverage": [
     { "modality": "Lifts", "logged": "3", "target": "3", "note": "Mon Push · Wed Pull" },
     { "modality": "Social runs", "logged": "1", "target": "3", "note": "Tue Kestrel" },
-    { "modality": "Yoga", "logged": "0", "target": "0", "note": "" }
+    { "modality": "Yoga", "logged": "0", "target": "0", "note": "" },
+    { "modality": "PT", "logged": "2", "target": "4", "note": "Tue PT Achilles · Thu PT" }
   ],
   "what_moved": [
     { "subject": "Pinewood Cabinetry", "event": "sits at Proposal, $12,000 cash." },
@@ -98,6 +99,38 @@
       "distance_mi": 0,
       "moving_min": 24,
       "athlete_count": 1
+    },
+    {
+      "name": "2026 PT Achilles",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-27T12:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 25,
+      "athlete_count": 1
+    },
+    {
+      "name": "2026 PT",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-29T12:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 22,
+      "athlete_count": 1
+    },
+    {
+      "name": "Ride to the studio",
+      "sport_type": "Ride",
+      "start_date_local": "2026-01-28T19:30:00Z",
+      "distance_mi": 4.93,
+      "moving_min": 21,
+      "athlete_count": 1
+    },
+    {
+      "name": "Track drills",
+      "sport_type": "Workout",
+      "start_date_local": "2026-01-31T09:00:00Z",
+      "distance_mi": 0.16,
+      "moving_min": 15,
+      "athlete_count": 1
     }
   ],
   "atelic": {
@@ -114,6 +147,7 @@
         "touches": 4,
         "opens": "7",
         "replied": "yes",
+        "last_reply": "2026-01-28",
         "last_send": "2026-01-27"
       },
       {
@@ -121,6 +155,7 @@
         "lifecycle": "marketingqualifiedlead",
         "status": "CONTACTED",
         "kind": "notes_from_the_call",
+        "last_touch": "Drop off",
         "touches": 2,
         "opens": null,
         "replied": "no",
@@ -153,6 +188,8 @@
         "lifecycle": "opportunity",
         "stage": "Proposal",
         "cash": "$12,000",
+        "replied": "yes",
+        "last_reply": "2026-01-29",
         "last_send": "2026-01-29"
       },
       {

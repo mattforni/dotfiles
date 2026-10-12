@@ -1,7 +1,7 @@
 ATELIC · RETRO · WEEK 5
 Mon, 2026-01-26 to Sun, 2026-02-01
 
-THREE OF FIVE TARGETS HIT.
+THREE OF SIX TARGETS HIT.
 
 An invented week, written so every branch of the renderer has
 something to render.
@@ -13,6 +13,7 @@ Movement
   Lifts          3 / 3   ###    Mon Push · Wed Pull
   Social Runs    1 / 3   #..    Tue Kestrel
   Yoga           0 / 0          
+  PT             2 / 4   ##..   Tue PT Achilles · Thu PT
   Takeout        2              Tue 01-27 Crosstown Noodle · Sat 01-31 Ember Pizza
 
 Atelic
@@ -36,26 +37,31 @@ The Read
 
 By Day
   Mon  Run · Lift
-  Tue  Run (S)
-  Wed  Lift · Yoga
-  Thu  Run (S)
+  Tue  Run (S) · PT
+  Wed  Lift · Ride · Yoga
+  Thu  Run (S) · PT
   Fri  Lift · Climb
-  Sat  Rest
+  Sat  Workout
   Sun  Walk · Rowing
 
-Sessions · 10
-  Day  Session                     Type     Min     Mi
-  Mon  Solo shakeout               Run       18   2.02
-  Mon  Push day                    Lift      55
-  Tue  Kestrel Loop with the club  Run (S)   47   5.08
-  Wed  Pull day                    Lift      61
-  Wed  Slow flow                   Yoga      40
-  Thu  Easy miles with Diego       Run (S)   33   3.50
-  Fri  Legs                        Lift      48
-  Fri  Bouldering session          Climb     75
-  Sun  Long walk to the reservoir  Walk      82   4.37
-  Sun  Rowing intervals            Rowing    24
-       Total                                483  14.97
+Sessions · 14
+  Day  Session                              Type     Min     Mi
+  Mon  Solo shakeout                        Run       18   2.02
+  Mon  Push day                             Lift      55
+  Tue  Kestrel Loop with the club           Run (S)   47   5.08
+  Tue  2026 PT Achilles                     PT        25
+  Wed  Pull day                             Lift      61
+  Wed  Ride to the studio                   Ride      21   4.93
+  Wed  Slow flow                            Yoga      40
+  Thu  Easy miles with Diego                Run (S)   33   3.50
+  Thu  2026 PT                              PT        22
+  Fri  Legs                                 Lift      48
+  Fri  Bouldering session                   Climb     75
+  Sat  Track drills                         Workout   15   0.16
+  Sun  Long walk to the reservoir           Walk      82   4.37
+  Sun  Rowing intervals                     Rowing    24
+       Total: runs, rides, workouts, walks           566  20.06
+       Runs only                                      98  10.60
 
 
 ================================================================
@@ -96,16 +102,17 @@ Lead · 2
 MQL · 1
   Harbor Line Plumbing [Contacted]
     2 touches · untracked
-    Last touch: Notes From the Call
+    Last touch: Drop off
 
 SQL · 1
   Pinewood Cabinetry [In Conversation]
-    4 touches · 7 opens · replied
+    4 touches · 7 opens · replied Wed 01-28
     Last touch: Email Send
 
 Opportunity · 2
-  Alder Court Dental
+  Alder Court Dental [Replied]
     Proposal · $12,000
+    Replied Thu 01-29
 
   Fernwood Bakery
     no stage set
