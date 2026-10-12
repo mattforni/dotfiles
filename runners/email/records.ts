@@ -142,7 +142,7 @@ export function touchClock(touch: TouchLine | null | undefined): string {
 	if (!touch) return "";
 	const clock: string[] = [];
 	const kind = jqToString(alt(touch.lastTouch, "")).toLowerCase();
-	if (ago(touch.daysSinceSend) !== "") clock.push(`${kind === "" ? "sent" : kind} ${ago(touch.daysSinceSend)}`);
+	if (ago(touch.daysSinceSend) !== "") clock.push(`${kind === "" || kind === "drop off" ? "sent" : kind} ${ago(touch.daysSinceSend)}`);
 	if (ago(touch.daysSinceOpen) !== "") clock.push(`opened ${ago(touch.daysSinceOpen)}`);
 	const reply = replyClock(touch);
 	if (reply !== "") clock.push(reply);

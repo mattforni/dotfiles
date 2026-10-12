@@ -260,6 +260,9 @@ const companiesFor = (eid, aCo, aCt) => {
 
 const priorSeen = new Set();
 const priorTouches = new Map();
+// Emails alone, so a paper drop off before the week never turns the first
+// email into a bump.
+const priorEmails = new Map();
 // Opens span every touch the Touches column counts, prior weeks included, so
 // the two columns describe the same sends. Keyed like the touches, a copy of
 // a touch keeps its best count, and a key with no tracked copy stays unread.
@@ -278,6 +281,7 @@ for (const e of prior) {
         }
         if (priorSeen.has(key)) continue;
         priorSeen.add(key);
+        priorEmails.set(c, (priorEmails.get(c) || 0) + 1);
         priorTouches.set(c, (priorTouches.get(c) || 0) + 1);
     }
 }
@@ -362,7 +366,7 @@ for (const e of week) {
         // is what Galvant is. Only then does first outrank bump.
         let kind;
         if (answered.has(p.hs_email_thread_id)) { r.reply += 1; kind = "Reply"; }
-        else if (!priorTouches.get(c) && r.sends === 1) { r.first += 1; kind = "First"; }
+        else if (!priorEmails.get(c) && r.sends === 1) { r.first += 1; kind = "First"; }
         else { r.bump += 1; kind = "Bump"; }
         r.events.push({ kind, ts: Date.parse(p.hs_timestamp) });
     }

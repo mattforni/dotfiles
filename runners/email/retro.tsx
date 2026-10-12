@@ -136,7 +136,7 @@ const KINDS: Record<string, string> = {
  * and graded against its own target (Forni, W41, when the retro counted a PT
  * session as the week's one lift).
  */
-const PT_NAME = /^(\d{4}\s+)?PT(\s+Achilles)?$/i;
+const PT_NAME = /^(\d{4}\s+)?PT\b/i;
 
 function kindOf(activity: Activity): string {
 	if (PT_NAME.test(cleanName(activity).trim())) return "PT";
@@ -220,7 +220,10 @@ type Target = { label: string; logged: number; target: number | null; note: stri
 /** A label as Title Case, an acronym (PT) kept in capitals. */
 function modalityLabel(value: unknown): string {
 	const raw = jqToString(alt(value, ""));
-	return /^[A-Z]{2,}$/.test(raw) ? raw : titlecase(raw);
+	return raw
+		.split(" ")
+		.map((word) => (/^[A-Z]{2,}$/.test(word) ? word : titlecase(word)))
+		.join(" ");
 }
 
 /** The model's coverage, with its note. */
@@ -340,7 +343,8 @@ function replyDay(row: FunnelRow): string {
  */
 function lastTouchOf(row: FunnelRow): string {
 	const named = jqToString(alt(row.last_touch, ""));
-	return named !== "" ? named : titlecase(alt(row.kind, ""));
+	const kind = titlecase(alt(row.kind, ""));
+	return named !== "" ? named : kind === "None" ? "" : kind;
 }
 
 function leadRecord(row: FunnelRow): RecordStackItem {
@@ -452,6 +456,15 @@ function totalMiles(week: Session[]): number {
 	return week.reduce((sum, session) => sum + alt(session.miles, 0), 0);
 }
 
+const KIND_PLURALS: Record<string, string> = {
+	Run: "runs",
+	Ride: "rides",
+	Walk: "walks",
+	Workout: "workouts",
+	Swim: "swims",
+	Hike: "hikes",
+};
+
 /** "runs, rides, workouts": every kind that carried miles, in the order the week met them. */
 function mileageKinds(week: Session[]): string[] {
 	const kinds: string[] = [];
@@ -459,7 +472,7 @@ function mileageKinds(week: Session[]): string[] {
 		if (session.miles === null || kinds.includes(session.kind)) continue;
 		kinds.push(session.kind);
 	}
-	return kinds.map((kind) => (kind === "PT" ? kind : `${asciiDowncase(kind)}s`));
+	return kinds.map((kind) => (kind === "PT" ? kind : KIND_PLURALS[kind] ?? asciiDowncase(kind)));
 }
 
 type TotalLine = { label: string; minutes: number; miles: number };
