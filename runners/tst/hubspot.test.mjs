@@ -31,9 +31,21 @@ const email = (id, iso, extra = {}) => ({
         ...extra,
     },
 });
-/** A call engagement as the search returns it. */
+/** The portal's default call dispositions (GET /calling/v1/dispositions). */
+const DISPOSITION = {
+    connected: "f240bbac-87c9-4f6e-bf70-924b57d47db7",
+    liveMessage: "a4c4c377-d246-4b32-a13b-75a56a4cd0ff",
+    voicemail: "b2cf5968-551e-4856-9783-52b3da59a7d0",
+    noAnswer: "73a0d17f-1163-4015-bdd5-ec830791da20",
+    busy: "9d9162e7-6cf3-4944-bf63-4dff82258764",
+    wrongNumber: "17b47fee-58de-441e-a44c-c6300d46f273",
+};
+/** A call engagement as the search returns it: a voicemail left, unless a test says otherwise. */
 const call = (id, iso, extra = {}) => ({
-    id, properties: { hs_timestamp: iso, hs_call_title: `Call ${id}`, hs_call_direction: "OUTBOUND", hs_call_status: "COMPLETED", hs_call_body: "", ...extra },
+    id, properties: {
+        hs_timestamp: iso, hs_call_title: `Call ${id}`, hs_call_direction: "OUTBOUND", hs_call_status: "COMPLETED",
+        hs_call_disposition: DISPOSITION.voicemail, hs_call_body: "", ...extra,
+    },
 });
 const links = (pairs) => new Map(pairs.map(([id, contacts]) => [id, contacts]));
 
@@ -80,6 +92,19 @@ test("an outbound call is a touch only when something reached them; an attempt, 
     for (const status of ["NO_ANSWER", "BUSY", "FAILED", "CANCELED", "", null]) {
         assert.equal(isOutboundCall(call("4", "2026-10-08T15:31:50Z", { hs_call_status: status }).properties), false, `${status} is an attempt, not a touch`);
     }
+});
+
+test("a hand logged call reached them only when its disposition says so", () => {
+    const logged = (extra) => isOutboundCall(call("5", "2026-10-08T15:31:50Z", extra).properties);
+    for (const reached of ["connected", "liveMessage", "voicemail"]) assert.equal(logged({ hs_call_disposition: DISPOSITION[reached] }), true, reached);
+    // COMPLETED is what HubSpot stamps on every hand logged call, an answer or not.
+    for (const attempt of ["noAnswer", "busy", "wrongNumber"]) assert.equal(logged({ hs_call_disposition: DISPOSITION[attempt] }), false, attempt);
+    assert.equal(logged({ hs_call_disposition: "a-custom-outcome" }), false, "an outcome the portal does not call reached is an attempt");
+    // No disposition at all: a body that says what happened makes it reached, nothing makes it an attempt.
+    assert.equal(logged({ hs_call_disposition: null, hs_call_body: "<p>Spoke with the owner about the writeup.</p>" }), true);
+    assert.equal(logged({ hs_call_disposition: null, hs_call_body: "" }), false);
+    assert.equal(logged({ hs_call_disposition: "", hs_call_body: "<p> </p>" }), false, "an empty body is no body");
+    assert.equal(logged({ hs_call_disposition: null, hs_call_status: "NO_ANSWER", hs_call_body: "Rang out." }), false, "a body never rescues a call that was not COMPLETED");
 });
 
 test("an attempt nobody picked up never folds into the touches, so it cannot answer a reply or advance the count", () => {
@@ -165,19 +190,27 @@ test("a clear outranks the customer rule, but a touch logged after it brings the
     assert.equal(statusTrueUp({ status: "", touches: later, history: clearedHistory }).next, "CONTACTED");
 });
 
-test("a contact with no Lead Status who writes back is owed a reply, and nobody else moves", () => {
+test("a contact cleared on purpose who writes back after the clear is owed a reply, and nobody else moves", () => {
     const now = "2026-10-12T06:00:00Z";
     const touches = [t("email", "2026-09-14")];
-    const reply = { date: "2026-10-09", ts: ms("2026-10-09T16:00:00Z") };
-    const cleared = sectionOf({ status: "", lifecycle: "lead", touches, replies: [reply], daysSince: daysSince(now) });
-    assert.equal(cleared.section, "replies_owed", "a cleared contact who replies surfaces");
-    assert.match(cleared.why, /2026-10-09 reply is the last message on the record/);
+    const read = (extra) => sectionOf({ status: "", lifecycle: "lead", touches, daysSince: daysSince(now), ...extra }).section;
+    // clearedHistory clears the status at 2026-10-08 16:26 UTC.
+    const after = { date: "2026-10-09", ts: ms("2026-10-09T16:00:00Z") };
+    const cleared = sectionOf({ status: "", lifecycle: "lead", touches, replies: [after], history: clearedHistory, daysSince: daysSince(now) });
+    assert.equal(cleared.section, "replies_owed", "a cleared contact who replies after leaving surfaces");
+    assert.match(cleared.why, /2026-10-09 reply is the last message on the record, written after their Lead Status was cleared/);
+    // A status never set (a vendor, a lawyer on a funnel company) stays out of the motion, reply or not.
+    assert.equal(read({ replies: [after], history: [] }), "not_in_motion");
+    assert.equal(read({ replies: [after], history: [at("", "2026-09-01T00:00:00Z")] }), "not_in_motion");
+    // A reply before the clear, the same Denver day included, is what the clear already answered.
+    assert.equal(read({ replies: [{ date: "2026-10-01", ts: ms("2026-10-01T16:00:00Z") }], history: clearedHistory }), "not_in_motion");
+    assert.equal(read({ replies: [{ date: "2026-10-08", ts: ms("2026-10-08T15:00:00Z") }], history: clearedHistory }), "not_in_motion");
+    assert.equal(read({ replies: [{ date: "2026-10-08", ts: ms("2026-10-08T18:00:00Z") }], history: clearedHistory }), "replies_owed", "later the same day is after the clear");
     // Silent, or answered since: still out of the motion.
-    assert.equal(sectionOf({ status: "", lifecycle: "lead", touches, daysSince: daysSince(now) }).section, "not_in_motion");
-    const answered = [...touches, t("email", "2026-10-10")];
-    assert.equal(sectionOf({ status: "", lifecycle: "lead", touches: answered, replies: [reply], daysSince: daysSince(now) }).section, "not_in_motion");
-    // A closed company and a customer keep their own reading.
-    assert.equal(sectionOf({ reason: "Out of business", status: "", lifecycle: "lead", touches, replies: [reply], daysSince: daysSince(now) }).section, "closed");
-    assert.equal(sectionOf({ status: "", lifecycle: "customer", touches, replies: [reply], daysSince: daysSince(now) }).section, "not_in_motion");
-    assert.equal(sectionOf({ status: "CONTACTED", lifecycle: "lead", touches, replies: [reply], daysSince: daysSince(now) }).section, "replies_owed");
+    assert.equal(read({ history: clearedHistory }), "not_in_motion");
+    assert.equal(read({ touches: [...touches, t("email", "2026-10-10")], replies: [after], history: clearedHistory }), "not_in_motion");
+    // A closed company and a customer keep their own reading, and a status is untouched.
+    assert.equal(read({ reason: "Out of business", replies: [after], history: clearedHistory }), "closed");
+    assert.equal(read({ lifecycle: "customer", replies: [after], history: clearedHistory }), "not_in_motion");
+    assert.equal(read({ status: "CONTACTED", replies: [after] }), "replies_owed");
 });

@@ -651,7 +651,7 @@ const SWEEP_EMAIL_PROPS = [
 const TASK_PROPS = ["hs_task_subject", "hs_task_body", "hs_timestamp", "hs_task_status", "hs_task_type", "hs_task_priority"];
 const MEETING_PROPS = ["hs_meeting_title", "hs_meeting_body", "hs_meeting_start_time", "hs_meeting_outcome", "hs_internal_meeting_notes", "hs_timestamp"];
 const NOTE_PROPS = ["hs_note_body", "hs_timestamp"];
-const CALL_PROPS = ["hs_timestamp", "hs_call_title", "hs_call_direction", "hs_call_status", "hs_call_body"];
+const CALL_PROPS = ["hs_timestamp", "hs_call_title", "hs_call_direction", "hs_call_status", "hs_call_disposition", "hs_call_body"];
 
 // HubSpot bodies arrive as HTML. The model reads them as text, with the links
 // kept because a meeting body's Granola link is the point of pulling it.
@@ -707,20 +707,46 @@ export function clearedOnPurpose(status, history) {
 
 /** The value a cleared status held last, and the day it was cleared, from the same history. */
 export function clearOf(history) {
-    const sorted = [...(history || [])].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
-    const was = sorted.find((h) => h.value);
-    const clearedAt = sorted.find((h) => !h.value && (!was || Date.parse(h.timestamp) >= Date.parse(was.timestamp)));
+    const { was, clearedAt } = clearEntries(history);
     return { was: was?.value || "", cleared_at: clearedAt ? denverDate(clearedAt.timestamp) : "" };
 }
 
-// A call is a touch when Forni placed it and something reached them: status
-// COMPLETED, which is a conversation or a voicemail left (the Mini Splits
-// voicemail of 2026-10-08 is one). NO_ANSWER, BUSY, FAILED and the like are
-// attempts, not touches, so they never take a name out of replies owed or
-// advance its count of touches. Inbound calls stay out (they are theirs, like
-// a reply), and so do the QUEUED records with no direction that a dialer
+/** The moment of the latest clear as epoch ms, or null when the status was never cleared; finer than clearOf's day, so a reply the same day is placed on the right side of it. */
+export function clearedAtMs(history) {
+    const { was, clearedAt } = clearEntries(history);
+    return was && clearedAt ? Date.parse(clearedAt.timestamp) : null;
+}
+
+/** The newest value the status held, and the newest empty entry at or after it. */
+function clearEntries(history) {
+    const sorted = [...(history || [])].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+    const was = sorted.find((h) => h.value);
+    const clearedAt = sorted.find((h) => !h.value && (!was || Date.parse(h.timestamp) >= Date.parse(was.timestamp)));
+    return { was, clearedAt };
+}
+
+// A call is a touch when Forni placed it and something reached them. A hand
+// logged call is COMPLETED whatever happened, and the outcome lives in
+// hs_call_disposition, so the test is three parts: OUTBOUND, COMPLETED, and a
+// disposition that reached them. These are the portal's default "reached"
+// dispositions (GET /calling/v1/dispositions lists them); No answer, Busy and
+// Wrong number, and any status other than COMPLETED (NO_ANSWER, BUSY, FAILED),
+// are attempts, not touches, so they never take a name out of replies owed or
+// advance its count of touches. A COMPLETED call with no disposition at all
+// counts as reached only when it carries a body, which says what happened;
+// with neither it is an attempt. Inbound calls stay out (they are theirs,
+// like a reply), and so do the QUEUED records with no direction that a dialer
 // import left on the portal in July: nobody dialled.
-export const isOutboundCall = (p) => p.hs_call_direction === "OUTBOUND" && p.hs_call_status === "COMPLETED";
+const REACHED_DISPOSITIONS = new Set([
+    "f240bbac-87c9-4f6e-bf70-924b57d47db7", // Connected
+    "a4c4c377-d246-4b32-a13b-75a56a4cd0ff", // Left live message
+    "b2cf5968-551e-4856-9783-52b3da59a7d0", // Left voicemail (the Mini Splits call of 2026-10-08)
+]);
+export const isOutboundCall = (p) => {
+    if (p.hs_call_direction !== "OUTBOUND" || p.hs_call_status !== "COMPLETED") return false;
+    if (p.hs_call_disposition) return REACHED_DISPOSITIONS.has(p.hs_call_disposition);
+    return plain(p.hs_call_body) !== "";
+};
 
 /**
  * Every contact's touches and replies, in time order, from the logged emails
@@ -824,7 +850,7 @@ export function statusTrueUp({ status = "", touches = [], replies = [], customer
  * silent since its last email. `daysSince` turns a YYYY-MM-DD into whole days
  * before the roster's reference day.
  */
-export function sectionOf({ reason = "", status = "", lifecycle = "", fit = null, touches = [], replies = [], due = [], parked = [], daysSince }) {
+export function sectionOf({ reason = "", status = "", lifecycle = "", fit = null, touches = [], replies = [], due = [], parked = [], history = [], daysSince }) {
     const lastTouch = touches[touches.length - 1] || null;
     const lastReply = replies[replies.length - 1] || null;
     const lastDay = lastTouch?.date || "";
@@ -839,11 +865,16 @@ export function sectionOf({ reason = "", status = "", lifecycle = "", fit = null
     // Prospect in Atelic's Tools/hubspot.md); a contact's status alone never closes.
     if (reason) return { section: "closed", why: reason };
     const replyLatest = Boolean(lastReply && (!lastTouch || lastReply.ts >= lastTouch.ts));
-    // A contact out of the motion (a status cleared on purpose, or never set)
-    // who writes back is still owed a reply: their message is tested before
-    // the empty status, or a reply from someone cleared would never surface.
-    // Only the empty status case moves; a customer's note stays client work.
-    if (!status && replyLatest && lifecycle !== "customer") return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record, from a contact with no Lead Status` };
+    // A contact cleared out of the motion who writes back after the clear is
+    // still owed a reply: their message is tested before the empty status, or
+    // it would never surface. Only a clear counts, and only a reply after it:
+    // a status never set (a vendor, a lawyer on a funnel company) stays out of
+    // the motion, and so does a reply the clear already answered. A
+    // customer's note stays client work.
+    const clearedMs = clearedOnPurpose(status, history) ? clearedAtMs(history) : null;
+    if (!status && replyLatest && lifecycle !== "customer" && clearedMs !== null && lastReply.ts > clearedMs) {
+        return { section: "replies_owed", why: `their ${lastReplyDay} reply is the last message on the record, written after their Lead Status was cleared` };
+    }
     if (!status) return { section: "not_in_motion", why: "no Lead Status" };
     if (CLOSED_STATUSES.has(status)) return { section: "closed", why: `${status} with no reason on the company; set one` };
     // A customer's contact is never owed a touch by this motion: a note from
@@ -1172,7 +1203,7 @@ async function sweep(argv) {
 
         const { section, why } = sectionOf({
             reason: co.disqualification_reason || "", status, lifecycle: co.lifecyclestage, fit: co.fit,
-            touches, replies, due, parked, daysSince: atNoon,
+            touches, replies, due, parked, history: c.status_history, daysSince: atNoon,
         });
 
         reads.push({
