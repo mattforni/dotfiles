@@ -4,11 +4,13 @@ Headless Claude routines that run on a schedule. One directory per runner, each 
 
 | Runner | Runs On | What It Does |
 |---|---|---|
-| [retro/](retro/README.md) | Cloud Run | Sunday 22:00 Denver. Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
-| [recruiter/](recruiter/README.md) | Cloud Run | Sunday 23:00 Denver. Pulls the job boards with curl, runs the `recruiter` agent over the pulled listings so the week's sweep is done before the Tuesday work search block, upserts the judged rows into the Pinole work ledger and logs the sweep as an activity, and emails the board as `YYYY-Www Recruiter`; the ledger rows live in the API and never in the mail. Promoted 2026-09-11. |
-| [plumber/](plumber/README.md) | Cloud Run | Sunday 22:30 Denver. Pulls the portal, both mailboxes, the One Pager and the candidate sites, runs the `plumber` agent over the pulled files so the week's roster is built and drafted before the Tuesday desk block, commits the roster into the Atelic repo, fires the Outreach routine for every first touch and bump, and emails `YYYY-Www Pipeline`: a to do list of what needs Forni, in his order, then the funnel's health (ATE-630). Rebuilt on the recruiter's shape 2026-09-15 and promoted under the agent's name 2026-09-24 (ATE-551). |
+| [retro/](retro/README.md) | Cloud Run | Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
+| [recruiter/](recruiter/README.md) | Cloud Run | Pulls the job boards with curl, runs the `recruiter` agent over the pulled listings so the week's sweep is done before the Tuesday work search block, upserts the judged rows into the Pinole work ledger and logs the sweep as an activity, and emails the board as `YYYY-Www Recruiter`; the ledger rows live in the API and never in the mail. Promoted 2026-09-11. |
+| [plumber/](plumber/README.md) | Cloud Run | Pulls the portal, both mailboxes, the One Pager and the candidate sites, runs the `plumber` agent over the pulled files so the week's roster is built and drafted before the Tuesday desk block, commits the roster into the Atelic repo, fires the Outreach routine for every first touch and bump, and emails `YYYY-Www Pipeline`: a to do list of what needs Forni, in his order, then the funnel's health (ATE-630). Rebuilt on the recruiter's shape 2026-09-15 and promoted under the agent's name 2026-09-24 (ATE-551). |
 
-The runtime one pager (why Cloud Run over Routines, the service accounts and their secrets, the schedules, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
+The runtime one pager (why Cloud Run over Routines, the service accounts and their secrets, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
+
+**When a runner fires is not written down anywhere in this repo.** The Cloud Scheduler entry is the only statement of it, and the command that reads it is in Eudy's `Admin/Tools/cloud-run.md`. A day or a clock copied into a README, a comment, an agent, or a skill is a second copy that drifts (ATE-649), so look it up when it matters and never write it down.
 
 ## Where a Runner Runs
 
@@ -23,7 +25,7 @@ A runner is defined once and can be executed three ways. Which one it is in is n
 **No runner is on a LaunchAgent right now**, and `launchagents/` is empty. The
 pipeline runner was scheduled for one morning and unscheduled the same day
 (2026-08-31): a pass then cost about $7.50, which is a real number to spend
-every Monday whether or not the week needs it. The middle row is kept because
+every week whether or not the week needs it. The middle row is kept because
 it is where a runner goes when the schedule earns its cost, and because it is
 the only thing a plist has to name. Adding one back is a plist and nothing else.
 

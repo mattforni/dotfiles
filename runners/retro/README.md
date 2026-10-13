@@ -1,8 +1,8 @@
 # The Retro Runner
 
-A Cloud Run Job (`retro`, project `atelic`, region `us-central1`) that fires every Sunday at 22:00 Denver, pulls the ISO week from Strava, Gmail, and HubSpot with curl, has headless Claude Code draft the retrospective as JSON, renders it into the branded email through the node renderer in [../email/](../email/), and sends it through Resend as `YYYY-Www Retro`. Read only against the world except the rotated Strava refresh token, which it writes back to the vault. Tracked as ATE-471.
+A Cloud Run Job (`retro`, project `atelic`, region `us-central1`) fired weekly by Cloud Scheduler, that pulls the ISO week from Strava, Gmail, and HubSpot with curl, has headless Claude Code draft the retrospective as JSON, renders it into the branded email through the node renderer in [../email/](../email/), and sends it through Resend as `YYYY-Www Retro`. Read only against the world except the rotated Strava refresh token, which it writes back to the vault. Tracked as ATE-471.
 
-The runtime one pager (why Cloud Run over Routines and launchd, the service account and its secrets, the schedule, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
+The runtime one pager (why Cloud Run over Routines and launchd, the service account and its secrets, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
 
 **Iterate locally first.** The loops and the promote step are in [../README.md](../README.md); the short version is `bin/runner/render-local retro` while changing how the email looks, `bin/runner/run-local retro --reuse` while changing what it says, and a merge to main once it is right, which builds the image and points the job at it on its own ([../README.md](../README.md#a-merge-to-main-is-the-promote)). `bin/runner/promote retro` is the same script, kept for a promote by hand.
 

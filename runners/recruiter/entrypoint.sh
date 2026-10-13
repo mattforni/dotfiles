@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# The Recruiter Runner. Meant for Sunday 23:00 Denver from Cloud Scheduler, so the
-# week's work search block opens on a scored slate rather than a sweep.
+# The Recruiter Runner. Fired weekly by Cloud Scheduler, so the week's work
+# search block opens on a scored slate rather than a sweep.
 #
 # Shape: Eudaimonia first (the checkout already present, or a shallow clone over
 # the read only deploy key), then the pulls (every board the recruiter's
@@ -361,7 +361,7 @@ pull_ledger() {
 # Both are hard failures: the draft is already saved by then, so nothing the
 # model produced is lost (`render-local` replays it), and an unattended run
 # that silently kept its rows out of the ledger would chase every one of them
-# again the next Sunday night.
+# again on the next fire.
 
 # The dedupe guard. The model is told to treat a key already in ledger.md as
 # a resurfaced dedupe, and it does for board cards, but a candidate found by
