@@ -19,7 +19,6 @@
           "opens": 5,
           "days_since_open": 1,
           "last_reply": "2026-09-18",
-          "fit": 15,
           "email": "x@example.test",
           "touch_days": [
             3
@@ -41,7 +40,6 @@
           "opens": 5,
           "days_since_open": 1,
           "last_reply": "2026-09-18",
-          "fit": 15,
           "email": "",
           "touch_days": [
             3
@@ -65,7 +63,6 @@
           "opens": 6,
           "days_since_open": 2,
           "last_reply": "",
-          "fit": 14,
           "email": "x@example.test",
           "tracked": 1,
           "touch_days": [
@@ -88,7 +85,6 @@
           "opens": 0,
           "days_since_open": null,
           "last_reply": "",
-          "fit": 12,
           "email": "x@example.test",
           "tracked": 1,
           "touch_days": [
@@ -111,7 +107,6 @@
           "opens": 0,
           "days_since_open": null,
           "last_reply": "",
-          "fit": 13,
           "email": "",
           "touch_days": [
             21,
@@ -134,7 +129,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": 17,
           "email": "x@example.test"
         }
       },
@@ -150,7 +144,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": 17,
           "email": ""
         }
       },
@@ -166,7 +159,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -182,7 +174,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -198,7 +189,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -214,7 +204,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -230,7 +219,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -246,7 +234,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -262,7 +249,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -278,7 +264,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -294,7 +279,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       },
@@ -310,7 +294,6 @@
           "opens": null,
           "days_since_open": null,
           "last_reply": "",
-          "fit": null,
           "email": ""
         }
       }
@@ -380,7 +363,6 @@
             "id": "30",
             "name": "Pinewood Cabinetry",
             "url": "https://app.example.test/contacts/1/record/0-2/30",
-            "fit": 8,
             "status": "CONTACTED",
             "last_touch": "First",
             "last_send": "2026-09-19",
@@ -408,7 +390,6 @@
             "id": "31",
             "name": "Harbor Lane Bakery",
             "url": "https://app.example.test/contacts/1/record/0-2/31",
-            "fit": 6,
             "status": "CONTACTED",
             "last_touch": "First",
             "last_send": "2026-09-17",
@@ -452,7 +433,6 @@
             "id": "0",
             "name": "Blue Heron Plumbing",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "CONTACTED",
             "last_touch": "Bump",
             "last_send": "2026-09-12",
@@ -485,7 +465,6 @@
             "id": "0",
             "name": "Sunridge Dental",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "CONTACTED",
             "last_touch": "First",
             "last_send": "2026-09-17",
@@ -516,7 +495,6 @@
             "id": "0",
             "name": "Old Mill Roasters",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "CONTACTED",
             "last_touch": "Bump",
             "last_send": "2026-09-10",
@@ -563,7 +541,6 @@
             "id": "0",
             "name": "Granite Peak Tile",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "ENGAGED",
             "last_touch": "",
             "last_send": "2026-09-15",
@@ -587,7 +564,6 @@
             "id": "0",
             "name": "Northwind Outfitters",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "CONNECTED",
             "last_touch": "Visit",
             "last_send": "2026-09-02",
@@ -616,7 +592,6 @@
             "id": "0",
             "name": "Silver Sage Counseling",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "ENGAGED",
             "last_touch": "First",
             "last_send": "2026-08-28",
@@ -656,7 +631,6 @@
             "id": "0",
             "name": "Rivermark Kitchen and Bath",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "QUALIFIED",
             "last_touch": "Visit",
             "last_send": "2026-09-18",
@@ -702,7 +676,6 @@
             "id": "0",
             "name": "Alder and Oak Physical Therapy",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "QUALIFIED",
             "last_touch": "Visit",
             "last_send": "2026-09-19",
@@ -731,7 +704,6 @@
             "id": "0",
             "name": "Westbrook Skylights",
             "url": "https://app.example.test/contacts/1/record/0-2/9",
-            "fit": null,
             "status": "QUALIFIED",
             "last_touch": "Visit",
             "last_send": "2026-09-16",
@@ -803,17 +775,6 @@
         "from": "CONTACTED",
         "to": "ENGAGED",
         "why": "they wrote back"
-      }
-    ],
-    "cleared": [
-      {
-        "id": "4",
-        "name": "Dale Okonkwo",
-        "company": "Front Range Cleanup Crew",
-        "url": "https://app.example.test/contacts/1/record/0-1/504",
-        "was": "CONTACTED",
-        "cleared_at": "2026-01-22",
-        "why": "Lead Status cleared on 2026-01-22 from CONTACTED; left cleared on purpose"
       }
     ],
     "proposed": [
