@@ -24,14 +24,14 @@ Anthropic reads every repo by construction, since Claude writes the code. Any ot
 ~/bin/review/run <worktree> --effort high        # Bash timeout 600000
 ```
 
-It changes into the worktree itself and reports the directory and HEAD in a leading `review_context` line, so the call carries no `cd`. Flags: `--base <ref>` (default the remote's default branch), `--effort low|medium|high|max`, `--max-findings N`, `--timeout <seconds>` (default 480, so it always returns inside the Bash call).
+It changes into the worktree itself and reports the directory and HEAD in a leading `review_context` line, so the call carries no `cd`. Flags: `--base <ref>` (default the remote's default branch), `--effort low|medium|high|max`, `--max-findings N`, `--timeout <seconds>` (default 450, so it always returns inside the Bash call).
 
 ## Reading the Stream
 
 One JSON object per line.
 
 - `review_context`: `workingDirectory`, `repo`, `sha`, `base`, `files`, `reviewers`, `note` (a failed fetch is named here).
-- `finding`: `reviewer`, `severity` (critical, major, minor, info), `fileName`, `line`, `summary`, `failure_scenario`.
+- `finding`: `reviewer`, `severity` (critical, major, minor, info), `rated` (false only when the grading pass left the major stamp in place), `fileName`, `line`, `summary`, `failure_scenario`.
 - `complete`, exactly one: `reviewer`, `ran`, `reason`, `findings`, `blocking` (the findings at critical or major), `unrated` (findings the grading pass did not grade, each stamped major), `sha`, `seconds`, `files`.
 
 **The gate is the claude `complete` line with `ran: true`.** The exit code says the same thing (0 only then) but read the line. An `unrated` count above zero means the grading pass failed, so every finding is stamped major and blocks: run the review once more, and if it is still unrated say so in the landing report, because that is a defect in the gate and not in the change.

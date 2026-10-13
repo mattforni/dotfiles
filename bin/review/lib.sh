@@ -36,18 +36,14 @@ review_state_dir() {
   printf '%s' "$REVIEW_STATE"
 }
 
-# Append one TSV row, writing the header on first touch.
+# Append one TSV row, writing the header on first touch. A scorecard begun
+# before a column was added keeps its old header: the readers go by position,
+# and rewriting the file under concurrent landers would lose their rows.
 # Args, in column order after ts: kind repo pr sha reviewer ran reason findings
 # fixed declined held_min seconds blocking. Tabs inside a value become spaces.
 scorecard_append() {
   review_state_dir >/dev/null
   [[ -s "$REVIEW_SCORECARD" ]] || printf '%s\n' "$REVIEW_HEADER" >"$REVIEW_SCORECARD"
-  # A scorecard begun before a column was added keeps its rows and takes the
-  # new header; the readers go by position and the old rows end one short.
-  if [[ "$(head -n1 "$REVIEW_SCORECARD")" != "$REVIEW_HEADER" ]]; then
-    { printf '%s\n' "$REVIEW_HEADER"; tail -n +2 "$REVIEW_SCORECARD"; } >"$REVIEW_SCORECARD.new" \
-      && mv "$REVIEW_SCORECARD.new" "$REVIEW_SCORECARD"
-  fi
   local row field
   row=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   for field in "$@"; do field="${field//$'\t'/ }"; field="${field//$'\n'/ }"; row+=$'\t'"${field//$'\r'/ }"; done
@@ -102,6 +98,7 @@ normalise_claude() {
     def finding:
       {type:"finding", reviewer:"claude",
        severity:(if rated then .severity else "major" end),
+       rated:rated,
        fileName:(.file // .fileName // ""),
        line:(.line // null),
        summary:(.summary // ""),
@@ -133,8 +130,9 @@ normalise_claude() {
 }
 
 # apply_grades <stream.jsonl> <grades.raw>
-# Prints the stream with each finding's severity replaced by the grading
-# pass's grade and the complete line's counts recomputed. grades.raw is the
+# Prints the stream with the grading pass's grade on each finding that arrived
+# without a severity (rated:false) and the complete line's counts recomputed.
+# A severity the reviewer did supply is never replaced. grades.raw is the
 # --output-format json document of the grading run. Anything short of one
 # valid grade per finding (no structured output, a count that does not match,
 # a grade outside the four) prints the stream untouched, so the findings keep
@@ -149,7 +147,8 @@ apply_grades() {
     | if ($g | length) != ($f | length)
          or ($g | all(.[]; . as $x | ($x | type) == "string" and (["critical","major","minor","info"] | index($x)) != null) | not)
       then .[]
-      else ([range(0; $f | length)] | map($f[.] + {severity: $g[.]})) as $n
+      else ([range(0; $f | length)]
+             | map($f[.] + (if $f[.].rated == true then {} else {severity: $g[.], rated: true} end))) as $n
         | ($n[]),
           ($c + {blocking: ($n | map(select(.severity == "critical" or .severity == "major")) | length), unrated: 0})
       end' "$stream"

@@ -40,8 +40,8 @@ fi
 awk -F'\t' -v cutoff="$cutoff" '
   NR == 1 { next }
   $1 < cutoff { next }
-  # A run that never started (nothing changed against the base) is skipped,
-  # which is not a failure; one that started and reached no usable result is.
+  # A row that did not run and took no time never started, and counts as
+  # skipped; one that started and reached no usable result is a failure.
   # Seconds average over the runs that actually ran.
   $2 == "run" {
     r = $6; runs[r]++; seen[r] = 1

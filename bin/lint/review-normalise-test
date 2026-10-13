@@ -146,6 +146,16 @@ expect "graded pass: unrated"     'map(select(.type=="complete"))[0].unrated' 0
 expect "graded pass: one complete" 'map(select(.type=="complete")) | length' 1
 expect "graded pass: findings kept" 'map(select(.type=="complete"))[0].findings' 3
 
+# 3g2. A severity the reviewer supplied survives the grading pass.
+cat >"$tmp/raw" <<'EOF'
+{"type":"result","subtype":"success","is_error":false,"result":"[{\"severity\":\"critical\",\"file\":\"a.sh\",\"line\":1,\"summary\":\"rm\",\"failure_scenario\":\"data loss\"},{\"file\":\"b.sh\",\"line\":2,\"summary\":\"guard\",\"failure_scenario\":\"odd input\"}]"}
+EOF
+normalise_claude "$tmp/raw" 0 mixed 40 2 >"$tmp/mixed"
+echo '{"structured_output":{"grades":["minor","minor"]}}' >"$tmp/grades"
+apply_grades "$tmp/mixed" "$tmp/grades" >"$tmp/out"
+expect "mixed: supplied grade kept" 'map(select(.type=="finding")) | map(.severity) | join(",")' "critical,minor"
+expect "mixed: blocking"            'map(select(.type=="complete"))[0].blocking' 1
+
 # 3h. Grades that cannot be trusted leave the stream untouched (fail closed):
 # a count that does not match, a grade outside the four, no structured output,
 # and a grading run that left nothing behind.
@@ -163,10 +173,6 @@ scorecard_append run acme/repo "" abc claude true "" 2 "" "" "" 75 1
 scorecard_append landing acme/repo 12 abc claude "" "" "" 1 1 9 ""
 lines=$(wc -l <"$REVIEW_SCORECARD" | tr -d ' ')
 if [[ "$lines" == 3 && "$(head -n1 "$REVIEW_SCORECARD")" == "$REVIEW_HEADER" ]]; then pass=$((pass + 1)); else fail=$((fail + 1)); echo "  FAIL scorecard: want header plus 2 rows, got $lines lines"; fi
-# A scorecard begun under an older header takes the new one and keeps its rows.
-{ printf 'ts\tkind\n'; tail -n +2 "$REVIEW_SCORECARD"; } >"$tmp/old" && cp "$tmp/old" "$REVIEW_SCORECARD"
-scorecard_append run acme/repo "" def claude true "" 0 "" "" "" 60 0
-if [[ "$(head -n1 "$REVIEW_SCORECARD")" == "$REVIEW_HEADER" && "$(wc -l <"$REVIEW_SCORECARD" | tr -d ' ')" == 4 ]]; then pass=$((pass + 1)); else fail=$((fail + 1)); echo "  FAIL scorecard: old header not replaced in place"; fi
 cols=$(sed -n 2p "$REVIEW_SCORECARD" | awk -F'\t' '{print NF}')
 if [[ "$cols" == 14 ]]; then pass=$((pass + 1)); else fail=$((fail + 1)); echo "  FAIL scorecard: want 14 columns, got $cols"; fi
 
