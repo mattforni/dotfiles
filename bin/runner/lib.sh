@@ -130,15 +130,100 @@ runner_repo_root() {
     cd "$here/../.." && pwd
 }
 
-# Resolve and validate a runner name into its source directory.
+# Resolve and validate a runner into its source directory. The one resolver:
+# every command hands its first argument here and works from what comes back.
+#
+# A bare name is runners/<name> in this repository, as it always was. Anything
+# with a slash in it is a path to a runner directory, absolute or relative to
+# where the command was typed, which is how a runner that lives in another
+# repository is named: that repository checks this one out and runs these
+# commands against its own directory. The path is resolved physically, so the
+# name every caller takes from it (the last component, which names the Cloud
+# Run job and the image) is the directory's real one and never a symlink's or
+# a trailing dot's.
 runner_dir() {
     local name="${1:-}" root dir
-    [[ -n "$name" ]] || die "usage: ${0##*/} <runner-name> [options]"
-    root="$(runner_repo_root)"
-    dir="$root/runners/$name"
-    [[ -d "$dir" ]] || die "no runner named '$name' (looked in $root/runners)"
+    [[ -n "$name" ]] || die "usage: ${0##*/} <runner-name-or-path> [options]"
+    if [[ "$name" == */* ]]; then
+        dir="$(cd -P "$name" 2>/dev/null && pwd)" || die "no runner directory at '$name'"
+    else
+        root="$(runner_repo_root)"
+        dir="$root/runners/$name"
+        [[ -d "$dir" ]] || die "no runner named '$name' (looked in $root/runners)"
+    fi
     [[ -f "$dir/entrypoint.sh" ]] || die "$dir has no entrypoint.sh"
     printf '%s' "$dir"
+}
+
+# Usage: runner_source_root <runner-dir>
+# The top of the repository a runner lives in, printed physical, or the runner
+# directory itself when it is in no repository. This is the fence a manifest
+# may reach up to and never past.
+#
+# git's own variables are dropped for the one call because a commit hook
+# exports where its repository is, and with those set the answer would be the
+# repository being committed to, whatever directory was asked about.
+runner_source_root() {
+    local top
+    if top="$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX -u GIT_COMMON_DIR \
+        git -C "$1" rev-parse --show-toplevel 2>/dev/null)" && [[ -n "$top" ]]; then
+        (cd -P "$top" && pwd)
+    else
+        printf '%s\n' "$1"
+    fi
+}
+
+# Usage: runner_source_path <runner-dir> <relative-path> <what it is, for the error>
+# Resolves a path a manifest names, relative to the runner directory, and
+# prints it absolute and physical. It may reach up with `..`, since what a
+# runner ships can sit elsewhere in its own repository, and it is refused the
+# moment it resolves outside that repository: a manifest that could name any
+# file on the machine would put it in an image. Resolved physically for that
+# reason, so a symlinked directory is judged by where it really is, and a
+# file that is itself a symlink is refused outright rather than followed.
+runner_source_path() {
+    local dir="$1" rel="$2" what="$3" abs parent fence
+    case "$rel" in
+        ""|/*) echo "$what '$rel' has to be a path relative to $dir" >&2; return 1 ;;
+    esac
+    if [[ -d "$dir/$rel" ]]; then
+        abs="$(cd -P "$dir/$rel" && pwd)" || return 1
+    elif [[ -L "$dir/$rel" ]]; then
+        echo "$what '$rel' is a symlink to a file, which is not followed; name the file itself" >&2
+        return 1
+    elif [[ -f "$dir/$rel" ]]; then
+        parent="$(cd -P "$(dirname "$dir/$rel")" && pwd)" || return 1
+        abs="$parent/$(basename "$rel")"
+    else
+        echo "$what '$rel' does not exist (looked from $dir)" >&2
+        return 1
+    fi
+    fence="$(runner_source_root "$dir")"
+    if [[ "$abs" != "$fence" && "$abs" != "$fence"/* ]]; then
+        echo "$what '$rel' resolves to $abs, which is outside $fence; a runner ships files from its own repository only" >&2
+        return 1
+    fi
+    printf '%s' "$abs"
+}
+
+# Usage: runner_lexical_path <path>
+# A path with its `.` and `..` folded away by the text alone, no filesystem
+# asked, and returns non zero when it climbs above where it started. This is
+# for bin/runner/changed, which reads manifests out of a commit and has no
+# tree on disk to resolve against; the staging resolves the real thing with
+# runner_source_path. Prints `.` for the starting point itself.
+runner_lexical_path() {
+    local parts=() out=() part IFS=/
+    read -r -a parts <<< "$1"
+    for part in ${parts[@]+"${parts[@]}"}; do
+        case "$part" in
+            ""|.) ;;
+            ..)   (( ${#out[@]} )) || return 1
+                  unset "out[$(( ${#out[@]} - 1 ))]" ;;
+            *)    out+=("$part") ;;
+        esac
+    done
+    if (( ${#out[@]} )); then printf '%s' "${out[*]}"; else printf '.'; fi
 }
 
 # The vaults answer to two identities and the active gcloud account is only
@@ -361,6 +446,14 @@ runner_execute() {
     export SKIP_PULLS="$reuse"
     [[ -z "$week" ]] || export WEEK="$week"
 
+    # This runner's own bundle, built or refreshed before the entrypoint is
+    # started, since on this path nothing else builds one and the scaffold
+    # only ever reads the file. A bundle that will not build is said out loud
+    # and the run goes on: the scaffold says the same at its render step and
+    # mails the failure page, which is where a missing bundle always ended.
+    runner_email_bundle "$dir" >/dev/null \
+        || echo "WARNING: could not build the email bundle for $(basename "$dir"); the render step will fail" >&2
+
     "$dir/entrypoint.sh"
 }
 
@@ -369,26 +462,82 @@ runner_execute() {
 # agree on it: runner_build_context, which leaves these out of the image, and
 # bin/runner/changed, which must not promote a runner over a change to one of
 # them. A copy kept in each would drift toward a merge that changes an image
-# and promotes nothing. `agents` and `mounts` are the manifests that drive the
-# staging and never ship themselves, though a change to `agents` changes
-# which agents do, and changed knows that.
-RUNNER_CONTEXT_EXCLUDES="out .build .env.local agents mounts"
+# and promotes nothing. `agents`, `context` and `mounts` are the manifests
+# that drive the staging and never ship themselves, though a change to
+# `agents` or `context` changes what does, and changed knows that.
+RUNNER_CONTEXT_EXCLUDES="out .build .env.local agents context mounts"
 
-# Usage: runner_agent_names < <agents manifest>
-# The agent names in a manifest, one per line: blank lines and comments
-# dropped, and the whitespace around a name with them, since that is what
-# `read` does. The one reader of the format, for the same reason as the list
-# above: the staging and the promote rules must see the same names.
-runner_agent_names() {
+# Usage: runner_manifest_lines < <manifest>
+# A manifest's lines: blank lines and comments dropped, and the whitespace
+# around a line with them, since that is what `read` does.
+runner_manifest_lines() {
     local n
     # The second test is for a last line with no newline after it: `read`
     # fills the variable and still reports failure there, and a bare
-    # `while read` would drop that name. IFS is left alone on purpose, since
+    # `while read` would drop that line. IFS is left alone on purpose, since
     # the trimming is `read` splitting on it.
     while read -r n || [[ -n "$n" ]]; do
         [[ -n "$n" && "$n" != \#* ]] || continue
         printf '%s\n' "$n"
     done
+}
+
+# Usage: runner_agent_names < <agents manifest>
+# The agents a manifest names, one `name=path` per line. A manifest line is
+# either a bare name, which is .claude/agents/<name>.md in this repository
+# and comes out here as `name=` with nothing after it, or `name=path`, which
+# is a definition the runner brings from its own repository, the path
+# relative to the runner directory. The second form is how a runner that
+# lives elsewhere ships an agent this repository has never heard of. Either
+# way the image gets agents/<name>.md.
+#
+# The one reader of the format, for the same reason as the list above: the
+# staging and the promote rules must see the same names. A caller splits a
+# line with ${line%%=*} and ${line#*=}.
+runner_agent_names() {
+    local n
+    while read -r n; do
+        case "$n" in
+            *=*) printf '%s\n' "$n" ;;
+            *)   printf '%s=\n' "$n" ;;
+        esac
+    done < <(runner_manifest_lines)
+}
+
+# Usage: runner_context_entries < <context manifest>
+# What a `context` manifest asks to be added to the staged context, one
+# `source:dest` per line. The source is relative to the runner directory and
+# may be a file or a directory; the dest is where it lands, relative to the
+# staged context. Read here and judged by the caller, since the staging
+# refuses a bad line and the promote rules only need to know what is named.
+runner_context_entries() { runner_manifest_lines; }
+
+# Usage: runner_email_stage <runner-dir> <dest-dir>
+# The renderer's sources as one flat project in <dest-dir>: this repository's
+# runners/email (its node_modules and its build left behind), then whatever
+# the runner keeps in an email/ folder of its own, copied in beside them. So a
+# page that lives with its runner imports ./jq, ./local, ./text, ./types and
+# ./records as though it had been written in runners/email, and resolves the
+# same packages from the same install.
+#
+# A file of the runner's that would land on one of the shared sources is
+# refused and never overwritten: the copy that lost would be the one nobody
+# was reading, in every image built from here.
+runner_email_stage() {
+    local dir="$1" dest="$2" root f rel
+    root="$(runner_repo_root)"
+    mkdir -p "$dest" || return 1
+    (cd "$root/runners/email" && tar --exclude=./node_modules --exclude=./dist -cf - .) \
+        | (cd "$dest" && tar -xf -) || return 1
+    [[ -d "$dir/email" ]] || return 0
+    while IFS= read -r -d '' f; do
+        rel="${f#"$dir/email/"}"
+        if [[ -e "$dest/$rel" ]]; then
+            echo "$dir/email/$rel has the name of a file in runners/email, and neither may replace the other; rename it" >&2
+            return 1
+        fi
+        mkdir -p "$(dirname "$dest/$rel")" && cp "$f" "$dest/$rel" || return 1
+    done < <(find "$dir/email" \( -name node_modules -o -name dist \) -prune -o -type f -print0)
 }
 
 # Usage: runner_build_context <runner-dir> [staging-dir]
@@ -400,17 +549,26 @@ runner_agent_names() {
 # builds submit uploads, yet a runner shares runners/lib/runner.sh and may ship
 # an agent definition from .claude/agents/. So the context is assembled: the
 # runner's own files (out/, .env.local and any prior staging left out),
-# lib/runner.sh, and agents/<name>.md for each name listed one per line in the
-# runner's `agents` file. Built fresh every time, under the runner's gitignored
-# .build/, so a stale copy of the library can never ship.
+# lib/ and email/ from this repository, agents/<name>.md for each agent the
+# runner's `agents` file names, and whatever its `context` file adds. Built
+# fresh every time, under the runner's gitignored .build/, so a stale copy of
+# the library can never ship.
+#
+# The runner directory may be anywhere. One in another repository gets the
+# same lib/ and the same renderer from this one, and brings the rest itself:
+# a page in its own email/ folder, an agent by path, and through `context`
+# any other file of its repository the image needs.
 runner_build_context() {
-    local dir="$1" root staged n excludes=() e
+    local dir="$1" root staged staged_real n p src dest entry excludes=() e
     root="$(runner_repo_root)"
     staged="${2:-$dir/.build}"
     rm -rf "$staged" && mkdir -p "$staged/lib" || return 1
-    # The `agents` and `mounts` manifests drive this side and never ship; and
-    # `agents` the file would collide with agents/ the directory below.
-    for e in $RUNNER_CONTEXT_EXCLUDES; do excludes+=("--exclude=./$e"); done
+    staged_real="$(cd -P "$staged" && pwd)" || return 1
+    # The manifests drive this side and never ship; and `agents` the file
+    # would collide with agents/ the directory below. A runner's own email/
+    # is left for runner_email_stage, which sets it beside the shared
+    # renderer and refuses a clash that a copy here would hide.
+    for e in $RUNNER_CONTEXT_EXCLUDES email; do excludes+=("--exclude=./$e"); done
     (cd "$dir" && tar "${excludes[@]}" -cf - .) \
         | (cd "$staged" && tar -xf -) || return 1
     # The whole shared library: runner.sh for the entrypoint, the pull
@@ -424,20 +582,97 @@ runner_build_context() {
     # because the flat copy above carries files and not directories. Its
     # node_modules and its build stay behind: the image's first stage installs
     # and builds its own, so nothing here can ship a stale bundle.
-    mkdir -p "$staged/email" || return 1
-    (cd "$root/runners/email" && tar --exclude=./node_modules --exclude=./dist -cf - .) \
-        | (cd "$staged/email" && tar -xf -) || return 1
+    runner_email_stage "$dir" "$staged/email" || return 1
     if [[ -r "$dir/agents" ]]; then
         mkdir -p "$staged/agents" || return 1
-        while read -r n; do
-            if [[ ! -r "$root/.claude/agents/$n.md" ]]; then
-                echo "no agent named '$n' in .claude/agents (listed in $dir/agents)" >&2
+        while read -r entry; do
+            n="${entry%%=*}"; p="${entry#*=}"
+            if [[ -z "$n" || "$n" == */* ]]; then
+                echo "'$n' is not an agent name (listed in $dir/agents)" >&2
                 return 1
             fi
-            cp "$root/.claude/agents/$n.md" "$staged/agents/$n.md" || return 1
+            if [[ -n "$p" ]]; then
+                # The runner's own definition, from its own repository.
+                src="$(runner_source_path "$dir" "$p" "the agent '$n' in $dir/agents, at")" || return 1
+                if [[ ! -f "$src" ]]; then
+                    echo "the agent '$n' in $dir/agents names $p, which is not a file" >&2
+                    return 1
+                fi
+            else
+                src="$root/.claude/agents/$n.md"
+                if [[ ! -r "$src" ]]; then
+                    echo "no agent named '$n' in .claude/agents (listed in $dir/agents)" >&2
+                    return 1
+                fi
+            fi
+            cp "$src" "$staged/agents/$n.md" || return 1
         done < <(runner_agent_names < "$dir/agents")
     fi
+    # Last, so a line here can be held against everything already staged: a
+    # dest that is taken is refused, since the two files would otherwise ship
+    # as whichever was copied second.
+    if [[ -r "$dir/context" ]]; then
+        while read -r entry; do
+            src="${entry%%:*}"; dest="${entry#*:}"
+            if [[ "$entry" != *:* || -z "$src" || -z "$dest" ]]; then
+                echo "'$entry' in $dir/context is not source:dest" >&2
+                return 1
+            fi
+            case "$dest" in
+                /*|..|../*|*/..|*/../*)
+                    echo "the dest '$dest' in $dir/context has to stay inside the staged context" >&2
+                    return 1 ;;
+            esac
+            src="$(runner_source_path "$dir" "$src" "the context source")" || return 1
+            # A source that holds the staging directory would be copied into
+            # itself: the runner's own directory or anything above it, while
+            # the context is staged in .build/.
+            if [[ "$staged_real" == "$src" || "$staged_real" == "$src"/* ]]; then
+                echo "the context source '${entry%%:*}' in $dir/context holds the staging directory $staged_real; name something narrower" >&2
+                return 1
+            fi
+            if [[ -e "$staged/$dest" ]]; then
+                echo "the dest '$dest' in $dir/context is already in the staged context, and nothing is overwritten" >&2
+                return 1
+            fi
+            mkdir -p "$(dirname "$staged/$dest")" || return 1
+            if [[ -d "$src" ]]; then
+                # A repository's own directory and a fetched environment
+                # file are never what a line here means, wherever they sit.
+                mkdir "$staged/$dest" || return 1
+                (cd "$src" && tar --exclude=.git --exclude=.env.local -cf - .) \
+                    | (cd "$staged/$dest" && tar -xf -) || return 1
+            else
+                cp "$src" "$staged/$dest" || return 1
+            fi
+        done < <(runner_context_entries < "$dir/context")
+    fi
     printf '%s' "$staged"
+}
+
+# Usage: runner_source_paths <runner-dir>
+# Every path outside this repository's shared directories that a runner's
+# image is built from, absolute, one per line: the runner directory, each
+# source its `context` names, and each agent it brings by path. What promote
+# asks git about before it builds, so a manifest cannot route an uncommitted
+# file around the dirty gate.
+runner_source_paths() {
+    local dir="$1" entry p
+    printf '%s\n' "$dir"
+    if [[ -r "$dir/agents" ]]; then
+        while read -r entry; do
+            p="${entry#*=}"
+            [[ -n "$p" ]] || continue
+            runner_source_path "$dir" "$p" "the agent '${entry%%=*}' in $dir/agents, at" || return 1
+            echo
+        done < <(runner_agent_names < "$dir/agents")
+    fi
+    if [[ -r "$dir/context" ]]; then
+        while read -r entry; do
+            runner_source_path "$dir" "${entry%%:*}" "the context source" || return 1
+            echo
+        done < <(runner_context_entries < "$dir/context")
+    fi
 }
 
 # Usage: runner_execute_container <runner-dir> <send 0|1> <reuse 0|1> [week]
@@ -528,24 +763,54 @@ runner_email_artifact() {
     return 1
 }
 
-# Usage: runner_email_bundle
-# The node renderer's bundle, built first when it is missing or older than any
-# of its sources, and its path printed. This is the driver side, which is the
-# half allowed to know this machine has npm on it; the entrypoint side only
-# ever reads the file. An image builds its own copy in its first stage.
+# Usage: runner_email_bundle <runner-dir>
+# One runner's bundle of the node renderer (its page and the failure page),
+# built first when it is missing or stale, and its path printed. This is the
+# driver side, which is the half allowed to know this machine has npm on it;
+# the entrypoint side only ever reads the file. An image builds its own copy
+# in its first stage.
+#
+# A bundle per runner, dist/render-<name>.cjs, because a bundle carries one
+# page: a single file would be the last runner's, and the next one to render
+# would be told its page is unknown. Stale means older than any source, the
+# runner's own email/ folder included, or built for another directory: a
+# runner in another repository may wear the name of one in here, and the
+# directory a bundle was built from is written beside it so the two never
+# pass for each other.
+#
+# A runner with an email/ folder of its own is built from a merged copy of
+# the sources under dist/, the same merge an image is built from, which sits
+# below runners/email so the packages still resolve from the one install.
 runner_email_bundle() {
-    local root dir bundle newer=""
+    local dir="$1" root email name bundle stamp merged newer="" own=""
     root="$(runner_repo_root)"
-    dir="$root/runners/email"
-    bundle="$dir/dist/render.cjs"
-    [[ -d "$dir" ]] || { echo "no runners/email under $root" >&2; return 1; }
+    email="$root/runners/email"
+    name="$(basename "$dir")"
+    bundle="$email/dist/render-$name.cjs"
+    stamp="$bundle.from"
+    [[ -d "$email" ]] || { echo "no runners/email under $root" >&2; return 1; }
+    [[ ! -d "$dir/email" ]] || own="$dir/email"
     if [[ -s "$bundle" ]]; then
-        newer="$(find "$dir" \( -name node_modules -o -name dist \) -prune -o \
-            -type f -newer "$bundle" -print -quit 2>/dev/null)"
+        if [[ "$(cat "$stamp" 2>/dev/null)" != "$dir" ]]; then
+            newer="built for another directory"
+        else
+            newer="$(find "$email" ${own:+"$own"} \( -name node_modules -o -name dist \) -prune -o \
+                -type f -newer "$bundle" -print -quit 2>/dev/null)"
+        fi
     fi
     if [[ ! -s "$bundle" || -n "$newer" ]]; then
-        [[ -d "$dir/node_modules" ]] || npm --prefix "$dir" install --no-audit --no-fund >&2 || return 1
-        npm --prefix "$dir" run build >&2 || return 1
+        [[ -d "$email/node_modules" ]] || npm --prefix "$email" install --no-audit --no-fund >&2 || return 1
+        rm -f "$stamp"
+        if [[ -n "$own" ]]; then
+            merged="$email/dist/src-$name"
+            rm -rf "$merged" || return 1
+            runner_email_stage "$dir" "$merged" >&2 || return 1
+            RUNNER="$name" npm --prefix "$merged" run build >&2 || return 1
+            cp "$merged/dist/render-$name.cjs" "$bundle" || return 1
+        else
+            RUNNER="$name" npm --prefix "$email" run build >&2 || return 1
+        fi
+        printf '%s\n' "$dir" > "$stamp" || return 1
     fi
     printf '%s' "$bundle"
 }

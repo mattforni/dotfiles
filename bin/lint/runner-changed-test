@@ -11,9 +11,11 @@
 #
 # Checks: the shared library and the renderer reach every runner, the two
 # scripts that decide what ships do too, a runner's own files reach only it,
-# the paths that never ship reach nothing, an agent reaches the runners whose
-# manifest names it, a runner without a Dockerfile is never printed, an
-# unusable base means everything, and --all.
+# a runner's page reaches only it, the paths that never ship reach nothing,
+# an agent reaches the runners whose manifest names it, a path a context
+# manifest or an agent line names reaches the runner that named it, a runner
+# without a Dockerfile is never printed, an unusable base means everything,
+# and --all.
 set -uo pipefail
 
 # Under the pre-commit hook git exports where its index and directory are, and
@@ -96,6 +98,13 @@ put runners/localonly/prompt.md
 put runners/lib/runner.sh
 put runners/email/render.tsx
 put runners/email/package.json
+put runners/email/package-lock.json
+put runners/email/build.mjs
+put runners/email/jq.ts
+put runners/email/local.tsx
+put runners/email/alpha.tsx
+put runners/email/beta.tsx
+put runners/email/localonly.tsx
 put runners/email/tst/render.test.mjs
 put runners/email/fixtures/alpha.json
 put runners/email/goldens/alpha.html
@@ -123,6 +132,12 @@ after="$(commit)"
 expect "a file leaving runners/lib reaches every runner" "alpha beta gamma" "$before" "$after"
 change "runners/email reaches every runner"      "alpha beta gamma" runners/email/render.tsx
 change "the renderer's package file does too"    "alpha beta gamma" runners/email/package.json
+change "and its lockfile"                        "alpha beta gamma" runners/email/package-lock.json
+change "and the script that builds a bundle"     "alpha beta gamma" runners/email/build.mjs
+change "a helper any page may import"            "alpha beta gamma" runners/email/jq.ts
+# Shaped like a page, named for no runner: a component file every page shares.
+change "a tsx that is no runner's page"          "alpha beta gamma" runners/email/local.tsx
+change "a tsx in a folder under the renderer"    "alpha beta gamma" runners/email/parts/alpha.tsx
 change "bin/runner/promote reaches every runner" "alpha beta gamma" bin/runner/promote
 change "bin/runner/lib.sh reaches every runner"  "alpha beta gamma" bin/runner/lib.sh
 
@@ -136,6 +151,25 @@ change "a nested README still ships"             "beta"       runners/beta/docs/
 # quoted path would match no rule.
 change "a name past ASCII reaches its runner"    "gamma"      "runners/gamma/café.jq"
 change "a name with a space reaches its runner"  "beta"       "runners/beta/two words.jq"
+
+echo "A runner's page reaches only that runner"
+# A bundle is built around one page, so the retro's page is in the retro's
+# image and no other. Promoting every runner for it would be three builds
+# where one image changed.
+change "a page reaches the runner it is named for" "alpha"     runners/email/alpha.tsx
+change "two pages reach their two runners"       "alpha beta"  runners/email/beta.tsx runners/email/alpha.tsx
+change "a page beside a shared file reaches all" "alpha beta gamma" runners/email/alpha.tsx runners/email/render.tsx
+change "the page of a runner with no Dockerfile" ""            runners/email/localonly.tsx
+change "a page a runner keeps in its own folder" "gamma"       runners/gamma/email/gamma.tsx
+# A runner that leaves takes its page with it, and no other image held it.
+put runners/delta/Dockerfile
+put runners/delta/entrypoint.sh
+put runners/email/delta.tsx
+commit >/dev/null
+before="$(g rev-parse HEAD)"
+g rm --quiet -r runners/delta runners/email/delta.tsx
+after="$(commit)"
+expect "a runner and its page leaving reach no other runner" "" "$before" "$after"
 
 echo "Paths that never ship reach nothing"
 change "a runner's README"                       "" runners/alpha/README.md
@@ -167,6 +201,45 @@ before="$(g rev-parse HEAD)"
 after="$(commit)"
 expect "a new manifest reaches its runner" "gamma" "$before" "$after"
 change "the manifest is read at head"            "beta gamma" .claude/agents/shared.md
+
+echo "Manifests reach outside the runner's directory"
+# A context manifest adds files from elsewhere in the repository to a staged
+# context, so a change to one of them is a change to that runner's image and
+# to no other. The manifest never ships itself, and like `agents` it decides
+# what does.
+put shared/rules/fold.mjs
+put shared/rules/deep/sweep.mjs
+put shared/other/unrelated.mjs
+put shared/one.mjs
+commit >/dev/null
+printf '# what gamma adds\n\n../../shared/rules:lib/rules\n  ../../shared/one.mjs:one.mjs \n' > "$FAKE/runners/gamma/context"
+before="$(g rev-parse HEAD)"
+after="$(commit)"
+expect "a new context manifest reaches its runner" "gamma" "$before" "$after"
+change "a file under a context source"           "gamma" shared/rules/fold.mjs
+change "a file deep under a context source"      "gamma" shared/rules/deep/sweep.mjs
+change "a new file under a context source"       "gamma" shared/rules/new.mjs
+change "a context source that is one file"       "gamma" shared/one.mjs
+change "a file beside a context source"          ""      shared/other/unrelated.mjs
+change "a file whose name a source only begins"  ""      shared/rules-old/fold.mjs
+change "a context source and another runner"     "alpha gamma" shared/rules/fold.mjs runners/alpha/prompt.md
+# A line that climbs out of the repository is the staging's to refuse. Here it
+# has to be dropped without taking the other lines down with it.
+printf '../../../elsewhere:x\n../../shared/rules:lib/rules\n' > "$FAKE/runners/gamma/context"
+commit >/dev/null
+change "a source past a line that climbs out"    "gamma" shared/rules/fold.mjs
+# An agent a runner brings by path is that file and not the one of the same
+# name in .claude/agents.
+put .claude/agents/own.md
+put definitions/own.md
+commit >/dev/null
+printf '# what beta runs\n\nbeta\n  shared \nown=../../definitions/own.md\n' > "$FAKE/runners/beta/agents"
+before="$(g rev-parse HEAD)"
+after="$(commit)"
+expect "an agent line by path reaches its runner" "beta" "$before" "$after"
+change "an agent brought by path"                "beta" definitions/own.md
+change "the same name in .claude/agents"         ""     .claude/agents/own.md
+change "a bare name beside a path line still matches" "beta" .claude/agents/beta.md
 
 echo "Deletes, renames and new runners"
 before="$(g rev-parse HEAD)"

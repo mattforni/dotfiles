@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Write a runner's local environment file from its deployed Cloud Run job.
 #
-# Usage: fetch-env <runner-name>
+# Usage: fetch-env <runner-name-or-path>
 #
 # The map from environment variable to vault secret lives in exactly one place,
 # the deployed job's own configuration, and this reads it back rather than
@@ -11,8 +11,10 @@
 # Plain configuration values come across too, so a local run sees the same
 # recipient and the same defaults the cloud does.
 #
-# The result is runners/<name>/.env.local, gitignored and mode 600. It holds
-# live credentials in plaintext: never commit it, never print it.
+# The result is .env.local in the runner's directory, gitignored and mode 600.
+# It holds live credentials in plaintext: never commit it, never print it. A
+# runner that lives in another repository has to ignore the file there, since
+# this repository's .gitignore does not reach it.
 set -euo pipefail
 
 LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
@@ -22,6 +24,9 @@ LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 name="${1:-}"
 dir="$(runner_dir "$name")"
+# A path names a runner as well as a name does, and either way the name used
+# from here on is the directory's own.
+name="$(basename "$dir")"
 out="$dir/.env.local"
 
 command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"

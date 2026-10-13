@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Promote a runner to production: build its image and point its job at it.
 #
-# Usage: promote <runner-name> [--dirty] [--tag <tag>]
+# Usage: promote <runner-name-or-path> [--dirty] [--tag <tag>]
 #
 # The two gcloud commands this wraps lived only in a README code block, which
 # meant production was something retyped from documentation every time. Cloud
@@ -32,23 +32,46 @@ while (( $# )); do
 done
 
 dir="$(runner_dir "$name")"
+# A path names a runner as well as a name does, and either way the name used
+# from here on is the directory's own.
+name="$(basename "$dir")"
 
 # A runner without a Dockerfile is local only, which is a design position and
 # not an unfinished one: it may drive the local CLIs or a real browser, and
 # neither survives a container without work that has to be decided rather than
 # assumed. Say so plainly instead of failing inside Cloud Build.
-[[ -f "$dir/Dockerfile" ]] || die "$name has no Dockerfile, so it is a local only runner and production for it is launchd. runners/$name/README.md says what promoting it would take."
+[[ -f "$dir/Dockerfile" ]] || die "$name has no Dockerfile, so it is a local only runner and production for it is launchd. $dir/README.md says what promoting it would take."
 
 command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
 
 root="$(runner_repo_root)"
 # The image is built from a staged context (the runner, the shared library, the
-# node renderer, any agent it ships), so every source has to be clean for the
-# artifact to be reproducible.
-dirty="$(git -C "$root" status --porcelain -- "runners/$name" runners/lib runners/email .claude/agents)" \
+# node renderer, any agent it ships, anything its context manifest adds), so
+# every source has to be clean for the artifact to be reproducible.
+#
+# Two repositories can be behind one image. The shared directories are always
+# this one's. The runner's own sources (its directory, and whatever its
+# manifests name beside it) are this one's too for a runner under runners/,
+# and another repository's for a runner named by path, so each set is asked
+# about in the repository it belongs to. --dirty is still the way past, and
+# it also covers a runner directory that is in no repository at all, where
+# there is no clean to check.
+sources="$(runner_source_paths "$dir")" || die "could not resolve what $name is built from"
+own_paths=()
+while IFS= read -r line; do
+    [[ -z "$line" ]] || own_paths+=("$line")
+done <<< "$sources"
+source_root="$(runner_source_root "$dir")"
+dirty="$(git -C "$root" status --porcelain -- runners/lib runners/email .claude/agents)" \
     || die "could not read the working tree state of $root; the dirty gate cannot pass on a guess"
+if own="$(git -C "$source_root" status --porcelain -- "${own_paths[@]}" 2>/dev/null)"; then
+    [[ -z "$own" ]] || dirty="${dirty:+$dirty
+}$own"
+elif (( ! allow_dirty )); then
+    die "could not read the working tree state of $source_root; the dirty gate cannot pass on a guess"
+fi
 if [[ -n "$dirty" && $allow_dirty -eq 0 ]]; then
-    echo "runners/$name, runners/lib, runners/email or .claude/agents has uncommitted changes:" >&2
+    echo "$dir (or what its manifests name), runners/lib, runners/email or .claude/agents has uncommitted changes:" >&2
     printf '%s\n' "$dirty" >&2
     die "commit them, or pass --dirty to promote anyway"
 fi

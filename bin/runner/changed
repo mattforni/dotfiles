@@ -10,10 +10,19 @@
 #
 # The rules, which mirror what runner_build_context in lib.sh stages:
 #   runners/lib/, runners/email/         every runner (both ship in every image)
+#   runners/email/<name>.tsx             that runner alone: a bundle carries its
+#                                        own runner's page and no other
 #   bin/runner/promote, bin/runner/lib.sh  every runner (they decide what ships)
 #   runners/<name>/                      that runner, unless every changed path
 #                                        there is one that never ships
 #   .claude/agents/<x>.md                each runner whose agents manifest lists x
+#   a path a manifest names              each runner whose context manifest has
+#                                        it as a source, or whose agents manifest
+#                                        brings an agent from it
+#
+# Only runners in this repository are ever printed. One that lives in another
+# repository is promoted by that repository's own workflow, with these same
+# commands, and nothing here can see it.
 #
 # What an entrypoint reads from another repository at run time is in no image
 # and so in no rule here: the funnel rules the plumber and the retro run live
@@ -39,7 +48,7 @@ while (( $# )); do
     case "$1" in
         -C)        repo="${2:-}"; [[ -n "$repo" ]] || die "-C needs a directory"; shift 2 ;;
         --all)     all=1; shift ;;
-        -h|--help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,37p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*)        die "unknown option $1" ;;
         *)
             # An empty base is a real argument here (a workflow hands one over
@@ -90,11 +99,17 @@ if (( all )); then
     exit 0
 fi
 
-# The names in a runner's agents manifest at <head>, through the same reader
+# A runner's agents manifest at <head>, through the same reader
 # runner_build_context stages from, so a line the staging would ship (indented,
-# say) is a line this matches.
+# say) is a line this matches. One `name=path` per line, the path empty for an
+# agent that comes from .claude/agents.
 manifest() {
     git -C "$repo" show "$head:runners/$1/agents" 2>/dev/null | runner_agent_names || true
+}
+
+# A runner's context manifest at <head>, one `source:dest` per line.
+context() {
+    git -C "$repo" show "$head:runners/$1/context" 2>/dev/null | runner_context_entries || true
 }
 
 # Usage: has_line <lines> <line>
@@ -118,16 +133,49 @@ is_runner() { has_line "$every" "$1"; }
 
 # Whether a path inside a runner's directory is one that never reaches its
 # image. The list is the one runner_build_context excludes by, minus the
-# agents manifest (it decides which agents ship, so it counts), plus the
-# README, which is staged and which no Dockerfile copies.
+# agents and context manifests (they decide what ships, so they count), plus
+# the README, which is staged and which no Dockerfile copies.
 never_ships() {
     local rest="$1" e
     [[ "$rest" != README.md ]] || return 0
     for e in $RUNNER_CONTEXT_EXCLUDES; do
-        [[ "$e" != agents ]] || continue
+        [[ "$e" != agents && "$e" != context ]] || continue
         [[ "$rest" == "$e" || "$rest" == "$e"/* ]] && return 0
     done
     return 1
+}
+
+# What each runner's manifests reach for outside the rules below, as
+# `runner<TAB>path` lines with the path from the top of the repository: a
+# context source, and an agent brought by path. A manifest names these
+# relative to the runner's directory and may climb out of it with `..`, so
+# the path is folded by its text (there is no tree on disk at <head> to ask).
+# A line that climbs out of the repository is dropped here; the staging is
+# what refuses it.
+watched=""
+tab="$(printf '\t')"
+while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    while IFS= read -r entry; do
+        [[ -n "$entry" ]] || continue
+        target="$(runner_lexical_path "runners/$name/${entry%%:*}")" || continue
+        watched="$watched$name$tab$target
+"
+    done <<< "$(context "$name")"
+    while IFS= read -r entry; do
+        [[ -n "${entry#*=}" ]] || continue
+        target="$(runner_lexical_path "runners/$name/${entry#*=}")" || continue
+        watched="$watched$name$tab$target
+"
+    done <<< "$(manifest "$name")"
+done <<< "$every"
+
+# Whether runners/<x> is a runner's directory, at either end of the diff. Both
+# ends, so the page of a runner that this very push removes is still read as
+# that runner's page and not as a shared file of the renderer.
+runner_tree() {
+    git -C "$repo" cat-file -e "$head:runners/$1/entrypoint.sh" 2>/dev/null \
+        || git -C "$repo" cat-file -e "$base:runners/$1/entrypoint.sh" 2>/dev/null
 }
 
 # The diff is tree against tree, so it is right whether or not base is an
@@ -144,6 +192,15 @@ git -C "$repo" diff -z --name-only --no-renames "$base" "$head" > "$paths" \
 everything=0; affected=""
 while IFS= read -r -d '' path; do
     [[ -n "$path" ]] || continue
+    # Beside the rules below and never instead of them: a manifest may name
+    # a path any of them also covers.
+    while IFS="$tab" read -r name target; do
+        [[ -n "$name" ]] || continue
+        if [[ "$target" == . || "$path" == "$target" || "$path" == "$target"/* ]]; then
+            affected="$affected$name
+"
+        fi
+    done <<< "$watched"
     case "$path" in
         bin/runner/promote|bin/runner/lib.sh|runners/lib/*)
             everything=1 ;;
@@ -152,6 +209,22 @@ while IFS= read -r -d '' path; do
         # fixtures and the goldens are inputs to none of it.
         runners/email/tst/*|runners/email/fixtures/*|runners/email/goldens/*) ;;
         runners/email/node_modules/*|runners/email/dist/*) ;;
+        # A runner's page is in that runner's bundle and in no other, since
+        # each image's first stage builds render.tsx around one page. So
+        # runners/email/<name>.tsx reaches the runner called <name>, and
+        # nothing when that runner ships no image. Every other file here is
+        # the renderer itself, or a helper any page may import, and reaches
+        # them all.
+        runners/email/*.tsx)
+            page="${path#runners/email/}"
+            page="${page%.tsx}"
+            if [[ "$page" != */* ]] && runner_tree "$page"; then
+                ! is_runner "$page" || affected="$affected$page
+"
+            else
+                everything=1
+            fi
+            ;;
         runners/email/*)
             everything=1 ;;
         runners/*/*)
@@ -169,7 +242,10 @@ while IFS= read -r -d '' path; do
             while IFS= read -r name; do
                 [[ -n "$name" ]] || continue
                 names="$(manifest "$name")"
-                if has_line "$names" "$agent"; then
+                # `x=` is the reader's line for a bare `x`: the agent from
+                # .claude/agents. A runner that brings its own `x` by path
+                # does not ship this file, and its line does not match.
+                if has_line "$names" "$agent="; then
                     affected="$affected$name
 "
                 fi

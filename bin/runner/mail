@@ -2,7 +2,7 @@
 # Mail a runner's rendered email to Forni, for looking at a draft in the place
 # it will actually be read.
 #
-# Usage: mail <runner-name> [--subject "..."]
+# Usage: mail <runner-name-or-path> [--subject "..."]
 #
 # A browser preview is not the artifact. Gmail collapses styles, rewrites some
 # markup, and renders on a phone, so a table that lines up in Chrome can still
@@ -28,6 +28,9 @@ while (( $# )); do
 done
 
 dir="$(runner_dir "$name")"
+# A path names a runner as well as a name does, and either way the name used
+# from here on is the directory's own.
+name="$(basename "$dir")"
 work="$dir/out"
 html="$(runner_email_artifact "$work")" \
     || die "nothing rendered in $work; run 'bin/runner/run-local $name' first"

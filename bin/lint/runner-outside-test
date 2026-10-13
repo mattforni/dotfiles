@@ -1,0 +1,302 @@
+#!/usr/bin/env bash
+# Test for a runner that lives outside this repository: bin/runner/lib.sh
+# resolving it by path and staging the context its image is built from.
+#
+# Such a runner is promoted by another repository's workflow, which checks
+# this one out for its tooling, so nothing here ever stages one for real and
+# a break would first show as that repository's red promote. And the staging
+# is where a manifest is trusted with paths: a line that could reach outside
+# the runner's own repository would put any file on the machine into an
+# image. So this builds a throwaway repository with an invented runner in it
+# and holds what gets staged, and what is refused, against each rule.
+#
+# Checks: a path resolves to the real directory and its name, and a bare name
+# still means runners/<name> here; the shared library and the renderer come
+# from this repository and the runner's files from its own; the manifests and
+# the local leftovers never ship; an agent comes by path or by name; a context
+# line copies a file or a directory to its dest, and is refused when its
+# source leaves the repository (by `..`, by an absolute path, through a
+# symlink), when its dest leaves the context or is taken, and when it is not
+# source:dest; the runner's own email/ lands beside the shared renderer and a
+# clash of names is refused; and, where the renderer's packages are
+# installed, the runner's page builds into a bundle of its own that never
+# passes for another directory's.
+set -uo pipefail
+
+# Under the pre-commit hook git exports where its index and directory are, and
+# every git call below would then land on the real repository instead of the
+# throwaway one.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX GIT_COMMON_DIR
+
+ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../runner/lib.sh
+. "$ROOT/bin/runner/lib.sh"
+
+# The invented runner's name. It names a bundle under runners/email/dist for
+# the last section, so it is one no real runner would ever take.
+NAME="outsider-under-test"
+
+# Physical, because the staging resolves what a manifest names physically and
+# a temporary directory is often reached through a symlink (/tmp on a Mac).
+WORK="$(cd -P "$(mktemp -d)" && pwd)"
+cleanup() {
+  rm -rf "$WORK"
+  rm -rf "$ROOT/runners/email/dist/src-$NAME" "$ROOT/runners/email/dist/render-$NAME.cjs" \
+    "$ROOT/runners/email/dist/render-$NAME.cjs.from"
+}
+trap cleanup EXIT
+
+pass=0; fail=0
+ok()   { printf '  \033[0;32mok\033[0m   %s\n' "$1"; pass=$((pass+1)); }
+bad()  { printf '  \033[0;31mFAIL\033[0m %s\n' "$1"; fail=$((fail+1)); }
+
+# Usage: check <label> <command...>. Passes when the command does.
+check() {
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then ok "$label"; else bad "$label"; fi
+}
+
+# Usage: same <label> <want> <got>
+same() {
+  if [[ "$2" == "$3" ]]; then ok "$1"; else bad "$1 (wanted '$2', got '$3')"; fi
+}
+
+FAKE="$WORK/elsewhere/practice"
+RUNNER="$FAKE/runners/$NAME"
+STAGED="$WORK/staged"
+
+# An agent this repository really has, for the bare name form. Read from the
+# tree so the test names none itself.
+REAL_AGENT="$(find "$ROOT/.claude/agents" -maxdepth 1 -name '*.md' | sort | head -1)"
+REAL_AGENT="$(basename "${REAL_AGENT:-none.md}" .md)"
+
+# Usage: fresh. Rebuilds the invented repository from nothing, so each
+# section starts from the same tree and a refusal in one cannot leak into the
+# next.
+fresh() {
+  rm -rf "$WORK/elsewhere" "$STAGED"
+  mkdir -p "$RUNNER/email" "$RUNNER/out" "$FAKE/shared/rules/deep" "$FAKE/definitions" "$WORK/elsewhere/not-ours"
+  git init --quiet "$FAKE" || return 1
+  printf '#!/usr/bin/env bash\n' > "$RUNNER/entrypoint.sh"
+  printf 'FROM scratch\n' > "$RUNNER/Dockerfile"
+  printf 'the prompt\n' > "$RUNNER/prompt.md"
+  printf 'a draft\n' > "$RUNNER/out/email.html"
+  printf 'export INVENTED=1\n' > "$RUNNER/.env.local"
+  printf '%s\n' "$HOME/nowhere:/home/runner/nowhere:ro" > "$RUNNER/mounts"
+  printf 'the fold\n' > "$FAKE/shared/rules/fold.mjs"
+  printf 'the sweep\n' > "$FAKE/shared/rules/deep/sweep.mjs"
+  printf 'export INVENTED=2\n' > "$FAKE/shared/rules/.env.local"
+  printf 'one file\n' > "$FAKE/shared/one.mjs"
+  printf 'the runner brought this agent\n' > "$FAKE/definitions/own.md"
+  printf 'not this repository\n' > "$WORK/elsewhere/not-ours/secret.txt"
+  # The page, with a helper beside it, importing this repository's helpers as
+  # though it had been written in runners/email.
+  cat > "$RUNNER/email/$NAME.tsx" <<'PAGE'
+import { alt } from "./jq";
+import { greeting } from "./greeting";
+import type { Page } from "./types";
+
+export const page: Page = {
+	html: (_draft, context) => `<p>${greeting} ${alt(context.week, "")}</p>`,
+	text: (_draft, context) => `${greeting} ${alt(context.week, "")}`,
+};
+PAGE
+  printf 'export const greeting = "%s";\n' "${1:-from the first directory}" > "$RUNNER/email/greeting.ts"
+  printf '# what this runner runs\n\n%s\nown=../../definitions/own.md\n' "$REAL_AGENT" > "$RUNNER/agents"
+  printf '# what this runner adds\n\n../../shared/rules:lib/rules\n  ../../shared/one.mjs:extra/one.mjs \n' > "$RUNNER/context"
+}
+
+# Usage: stage [staging-dir]. Stages the invented runner, leaving what the
+# staging said in $WORK/err.
+stage() {
+  ( runner_build_context "$RUNNER" "${1:-$STAGED}" ) >"$WORK/out" 2>"$WORK/err"
+}
+
+# Usage: refused <label> <words the refusal has to carry>
+# Stages, and passes only when the staging failed and said why in those words.
+# A staging that fails for some other reason is not the rule holding.
+refused() {
+  local label="$1" words="$2"
+  if stage; then
+    bad "$label (it staged)"
+  elif grep -qF -- "$words" "$WORK/err"; then
+    ok "$label"
+  else
+    bad "$label (refused, but said: $(tr '\n' ' ' < "$WORK/err"))"
+  fi
+}
+
+fresh || { echo "could not build the invented repository"; exit 1; }
+
+echo "A runner is named by path"
+same "an absolute path resolves to the directory" "$RUNNER" "$( (runner_dir "$RUNNER") 2>/dev/null)"
+same "a relative path resolves from where it is typed" "$RUNNER" "$( (cd "$FAKE" && runner_dir "./runners/$NAME") 2>/dev/null)"
+same "a path with dots in it resolves to the real one" "$RUNNER" "$( (runner_dir "$FAKE/shared/../runners/$NAME/.") 2>/dev/null)"
+ln -s "$RUNNER" "$WORK/alias"
+same "a symlink resolves to the directory it points at" "$RUNNER" "$( (runner_dir "$WORK/alias/") 2>/dev/null)"
+same "and the name is the real directory's" "$NAME" "$(basename "$( (runner_dir "$WORK/alias/") 2>/dev/null)")"
+first_real="$(find "$ROOT/runners" -mindepth 2 -maxdepth 2 -name entrypoint.sh | sort | head -1)"
+first_real="$(basename "$(dirname "$first_real")")"
+same "a bare name is still runners/<name> here" "$ROOT/runners/$first_real" "$( (runner_dir "$first_real") 2>/dev/null)"
+same "a path to a runner in this repository is that runner" "$ROOT/runners/$first_real" "$( (cd "$ROOT" && runner_dir "./runners/$first_real") 2>/dev/null)"
+check "a path with no runner at it is refused" bash -c "! ( . '$ROOT/bin/runner/lib.sh'; runner_dir '$FAKE/runners/nobody' )"
+check "a directory with no entrypoint is refused" bash -c "! ( . '$ROOT/bin/runner/lib.sh'; runner_dir '$FAKE/shared' )"
+check "a bare name is never looked for outside" bash -c "! ( cd '$FAKE/runners' && . '$ROOT/bin/runner/lib.sh'; runner_dir '$NAME' )"
+same "its repository is the fence" "$FAKE" "$(runner_source_root "$RUNNER")"
+
+echo "The staged context"
+if stage; then ok "the invented runner stages"; else bad "the invented runner stages ($(tr '\n' ' ' < "$WORK/err"))"; fi
+same "the staging prints where it staged" "$STAGED" "$(cat "$WORK/out")"
+check "its own files are there" test -f "$STAGED/entrypoint.sh" -a -f "$STAGED/prompt.md" -a -f "$STAGED/Dockerfile"
+check "the shared library comes from this repository" cmp -s "$ROOT/runners/lib/runner.sh" "$STAGED/lib/runner.sh"
+check "the renderer comes from this repository" cmp -s "$ROOT/runners/email/render.tsx" "$STAGED/email/render.tsx"
+check "and the script that builds a bundle with it" cmp -s "$ROOT/runners/email/build.mjs" "$STAGED/email/build.mjs"
+# agents/ the directory is staged, so the manifest of that name is looked for
+# as a file.
+check "the agents manifest does not ship" test ! -f "$STAGED/agents"
+for leftover in context mounts out .env.local .build; do
+  check "$leftover does not ship" test ! -e "$STAGED/$leftover"
+done
+
+echo "Agents"
+check "an agent by path is the runner's own file" cmp -s "$FAKE/definitions/own.md" "$STAGED/agents/own.md"
+check "an agent by name is this repository's" cmp -s "$ROOT/.claude/agents/$REAL_AGENT.md" "$STAGED/agents/$REAL_AGENT.md"
+same "and no other agent is staged" "2" "$(find "$STAGED/agents" -type f | wc -l | tr -d ' ')"
+printf 'own=../../definitions/missing.md\n' > "$RUNNER/agents"
+refused "an agent path with nothing at it" "does not exist"
+printf 'own=../../../not-ours/secret.txt\n' > "$RUNNER/agents"
+refused "an agent path outside the repository" "is outside $FAKE"
+printf 'own=../../definitions\n' > "$RUNNER/agents"
+refused "an agent path that is a directory" "is not a file"
+printf 'no-such-agent-anywhere\n' > "$RUNNER/agents"
+refused "an agent name this repository lacks" "no agent named 'no-such-agent-anywhere'"
+printf 'sub/own=../../definitions/own.md\n' > "$RUNNER/agents"
+refused "an agent name with a slash in it" "is not an agent name"
+
+echo "The context manifest"
+fresh; stage
+check "a directory source lands at its dest" cmp -s "$FAKE/shared/rules/fold.mjs" "$STAGED/lib/rules/fold.mjs"
+check "with what is under it" cmp -s "$FAKE/shared/rules/deep/sweep.mjs" "$STAGED/lib/rules/deep/sweep.mjs"
+check "a file source lands at its dest" cmp -s "$FAKE/shared/one.mjs" "$STAGED/extra/one.mjs"
+check "an environment file under a source stays behind" test ! -e "$STAGED/lib/rules/.env.local"
+check "the shared library is still whole beside it" cmp -s "$ROOT/runners/lib/runner.sh" "$STAGED/lib/runner.sh"
+printf '../../../not-ours/secret.txt:secret.txt\n' > "$RUNNER/context"
+refused "a source outside the repository" "is outside $FAKE"
+check "and nothing of it was staged" test ! -e "$STAGED/secret.txt"
+printf '../../../not-ours:theirs\n' > "$RUNNER/context"
+refused "a directory source outside the repository" "is outside $FAKE"
+printf '%s:secret.txt\n' "$WORK/elsewhere/not-ours/secret.txt" > "$RUNNER/context"
+refused "an absolute source" "has to be a path relative to"
+ln -s "$WORK/elsewhere/not-ours" "$FAKE/shared/door"
+printf '../../shared/door:theirs\n' > "$RUNNER/context"
+refused "a symlinked directory that leads outside" "is outside $FAKE"
+printf '../../shared/door/secret.txt:secret.txt\n' > "$RUNNER/context"
+refused "a file reached through that symlink" "is outside $FAKE"
+ln -s "$WORK/elsewhere/not-ours/secret.txt" "$FAKE/shared/link.txt"
+printf '../../shared/link.txt:secret.txt\n' > "$RUNNER/context"
+refused "a symlink to a file" "is a symlink to a file"
+printf '../../shared/missing:x\n' > "$RUNNER/context"
+refused "a source with nothing at it" "does not exist"
+printf '../../shared/one.mjs:../one.mjs\n' > "$RUNNER/context"
+refused "a dest that climbs out of the context" "has to stay inside the staged context"
+printf '../../shared/one.mjs:extra/../../one.mjs\n' > "$RUNNER/context"
+refused "a dest that climbs out part way along" "has to stay inside the staged context"
+printf '../../shared/one.mjs:/tmp/one.mjs\n' > "$RUNNER/context"
+refused "an absolute dest" "has to stay inside the staged context"
+printf '../../shared/one.mjs:lib/runner.sh\n' > "$RUNNER/context"
+refused "a dest the shared library already holds" "is already in the staged context"
+check "and the shared library is not overwritten" cmp -s "$ROOT/runners/lib/runner.sh" "$STAGED/lib/runner.sh"
+printf '../../shared/one.mjs:entrypoint.sh\n' > "$RUNNER/context"
+refused "a dest the runner's own file holds" "is already in the staged context"
+printf '../../shared/one.mjs\n' > "$RUNNER/context"
+refused "a line with no dest" "is not source:dest"
+printf ':one.mjs\n' > "$RUNNER/context"
+refused "a line with no source" "is not source:dest"
+# The default staging directory is the runner's own .build/, so a source that
+# holds the runner would be copied into itself.
+printf '../..:whole\n' > "$RUNNER/context"
+if stage "$RUNNER/.build"; then
+  bad "a source that holds the staging directory (it staged)"
+elif grep -qF "holds the staging directory" "$WORK/err"; then
+  ok "a source that holds the staging directory"
+else
+  bad "a source that holds the staging directory (said: $(tr '\n' ' ' < "$WORK/err"))"
+fi
+rm -rf "$RUNNER/.build"
+
+echo "A runner in no repository"
+fresh
+rm -rf "$FAKE/.git"
+same "its own directory is the fence" "$RUNNER" "$(runner_source_root "$RUNNER")"
+printf '../../shared/one.mjs:one.mjs\n' > "$RUNNER/context"
+printf '%s\n' "$REAL_AGENT" > "$RUNNER/agents"
+refused "a source above its directory" "is outside $RUNNER"
+printf 'prompt.md:copy.md\n' > "$RUNNER/context"
+if stage; then ok "a source inside its directory stages"; else bad "a source inside its directory stages ($(tr '\n' ' ' < "$WORK/err"))"; fi
+
+echo "The runner's own page"
+fresh; stage
+check "the page lands beside the shared renderer" cmp -s "$RUNNER/email/$NAME.tsx" "$STAGED/email/$NAME.tsx"
+check "and the helper beside it" cmp -s "$RUNNER/email/greeting.ts" "$STAGED/email/greeting.ts"
+check "the helpers it imports are there to import" test -f "$STAGED/email/jq.ts" -a -f "$STAGED/email/types.ts"
+check "its email folder is staged once, as the renderer's" test ! -e "$STAGED/email/email"
+printf 'not the renderer\n' > "$RUNNER/email/render.tsx"
+refused "a file with the renderer's name" "has the name of a file in runners/email"
+check "and the renderer staged is still this repository's" cmp -s "$ROOT/runners/email/render.tsx" "$STAGED/email/render.tsx"
+rm "$RUNNER/email/render.tsx"
+printf 'not the helper\n' > "$RUNNER/email/jq.ts"
+refused "a file with a shared helper's name" "has the name of a file in runners/email"
+rm "$RUNNER/email/jq.ts"
+mkdir -p "$RUNNER/email/tst"
+printf 'not the test\n' > "$RUNNER/email/tst/render.test.mjs"
+refused "a clash in a folder under it" "has the name of a file in runners/email"
+
+echo "What the dirty gate asks about"
+fresh
+paths="$(runner_source_paths "$RUNNER" 2>/dev/null | tr '\n' ' ')"
+same "the runner, the agent it brings, and each context source" \
+  "$RUNNER $FAKE/definitions/own.md $FAKE/shared/rules $FAKE/shared/one.mjs " "$paths"
+printf '../../../not-ours:theirs\n' > "$RUNNER/context"
+check "and a source outside the repository fails it" bash -c "! ( . '$ROOT/bin/runner/lib.sh'; runner_source_paths '$RUNNER' )"
+
+# The bundle, which needs the renderer's packages. The Shell job in CI has
+# none and stops here; the renderer job installs them and runs this file
+# again for these rows, and so does any machine that has run a local render.
+echo "The bundle"
+if [[ ! -d "$ROOT/runners/email/node_modules" ]] || ! command -v node >/dev/null 2>&1; then
+  echo "  skipped: runners/email has no node_modules here (npm ci there, then run this again)"
+else
+  WEEK=(--week 2026-W38 --monday 2026-09-14 --sunday 2026-09-20)
+  fresh "from the first directory"
+  if bundle="$(runner_email_bundle "$RUNNER" 2>"$WORK/err")"; then
+    ok "the page builds into a bundle of its own"
+  else
+    bad "the page builds into a bundle of its own ($(tail -3 "$WORK/err" | tr '\n' ' '))"
+    bundle=""
+  fi
+  same "under its runner's name" "$ROOT/runners/email/dist/render-$NAME.cjs" "$bundle"
+  same "and it renders through this repository's helpers" "from the first directory 2026-W38" \
+    "$(node "$bundle" "$NAME" text "${WEEK[@]}" <<< '{}' 2>&1)"
+  check "the bundle carries the failure page" bash -c "node '$bundle' failure html --title T --reason R <<< 'tail' | grep -q '</html>'"
+  check "and no page but its own" bash -c "! node '$bundle' retro text ${WEEK[*]} <<< '{}'"
+  before="$(stat -f %m "$bundle" 2>/dev/null || stat -c %Y "$bundle")"
+  runner_email_bundle "$RUNNER" >/dev/null 2>&1
+  same "a second ask reuses a fresh bundle" "$before" "$(stat -f %m "$bundle" 2>/dev/null || stat -c %Y "$bundle")"
+  # Another directory wearing the same name, older than the bundle in every
+  # file: only the directory written beside the bundle can tell them apart.
+  OTHER="$WORK/second/runners/$NAME"
+  mkdir -p "$WORK/second/runners"
+  cp -R "$RUNNER" "$OTHER"
+  printf 'export const greeting = "from the second directory";\n' > "$OTHER/email/greeting.ts"
+  find "$OTHER" -exec touch -t 202001010000 {} +
+  runner_email_bundle "$OTHER" >/dev/null 2>"$WORK/err"
+  same "a runner of the same name elsewhere gets its own page" "from the second directory 2026-W38" \
+    "$(node "$bundle" "$NAME" text "${WEEK[@]}" <<< '{}' 2>&1)"
+  runner_email_bundle "$RUNNER" >/dev/null 2>"$WORK/err"
+  same "and going back gets the first one's again" "from the first directory 2026-W38" \
+    "$(node "$bundle" "$NAME" text "${WEEK[@]}" <<< '{}' 2>&1)"
+fi
+
+echo
+printf 'pass %d, fail %d\n' "$pass" "$fail"
+[[ $fail -eq 0 ]]

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run a runner on this machine, rendering its email instead of sending it.
 #
-# Usage: run-local <runner-name> [--week YYYY-Www] [--reuse] [--send] [--no-open] [--host]
+# Usage: run-local <runner-name-or-path> [--week YYYY-Www] [--reuse] [--send] [--no-open] [--host]
 #
 #   --week    draft another week instead of the runner's own default week
 #   --reuse   skip the API pulls and reuse the JSON already in out/, which is

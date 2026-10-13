@@ -30,7 +30,7 @@ import { alt, fromDate, jqToString, numberString, shortDate, unindent, weekdayNa
 import { DimLine, Link, type NeedsGroup, type NeedsItem, NeedsList, RosterLine, type WeekCell, WeekTable } from "./local";
 import { money } from "./records";
 import { hang } from "./text";
-import type { RenderContext } from "./types";
+import type { Page, RenderContext } from "./types";
 
 /*
  * The Pipeline email: what needs Forni first, then the health of the funnel.
@@ -837,3 +837,6 @@ export function pipelineText(input: unknown, context: RenderContext): string {
 	out += `\n\n${context.meta}\n`;
 	return out;
 }
+
+/** What the bundle built for this runner renders: build.mjs aliases "runner-page" to this file. */
+export const page: Page = { html: pipelineHTML, text: pipelineText };

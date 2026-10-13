@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Execute a runner's Cloud Run job now and print what it logged.
 #
-# Usage: fire <runner-name> [--week YYYY-Www] [--lines N]
+# Usage: fire <runner-name-or-path> [--week YYYY-Www] [--lines N]
 #
 # This is production: whatever the runner does on a schedule, it does now, send
 # included. A --week override rides on the execution itself rather than being
@@ -26,7 +26,10 @@ while (( $# )); do
     esac
 done
 
-runner_dir "$name" >/dev/null
+dir="$(runner_dir "$name")"
+# A path names a runner as well as a name does, and either way the name used
+# from here on is the directory's own.
+name="$(basename "$dir")"
 command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
 
 override=()

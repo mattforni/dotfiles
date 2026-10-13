@@ -5,7 +5,12 @@ import { fileURLToPath } from "node:url";
 
 /*
  * What both the test and the golden writer need: where things live, the one
- * week every golden is rendered for, and the call into the built bundle.
+ * week every golden is rendered for, and the call into the built bundles.
+ *
+ * A bundle carries one runner's page, so there is one per runner here too,
+ * each built by build.mjs the way an image's first stage builds its own. Every
+ * render below goes through the file an image would run, never an import of
+ * the page.
  *
  * The week is 2026-W05 on purpose. Its number carries a leading zero, so the
  * goldens prove that a week reads as 5 rather than 05, and it runs from
@@ -14,7 +19,6 @@ import { fileURLToPath } from "node:url";
 
 export const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = dirname(HERE);
-export const BUNDLE = join(ROOT, "dist", "render.cjs");
 
 export const CONTEXT = {
 	week: "2026-W05",
@@ -35,6 +39,26 @@ export const CASES = [
 
 export const FORMATS = ["html", "text"];
 
+/** Where build.mjs leaves a runner's bundle. */
+export function bundlePath(runner) {
+	return join(ROOT, "dist", `render-${runner}.cjs`);
+}
+
+/*
+ * Every runner with a fixture is built once, when this file is first loaded,
+ * so the test and the golden writer never read a bundle older than the
+ * sources. A build that fails stops everything here with the builder's own
+ * line, since nothing below could mean anything.
+ */
+{
+	const runners = [...new Set(CASES.map(({ runner }) => runner))];
+	const built = spawnSync(process.execPath, [join(ROOT, "build.mjs"), ...runners], { encoding: "utf8" });
+	if (built.status !== 0) {
+		process.stderr.write(built.stderr || `build.mjs exited ${built.status}\n`);
+		process.exit(1);
+	}
+}
+
 export function goldenPath(fixture, format) {
 	return join(ROOT, "goldens", `${fixture}.${format === "html" ? "html" : "txt"}`);
 }
@@ -43,12 +67,16 @@ export function fixturePath(fixture) {
 	return join(ROOT, "fixtures", `${fixture}.json`);
 }
 
-/** One run of the built bundle, with whatever is handed in on stdin. */
-export function renderRaw(runner, format, input) {
+/*
+ * One run of a built bundle, with whatever is handed in on stdin. The bundle
+ * is the named runner's own unless another is asked for, which is how a test
+ * asks one runner's bundle for a page it does not carry.
+ */
+export function renderRaw(runner, format, input, bundle = runner) {
 	return spawnSync(
 		process.execPath,
 		[
-			BUNDLE,
+			bundlePath(bundle),
 			runner,
 			format,
 			"--week",
@@ -64,7 +92,7 @@ export function renderRaw(runner, format, input) {
 	);
 }
 
-/** One run of the built bundle over a fixture, with the page captured. */
-export function render(runner, format, fixture) {
-	return renderRaw(runner, format, readFileSync(fixturePath(fixture), "utf8"));
+/** One run of a built bundle over a fixture, with the page captured. */
+export function render(runner, format, fixture, bundle = runner) {
+	return renderRaw(runner, format, readFileSync(fixturePath(fixture), "utf8"), bundle);
 }

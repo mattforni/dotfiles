@@ -24,7 +24,7 @@ jobs:
         with:
           globs: "**/*.{md,markdown}"
 
-  # The node renderer the three runners mail their page through. It stays green
+  # The node renderer the runners mail their pages through. It stays green
   # only once @atelic-action/ui is published and runners/email/package-lock.json
   # is committed beside it, since `npm ci` refuses to run without a lockfile.
   renderer:
@@ -57,13 +57,19 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build
-        run: npm run build
-
       # Every fixture renders and has to match its frozen golden byte for byte,
-      # html and text alike.
+      # html and text alike. A bundle carries one runner's page, so there is
+      # no single build to run first: the test builds each runner's bundle
+      # the way that runner's image does, and renders through it.
       - name: Test
         run: npm test
+
+      # A runner that lives in another repository brings its page with it.
+      # The Shell job runs this same file for the staging and stops short of
+      # the bundle, since it has no packages; here they are installed, so the
+      # page is built and rendered too.
+      - name: Test a runner outside this repository, bundle included
+        run: ../../bin/lint/runner-outside-test
 
   shell:
     name: Shell
@@ -101,6 +107,13 @@ jobs:
       # each must reach runs here against a throwaway repository.
       - name: Test the promote path rules
         run: ./bin/lint/runner-changed-test
+
+      # A runner may live in another repository, which checks this one out
+      # for its tooling and stages its own image with it. Nothing here ever
+      # stages one for real, so a throwaway repository with an invented
+      # runner does: what it brings, and every path a manifest is refused.
+      - name: Test a runner outside this repository
+        run: ./bin/lint/runner-outside-test
 
       # A run lands its one file (the plumber's roster) on a main that moved
       # while it ran, and reads its site list a line at a time. Both failed

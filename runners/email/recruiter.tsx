@@ -22,7 +22,7 @@ import { renderEmail } from "@atelic-action/ui/email/render";
 import { alt, jqToString, shortDate, unindent, weekNumber } from "./jq";
 import { FaintSpan, FractionalEmptyRow } from "./local";
 import { hang, leadBlock } from "./text";
-import type { RenderContext } from "./types";
+import type { Page, RenderContext } from "./types";
 
 /*
  * The Recruiter email, ported from the jq renderer it replaced: the shortlist,
@@ -333,3 +333,6 @@ export function recruiterText(input: unknown, context: RenderContext): string {
 	out += `\n\n${context.meta}\n`;
 	return out;
 }
+
+/** What the bundle built for this runner renders: build.mjs aliases "runner-page" to this file. */
+export const page: Page = { html: recruiterHTML, text: recruiterText };

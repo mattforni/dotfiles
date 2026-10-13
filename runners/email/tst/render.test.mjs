@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { canonicalize, firstDifference } from "../parity.mjs";
-import { CASES, FORMATS, goldenPath, render, renderRaw } from "./fixtures.mjs";
+import { spawnSync } from "node:child_process";
+import { bundlePath, CASES, FORMATS, goldenPath, render, renderRaw } from "./fixtures.mjs";
 
 /*
- * The gate on the renderer. Every fixture renders through the built bundle and
- * has to come back byte for byte what the frozen golden says, html and text
+ * The gate on the renderer. Every fixture renders through its runner's built
+ * bundle and has to come back byte for byte what the frozen golden says, html and text
  * alike, so a padding, a column width or a conditional that moves is a failed
  * build rather than a surprise in Monday's inbox.
  *
@@ -192,10 +193,35 @@ test("the groom line says what moved and nothing about a status left blank", () 
 });
 
 test("an unknown runner fails loudly", () => {
-	const result = render("nosuchrunner", "html", "retro");
+	const result = render("nosuchrunner", "html", "retro", "retro");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /unknown runner/);
 	assert.equal(result.stdout, "");
+});
+
+/*
+ * A bundle carries its own runner's page and the failure page, and nothing
+ * else. A page from another runner is not in the file at all, so asking for
+ * it has to read exactly like a name nobody has: one line, exit one, no page.
+ */
+test("a bundle asked for another runner's page fails the way an unknown runner does", () => {
+	const result = render("plumber", "html", "plumber", "retro");
+	assert.equal(result.status, 1);
+	assert.equal(result.stderr, 'render: unknown runner "plumber"; one of retro, failure\n');
+	assert.equal(result.stdout, "");
+});
+
+test("every bundle carries the failure page", () => {
+	for (const runner of new Set(CASES.map((item) => item.runner))) {
+		const result = spawnSync(
+			process.execPath,
+			[bundlePath(runner), "failure", "html", "--title", "Invented", "--reason", "an invented reason"],
+			{ input: "the log's tail\n", encoding: "utf8" },
+		);
+		assert.equal(result.status, 0, `${runner}: ${result.stderr}`);
+		assert.ok(result.stdout.includes("an invented reason"), `${runner} renders the reason`);
+		assert.ok(result.stdout.endsWith("</html>\n"));
+	}
 });
 
 test("an unknown format fails loudly", () => {
