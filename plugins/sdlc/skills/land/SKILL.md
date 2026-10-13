@@ -65,9 +65,9 @@ This is the review gate, and it runs against the branch's current HEAD in the PR
 ~/bin/review/run <worktree> --effort high
 ```
 
-It fetches, resolves the base itself (pass `--base origin/<branch>` when the PR's base is not the remote default: `gh pr view PR_NUMBER --json baseRefName --jq .baseRefName`, which also covers a stacked PR), changes directory internally, and echoes the directory and HEAD in its leading `review_context` line, so the call carries no `cd`. It runs every reviewer at once and prints one JSONL stream; the shape and the triage rules are in [reference/code-review.md](../../reference/code-review.md).
+It fetches, resolves the base itself (pass `--base origin/<branch>` when the PR's base is not the remote default: `gh pr view PR_NUMBER --json baseRefName --jq .baseRefName`, which also covers a stacked PR), changes directory internally, and echoes the directory and HEAD in its leading `review_context` line, so the call carries no `cd`. It prints one JSONL stream; the shape and the triage rules are in [reference/code-review.md](../../reference/code-review.md).
 
-Store the findings for Step 4, and record the `sha` from the claude `complete` line as REVIEWED_SHA, which Step 5 compares against HEAD before merging. **A run counts as clean only when the claude `complete` line arrives with `ran: true` and no finding at major or above remains unaddressed.** A claude line with `ran: false` reviewed nothing: retry once after sixty seconds, then bail with its `reason`. The other reviewers' lines are evidence, never something to wait for.
+Store the findings for Step 4, and record the `sha` from the claude `complete` line as REVIEWED_SHA, which Step 5 compares against HEAD before merging. **A run counts as clean only when the claude `complete` line arrives with `ran: true` and no finding at major or above remains unaddressed.** A claude line with `ran: false` reviewed nothing: retry once after sixty seconds, then bail with its `reason`. The line's `blocking` count is the findings at major and above; minor and info findings never hold a merge.
 
 ## Step 3: Watch CI
 
@@ -127,11 +127,11 @@ Run this under Monitor when landing in the background, and stay resident until i
 
 ## Step 4: Decide and Act on the Event
 
-- **`READY`**: triage every `finding` line from Step 2, by reviewer and severity, plus any PR bot comments that happen to be sitting on HEAD if the repo is public.
+- **`READY`**: triage every `finding` line from Step 2 at major or above, plus any PR bot comments that happen to be sitting on HEAD if the repo is public.
   - Read the actual code before treating any finding as authoritative. Reviewers can be wrong, the gate included, and a finding that misreads control flow gets declined rather than obeyed.
   - Sort by severity and by whether the item is actionable or advisory. The blocking threshold is major and above.
   - Decide:
-    - A claude `complete` line with `ran: true` and no finding at major or above left unaddressed, or whose only such findings are ones you decline with a reason → **merge** (Step 5). A claude line with `ran: false` is not a clean run, whatever the other reviewers printed.
+    - A claude `complete` line with `ran: true` and no finding at major or above left unaddressed, or whose only such findings are ones you decline with a reason → **merge** (Step 5). A claude line with `ran: false` is not a clean run.
     - Actionable items → **iterate** (next bullet)
     - Mixed → address the actionable ones, decline the advisory ones with reasoning, push, then loop back
   - When a declined item came from the PR bot and is therefore visible to others, reply on that comment with the reasoning so the audit trail shows it was considered rather than ignored.
@@ -169,7 +169,7 @@ gh pr merge PR_NUMBER --squash --delete-branch
 ~/bin/review/landed REPO PR_NUMBER REVIEWED_SHA --fixed claude:N --declined claude:M --held-min X
 ```
 
-The second line records the landing on the scorecard (name every reviewer whose findings you triaged; a landing with nothing to triage still gets the call so the hold is counted).
+The second line records the landing on the scorecard (count the major and above findings across every pass on the PR, not the last pass alone; a landing with nothing to triage still gets the call so the hold is counted).
 
 If `BEHIND` or `DIRTY` (merge conflict against base): bail to user. Rebasing into a conflicting state is judgment-call territory and shouldn't happen silently.
 
@@ -182,7 +182,7 @@ After a successful merge, remove the PR's worktree (`git worktree remove`, never
 ```text
 PR #<number> landed
 Cycles: <N> iterate, <M> decline
-Review: <N> review/run runs; claude <F> findings, coderabbit <ran|skipped: reason>, on <reviewed SHA>
+Review: <N> review/run runs; claude <F> findings, <B> blocking, on <reviewed SHA>
 Merged: <SHA>
 Recorded: review/landed <repo> <pr> <reviewed SHA> --fixed ... --declined ... --held-min <X>
 Status: clean

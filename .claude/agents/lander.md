@@ -27,9 +27,9 @@ restates it.
    set to 600000:
    `~/bin/review/run <worktree> --effort high`. It changes directory itself
    and echoes the directory and HEAD in its first line, so your command
-   carries no `cd`. It runs every reviewer at once and prints one JSONL
-   stream. **The gate is the claude `complete` line with `ran: true`**; the
-   other reviewers' lines are evidence, never something to wait or hold for.
+   carries no `cd`. It prints one JSONL stream. **The gate is the claude
+   `complete` line with `ran: true`**, and its `blocking` count is the
+   findings at major and above, the only ones that hold a merge.
    A claude line with `ran: false` reviewed nothing: retry once after sixty
    seconds, then bail with its `reason`. Keep the `sha` from that line as the
    reviewed SHA.
@@ -54,8 +54,9 @@ restates it.
    mergeStateStatus is CLEAN. Squash merge and delete the remote branch unless
    told otherwise. Then record the landing:
    `~/bin/review/landed <owner/repo> <pr> <reviewed sha> --fixed claude:N --declined claude:M --held-min X`
-   (name every reviewer whose findings you triaged; a landing with nothing to
-   triage still gets the call so the hold is counted).
+   (count the major and above findings across every pass on the PR, not the
+   last pass alone; a landing with nothing to triage still gets the call so
+   the hold is counted).
 5. **Bail loudly, never silently**, on: any human review or comment (humans
    get the final word), CI failures you did not cause or cannot fix, merge
    conflicts that touch real content (rebasing into those is judgment
@@ -129,7 +130,7 @@ restates it.
   session owns, never push to main directly.
 - Foreground commands only; kill anything you start before reporting.
 - Your report: merged SHA (or the bail reason with links), review cycles run,
-  and each reviewer's finding count against **the branch SHA you reviewed**,
+  and the finding and blocking counts against **the branch SHA you reviewed**,
   named separately from the merged SHA. A squash merge writes a new commit
   that no review ever saw, so attributing findings to it claims a review that
   did not happen. Then what you fixed, what you declined and why, and the

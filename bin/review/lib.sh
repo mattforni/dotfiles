@@ -1,7 +1,7 @@
 # shellcheck shell=bash
-# Shared plumbing for bin/review/*: the findings schema the Claude reviewer
-# fills, the state directory, the scorecard append, and the normalisers that
-# turn each reviewer's raw output into the one JSONL stream the lander parses.
+# Shared plumbing for bin/review/*: the findings shape the Claude reviewer
+# fills, the state directory, the scorecard append, and the normaliser that
+# turns the reviewer's raw output into the JSONL stream the lander parses.
 #
 # The rules (when a review runs, which reviewer gates, how findings are
 # triaged) live in plugins/sdlc/reference/code-review.md. This file is
@@ -9,7 +9,7 @@
 
 REVIEW_STATE="${REVIEW_STATE:-$HOME/.local/state/review}"
 REVIEW_SCORECARD="$REVIEW_STATE/scorecard.tsv"
-REVIEW_HEADER=$'ts\tkind\trepo\tpr\tsha\treviewer\tran\treason\tfindings\tfixed\tdeclined\theld_min\tseconds'
+REVIEW_HEADER=$'ts\tkind\trepo\tpr\tsha\treviewer\tran\treason\tfindings\tfixed\tdeclined\theld_min\tseconds\tblocking'
 
 die() { echo "${0##*/}: $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "$1 is required and not on PATH"; }
@@ -38,7 +38,7 @@ review_state_dir() {
 
 # Append one TSV row, writing the header on first touch.
 # Args, in column order after ts: kind repo pr sha reviewer ran reason findings
-# fixed declined held_min seconds. Tabs inside a value become spaces.
+# fixed declined held_min seconds blocking. Tabs inside a value become spaces.
 scorecard_append() {
   review_state_dir >/dev/null
   [[ -s "$REVIEW_SCORECARD" ]] || printf '%s\n' "$REVIEW_HEADER" >"$REVIEW_SCORECARD"
@@ -49,14 +49,21 @@ scorecard_append() {
 }
 
 # The shape the Claude reviewer is asked to return, appended to the system
-# prompt of the headless run. The severity is the model's call; the normaliser
-# falls back to a rule (major when a failure scenario is given, else minor)
-# only when a finding arrives without one. Read by bin/review/run.
+# prompt of the headless run. The /code-review skill has a finding shape of
+# its own with no severity in it, and for the first week that shape won: 1136
+# of 1145 findings arrived ungraded and the normaliser stamped each one major
+# (ATE-635). So the prompt names severity first, says the skill's shape lacks
+# it, and defines the grades by what the change does in ordinary use. Read by
+# bin/review/run.
 # shellcheck disable=SC2034
-REVIEW_SHAPE_PROMPT='Report the review findings as your entire final reply: one JSON array, no prose before or after it, no code fence. Each element has exactly these keys: "file" (repo relative path), "line" (integer), "summary" (one sentence), "failure_scenario" (concrete inputs or state and the wrong outcome), "severity" (one of "critical", "major", "minor", "info": critical or major when the scenario breaks behaviour, loses or corrupts data, leaks a secret, or contradicts a documented rule the diff was meant to follow; minor for a correctness nit; info for reuse, simplification, or efficiency). An empty array means no findings.'
+REVIEW_SHAPE_PROMPT='Report the review findings as your entire final reply: one JSON array, no prose before or after it, no code fence. Each element has exactly these five keys, and an element missing any of them is invalid: "severity", "file" (repo relative path), "line" (integer), "summary" (one sentence), "failure_scenario" (concrete inputs or state and the wrong outcome). The /code-review skill has no severity in its own finding shape; add it to every finding here. Severity is one of "critical", "major", "minor", "info", and it grades the defect, not how sure you are of it. critical: in ordinary use the change loses or corrupts data, leaks a secret, or opens a security hole. major: the change as written does the wrong thing on a path that runs in ordinary use, with inputs or state you can name and that will occur, or it breaks a documented rule the change was meant to follow. minor: a real defect that needs unusual input or state to show, a missing guard against a failure nothing in the change makes likely, a hardening suggestion, or a stale comment or doc line. info: reuse, simplification, efficiency, naming. A hardening suggestion is never major. A defect the change neither introduced nor touched is at most minor. When a finding sits between two grades, give the lower. An empty array means no findings.'
 
 # normalise_claude <raw.json> <rc> <sha> <seconds> <files>
 # Prints finding lines then exactly one complete line for the claude reviewer.
+# The complete line counts the findings, the blocking ones (critical or
+# major), and the unrated ones: findings that arrived without a severity and
+# were graded by the fallback rule, which fails closed (major when a failure
+# scenario is given). An unrated count above zero means the shape prompt lost.
 # raw.json is the --output-format json document from a headless run. Three
 # shapes are accepted: structured_output.findings (the schema applied), a JSON
 # array in the result text (optionally fenced), and anything else, which is
@@ -66,15 +73,18 @@ normalise_claude() {
   if ! jq -e . "$raw" >/dev/null 2>&1; then
     jq -cn --arg sha "$sha" --argjson secs "$seconds" --argjson files "$files" \
       --arg reason "no json output (rc $rc): $(head -c 200 "$raw" 2>/dev/null | tr '\n' ' ')" \
-      '{type:"complete",reviewer:"claude",ran:false,reason:$reason,findings:0,sha:$sha,seconds:$secs,files:$files}'
+      '{type:"complete",reviewer:"claude",ran:false,reason:$reason,findings:0,blocking:0,unrated:0,sha:$sha,seconds:$secs,files:$files}'
     return 0
   fi
   jq -c --arg sha "$sha" --argjson rc "$rc" --argjson secs "$seconds" --argjson files "$files" '
-    def complete(ran; reason; n):
-      {type:"complete", reviewer:"claude", ran:ran, reason:reason, findings:n, sha:$sha, seconds:$secs, files:$files};
+    def grades: ["critical","major","minor","info"];
+    def complete(ran; reason; n; b; u):
+      {type:"complete", reviewer:"claude", ran:ran, reason:reason, findings:n, blocking:b, unrated:u, sha:$sha, seconds:$secs, files:$files};
+    def blocking: map(select(.severity == "critical" or .severity == "major")) | length;
+    def unrated: map(select((.severity // "") as $s | (grades | index($s)) == null)) | length;
     def finding(sev):
       {type:"finding", reviewer:"claude",
-       severity:((.severity // sev) as $s | if (["critical","major","minor","info"] | index($s)) != null then $s else "major" end),
+       severity:((.severity // sev) as $s | if (grades | index($s)) != null then $s else "major" end),
        fileName:(.file // .fileName // ""),
        line:(.line // null),
        summary:(.summary // ""),
@@ -92,49 +102,16 @@ normalise_claude() {
         else ((tostring | capture("```(json)?\\s*(?<a>\\[[\\s\\S]*?\\])\\s*```").a? // "")
               | try fromjson catch null | objects_only) end;
     if (.is_error // false) or $rc != 0 then
-      complete(false; ((.result // "error") | tostring | gsub("\\s+"; " ") | .[0:200]); 0)
+      complete(false; ((.result // "error") | tostring | gsub("\\s+"; " ") | .[0:200]); 0; 0; 0)
     elif ((.structured_output.findings? // null) | objects_only | type) == "array" then
-      (.structured_output.findings | map(finding("major"))) as $f
-      | ($f[]), complete(true; ""; ($f | length))
+      (.structured_output.findings | unrated) as $u
+      | (.structured_output.findings | map(finding("major"))) as $f
+      | ($f[]), complete(true; ""; ($f | length); ($f | blocking); $u)
     elif (((.result // "") | arr) | type) == "array" then
-      (((.result // "") | arr) | map(select(type == "object") | finding(fallback_sev))) as $f
-      | ($f[]), complete(true; ""; ($f | length))
+      (((.result // "") | arr) | unrated) as $u
+      | (((.result // "") | arr) | map(finding(fallback_sev))) as $f
+      | ($f[]), complete(true; ""; ($f | length); ($f | blocking); $u)
     else
-      complete(false; ("unparseable output: " + ((.result // "") | tostring | gsub("\\s+"; " ") | .[0:200])); 0)
+      complete(false; ("unparseable output: " + ((.result // "") | tostring | gsub("\\s+"; " ") | .[0:200])); 0; 0; 0)
     end' "$raw"
-}
-
-# normalise_coderabbit <raw.jsonl> <sha> <seconds> <files>
-# Passes finding lines through with reviewer:coderabbit and emits one complete
-# line. The stream is clean only when its own complete line arrived; a stream
-# that stopped short (rate limit, WebSocket drop) is ran:false with the error
-# line's message as the reason.
-normalise_coderabbit() {
-  local raw="$1" sha="$2" seconds="${3:-0}" files="${4:-0}"
-  jq -cs --arg sha "$sha" --argjson secs "$seconds" --argjson files "$files" '
-    def complete(ran; reason; n):
-      {type:"complete", reviewer:"coderabbit", ran:ran, reason:reason, findings:n, sha:$sha, seconds:$secs, files:$files};
-    # The CLI puts the actual comment inside codegenInstructions, after a
-    # boilerplate paragraph and a "Review comment at @<file> at line <n>:"
-    # header; the line number lives nowhere else.
-    def body: (.codegenInstructions // "") | tostring
-      | (capture("at line (?<n>[0-9]+):\\s*(?<text>[\\s\\S]*)$") // {n: null, text: .});
-    (map(select(.type == "finding")) | map(body as $b | {
-       type:"finding", reviewer:"coderabbit",
-       severity:(.severity // "minor"),
-       fileName:(.fileName // .file // ""),
-       line:(.lineRange.start // .line // ($b.n | if . == null then null else tonumber end)),
-       summary:((.summary // .description // .message // .comment // $b.text) | tostring | gsub("\\s+"; " ") | .[0:400]),
-       failure_scenario:""})) as $f
-    | (map(select(.type == "complete")) | first) as $done
-    | (map(select(.type == "error")) | first) as $err
-    | ($f[]),
-      (if $done != null then complete(true; ""; ($done.findings // ($f | length)))
-       else complete(false; ("stream stopped before complete"
-                             + (if $err != null then ": " + (($err.message // "") | tostring)
-                                  + (if ($err.metadata.waitTime // "") != "" then " (wait " + ($err.metadata.waitTime|tostring) + ")" else "" end)
-                                else "" end)); 0)
-       end)' "$raw" 2>/dev/null \
-  || jq -cn --arg sha "$sha" --argjson secs "$seconds" --argjson files "$files" \
-       '{type:"complete",reviewer:"coderabbit",ran:false,reason:"unreadable stream",findings:0,sha:$sha,seconds:$secs,files:$files}'
 }
