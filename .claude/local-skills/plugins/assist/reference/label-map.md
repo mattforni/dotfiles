@@ -1,7 +1,8 @@
 # Label Map
 
 The **personal** account's label taxonomy (`mattforni@gmail.com`). The practice
-mailbox has its own tree in [label-map-atelic.md](label-map-atelic.md); the two
+mailbox has its own tree in the Atelic repo, at
+`~/Eudaimonia/Craft/Vocation/Atelic/Tools/Google/gmail-labels.md`; the two
 never mix. Label IDs are resolved at runtime via `gws gmail users labels list`. Trued up against the live label list 2026-10-09.
 
 Always route to the most specific sublabel. Never label with just a parent pillar when a sublabel fits.

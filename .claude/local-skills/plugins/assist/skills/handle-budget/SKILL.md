@@ -18,7 +18,7 @@ Pull uncategorized YNAB transactions, file them into the right category, tag tri
 1. Read this skill's local [learned-rules.md](learned-rules.md) for prior corrections about how Forni wants the budget pass to run.
 2. Read [reference/payee-map.md](../../reference/payee-map.md) and the `## Spend Categorization` section of the plugin-wide [learned-rules.md](../../learned-rules.md). Learned rules override the map.
 3. Confirm access: `ynab auth status` should report `"authenticated": true`.
-4. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, Atelic `e0d471f0-bf90-452c-8232-b1153b7411be` (shown as RYLLC before the entity rename). Personal is the CLI's configured default, so **anything touching Atelic needs an explicit `--budget`**.
+4. Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`. The Atelic budget's id, with every rule that governs that budget, lives in the Atelic repo at `~/Eudaimonia/Craft/Vocation/Atelic/Tools/ynab.md`; read that file before grooming the Atelic budget. Personal is the CLI's configured default, so **anything touching Atelic needs an explicit `--budget`**.
 
 ## Access: the `ynab` CLI
 
@@ -109,7 +109,7 @@ Then remind the user to hard-refresh the YNAB app or web tab, since an already-o
 
 ## Phase 6: Learn
 
-When the user corrects a proposed category, or decides a brand-new payee, append the rule to the `## Spend Categorization` section of [learned-rules.md](../../learned-rules.md) so it sticks. One line: `Payee -> Category (note)`.
+When the user corrects a proposed category, or decides a brand-new payee, append the rule to the `## Spend Categorization` section of [learned-rules.md](../../learned-rules.md) so it sticks. One line: `Payee -> Category (note)`. A correction on the Atelic budget goes to `~/Eudaimonia/Craft/Vocation/Atelic/Tools/ynab.md` instead, in the Atelic repo, never here.
 
 ## Phase 7: Report
 

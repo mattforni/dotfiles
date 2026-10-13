@@ -141,6 +141,7 @@
     "open_leads": [
       {
         "company": "Pinewood Cabinetry",
+        "funnel": "SQL",
         "lifecycle": "salesqualifiedlead",
         "status": "IN_CONVERSATION",
         "kind": "email_send",
@@ -152,6 +153,7 @@
       },
       {
         "company": "Harbor Line Plumbing",
+        "funnel": "MQL",
         "lifecycle": "marketingqualifiedlead",
         "status": "CONTACTED",
         "kind": "notes_from_the_call",
@@ -163,6 +165,7 @@
       },
       {
         "company": "Sable Creek Landscaping",
+        "funnel": "Lead",
         "lifecycle": "lead",
         "status": "NEW",
         "kind": "walk_in",
@@ -173,6 +176,7 @@
       },
       {
         "company": "Ridgeline Glass",
+        "funnel": "Lead",
         "lifecycle": null,
         "status": "NEW",
         "kind": "email_send",
@@ -185,6 +189,7 @@
     "opportunities": [
       {
         "company": "Alder Court Dental",
+        "funnel": "Opportunity",
         "lifecycle": "opportunity",
         "stage": "Proposal",
         "cash": "$12,000",
@@ -194,6 +199,7 @@
       },
       {
         "company": "Fernwood Bakery",
+        "funnel": "Opportunity",
         "lifecycle": "opportunity",
         "stage": null,
         "cash": "-",
@@ -201,6 +207,7 @@
       },
       {
         "company": "Copper Kettle Catering",
+        "funnel": "Customer",
         "lifecycle": "opportunity",
         "stage": "Closed Won",
         "cash": "$4,500",
@@ -208,6 +215,7 @@
       },
       {
         "company": "Quarry Road Auto",
+        "funnel": "Closed",
         "lifecycle": "opportunity",
         "stage": "Closed Lost",
         "cash": "-",
@@ -217,6 +225,7 @@
     "closed_leads": [
       {
         "company": "Lantern Hill Roofing",
+        "funnel": "Closed",
         "lifecycle": "other",
         "status": "UNQUALIFIED",
         "kind": "email_send",
@@ -228,6 +237,7 @@
       },
       {
         "company": "Thistle Lane Florist",
+        "funnel": "Closed",
         "lifecycle": "other",
         "status": "UNQUALIFIED",
         "kind": "email_send",

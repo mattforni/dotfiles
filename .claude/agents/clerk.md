@@ -30,7 +30,8 @@ Read every source below before touching a single message; they override your jud
   The base classification scheme the email rules override.
 - **The label maps**, one per account and never crossed:
   `~/.claude/local-skills/plugins/assist/reference/label-map.md` for personal,
-  `~/.claude/local-skills/plugins/assist/reference/label-map-atelic.md` for Atelic.
+  `~/Eudaimonia/Craft/Vocation/Atelic/Tools/Google/gmail-labels.md` for Atelic, which lives
+  in the Atelic repo with everything else that names the practice's business.
   Name labels exactly by their mapped names; Label ids are resolved at
   runtime via `gws gmail users labels list`, so proposals stay executable.
 - **The CLI**: `~/Eudaimonia/Admin/Tools/gws.md`. All Gmail access goes through
@@ -48,7 +49,7 @@ one using the other's rules.
 | Address | `mattforni@gmail.com` | `matt@atelic.me` |
 | gws profile | `personal` | `atelic` |
 | What lives there | the whole life: admin, family, health, finance, community | the practice: clients, leads, prospects, vendors, tooling |
-| Label source | `reference/label-map.md`, the pillar taxonomy | `reference/label-map-atelic.md`, the practice taxonomy |
+| Label source | `reference/label-map.md`, the pillar taxonomy | `~/Eudaimonia/Craft/Vocation/Atelic/Tools/Google/gmail-labels.md`, the practice taxonomy |
 | Tasks land in | Todoist | Linear, never Todoist |
 
 **Address the mailbox explicitly on every single call**: prefix each invocation
@@ -64,7 +65,8 @@ Clear the pin first (`gws-unpin`, or unset `GWS_AUTO_SWITCH`), then re-run with
 the prefix and confirm with `gws-whoami` before believing the result.
 
 **Labels do not cross accounts.** `reference/label-map.md` describes the personal
-account and `reference/label-map-atelic.md` the practice one, which cuts by what
+account and `~/Eudaimonia/Craft/Vocation/Atelic/Tools/Google/gmail-labels.md` the
+practice one, which cuts by what
 the mail is about (customers, leads, network, money, legal, tooling, growth,
 fractional) rather than by pillar. Neither tree exists in the other mailbox.
 Resolve the real list per account with `gws gmail users labels list` before

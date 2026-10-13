@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { canonicalize, firstDifference } from "../parity.mjs";
 import { spawnSync } from "node:child_process";
-import { bundlePath, CASES, FORMATS, goldenPath, render, renderRaw } from "./fixtures.mjs";
+import { bundlePath, CASES, FORMATS, fixturePath, goldenPath, render, renderRaw } from "./fixtures.mjs";
 
 /*
  * The gate on the renderer. Every fixture renders through its runner's built
@@ -130,6 +130,38 @@ test("a render that throws fails loudly rather than writing half a page", () => 
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /render threw/);
 	assert.equal(result.stdout, "");
+});
+
+/*
+ * The retro prints the stage the pull put on each row. A draft from before
+ * the pull carried one still renders, with every company on the page under
+ * No Stage and the six stages at zero, rather than throwing or guessing.
+ */
+test("a retro row with no stage is listed under No Stage, never dropped", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
+	const tables = ["open_leads", "opportunities", "closed_leads"];
+	const companies = [];
+	for (const table of tables) {
+		for (const row of draft.atelic[table]) {
+			delete row.funnel;
+			companies.push(row.company);
+		}
+	}
+	draft.atelic.open_leads[0].funnel = "A Stage Nobody Knows";
+	assert.equal(companies.length, 10);
+
+	const text = renderRaw("retro", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	assert.ok(text.stdout.includes("\nNo Stage · 10\n"), "the group is headed with its count");
+	assert.match(text.stdout, /\n  No stage  10\n/);
+	assert.match(text.stdout, /\n  Lead      0\n/);
+	const listed = text.stdout.slice(text.stdout.indexOf("\nNo Stage · 10\n"));
+	for (const company of companies) assert.ok(listed.includes(company), `${company} is listed`);
+
+	const html = renderRaw("retro", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	assert.ok(html.stdout.includes("No Stage · 10"));
+	for (const company of companies) assert.ok(html.stdout.includes(company), `${company} is on the page`);
 });
 
 test("the parity canonicalizer ignores what only the markup differs on", () => {
