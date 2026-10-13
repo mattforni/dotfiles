@@ -44,6 +44,12 @@ jobs:
         with:
           node-version: "24"
 
+      # The Gmail request every runner's mailbox pull goes through
+      # (runners/lib/gmail.mjs), against a stubbed fetch: no dependency to
+      # install, so it runs ahead of the install and fails in seconds.
+      - name: Runner lib tests
+        run: node --test ../tst/*.test.mjs
+
       - name: Install
         run: npm ci
 
