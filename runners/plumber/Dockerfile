@@ -48,9 +48,10 @@ WORKDIR /home/runner
 
 COPY --chown=runner:runner entrypoint.sh /home/runner/entrypoint.sh
 COPY --chown=runner:runner prompt.md /home/runner/prompt.md
-# The shared library: runner.sh for the entrypoint, hubspot.mjs, gmail.mjs,
-# linear.mjs and text.mjs for the pulls, and pipeline.mjs for the fold that
-# turns the pulls into the mail's named lines and send weeks.
+# The shared library: runner.sh for the entrypoint, and gmail.mjs, linear.mjs
+# and text.mjs for the pulls. The portal sweep and the fold that turns the
+# pulls into the mail's named lines are not in the image: the entrypoint runs
+# them from the Atelic checkout it clones, where the funnel rules live.
 COPY --chown=runner:runner lib/ /home/runner/lib/
 # The bundled renderer, at the first place runner.sh looks for it, and the
 # only renderer in the image since the jq one retired (ATE-563).

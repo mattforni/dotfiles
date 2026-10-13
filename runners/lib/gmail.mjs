@@ -5,7 +5,7 @@
 // a send are already on disk when the model starts. No dependencies, node 20.
 //
 //   node gmail.mjs <terms-file> <out-dir>
-//       terms-file: one domain or email address per line (hubspot.mjs sweep
+//       terms-file: one domain or email address per line (the Atelic repo's hubspot.mjs sweep
 //       writes mail-terms.txt). Writes mailbox.json and mailbox.md.
 //
 // Access tokens arrive in the environment, minted by the entrypoint from the

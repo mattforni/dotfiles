@@ -15,6 +15,11 @@
 #                                        there is one that never ships
 #   .claude/agents/<x>.md                each runner whose agents manifest lists x
 #
+# What an entrypoint reads from another repository at run time is in no image
+# and so in no rule here: the funnel rules the plumber and the retro run live
+# in the Atelic repo and are cloned by the run, so a change there is live on
+# the next run and promotes nothing.
+#
 # Runners and manifests are read from the tree at <head>, never from a list
 # kept here, so a new runner is covered the day its Dockerfile lands. A base
 # that is empty, all zeros, or not a commit this clone holds (a first push, a
@@ -34,7 +39,7 @@ while (( $# )); do
     case "$1" in
         -C)        repo="${2:-}"; [[ -n "$repo" ]] || die "-C needs a directory"; shift 2 ;;
         --all)     all=1; shift ;;
-        -h|--help) sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*)        die "unknown option $1" ;;
         *)
             # An empty base is a real argument here (a workflow hands one over

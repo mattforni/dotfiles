@@ -32,12 +32,20 @@
 #
 # The order of the mail is not the model's (ATE-630, 2026-10-07). Forni opened
 # the W41 mail and could not tell what needed him, so the mail became a to do
-# list in his own order, and lib/pipeline.mjs fills it from the records: the
+# list in his own order, and the Atelic repo's pipeline.mjs fills it from the
+# records: the
 # named lines (customers from the Linear cycle, open proposals and warm SQLs
 # from the sweep) as `needs`, the trailing send weeks as `health`, and the
 # model's owed names settled against those lines so nothing is said twice. The
 # model still writes the read, the names owed a touch with a note each, the
 # flags and the payloads.
+#
+# What this runner knows about the business it does not carry (ATE-656,
+# 2026-10-13). The portal sweep and the fold are the Atelic repo's own
+# (plugins/atelic/scripts/lib/hubspot.mjs and pipeline.mjs), run from the
+# Atelic checkout the run already has, so the hand run commands there and
+# this run read one copy of the funnel rules. No image carries them: a rule
+# changed in that repo is live on the next run, with no promote.
 #
 # What a run writes to the world, so nobody reads "prep only" as "read only":
 # the groom's derived stage and Lead Status moves in HubSpot (unless
@@ -129,6 +137,8 @@ EUDY_REPO="${EUDY_REPO:-git@github.com:mattforni/Eudaimonia.git}"
 ATELIC="${ATELIC:-$EUDY/Craft/Vocation/Atelic}"
 ATELIC_REPO="${ATELIC_REPO:-git@github.com:atelic-action/practice.git}"
 ONE_PAGER_ID="${ONE_PAGER_ID:-1SraHDzvUebGSpAW54AV78tKpCi4_PqeXQvG6FHCOVtg}"
+# The funnel rules, in the Atelic checkout: the sweep and the fold.
+RULES_DIR="$ATELIC/plugins/atelic/scripts/lib"
 PULLS="$WORK/pulls"
 SITES="$PULLS/sites"
 PULLS_MD="$WORK/pulls.md"
@@ -142,40 +152,10 @@ SITE_HOME_CHARS="${SITE_HOME_CHARS:-6000}"
 SITE_PAGE_CHARS="${SITE_PAGE_CHARS:-2000}"
 
 # ---------- the repos ----------
-# A checkout that is already there is used as it is and never touched: on this
-# machine that is the real repository, and in a container rehearsal it is a
-# read only mount of it. Only an absent checkout is cloned, shallow, over its
-# read only deploy key, which is the production path. Eudy first, then Atelic
-# into its place inside Eudy, since Eudy gitignores it.
-checkout_ready() {
-    local path="$1" repo="$2" marker="$3" keyvar="$4" keyfile="$HOME/.ssh/$5"
-    if [[ -f "$path/$marker" ]]; then
-        echo "repo: using the checkout at $path ($(git -C "$path" log -1 --format=%h 2>/dev/null || echo 'not a git checkout'))"
-        return 0
-    fi
-    if [[ -e "$path" ]]; then
-        fail_reason="$path exists but has no $marker; refusing to clone over it"
-        return 1
-    fi
-    require "$keyvar" || return 1
-    mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
-    printf '%s\n' "${!keyvar}" > "$keyfile"
-    chmod 600 "$keyfile"
-    if ! GIT_SSH_COMMAND="ssh -i $keyfile -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes" \
-        timeout 2m git clone --quiet --depth 1 "$repo" "$path" 2>"$WORK/git-stderr.txt"; then
-        fail_reason="clone of $repo failed: $(head -c 300 "$WORK/git-stderr.txt")"
-        return 1
-    fi
-    if [[ ! -f "$path/$marker" ]]; then
-        fail_reason="the clone of $repo is missing $marker"
-        return 1
-    fi
-    echo "repo: $repo at $(git -C "$path" log -1 --format='%h %s' | cut -c1-80)"
-    # A clone this run made is the only checkout the roster commit may land
-    # in; a checkout that was already there (the real repo, or a read only
-    # mount of it) is never written.
-    CLONED_PATHS="${CLONED_PATHS:-} $path"
-}
+# runner_checkout (lib/runner.sh) uses a checkout that is already there and
+# clones an absent one over its read only deploy key. Eudy first, then Atelic
+# into its place inside Eudy, since Eudy gitignores it. Both are in place
+# before any pull, because the first pull runs the Atelic repo's own sweep.
 
 # ---------- linting the roster ----------
 # The Atelic repo's own markdown gate, run on the roster before it is placed:
@@ -225,7 +205,7 @@ lint_roster() {
 # fails is never pushed. Returns non zero, with the reason on stdout, when the
 # roster could not be placed; the caller then falls back to attaching it.
 place_roster() {
-    local keyfile="$HOME/.ssh/atelic_push_key" target="$ATELIC/Outreach/$WEEK-roster.md" ssh_cmd
+    local keyfile="$HOME/.ssh/atelic_push_key" ssh_cmd
     # First, on every run, so a local rehearsal reads the verdict too.
     lint_roster || return 1
     if [[ -z "${ATELIC_PUSH_KEY:-}" ]]; then
@@ -240,33 +220,17 @@ place_roster() {
     printf '%s\n' "$ATELIC_PUSH_KEY" > "$keyfile"
     chmod 600 "$keyfile"
     ssh_cmd="ssh -i $keyfile -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes"
-    cp "$ROSTER_MD" "$target" || { echo "roster: could not copy the roster into the checkout"; return 1; }
-    git -C "$ATELIC" -c user.name="Claude" -c user.email="claude@atelic.me" add "Outreach/$WEEK-roster.md" || return 1
-    if git -C "$ATELIC" diff --cached --quiet; then
-        echo "roster: the checkout already holds this roster; nothing to commit"
-    elif ! git -C "$ATELIC" -c user.name="Claude" -c user.email="claude@atelic.me" commit --quiet \
-            -m "Outreach: the $WEEK roster, built by the plumber runner" \
-            -m "Built $(date +%F) from the portal sweep, both mailboxes and the pulled sites; the skeleton's Placed Ahead entries carried at the foot." 2>"$WORK/git-stderr.txt"; then
-        echo "roster: commit failed: $(head -c 300 "$WORK/git-stderr.txt")"
+    # Main usually moves during a run of twenty minutes, so the commit is
+    # built on the fresh tip and never rebased (runner_land_file in
+    # lib/runner.sh says why, and retries a push that lost a race).
+    if ! runner_land_file "$ATELIC" "$ROSTER_MD" "Outreach/$WEEK-roster.md" "$ssh_cmd" \
+            "Outreach: the $WEEK roster, built by the plumber runner" \
+            "Built $(date +%F) from the portal sweep, both mailboxes and the pulled sites; the skeleton's Placed Ahead entries carried at the foot."; then
+        echo "roster: could not be placed on main"
         return 1
     fi
-    # A shallow clone pushes fine as long as main has not moved under it; when
-    # it has, one rebase onto the fresh tip is the whole retry, since the
-    # commit touches one file nobody else writes in that minute.
-    local attempt
-    for attempt in 1 2; do
-        if GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$ATELIC" push --quiet origin HEAD:main 2>"$WORK/git-stderr.txt"; then
-            ROSTER_URL="https://github.com/atelic-action/practice/blob/main/Outreach/$WEEK-roster.md"
-            echo "roster: pushed to main as $(git -C "$ATELIC" log -1 --format=%h), $ROSTER_URL"
-            return 0
-        fi
-        [[ $attempt -eq 1 ]] || break
-        GIT_SSH_COMMAND="$ssh_cmd" git -C "$ATELIC" fetch --quiet --depth 1 origin main 2>>"$WORK/git-stderr.txt" \
-            && git -C "$ATELIC" -c user.name="Claude" -c user.email="claude@atelic.me" rebase --quiet origin/main 2>>"$WORK/git-stderr.txt" \
-            || break
-    done
-    echo "roster: push failed: $(head -c 300 "$WORK/git-stderr.txt")"
-    return 1
+    ROSTER_URL="https://github.com/atelic-action/practice/blob/main/Outreach/$WEEK-roster.md"
+    echo "roster: on main as $LANDED_COMMIT, $ROSTER_URL"
 }
 
 # ---------- firing the Outreach routine ----------
@@ -372,16 +336,16 @@ fire_payloads() {
 # site pulls read (mail-terms.txt, sites.txt), which is why it runs first.
 portal_pull() {
     local rc
-    HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" timeout 10m node "$LIB_DIR/hubspot.mjs" sweep "$MONDAY" "$WORK" \
+    HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" timeout 10m node "$RULES_DIR/hubspot.mjs" sweep "$MONDAY" "$WORK" \
         > "$WORK/portal-counts.json" 2>"$WORK/hubspot-stderr.txt"
     rc=$?
     if (( rc == 124 )); then fail_reason="HubSpot sweep timed out after 10m"; return 1; fi
     if (( rc != 0 )); then fail_reason="HubSpot sweep failed: $(head -c 300 "$WORK/hubspot-stderr.txt")"; return 1; fi
-    echo "portal: $(jq -r '"\(.funnel_companies) funnel companies; Next Up \(.next_up) (\(.next_up_with_new) with a NEW contact), unscored \(.unscored); sections \(.sections | to_entries | map("\(.key) \(.value)") | join(", "))"' "$WORK/portal-counts.json")"
+    echo "portal: $(jq -r '"\(.funnel_companies) funnel companies; Next Up \(.next_up) (\(.next_up_with_new) with a NEW contact); sections \(.sections | to_entries | map("\(.key) \(.value)") | join(", "))"' "$WORK/portal-counts.json")"
 }
 
 # The active cycle's open issues, which become the customer lines of the mail
-# (lib/pipeline.mjs joins them to a Customer company on its linear_project
+# (the Atelic repo's pipeline.mjs joins them to a Customer company on its linear_project
 # property). Never fatal and never retried: with no key, or a tracker that did
 # not answer, the fold falls back to open HubSpot tasks and the mail carries
 # one line under Left for You saying the read did not run, with the reason
@@ -527,7 +491,10 @@ sites_pull() {
         echo "sites: none named"
         return 0
     fi
-    xargs -P "$FETCH_PARALLEL" -I{} bash -c 'site_fetch_one "$1"' _ {} < "$WORK/sites.txt"
+    # Through runner_each_line and never bare xargs: a company name with an
+    # apostrophe in it ended the pull at its line (ATE-653), and the first
+    # touch sites, last in the list, went unread for two weeks.
+    runner_each_line "$FETCH_PARALLEL" site_fetch_one < "$WORK/sites.txt"
     {
         echo "- Sites: one file per domain, $SITES/<domain>.md, opening with the company, the section it was pulled for, what the head of the home page code says, robots.txt, then the home page and a few internal pages as text:"
         local f
@@ -600,8 +567,14 @@ ALLOWED_TOOLS=(
     "Write"
 )
 
-checkout_ready "$EUDY" "$EUDY_REPO" "VOICE.md" EUDY_DEPLOY_KEY eudy_deploy_key || exit 1
-checkout_ready "$ATELIC" "$ATELIC_REPO" "Outreach/README.md" ATELIC_DEPLOY_KEY atelic_deploy_key || exit 1
+runner_checkout "$EUDY" "$EUDY_REPO" "VOICE.md" EUDY_DEPLOY_KEY eudy_deploy_key || exit 1
+runner_checkout "$ATELIC" "$ATELIC_REPO" "Outreach/README.md" ATELIC_DEPLOY_KEY atelic_deploy_key || exit 1
+for rules in hubspot.mjs pipeline.mjs; do
+    if [[ ! -f "$RULES_DIR/$rules" ]]; then
+        fail_reason="the Atelic checkout has no plugins/atelic/scripts/lib/$rules; the funnel rules live there since ATE-656, so the checkout is behind main"
+        exit 1
+    fi
+done
 if [[ ! -f "$ATELIC/Outreach/$WEEK-roster.md" ]]; then
     fail_reason="the Atelic repo has no skeleton at Outreach/$WEEK-roster.md; cut one first"
     exit 1
@@ -637,7 +610,7 @@ if jq -e '.funnel' "$WORK/portal.json" >/dev/null 2>&1; then
                 opens: (if .value.tracked_sends > 0 then .value.opens else null end), tracked: .value.tracked_sends,
                 days_since_open: .value.days_since_open, last_reply: .value.last_reply,
                 touch_days: .value.touch_days, open_days: .value.open_days,
-                fit: .value.fit, email: .value.email}}) | from_entries) as $m
+                email: .value.email}}) | from_entries) as $m
             | .[0] + {funnel: .[1].funnel, groom: .[1].groom}
             | .owed |= with_entries(.value |= ((. // []) | map(
                 . + {metrics: ((.contact_url // null) as $cu | if ($cu | type) == "string" then ($m[$cu] // null) else null end)})))' \
@@ -661,7 +634,7 @@ if jq -e '.funnel' "$WORK/portal.json" >/dev/null 2>&1; then
     # the list.
     linear_file=""
     [[ -n "$LINEAR_WHY" || ! -s "$WORK/linear.json" ]] || linear_file="$WORK/linear.json"
-    if node "$LIB_DIR/pipeline.mjs" fold "$DRAFT_JSON" "$WORK/portal.json" "$MONDAY" "$linear_file" "$LINEAR_WHY" "$LINEAR_REUSED" \
+    if node "$RULES_DIR/pipeline.mjs" fold "$DRAFT_JSON" "$WORK/portal.json" "$MONDAY" "$linear_file" "$LINEAR_WHY" "$LINEAR_REUSED" \
             > "$WORK/draft-folded.json" 2>"$WORK/pipeline-stderr.txt" \
         && jq -e '(.needs.tiers | type == "array") and (.needs.first_touch_target | type == "number")
             and (.health.weeks | type == "array") and (.owed | type == "object") and (.flags | type == "array")

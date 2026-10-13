@@ -17,10 +17,14 @@
 #   GWS_OAUTH_TOKEN_JSON      forni-keys/gws-oauth-token-personal (authorized_user JSON)
 #   HUBSPOT_SERVICE_KEY       atelic-keys/hubspot-service-key-atelic (read only use here)
 #   EUDY_DEPLOY_KEY           forni-keys/github-deploy-key-eudy (read only deploy key on mattforni/Eudaimonia)
+#   ATELIC_DEPLOY_KEY         atelic-keys/github-deploy-key-atelic (read only deploy key on the Atelic repo); only
+#                             when the pulls run and no checkout is at $ATELIC
 # Plain configuration:
 #   REPORT_RECIPIENT          where the retro goes
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
 #   STRAVA_SECRET_RESOURCE    defaults to projects/forni-keys/secrets/strava-refresh-token
+#   ATELIC                    the Atelic checkout, whose funnel rules the HubSpot pull runs; defaults to its place
+#                             inside Eudaimonia under $HOME, which is where a local run finds the real one
 #   WEEK                      optional YYYY-Www override for a test fire; default is the previous week, the ISO week that closed most recently
 #   DRY_RUN                   1 renders the email and skips the send; the local loop
 #   SKIP_PULLS                1 reuses the JSON already in $WORK instead of pulling again
@@ -61,6 +65,8 @@ BEFORE_EPOCH="$(midnight_epoch "$NEXT_MONDAY")"
 # What a run needs depends on what it will do. A dry run never sends, and a run
 # over cached pulls never authenticates to Strava, Google, HubSpot or GitHub, so
 # demanding all nine every time would make the fast local loops impossible.
+# ATELIC_DEPLOY_KEY is asked for later still, by the HubSpot pull, and only
+# when no Atelic checkout is already in place.
 required=(CLAUDE_CODE_OAUTH_TOKEN)
 [[ "$DRY_RUN" == "1" ]] || required+=(RESEND_API_KEY REPORT_RECIPIENT)
 [[ "$SKIP_PULLS" == "1" ]] || required+=(STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON EUDY_DEPLOY_KEY HUBSPOT_SERVICE_KEY)
@@ -202,17 +208,27 @@ gmail_pull() {
 
 # ---------- HubSpot (the Atelic week) ----------
 # The joins behind these tables have traps that a model reading raw JSON would
-# get wrong quietly, so the arithmetic is done here and the prompt is handed
-# three finished tables to write one sentence about. See the shared
-# lib/hubspot.mjs, whose `week` command is this pull (it moved there from this
-# directory on 2026-09-15, ATE-551, so the pipeline sweep could share it).
+# get wrong quietly, so the arithmetic is done in code and the prompt is
+# handed three finished tables to write one sentence about. The code is the
+# Atelic repo's own: plugins/atelic/scripts/lib/hubspot.mjs, whose `week`
+# command is this pull. It is the one copy of the funnel rules, read by the
+# plumber runner and by the hand run commands in that repo too (ATE-656,
+# 2026-10-13; the file lived in this repo's runners/lib until then). So the
+# pull needs an Atelic checkout: the one already at $ATELIC (this machine's
+# own, or a read only mount of it in a container rehearsal), or a shallow
+# clone over the read only deploy key, which is the production path. No image
+# carries the rules, so a rule changed there is live on the next run.
+ATELIC="${ATELIC:-$HOME/Eudaimonia/Craft/Vocation/Atelic}"
+ATELIC_REPO="${ATELIC_REPO:-git@github.com:atelic-action/practice.git}"
+ATELIC_RULES="plugins/atelic/scripts/lib/hubspot.mjs"
 atelic_pull() {
+    runner_checkout "$ATELIC" "$ATELIC_REPO" "$ATELIC_RULES" ATELIC_DEPLOY_KEY atelic_deploy_key || return 1
     # The same Denver midnight epochs the Strava pull uses, so both weeks close
     # at the same instant; hubspot.mjs says why a date string would not do.
     # Bounded like the other external steps, since a hung HubSpot call would
     # otherwise hold the job until Cloud Run's own deadline killed it.
     local rc
-    HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" timeout 10m node "$LIB_DIR/hubspot.mjs" week "$AFTER_EPOCH" "$BEFORE_EPOCH" > "$WORK/atelic.json" 2>"$WORK/hubspot-stderr.txt"
+    HUBSPOT_SERVICE_KEY="$HUBSPOT_SERVICE_KEY" timeout 10m node "$ATELIC/$ATELIC_RULES" week "$AFTER_EPOCH" "$BEFORE_EPOCH" > "$WORK/atelic.json" 2>"$WORK/hubspot-stderr.txt"
     rc=$?
     if (( rc == 124 )); then
         fail_reason="HubSpot pull timed out after 10m"
