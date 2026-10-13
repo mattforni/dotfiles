@@ -49,8 +49,9 @@ if [[ -z "${RUNNER_LIB:-}" ]]; then
 fi
 
 # The retro is for the ISO week that is closing. The job fires in that week's
-# last hours, and the default is read off yesterday's date rather than today's: Saturday names the same week, and a retry that
-# slips past midnight into Monday still reads Sunday and gets it right.
+# last hours, and the default is read off yesterday's date rather than
+# today's: Saturday names the same week, and a retry that slips past midnight
+# into Monday still reads Sunday and gets it right.
 runner_init retro "Retro" previous
 
 STRAVA_SECRET_RESOURCE="${STRAVA_SECRET_RESOURCE:-projects/forni-keys/secrets/strava-refresh-token}"

@@ -272,7 +272,7 @@ test("on a Monday run the week judged is the one that just ended, never the one 
     assert.ok(healthOf(portal, "2026-10-05", ms("2026-10-13T04:00:00Z")).flag, "a replay after the Sunday judges it");
 });
 
-test("a Sunday night run for the week ahead ends the table at the closing week and drops no real week", () => {
+test("a run on the night before its week ends the table at the closing week and drops no real week", () => {
     const portal = weeksPortal([[10, 6], [10, 6], [10, 6], [10, 6], [10, 0]]);
     // Sunday 2026-10-11 22:30 Denver (MDT), for the week of 2026-10-12.
     const sunday = ms("2026-10-12T04:30:00Z");
@@ -281,7 +281,7 @@ test("a Sunday night run for the week ahead ends the table at the closing week a
     assert.deepEqual(ahead.weeks, monday.weeks);
     assert.equal(ahead.weeks.at(-1).week, "2026-W41");
     assert.equal(ahead.weeks.at(-1).tracked, 10);
-    // The closing week is complete by Sunday night, so it is the week judged.
+    // The closing week is complete by then, so it is the week judged.
     assert.match(ahead.flag, /^W41 opened at 0% on 10 tracked sends/);
 });
 

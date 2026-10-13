@@ -10,7 +10,7 @@ Headless Claude routines that run on a schedule. One directory per runner, each 
 
 The runtime one pager (why Cloud Run over Routines, the service accounts and their secrets, the traps) lives in Eudy at `Admin/Tools/cloud-run.md`.
 
-**When a runner fires is not written down anywhere in this repo.** The Cloud Scheduler entry is the only statement of it, and the command that reads it is in Eudy's `Admin/Tools/cloud-run.md`. A day or a clock copied into a README, a comment, an agent, or a skill is a second copy that drifts (ATE-649), so look it up when it matters and never write it down.
+**When a runner fires is not written down anywhere in this repo.** The Cloud Scheduler entry is the only statement of it, and the command that reads it is in Eudy's `Admin/Tools/cloud-run.md`. A day or a clock copied into a README, a comment, an agent, or a skill is a second copy that drifts (ATE-649), so look it up when it matters and never write it down. One thing does depend on it: each runner's default week in `runner_init` (`runners/lib/runner.sh`) assumes the fire falls on the night before a week opens, so a move to another night is a scheduler change and a look at those defaults together.
 
 ## Where a Runner Runs
 

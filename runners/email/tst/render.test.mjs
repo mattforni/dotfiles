@@ -140,7 +140,7 @@ test("the week table never draws the week the mail is for, and keeps the oldest 
 });
 
 test("a run handed only completed weeks draws all but the oldest, which gives the last row its change", () => {
-	// The Sunday night run for the week ahead: five completed weeks, four rows.
+	// The run on the night before its week: five completed weeks, four rows.
 	const draft = plumberDraft();
 	draft.health.weeks = [sendWeek(2025, 52), ...[1, 2, 3, 4].map((n) => sendWeek(2026, n))];
 	assert.deepEqual(weekRowsOf(draft), ["W4", "W3", "W2", "W1"]);

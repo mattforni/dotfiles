@@ -250,9 +250,10 @@ meta_line() {
 # a reader sees it: the subject ("2026-W38 Retro"), the masthead, the failure
 # page. The third argument says which week is the default when WEEK is not
 # set: the week in progress, the week yesterday belonged to (the retro
-# fires Sunday night about the week that is closing), or the week tomorrow
-# belongs to (the plumber and the recruiter fire Sunday night to prepare the
-# week that opens in the morning; any other day that is the week in progress). Reads DRY_RUN, SKIP_PULLS,
+# fires on a week's last night, about the week that is closing), or the week
+# tomorrow belongs to (the plumber and the recruiter fire on that same night
+# to prepare the week that opens in the morning; on any other day that is
+# the week in progress). Reads DRY_RUN, SKIP_PULLS,
 # WORK and WEEK from the environment, and needs SELF_DIR (the entrypoint's
 # own directory) and RUNNER_LIB (this file's path) set by the entrypoint's
 # bootstrap. Sets:

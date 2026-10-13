@@ -935,8 +935,8 @@ async function sweep(argv) {
     // in the same week counts from that day; a rerun for a past week counts
     // from its Monday, so a replay does not drift.
     // The clamp up to the target Monday is deliberate: the roster is read as
-    // of the opening midnight of the week it is for, about ninety minutes
-    // after a Sunday 22:30 fire, so day counts read as they will on Monday
+    // of the opening midnight of the week it is for, shortly after a fire
+    // on the night before, so day counts read as they will on Monday
     // morning. The stamps below use the real clock, so a file never claims
     // tomorrow's date.
     const refMs = Math.min(Math.max(Date.now(), mondayMs), sundayEndMs - 1);
