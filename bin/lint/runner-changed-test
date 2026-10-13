@@ -115,6 +115,12 @@ ROOT_COMMIT="$(commit)" || { echo "could not build the fake repository"; exit 1;
 echo "Shared paths reach every runner"
 change "runners/lib reaches every runner"        "alpha beta gamma" runners/lib/runner.sh
 change "a new file in runners/lib does too"      "alpha beta gamma" runners/lib/pull.mjs
+# A script that leaves the shared library (the funnel rules moved to the
+# Atelic repo, which the runs clone) has to leave every image too.
+before="$(g rev-parse HEAD)"
+g rm --quiet runners/lib/pull.mjs
+after="$(commit)"
+expect "a file leaving runners/lib reaches every runner" "alpha beta gamma" "$before" "$after"
 change "runners/email reaches every runner"      "alpha beta gamma" runners/email/render.tsx
 change "the renderer's package file does too"    "alpha beta gamma" runners/email/package.json
 change "bin/runner/promote reaches every runner" "alpha beta gamma" bin/runner/promote

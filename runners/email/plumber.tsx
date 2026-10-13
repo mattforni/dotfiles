@@ -104,11 +104,7 @@ type Groom = {
 	companies?: unknown[] | null;
 	contacts?: unknown[] | null;
 	proposed?: Proposed[] | null;
-	/** The contacts the groom left alone because their Lead Status was cleared on purpose (ATE-652); the mail names them. */
-	cleared?: Cleared[] | null;
 } | null;
-/** A contact with a touch on the record and a Lead Status cleared by hand: `was` is the value it held, `cleared_at` the day it was cleared. */
-type Cleared = { name?: unknown; company?: unknown; url?: string | null; was?: unknown; cleared_at?: unknown };
 
 /**
  * One named line of the list, a sentence in four parts: who, what is owed,
@@ -633,27 +629,11 @@ function groomLine(groom: Groom): string {
 	const stages = alt(groom?.companies, []).length;
 	const contacts = alt(groom?.contacts, []).length;
 	if (groom === null || groom === undefined) return "The groom did not run this week.";
-	const cleared = clearedSentence(groom);
 	if (groom.applied === false) {
-		return `Read only this run: ${plural(stages, "stage move")} and ${plural(contacts, "status move")} were computed and nothing was written.${cleared}`;
+		return `Read only this run: ${plural(stages, "stage move")} and ${plural(contacts, "status move")} were computed and nothing was written.`;
 	}
-	if (stages === 0 && contacts === 0) return `The portal already said what was true; nothing moved.${cleared}`;
-	return `The groom moved ${plural(stages, "company")} and ${plural(contacts, "contact")} to match what the record already showed.${cleared}`;
-}
-
-/**
- * The contacts the groom left alone because their Lead Status was cleared on
- * purpose, as one sentence after the groom's own: a clear is a decision, and
- * until ATE-652 the groom undid it every week without saying so. Empty when
- * there are none.
- */
-function clearedSentence(groom: Groom): string {
-	const names = alt(groom?.cleared, []).map((c) =>
-		[jqToString(alt(c.name, "")), jqToString(alt(c.company, ""))].filter((part) => part !== "").join(", "),
-	);
-	const shown = names.filter((name) => name !== "");
-	if (shown.length === 0) return "";
-	return ` Left cleared on purpose: ${shown.join("; ")}.`;
+	if (stages === 0 && contacts === 0) return "The portal already said what was true; nothing moved.";
+	return `The groom moved ${plural(stages, "company")} and ${plural(contacts, "contact")} to match what the record already showed.`;
 }
 
 /* ---------- html ---------- */

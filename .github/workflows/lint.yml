@@ -44,14 +44,12 @@ jobs:
         with:
           node-version: "20"
 
-      # The folds the Pipeline mail's named lines and send weeks come from
-      # (runners/lib/pipeline.mjs) and the Linear read beside them, and the
-      # sweep's pure parts (runners/lib/hubspot.mjs: a cleared status, calls
-      # as touches): pure functions over small invented portals with no
-      # dependency to install, so they run ahead of the install and fail in
-      # seconds.
+      # The Linear read the plumber hands the Pipeline mail's fold
+      # (runners/lib/linear.mjs): no dependency to install, so it runs ahead
+      # of the install and fails in seconds. The fold and the portal sweep
+      # are the Atelic repo's and are tested there.
       - name: Runner lib tests
-        run: node --test ../tst/pipeline.test.mjs ../tst/hubspot.test.mjs
+        run: node --test ../tst/linear.test.mjs
 
       - name: Install
         run: npm ci
@@ -103,6 +101,15 @@ jobs:
       # each must reach runs here against a throwaway repository.
       - name: Test the promote path rules
         run: ./bin/lint/runner-changed-test
+
+      # A run lands its one file (the plumber's roster) on a main that moved
+      # while it ran, and reads its site list a line at a time. Both failed
+      # in silence for weeks: a rebase across a shallow clone, and xargs
+      # stopping at an apostrophe. A throwaway bare repository that moves
+      # between the clone and the push holds the first; a list with quotes
+      # in it holds the second.
+      - name: Test the file landing and the line reader
+        run: ./bin/lint/runner-land-test
 
       # A promote takes its verdict from runner_build_wait, and the two ways
       # that can be wrong are both silent: a success reported for a build that

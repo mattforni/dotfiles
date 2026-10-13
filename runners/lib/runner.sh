@@ -269,8 +269,8 @@ meta_line() {
 #                               runner renders one (runner_render_text)
 #   ATTACHMENT                  empty; a runner sets it to a file to send along
 #   PROMPT_FILE                 prompt.md beside the entrypoint
-#   LIB_DIR                     the shared library (render.cjs, hubspot.mjs,
-#                               text.mjs), wherever it was found
+#   LIB_DIR                     the shared library (render.cjs, gmail.mjs,
+#                               linear.mjs, text.mjs), wherever it was found
 #   status fail_reason result rc
 # and traps runner_finish on EXIT.
 runner_init() {
@@ -438,6 +438,167 @@ fill_prompt() {
         args+=(-e "s|{{$v}}|$val|g")
     done
     sed "${args[@]}" "$file"
+}
+
+# ---------- the repos a run reads and writes ----------
+
+# Usage: runner_checkout <path> <repo url> <marker file> <deploy key variable> <key file name>
+# Puts a repository where a run expects it. A checkout that is already there
+# is used as it is and never touched: on this machine that is the real
+# repository, and in a container rehearsal it is a read only mount of it.
+# Only an absent checkout is cloned, shallow, over its read only deploy key,
+# which is the production path. The marker is a file the run cannot do
+# without, so a path holding something else is refused and never cloned over.
+# The key variable is required only when the clone is: a run that finds its
+# checkout needs no key. A path this call cloned is added to CLONED_PATHS,
+# the only checkouts a run may write into. Sets fail_reason and returns non
+# zero on failure.
+# shellcheck disable=SC2034
+runner_checkout() {
+    local path="$1" repo="$2" marker="$3" keyvar="$4" keyfile="$HOME/.ssh/$5"
+    if [[ -f "$path/$marker" ]]; then
+        echo "repo: using the checkout at $path ($(git -C "$path" log -1 --format=%h 2>/dev/null || echo 'not a git checkout'))"
+        return 0
+    fi
+    if [[ -e "$path" ]]; then
+        fail_reason="$path exists but has no $marker; refusing to clone over it"
+        return 1
+    fi
+    require "$keyvar" || return 1
+    mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+    printf '%s\n' "${!keyvar}" > "$keyfile"
+    chmod 600 "$keyfile"
+    if ! GIT_SSH_COMMAND="ssh -i $keyfile -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes" \
+        timeout 2m git clone --quiet --depth 1 "$repo" "$path" 2>"$WORK/git-stderr.txt"; then
+        fail_reason="clone of $repo failed: $(head -c 300 "$WORK/git-stderr.txt")"
+        return 1
+    fi
+    if [[ ! -f "$path/$marker" ]]; then
+        fail_reason="the clone of $repo is missing $marker"
+        return 1
+    fi
+    echo "repo: $repo at $(git -C "$path" log -1 --format='%h %s' | cut -c1-80)"
+    CLONED_PATHS="${CLONED_PATHS:-} $path"
+}
+
+# Usage: runner_land_file <checkout> <source file> <path in the repo> <ssh command> <subject> [<body>]
+# Lands one file on the remote's main for a run whose clone has fallen
+# behind it, which a run of twenty minutes usually has. The commit is built
+# on the fresh tip, in a clone of its own made for the landing: copy the file
+# in, commit, push. Never a rebase. The run's clone is one commit deep, and a
+# rebase across a shallow boundary has no common ancestor to work from, so it
+# reports add/add conflicts on files the commit never touched; that sent a
+# roster to the mail as an attachment on a morning main had only moved
+# (2026-10-07).
+#
+# The run's own checkout is read and never moved: it names the remote and
+# holds the file as the run read it at its start, and everything the run does
+# after the landing still stands on the revision it started from.
+#
+# Three ways a landing ends without the file on main, each said in the log
+# and each returning non zero so the caller falls back:
+#   - main holds a different file at that path than the run read at its
+#     start. Somebody changed it while the run was going, and the run's copy
+#     is not pushed over theirs.
+#   - the push was rejected because main moved again, RUNNER_LAND_TRIES times
+#     running (four by default, RUNNER_LAND_PAUSE seconds apart). Only this
+#     rejection is tried again, on the newer tip.
+#   - the remote refused for any other reason (a key, a branch rule, a
+#     hook), or could not be reached. That is not tried again: its own words
+#     go in the log and the caller falls back at once.
+#
+# Sets LANDED_COMMIT to the short hash on main.
+# shellcheck disable=SC2034
+runner_land_file() {
+    local checkout="$1" src="$2" dest="$3" ssh_cmd="$4" subject="$5" body="${6:-}"
+    local tries="${RUNNER_LAND_TRIES:-4}" pause="${RUNNER_LAND_PAUSE:-3}" attempt url tmp repo err base tip built rc=1 moved=0
+    # A runner's commit is never signed: no image holds a signing key, and a
+    # machine whose own config signs would stop here for a passphrase.
+    local ident=(-c user.name="${RUNNER_GIT_NAME:-Claude}" -c user.email="${RUNNER_GIT_EMAIL:-claude@atelic.me}" -c commit.gpgsign=false)
+    local message=(-m "$subject")
+    [[ -z "$body" ]] || message+=(-m "$body")
+    LANDED_COMMIT=""
+    if ! url="$(git -C "$checkout" remote get-url origin 2>/dev/null)"; then
+        echo "land: the checkout at $checkout names no origin to land on"
+        return 1
+    fi
+    # The file as the run read it at its start, and as the run built it, by
+    # blob. An absent file reads as empty on either side.
+    base="$(git -C "$checkout" rev-parse --quiet --verify "HEAD:$dest" 2>/dev/null || true)"
+    built="$(git hash-object "$src" 2>/dev/null)" || { echo "land: cannot read $src"; return 1; }
+    tmp="$(mktemp -d "$WORK/land.XXXXXX")" || { echo "land: cannot make a directory under $WORK"; return 1; }
+    repo="$tmp/repo"
+    err="$tmp/stderr.txt"
+    if ! GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git clone --quiet --depth 1 --branch main --no-tags "$url" "$repo" 2>"$err"; then
+        echo "land: could not clone main, so nothing was pushed: $(tail -c 300 "$err" | tr '\n' ' ')"
+        rm -rf "$tmp"
+        return 1
+    fi
+    for (( attempt = 1; attempt <= tries; attempt++ )); do
+        if (( attempt > 1 )); then
+            sleep "$pause"
+            if ! GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$repo" fetch --quiet --depth 1 origin main 2>"$err" \
+                || ! git -C "$repo" reset --quiet --hard FETCH_HEAD 2>>"$err"; then
+                echo "land: could not fetch main again: $(tail -c 300 "$err" | tr '\n' ' ')"
+                break
+            fi
+        fi
+        tip="$(git -C "$repo" rev-parse --quiet --verify "HEAD:$dest" 2>/dev/null || true)"
+        if [[ "$tip" == "$built" ]]; then
+            LANDED_COMMIT="$(git -C "$repo" log -1 --format=%h)"
+            echo "land: main already holds this $dest; nothing to commit"
+            rc=0
+            break
+        fi
+        if [[ "$tip" != "$base" ]]; then
+            echo "land: $dest changed on main while the run was going, so the run's copy is not pushed over it"
+            break
+        fi
+        if ! { mkdir -p "$(dirname "$repo/$dest")" && cp "$src" "$repo/$dest" && git -C "$repo" add -- "$dest" \
+                && git -C "$repo" "${ident[@]}" commit --quiet "${message[@]}"; } 2>"$err"; then
+            echo "land: could not commit $dest: $(tail -c 300 "$err" | tr '\n' ' ')"
+            break
+        fi
+        # LC_ALL=C so the rejection reads the same wherever this runs.
+        if LC_ALL=C GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$repo" push origin HEAD:main >"$err" 2>&1; then
+            LANDED_COMMIT="$(git -C "$repo" log -1 --format=%h)"
+            (( attempt == 1 )) || echo "land: main had moved; landed on its new tip on try $attempt"
+            rc=0
+            break
+        fi
+        # "! [rejected]" is git saying the remote's main is ahead of the
+        # commit pushed. A hook or a rule that declines reads "! [remote
+        # rejected]", and a key that is refused never gets that far.
+        if grep -q '! \[rejected\]' "$err"; then
+            moved=$attempt
+            echo "land: main moved under the push (try $attempt of $tries)"
+            continue
+        fi
+        moved=0
+        echo "land: the push was refused, and not because main moved, so it is not tried again: $(grep -v '^hint:' "$err" | head -c 400 | tr '\n' ' ')"
+        break
+    done
+    (( rc == 0 || moved < tries )) || echo "land: could not land $dest on main after $tries tries; main kept moving"
+    rm -rf "$tmp"
+    return "$rc"
+}
+
+# Usage: runner_each_line <parallel> <exported function> < lines
+# Runs the function once for every line of input, the whole line as its one
+# argument, <parallel> at a time. Blank lines are skipped. The lines go to
+# xargs NUL separated on purpose: fed lines, xargs reads quotes as its own,
+# and one apostrophe in a line stops it with "unterminated quote" and drops
+# every line after it. A company with an apostrophe in its name did that to
+# the plumber's site pull for two weeks (2026-W41 and W42): the list is
+# ordered follow ups first, so the first touch sites at its foot were never
+# fetched. The line is handed over as an argument of its own and never
+# through -I: BSD xargs stops replacing past 255 bytes and would hand the
+# function a literal {} for a long line. GNU xargs runs its command once on
+# empty input, which the count of arguments catches.
+runner_each_line() {
+    local parallel="$1" fn="$2"
+    sed '/^[[:space:]]*$/d' | tr '\n' '\0' \
+        | xargs -0 -n 1 -P "$parallel" bash -c '(( $# )) || exit 0; '"$fn"' "$1"' _
 }
 
 # Usage: runner_claude <prompt> [claude -p arguments...]

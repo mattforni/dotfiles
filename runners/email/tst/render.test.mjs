@@ -179,12 +179,16 @@ test("a run handed no completed week draws no table at all", () => {
 	assert.ok(renderRaw("plumber", "html", JSON.stringify(draft)).stdout.includes("Flag"));
 });
 
-test("the groom names who it left cleared on purpose", () => {
-	const text = renderRaw("plumber", "text", JSON.stringify(plumberDraft())).stdout;
-	assert.match(text.replace(/\s+/g, " "), /Left cleared on purpose: Dale Okonkwo, Front Range Cleanup Crew\./);
-	const none = plumberDraft();
-	delete none.groom.cleared;
-	assert.ok(!renderRaw("plumber", "text", JSON.stringify(none)).stdout.includes("cleared on purpose"));
+test("the groom line says what moved and nothing about a status left blank", () => {
+	// A blank Lead Status has one meaning since ATE-656: the record needs its
+	// status set, and the groom sets it. A draft from an older sweep that
+	// still carries the retired list renders without it.
+	const draft = plumberDraft();
+	draft.groom.cleared = [{ name: "An Invented Name", company: "An Invented Company" }];
+	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout.replace(/\s+/g, " ");
+	assert.match(text, /The groom moved \d+ compan(y|ies) and \d+ contacts? to match what the record already showed\./);
+	assert.ok(!text.includes("cleared on purpose"));
+	assert.ok(!text.includes("An Invented Name"));
 });
 
 test("an unknown runner fails loudly", () => {

@@ -1,6 +1,8 @@
 # The Retro Runner (ATE-471). A Cloud Run Job image: the entrypoint
-# pulls the week from Strava, Gmail, and HubSpot with curl, then headless
-# Claude Code writes the retrospective from those files and Resend delivers it.
+# pulls the week from Strava, Gmail, and HubSpot, then headless Claude Code
+# writes the retrospective from those files and Resend delivers it. The
+# HubSpot week is the Atelic repo's own script, run from a clone the
+# entrypoint makes over a read only deploy key; no image carries it.
 # Nothing here writes back to the world except the rotated Strava refresh
 # token, which goes to the vault.
 
@@ -38,7 +40,7 @@ COPY --chown=runner:runner lib/ /home/runner/lib/
 COPY --from=email --chown=runner:runner /email/dist/render.cjs /home/runner/lib/render.cjs
 RUN chmod +x /home/runner/entrypoint.sh
 
-# GitHub's published ed25519 host key, pinned so the Eudy clone never trusts
+# GitHub's published ed25519 host key, pinned so the clones never trust
 # on first use. Rotate from https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
 RUN mkdir -p /home/runner/.ssh && chmod 700 /home/runner/.ssh \
     && echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > /home/runner/.ssh/known_hosts

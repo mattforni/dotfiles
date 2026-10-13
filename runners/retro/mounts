@@ -1,0 +1,6 @@
+# Host paths mounted into a local container run, one per line, as
+# host:container[:ro]; $HOME is expanded. The Atelic checkout stands in for
+# the deploy key clone the HubSpot pull makes in production, so a rehearsal
+# here runs the funnel rules of the checkout on this machine and needs no
+# secret this machine lacks.
+$HOME/Eudaimonia/Craft/Vocation/Atelic:/home/runner/Eudaimonia/Craft/Vocation/Atelic:ro
