@@ -111,6 +111,8 @@ newest main and never an older one; the job summary names the commit built.
 | `runners/email/tst/`, `fixtures/`, `goldens/` | nothing: the image's first stage bundles `render.tsx` and what it imports, and copies only that file forward |
 | anything else (this README, the other `bin/runner/` scripts) | nothing |
 
+**None of this rebuilds a runner that lives in another repository** (Forni, 2026-10-13, ATE-656). Its image carries `runners/lib/`, the renderer and the Claude Code pin from here as well, but this workflow promotes only the runners in this tree, and that repository's workflow only sees its own pushes. So a fix here that such a runner should carry is finished only when that repository's Promote workflow has been run by hand on its main, which takes Forni's yes like any promote by hand. Until then that runner keeps firing an image built with the old tooling, beside a green run here.
+
 The rules live in `bin/runner/changed` and nowhere else; the workflow carries
 no path filter of its own. What a runner's directory keeps out of its image is
 one list in `bin/runner/lib.sh` (`RUNNER_CONTEXT_EXCLUDES`), read by both the
