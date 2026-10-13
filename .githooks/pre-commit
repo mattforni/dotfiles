@@ -138,23 +138,6 @@ if [[ ${#land[@]} -gt 0 ]] && [[ -x "$ROOT/bin/lint/runner-land-test" ]]; then
   fi
 fi
 
-# The shared library's node tests, only when one of its scripts or a test is
-# staged. They answer every request from a stubbed fetch and take a couple of
-# seconds. A machine without node skips them and CI still holds the gate.
-libtests=()
-for f in "${staged[@]}"; do
-  case "$f" in
-    runners/lib/*.mjs|runners/tst/*.test.mjs) libtests+=("$f") ;;
-  esac
-done
-
-if [[ ${#libtests[@]} -gt 0 ]] && command -v node >/dev/null 2>&1; then
-  if ! node --test "$ROOT"/runners/tst/*.test.mjs >/dev/null 2>&1; then
-    printf "${RED}[x]${NC} runner lib tests failed. Run node --test runners/tst/*.test.mjs to see which, or run again with --no-verify.\n" >&2
-    status=1
-  fi
-fi
-
 # Context size ratchet, only when an always loaded file is staged
 ctx=()
 for f in "${staged[@]}"; do

@@ -35,7 +35,7 @@ WORKDIR /home/runner
 
 COPY --chown=runner:runner entrypoint.sh /home/runner/entrypoint.sh
 COPY --chown=runner:runner prompt.md /home/runner/prompt.md
-# The shared library: runner.sh for the entrypoint, the pull scripts beside it.
+# The shared library: runner.sh for the entrypoint, the pull script beside it.
 COPY --chown=runner:runner lib/ /home/runner/lib/
 # The bundled renderer, at the first place runner.sh looks for it, and the
 # only renderer in the image since the jq one retired (ATE-563).
