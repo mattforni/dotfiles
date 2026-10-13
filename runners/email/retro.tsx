@@ -366,8 +366,8 @@ function leadRecord(row: FunnelRow): RecordStackItem {
 
 /**
  * A deal that heard back this week says so on the funnel, a Replied pill and
- * the day, rather than reading as a stage that held (Wynkoop Athletics at
- * Proposal in W41, with its 10-07 reply on the record).
+ * the day, rather than reading as a stage that held (a deal at Proposal in
+ * W41, with its reply that week on the record).
  */
 function dealRecord(row: FunnelRow): RecordStackItem {
 	const cash = alt(row.cash, "-");
