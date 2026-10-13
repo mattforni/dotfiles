@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Record a landing on the review scorecard: what each reviewer's findings came
-# to once triaged, and how long the merge was held.
+# Record a landing on the review scorecard: what the blocking findings (major
+# and above) came to once triaged, counted across every pass on the pull
+# request and not the last pass alone, and how long the merge was held.
 #
 # Usage: review/landed <repo> <pr> <reviewed-sha> [--fixed <spec>] [--declined <spec>]
 #                      [--held-min <minutes>]
 #
-# A spec is "claude:2,coderabbit:1", or a bare integer, which is attributed to
-# claude (the gate). One row is appended per reviewer named in either spec;
+# A spec is a bare integer, or "claude:2". One row is appended per reviewer
+# named in either spec, which is one row now that claude is the only reviewer;
 # a landing with nothing fixed or declined appends a single row with reviewer
 # "none" so the hold is still counted. Rows land in
 # $HOME/.local/state/review/scorecard.tsv; review/scorecard reads them back.

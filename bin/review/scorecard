@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# Print the review scorecard for a window: per reviewer, how many runs, how
-# many failed to run, how many findings, how many of those were fixed or
-# declined at landing; then the landings and the minutes held.
+# Print the review scorecard for a window: how many runs, how many failed to
+# run, how many findings and how many of them blocking (major
+# and above), how many were fixed or declined at landing; then the landings
+# and the minutes held. Rows written before 2026-10-13 carry no blocking
+# count, so that column undercounts a window reaching back past that day.
 #
 # Usage: review/scorecard [--since 7d|48h]
 #
 # Reads $HOME/.local/state/review/scorecard.tsv, written by review/run (one
-# row per reviewer per run) and review/landed (one row per reviewer per
-# landing).
+# row per run) and review/landed (one row per landing). Rows from the week
+# CodeRabbit and Codex also ran still print under their own names.
 set -euo pipefail
 
 # shellcheck source=bin/review/lib.sh
@@ -38,12 +40,12 @@ fi
 awk -F'\t' -v cutoff="$cutoff" '
   NR == 1 { next }
   $1 < cutoff { next }
-  # A reviewer that never started (no slot, not installed) is skipped, which
-  # is not a failure; one that started and did not reach a usable result is.
+  # A row that did not run and took no time never started, and counts as
+  # skipped; one that started and reached no usable result is a failure.
   # Seconds average over the runs that actually ran.
   $2 == "run" {
     r = $6; runs[r]++; seen[r] = 1
-    if ($7 == "true") { ran[r]++; findings[r] += $9; secs[r] += $13 }
+    if ($7 == "true") { ran[r]++; findings[r] += $9; secs[r] += $13; blocking[r] += $14 }
     else if ($13 + 0 == 0) { skipped[r]++ }
     else { failed[r]++ }
   }
@@ -53,11 +55,11 @@ awk -F'\t' -v cutoff="$cutoff" '
     if ($12 != "") held += $12
   }
   END {
-    printf "%-12s %5s %8s %7s %9s %6s %9s %8s\n", "reviewer", "runs", "skipped", "failed", "findings", "fixed", "declined", "avg s"
+    printf "%-12s %5s %8s %7s %9s %9s %6s %9s %8s\n", "reviewer", "runs", "skipped", "failed", "findings", "blocking", "fixed", "declined", "avg s"
     for (r in seen) {
       if (r == "none") continue
       avg = (ran[r] > 0) ? secs[r] / ran[r] : 0
-      printf "%-12s %5d %8d %7d %9d %6d %9d %8.0f\n", r, runs[r], skipped[r], failed[r], findings[r], fixed[r], declined[r], avg
+      printf "%-12s %5d %8d %7d %9d %9d %6d %9d %8.0f\n", r, runs[r], skipped[r], failed[r], findings[r], blocking[r], fixed[r], declined[r], avg
     }
     printf "\nlandings %d, held %d min total, window since %s\n", landings, held, cutoff
   }' "$REVIEW_SCORECARD"

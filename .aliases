@@ -20,9 +20,6 @@ alias sls="screen -ls"
 alias sra="screen -d -RR"
 alias sw="screen -wipe"
 
-# CodeRabbit
-alias cr="coderabbit"
-
 # Docker Aliases
 alias docker-clean='docker rm $(docker ps -a -q -f status=exited)'
 alias docker-clean-all='docker-stop; docker-clean; docker-clean-images'

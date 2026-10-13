@@ -53,7 +53,6 @@ cask "antigravity-ide" # The only IDE. Its cask puts antigravity-ide and agy-ide
 cask "bitwarden"
 cask "brave-browser"
 cask "claude"
-cask "coderabbit"
 cask "darktable"
 cask "docker-desktop"
 cask "gcloud-cli"
