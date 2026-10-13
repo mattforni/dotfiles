@@ -46,11 +46,12 @@ about 200 files and 4 PR reviews per hour. `tone_instructions` and custom
 present). Installing on a GitHub **Organization** funnels through a 14-day Pro
 Plus trial, then drops to Free; per the docs the org keeps working on Free after.
 
-## Local Reviews (CLI)
+## Local Reviews
 
-`coderabbit` (installed via the Brewfile cask). Authenticate once with
-`cr auth login`, then `coderabbit review --base main --agent` reviews the current
-branch against main and emits structured findings. Free tier, daily limits apply.
+The CodeRabbit CLI left the review gate on 2026-10-13 (ATE-635) and is no
+longer installed by the Brewfile. Local review is `~/bin/review/run`, whose
+rules live in [plugins/sdlc/reference/code-review.md](../plugins/sdlc/reference/code-review.md).
+What remains here is the pull request bot and the two configs it reads.
 
 ## Gotcha: pre-commit / pre-push lint hooks
 
