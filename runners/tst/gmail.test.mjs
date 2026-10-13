@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { beforeEach, test } from "node:test";
 
 /*
  * The gate on the Gmail request (runners/lib/gmail.mjs): a refusal for rate,
@@ -21,7 +21,9 @@ process.env.GMAIL_TRIES = "4";
 process.env.GMAIL_BACKOFF_MS = "5";
 process.env.GMAIL_BACKOFF_CAP_MS = "2000";
 // Importing must not run the pull: with no arguments it would exit 2 here.
-const { gmail } = await import("../lib/gmail.mjs");
+const { gmail, positive, resetPause } = await import("../lib/gmail.mjs");
+// No row inherits a pause an earlier one earned, so their order cannot matter.
+beforeEach(() => resetPause());
 
 const TOKEN = "ya29.INVENTEDTOKEN";
 const answer = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers });
@@ -105,6 +107,37 @@ test("a 500 and a lost connection are each tried again", async () => {
     assert.deepEqual(lost.value, { id: "m3" });
     assert.equal(lost.calls.length, 2);
     assert.match(lost.lines[0], /^gmail: network error, waiting /);
+});
+
+test("a rejection with no network code fails at once and never repeats its message", async () => {
+    // The shape fetch gives a header it refuses: the message quotes the header.
+    const planted = `Headers.append: "Bearer ${TOKEN} PLANTEDSECRET" is an invalid header value.`;
+    const { error, calls, lines } = await stubbed([() => { throw new TypeError(planted); }, () => answer({ id: "never" })], () => gmail(TOKEN, "messages/m8"));
+    assert.equal(calls.length, 1);
+    assert.equal(lines.length, 0);
+    assert.equal(error.message, "Gmail request failed on messages/m8: TypeError");
+    assert.ok(!error.message.includes("PLANTEDSECRET") && !error.message.includes(TOKEN));
+});
+
+test("a rejection that carries a network code is tried again, and only the code is kept", async () => {
+    const reset = () => { throw Object.assign(new TypeError(`fetch failed for ${TOKEN}`), { cause: { code: "UND_ERR_SOCKET" } }); };
+    const once = await stubbed([reset, () => answer({ id: "m9" })], () => gmail(TOKEN, "messages/m9"));
+    assert.deepEqual(once.value, { id: "m9" });
+    assert.equal(once.calls.length, 2);
+    const always = await stubbed([reset], () => gmail(TOKEN, "messages/m9"));
+    assert.equal(always.error.message, "Gmail network error on messages/m9 after 4 tries: UND_ERR_SOCKET");
+});
+
+test("an answer that is ok and not JSON fails at once, never as a lost connection", async () => {
+    const { error, calls } = await stubbed([() => new Response("<html>gateway</html>", { status: 200 })], () => gmail(TOKEN, "messages/m10"));
+    assert.equal(calls.length, 1);
+    assert.ok(error instanceof SyntaxError);
+});
+
+test("a setting that is not a finite positive number falls back to its default", () => {
+    for (const bad of [undefined, "", "abc", "0", "-3", "Infinity", "NaN"]) assert.equal(positive(bad, 6), 6, `for ${bad}`);
+    assert.equal(positive("4", 6), 4);
+    assert.equal(positive("2.5", 6), 2.5);
 });
 
 test("a permission 403 and any other 4xx fail at once, in one call", async () => {

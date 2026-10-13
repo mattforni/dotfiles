@@ -43,9 +43,16 @@ let terms = [];
 // BACKOFF_CAP_MS: about two and a half minutes of patience by default, which
 // outlasts the one minute window with room to spare. The three are read from
 // the environment so a test can run in milliseconds.
-const TRIES = Number(process.env.GMAIL_TRIES || 6);
-const BACKOFF_MS = Number(process.env.GMAIL_BACKOFF_MS || 5000);
-const BACKOFF_CAP_MS = Number(process.env.GMAIL_BACKOFF_CAP_MS || 60000);
+// A setting that is not a finite positive number falls back to its default:
+// a typo in the environment must never become a loop with no end or a wait
+// of no length.
+export const positive = (raw, fallback) => {
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+const TRIES = Math.max(1, Math.floor(positive(process.env.GMAIL_TRIES, 6)));
+const BACKOFF_MS = positive(process.env.GMAIL_BACKOFF_MS, 5000);
+const BACKOFF_CAP_MS = positive(process.env.GMAIL_BACKOFF_CAP_MS, 60000);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // The moment before which no request leaves. One refusal for rate moves it
@@ -54,6 +61,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // closed door. It is one moment for both mailboxes, which costs nothing
 // because they are read one after the other.
 let notBefore = 0;
+// For the tests alone, so a pause one row earned never reaches the next.
+export const resetPause = () => { notBefore = 0; };
 
 // A 403 is also how Gmail says a token may not read the mailbox, and that
 // one never clears by waiting. Only a refusal that names rate or quota, by
@@ -91,9 +100,14 @@ export async function gmail(token, path, params = {}) {
             ({ ok, status } = res);
             retryAfter = res.headers?.get("retry-after") || "";
         } catch (error) {
-            // A fetch that rejects never reached an answer. Its code is all
-            // that is kept, since nothing else it says is this file's to print.
-            text = String(error?.cause?.code || error?.message || "fetch failed");
+            // A lost connection rejects with a cause that carries a code
+            // (ECONNRESET, ENOTFOUND, UND_ERR_SOCKET), and that code is all
+            // that is kept. Anything else is a fault no wait will mend, and
+            // its message is never repeated: the one fetch writes for a
+            // header it refuses quotes the header, token and all.
+            const code = error?.cause?.code;
+            if (typeof code !== "string" || !code) throw new Error(`Gmail request failed on ${path}: ${error?.constructor?.name || "Error"}`);
+            text = code;
         }
         if (ok) return JSON.parse(text);
         const rate = isRateRefusal(status, text);
@@ -115,7 +129,8 @@ export async function gmail(token, path, params = {}) {
 }
 
 // A small pool, so a mailbox with a few hundred hits is read in a minute
-// rather than serially and without tripping the per user rate limit.
+// rather than serially. It can still meet the per user rate limit, which
+// other clients share; the request above is what waits that out.
 async function pool(items, size, fn) {
     const out = new Array(items.length);
     let next = 0;
