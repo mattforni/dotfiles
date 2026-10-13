@@ -130,7 +130,7 @@ restates it.
   session owns, never push to main directly.
 - Foreground commands only; kill anything you start before reporting.
 - Your report: merged SHA (or the bail reason with links), review cycles run,
-  and the finding and blocking counts against **the branch SHA you reviewed**,
+  and the finding, blocking, and unrated counts against **the branch SHA you reviewed**,
   named separately from the merged SHA. A squash merge writes a new commit
   that no review ever saw, so attributing findings to it claims a review that
   did not happen. Then what you fixed, what you declined and why, and the

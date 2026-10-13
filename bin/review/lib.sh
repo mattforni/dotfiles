@@ -42,6 +42,12 @@ review_state_dir() {
 scorecard_append() {
   review_state_dir >/dev/null
   [[ -s "$REVIEW_SCORECARD" ]] || printf '%s\n' "$REVIEW_HEADER" >"$REVIEW_SCORECARD"
+  # A scorecard begun before a column was added keeps its rows and takes the
+  # new header; the readers go by position and the old rows end one short.
+  if [[ "$(head -n1 "$REVIEW_SCORECARD")" != "$REVIEW_HEADER" ]]; then
+    { printf '%s\n' "$REVIEW_HEADER"; tail -n +2 "$REVIEW_SCORECARD"; } >"$REVIEW_SCORECARD.new" \
+      && mv "$REVIEW_SCORECARD.new" "$REVIEW_SCORECARD"
+  fi
   local row field
   row=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   for field in "$@"; do field="${field//$'\t'/ }"; field="${field//$'\n'/ }"; row+=$'\t'"${field//$'\r'/ }"; done
@@ -49,21 +55,31 @@ scorecard_append() {
 }
 
 # The shape the Claude reviewer is asked to return, appended to the system
-# prompt of the headless run. The /code-review skill has a finding shape of
-# its own with no severity in it, and for the first week that shape won: 1136
-# of 1145 findings arrived ungraded and the normaliser stamped each one major
-# (ATE-635). So the prompt names severity first, says the skill's shape lacks
-# it, and defines the grades by what the change does in ordinary use. Read by
-# bin/review/run.
+# prompt of the headless run. It is a request the run mostly never reads: the
+# /code-review skill runs as a local command with a finding shape of its own
+# (file, line, summary, failure_scenario) and no model turn in which a system
+# prompt could add a key, so the normaliser accepts that shape and the grade
+# comes from the pass below. Read by bin/review/run.
 # shellcheck disable=SC2034
-REVIEW_SHAPE_PROMPT='Report the review findings as your entire final reply: one JSON array, no prose before or after it, no code fence. Each element has exactly these five keys, and an element missing any of them is invalid: "severity", "file" (repo relative path), "line" (integer), "summary" (one sentence), "failure_scenario" (concrete inputs or state and the wrong outcome). The /code-review skill has no severity in its own finding shape; add it to every finding here. Severity is one of "critical", "major", "minor", "info", and it grades the defect, not how sure you are of it. critical: in ordinary use the change loses or corrupts data, leaks a secret, or opens a security hole. major: the change as written does the wrong thing on a path that runs in ordinary use, with inputs or state you can name and that will occur, or it breaks a documented rule the change was meant to follow. minor: a real defect that needs unusual input or state to show, a missing guard against a failure nothing in the change makes likely, a hardening suggestion, or a stale comment or doc line. info: reuse, simplification, efficiency, naming. A hardening suggestion is never major. A defect the change neither introduced nor touched is at most minor. When a finding sits between two grades, give the lower. An empty array means no findings.'
+REVIEW_SHAPE_PROMPT='Report the review findings as your entire final reply: one JSON array, no prose before or after it, no code fence. Each element has exactly these keys: "file" (repo relative path), "line" (integer), "summary" (one sentence), "failure_scenario" (concrete inputs or state and the wrong outcome). An empty array means no findings.'
+
+# The grading pass. For the first week no grade arrived at all: 1136 of 1145
+# findings came back with no severity and the normaliser stamped each one
+# major, so every finding blocked and no run in 174 was clean (ATE-635). A
+# second, short headless run now grades the findings from their own text,
+# with a schema, which a plain prompt honours where the skill does not. Read
+# by bin/review/run.
+# shellcheck disable=SC2034
+REVIEW_GRADE_PROMPT='Grade each code review finding in the JSON array below, one grade per finding, in the same order. A grade is one of "critical", "major", "minor", "info", and it grades the defect, not how sure anyone is of it. critical: on a path that can be reached, the change loses or corrupts data, leaks a secret, or opens a security hole. major: the change as written does the wrong thing on a path that runs in ordinary use, with inputs or state that will occur, or it breaks a documented rule the change was meant to follow. minor: a real defect that needs unusual input or state to show, a missing guard against a failure nothing in the change makes likely, a hardening suggestion, or a stale comment or doc line. info: reuse, simplification, efficiency, naming, leftover wording. A hardening suggestion is never major. A defect the change neither introduced nor touched is at most minor. When a finding sits between major and minor, give minor; never grade data loss, a leaked secret, or a security hole below major. Use no tools and read no files: grade from the text of each finding alone.'
+# shellcheck disable=SC2034
+REVIEW_GRADE_SCHEMA='{"type":"object","properties":{"grades":{"type":"array","items":{"type":"string","enum":["critical","major","minor","info"]}}},"required":["grades"]}'
 
 # normalise_claude <raw.json> <rc> <sha> <seconds> <files>
 # Prints finding lines then exactly one complete line for the claude reviewer.
 # The complete line counts the findings, the blocking ones (critical or
-# major), and the unrated ones: findings that arrived without a severity and
-# were graded by the fallback rule, which fails closed (major when a failure
-# scenario is given). An unrated count above zero means the shape prompt lost.
+# major), and the unrated ones: findings that arrived without a severity,
+# which is nearly all of them, and are stamped major so an ungraded finding
+# fails closed. apply_grades then replaces the stamp with a real grade.
 # raw.json is the --output-format json document from a headless run. Three
 # shapes are accepted: structured_output.findings (the schema applied), a JSON
 # array in the result text (optionally fenced), and anything else, which is
@@ -81,15 +97,15 @@ normalise_claude() {
     def complete(ran; reason; n; b; u):
       {type:"complete", reviewer:"claude", ran:ran, reason:reason, findings:n, blocking:b, unrated:u, sha:$sha, seconds:$secs, files:$files};
     def blocking: map(select(.severity == "critical" or .severity == "major")) | length;
-    def unrated: map(select((.severity // "") as $s | (grades | index($s)) == null)) | length;
-    def finding(sev):
+    def rated: (.severity // null) as $s | ($s | type) == "string" and (grades | index($s)) != null;
+    def unrated: map(select(rated | not)) | length;
+    def finding:
       {type:"finding", reviewer:"claude",
-       severity:((.severity // sev) as $s | if (grades | index($s)) != null then $s else "major" end),
+       severity:(if rated then .severity else "major" end),
        fileName:(.file // .fileName // ""),
        line:(.line // null),
        summary:(.summary // ""),
        failure_scenario:(.failure_scenario // "")};
-    def fallback_sev: if ((.failure_scenario // "") | length) > 0 then "major" else "minor" end;
     def unfence: tostring | gsub("^\\s*```(json)?\\s*"; "") | gsub("\\s*```\\s*$"; "");
     # The findings array is accepted in two forms only: the whole reply
     # (optionally fenced), or one fenced json block inside prose. A bare
@@ -105,13 +121,36 @@ normalise_claude() {
       complete(false; ((.result // "error") | tostring | gsub("\\s+"; " ") | .[0:200]); 0; 0; 0)
     elif ((.structured_output.findings? // null) | objects_only | type) == "array" then
       (.structured_output.findings | unrated) as $u
-      | (.structured_output.findings | map(finding("major"))) as $f
+      | (.structured_output.findings | map(finding)) as $f
       | ($f[]), complete(true; ""; ($f | length); ($f | blocking); $u)
     elif (((.result // "") | arr) | type) == "array" then
       (((.result // "") | arr) | unrated) as $u
-      | (((.result // "") | arr) | map(finding(fallback_sev))) as $f
+      | (((.result // "") | arr) | map(finding)) as $f
       | ($f[]), complete(true; ""; ($f | length); ($f | blocking); $u)
     else
       complete(false; ("unparseable output: " + ((.result // "") | tostring | gsub("\\s+"; " ") | .[0:200])); 0; 0; 0)
     end' "$raw"
+}
+
+# apply_grades <stream.jsonl> <grades.raw>
+# Prints the stream with each finding's severity replaced by the grading
+# pass's grade and the complete line's counts recomputed. grades.raw is the
+# --output-format json document of the grading run. Anything short of one
+# valid grade per finding (no structured output, a count that does not match,
+# a grade outside the four) prints the stream untouched, so the findings keep
+# their major stamp and the unrated count says the grading did not happen.
+apply_grades() {
+  local stream="$1" graw="$2" grades
+  grades=$(jq -c '(.structured_output.grades? // null) | if type == "array" then . else empty end' "$graw" 2>/dev/null) || grades=""
+  [[ -n "$grades" ]] || { cat "$stream"; return 0; }
+  jq -cs --argjson g "$grades" '
+    map(select(.type == "finding")) as $f
+    | (map(select(.type == "complete")) | first) as $c
+    | if ($g | length) != ($f | length)
+         or ($g | all(.[]; . as $x | ($x | type) == "string" and (["critical","major","minor","info"] | index($x)) != null) | not)
+      then .[]
+      else ([range(0; $f | length)] | map($f[.] + {severity: $g[.]})) as $n
+        | ($n[]),
+          ($c + {blocking: ($n | map(select(.severity == "critical" or .severity == "major")) | length), unrated: 0})
+      end' "$stream"
 }

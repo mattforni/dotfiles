@@ -7,7 +7,7 @@
 #                      [--held-min <minutes>]
 #
 # A spec is a bare integer, or "claude:2". One row is appended per reviewer
-# named in either spec;
+# named in either spec, which is one row now that claude is the only reviewer;
 # a landing with nothing fixed or declined appends a single row with reviewer
 # "none" so the hold is still counted. Rows land in
 # $HOME/.local/state/review/scorecard.tsv; review/scorecard reads them back.

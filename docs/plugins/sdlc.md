@@ -47,7 +47,7 @@ claude plugin install sdlc@skillset
 
 - **Git** for version control
 - **GitHub CLI** (`gh`) for PR operations
-- **`~/bin/review/run`** (homebase) for the review gate used by land. It runs Claude Code's built in `/code-review` headless on the subscription, plus the CodeRabbit CLI when a slot is free and Codex when installed, and prints one findings stream. The rules live in the plugin's [reference/code-review.md](../../plugins/sdlc/reference/code-review.md); vendor mechanics in `~/Eudaimonia/Admin/Tools/<vendor>.md`.
+- **`~/bin/review/run`** (homebase) for the review gate used by land. It runs Claude Code's built in `/code-review` headless on the subscription, grades the findings in a second short pass, and prints one findings stream. The rules live in the plugin's [reference/code-review.md](../../plugins/sdlc/reference/code-review.md); vendor mechanics in `~/Eudaimonia/Admin/Tools/<vendor>.md`.
 - **Linear CLI** (`linear`) for Linear integration (optional, used by plan and design). Install via `brew install schpet/tap/linear`.
 
 ## Skill Details

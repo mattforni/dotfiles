@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Print the review scorecard for a window: per reviewer, how many runs, how
-# many failed to run, how many findings and how many of them blocking (major
+# Print the review scorecard for a window: how many runs, how many failed to
+# run, how many findings and how many of them blocking (major
 # and above), how many were fixed or declined at landing; then the landings
 # and the minutes held. Rows written before 2026-10-13 carry no blocking
 # count, so that column undercounts a window reaching back past that day.
@@ -8,8 +8,8 @@
 # Usage: review/scorecard [--since 7d|48h]
 #
 # Reads $HOME/.local/state/review/scorecard.tsv, written by review/run (one
-# row per reviewer per run) and review/landed (one row per reviewer per
-# landing).
+# row per run) and review/landed (one row per landing). Rows from the week
+# CodeRabbit and Codex also ran still print under their own names.
 set -euo pipefail
 
 # shellcheck source=bin/review/lib.sh
@@ -40,8 +40,8 @@ fi
 awk -F'\t' -v cutoff="$cutoff" '
   NR == 1 { next }
   $1 < cutoff { next }
-  # A reviewer that never started (no slot, not installed) is skipped, which
-  # is not a failure; one that started and did not reach a usable result is.
+  # A run that never started (nothing changed against the base) is skipped,
+  # which is not a failure; one that started and reached no usable result is.
   # Seconds average over the runs that actually ran.
   $2 == "run" {
     r = $6; runs[r]++; seen[r] = 1

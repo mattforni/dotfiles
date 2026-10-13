@@ -182,7 +182,7 @@ After a successful merge, remove the PR's worktree (`git worktree remove`, never
 ```text
 PR #<number> landed
 Cycles: <N> iterate, <M> decline
-Review: <N> review/run runs; claude <F> findings, <B> blocking, on <reviewed SHA>
+Review: <N> review/run runs; claude <F> findings, <B> blocking, <U> unrated, on <reviewed SHA>
 Merged: <SHA>
 Recorded: review/landed <repo> <pr> <reviewed SHA> --fixed ... --declined ... --held-min <X>
 Status: clean

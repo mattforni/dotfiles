@@ -2,8 +2,9 @@
 # Review a checkout with the claude reviewer and print one JSONL stream: a
 # review_context line, finding lines (reviewer, severity, fileName, line,
 # summary, failure_scenario), and one complete line (reviewer, ran, reason,
-# findings, blocking, unrated, sha, seconds, files). The exit code is 0 only
-# when the complete line says ran:true.
+# findings, blocking, unrated, sha, seconds, files). The findings come from
+# the /code-review skill and their severities from a short grading pass after
+# it. The exit code is 0 only when the complete line says ran:true.
 #
 # Usage: review/run <worktree> [--base <ref>] [--effort low|medium|high|max]
 #                   [--max-findings N] [--timeout <seconds>]
@@ -18,8 +19,9 @@ set -euo pipefail
 . "$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 # The default budget leaves room inside a 600 second Bash call for the fetch
-# (30 s), the kill grace (15 s), and process startup.
-worktree=""; base=""; effort="high"; max=""; budget=480
+# (30 s), the grading pass (60 s), two kill graces (15 s each), and process
+# startup.
+worktree=""; base=""; effort="high"; max=""; budget=450
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --base) base=$(value "$@") || exit 1; shift 2 ;;
@@ -91,9 +93,22 @@ run_claude() {
     --output-format json --append-system-prompt "$REVIEW_SHAPE_PROMPT" \
     --permission-mode dontAsk --no-session-persistence \
     --allowedTools "Read,Grep,Glob,Bash(git diff *),Bash(git log *),Bash(git show *),Bash(git blame *)" \
-    >"$dir/raw" 2>"$dir/err" || rc=$?
+    </dev/null >"$dir/raw" 2>"$dir/err" || rc=$?
   echo "$rc" >"$dir/rc"
   echo $(( $(date +%s) - start )) >"$dir/seconds"
+}
+
+# Grade the findings in a stream: one grade each, from the finding's own text,
+# with no tools. A grading run that fails leaves no usable grades.raw, and
+# apply_grades then passes the stream through with every finding still major.
+grade_claude() { # <stream.jsonl> <dir>
+  local stream="$1" dir="$2" findings
+  findings=$(jq -cs 'map(select(.type == "finding") | {file: .fileName, line, summary, failure_scenario})' "$stream")
+  timeout -k 15 60 claude -p "$REVIEW_GRADE_PROMPT"$'\n\n'"$findings" \
+    --output-format json --json-schema "$REVIEW_GRADE_SCHEMA" \
+    --system-prompt "You grade code review findings and reply with the grades only." \
+    --permission-mode dontAsk --no-session-persistence --tools "" \
+    </dev/null >"$dir/grades.raw" 2>>"$dir/err" || true
 }
 
 dir="$tmp/claude"
@@ -109,6 +124,17 @@ out="$tmp/out.jsonl"
 if ! normalise_claude "$dir/raw" "$(cat "$dir/rc" 2>/dev/null || echo 1)" "$sha" "$secs" "$files" >"$out"; then
   jq -cn --arg sha "$sha" --argjson secs "$secs" --argjson files "$files" \
     '{type:"complete",reviewer:"claude",ran:false,reason:"normaliser failed; raw kept under the state dir",findings:0,blocking:0,unrated:0,sha:$sha,seconds:$secs,files:$files}' >"$out"
+fi
+
+# Grade whatever arrived without a severity, which in practice is every
+# finding. Nothing to grade, or a grading run that failed, leaves the stream
+# as the normaliser wrote it.
+if [[ "$(jq -cs 'map(select(.type == "complete")) | first | .unrated // 0' "$out")" -gt 0 ]]; then
+  grade_claude "$out" "$dir"
+  cp "$dir/grades.raw" "$state/runs/$stamp-grades.raw" 2>/dev/null || true
+  if apply_grades "$out" "$dir/grades.raw" >"$tmp/graded.jsonl" && [[ -s "$tmp/graded.jsonl" ]]; then
+    mv "$tmp/graded.jsonl" "$out"
+  fi
 fi
 
 # One scorecard row, from the complete line.

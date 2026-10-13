@@ -47,15 +47,16 @@ expect "schema: sha carried"       'map(select(.type=="complete"))[0].sha' abc12
 expect "schema: blocking counted"  'map(select(.type=="complete"))[0].blocking' 1
 expect "schema: none unrated"      'map(select(.type=="complete"))[0].unrated' 0
 
-# 2. No schema: a fenced JSON array in the result text, severity by rule.
+# 2. No schema: a fenced JSON array in the result text, the shape the skill
+# really returns. No severity arrives, so every finding is stamped major.
 cat >"$tmp/raw" <<'EOF'
 {"type":"result","subtype":"success","is_error":false,"result":"```json\n[{\"file\":\"a.sh\",\"line\":1,\"summary\":\"bad\",\"failure_scenario\":\"data loss\"},{\"file\":\"b.sh\",\"line\":2,\"summary\":\"meh\",\"failure_scenario\":\"\"}]\n```"}
 EOF
 normalise_claude "$tmp/raw" 0 def456 60 2 >"$tmp/out"
 expect "array: ran true"          'map(select(.type=="complete"))[0].ran' true
-expect "array: fallback severity" 'map(select(.type=="finding")) | map(.severity) | join(",")' "major,minor"
+expect "array: stamped major"     'map(select(.type=="finding")) | map(.severity) | join(",")' "major,major"
 expect "array: fileName mapped"   'map(select(.type=="finding"))[0].fileName' a.sh
-expect "array: fallback blocks"   'map(select(.type=="complete"))[0].blocking' 1
+expect "array: all blocking"      'map(select(.type=="complete"))[0].blocking' 2
 expect "array: unrated counted"   'map(select(.type=="complete"))[0].unrated' 2
 
 # 2b. Prose around one fenced json block is accepted; the block is the payload.
@@ -122,11 +123,50 @@ normalise_claude "$tmp/raw" 124 ccc 540 1 >"$tmp/out"
 expect "nojson: ran false"   'map(select(.type=="complete"))[0].ran' false
 expect "nojson: rc in reason" 'map(select(.type=="complete"))[0].reason | contains("rc 124")' true
 
+# 2g. A severity that is not a string (an array holding a valid grade) is
+# unrated, not kept as is.
+cat >"$tmp/raw" <<'EOF'
+{"type":"result","subtype":"success","is_error":false,"result":"[{\"severity\":[\"minor\"],\"file\":\"a.sh\",\"line\":1,\"summary\":\"x\",\"failure_scenario\":\"y\"}]"}
+EOF
+normalise_claude "$tmp/raw" 0 arrsev 40 1 >"$tmp/out"
+expect "array severity: stamped major" 'map(select(.type=="finding"))[0].severity' major
+expect "array severity: unrated"       'map(select(.type=="complete"))[0].unrated' 1
+
+# 3g. The grading pass: one valid grade per finding replaces the stamp and
+# recounts the complete line.
+cat >"$tmp/raw" <<'EOF'
+{"type":"result","subtype":"success","is_error":false,"result":"[{\"file\":\"a.sh\",\"line\":1,\"summary\":\"wrong\",\"failure_scenario\":\"every run\"},{\"file\":\"b.sh\",\"line\":2,\"summary\":\"guard\",\"failure_scenario\":\"odd input\"},{\"file\":\"c.sh\",\"line\":3,\"summary\":\"reuse\",\"failure_scenario\":\"none\"}]"}
+EOF
+normalise_claude "$tmp/raw" 0 tograde 40 3 >"$tmp/stream"
+echo '{"is_error":false,"structured_output":{"grades":["major","minor","info"]}}' >"$tmp/grades"
+apply_grades "$tmp/stream" "$tmp/grades" >"$tmp/out"
+expect "graded pass: severities"  'map(select(.type=="finding")) | map(.severity) | join(",")' "major,minor,info"
+expect "graded pass: blocking"    'map(select(.type=="complete"))[0].blocking' 1
+expect "graded pass: unrated"     'map(select(.type=="complete"))[0].unrated' 0
+expect "graded pass: one complete" 'map(select(.type=="complete")) | length' 1
+expect "graded pass: findings kept" 'map(select(.type=="complete"))[0].findings' 3
+
+# 3h. Grades that cannot be trusted leave the stream untouched (fail closed):
+# a count that does not match, a grade outside the four, no structured output,
+# and a grading run that left nothing behind.
+for bad in '{"structured_output":{"grades":["minor","minor"]}}' \
+           '{"structured_output":{"grades":["minor","low","info"]}}' \
+           '{"is_error":true,"result":"usage limit"}' ''; do
+  printf '%s' "$bad" >"$tmp/grades"
+  apply_grades "$tmp/stream" "$tmp/grades" >"$tmp/out"
+  expect "bad grades (${bad:0:40}): still blocking" 'map(select(.type=="complete"))[0].blocking' 3
+  expect "bad grades (${bad:0:40}): still unrated"  'map(select(.type=="complete"))[0].unrated' 3
+done
+
 # 6. The scorecard writes its header once and then one row per append.
 scorecard_append run acme/repo "" abc claude true "" 2 "" "" "" 75 1
 scorecard_append landing acme/repo 12 abc claude "" "" "" 1 1 9 ""
 lines=$(wc -l <"$REVIEW_SCORECARD" | tr -d ' ')
 if [[ "$lines" == 3 && "$(head -n1 "$REVIEW_SCORECARD")" == "$REVIEW_HEADER" ]]; then pass=$((pass + 1)); else fail=$((fail + 1)); echo "  FAIL scorecard: want header plus 2 rows, got $lines lines"; fi
+# A scorecard begun under an older header takes the new one and keeps its rows.
+{ printf 'ts\tkind\n'; tail -n +2 "$REVIEW_SCORECARD"; } >"$tmp/old" && cp "$tmp/old" "$REVIEW_SCORECARD"
+scorecard_append run acme/repo "" def claude true "" 0 "" "" "" 60 0
+if [[ "$(head -n1 "$REVIEW_SCORECARD")" == "$REVIEW_HEADER" && "$(wc -l <"$REVIEW_SCORECARD" | tr -d ' ')" == 4 ]]; then pass=$((pass + 1)); else fail=$((fail + 1)); echo "  FAIL scorecard: old header not replaced in place"; fi
 cols=$(sed -n 2p "$REVIEW_SCORECARD" | awk -F'\t' '{print NF}')
 if [[ "$cols" == 14 ]]; then pass=$((pass + 1)); else fail=$((fail + 1)); echo "  FAIL scorecard: want 14 columns, got $cols"; fi
 
