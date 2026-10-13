@@ -43,7 +43,7 @@
 # What this runner knows about the business it does not carry (ATE-656,
 # 2026-10-13). The portal sweep and the fold are the Atelic repo's own
 # (plugins/atelic/scripts/lib/hubspot.mjs and pipeline.mjs), run from the
-# Atelic checkout the run already has, so the hand run commands there and
+# Atelic checkout the run already has, so the manual commands there and
 # this run read one copy of the funnel rules. No image carries them: a rule
 # changed in that repo is live on the next run, with no promote.
 #

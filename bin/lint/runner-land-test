@@ -9,7 +9,7 @@
 #
 # The first is driven against a throwaway bare repository that moves between
 # the clone and the push, the way main moves during a twenty minute run: a
-# second clone, the desk, pushes commits of its own, to files the run never
+# second clone, another session's, pushes commits of its own, to files the run never
 # touched and to the run's own file. The old retry fetched one commit deep
 # and rebased, and a rebase across a shallow boundary reports add/add
 # conflicts on files the commit never touched, so the roster rode the mail as
@@ -54,7 +54,7 @@ check() { local label="$1"; shift; if "$@"; then ok "$label"; else bad "$label";
 
 REAL_GIT="$(command -v git)"
 ORIGIN="$SCRATCH/origin.git"
-DESK="$SCRATCH/desk"
+OTHER="$SCRATCH/other"
 RUN="$SCRATCH/run"
 ROSTER="$SCRATCH/built-roster.md"
 DEST="Outreach/2026-W01-roster.md"
@@ -66,34 +66,34 @@ export RUNNER_LAND_PAUSE=0
 
 g() { "$REAL_GIT" -c user.name=test -c user.email=test@example.invalid "$@"; }
 
-# Usage: desk_push <message> <path> <content> [<path> <content>...]
-# The desk writes files and pushes them to main, as another session would.
-desk_push() {
+# Usage: other_push <message> <path> <content> [<path> <content>...]
+# The other session writes files and pushes them to main.
+other_push() {
     local message="$1"; shift
-    g -C "$DESK" pull --quiet origin main >/dev/null 2>&1 || return 1
+    g -C "$OTHER" pull --quiet origin main >/dev/null 2>&1 || return 1
     while (( $# )); do
-        mkdir -p "$DESK/$(dirname "$1")"
-        printf '%s\n' "$2" > "$DESK/$1"
+        mkdir -p "$OTHER/$(dirname "$1")"
+        printf '%s\n' "$2" > "$OTHER/$1"
         shift 2
     done
-    g -C "$DESK" add -A && g -C "$DESK" commit --quiet --no-verify -m "$message" && g -C "$DESK" push --quiet origin HEAD:main
+    g -C "$OTHER" add -A && g -C "$OTHER" commit --quiet --no-verify -m "$message" && g -C "$OTHER" push --quiet origin HEAD:main
 }
 
-# Usage: fresh. A new origin with a little history, a desk clone of it, and
+# Usage: fresh. A new origin with a little history, the other session's clone of it, and
 # the run's own clone, one commit deep, as the runner makes it. RUN_HEAD is
 # where the run's checkout stands, which no landing may move.
 fresh() {
-    rm -rf "$ORIGIN" "$DESK" "$RUN" "$SCRATCH/moves" "$SCRATCH/pushes"
+    rm -rf "$ORIGIN" "$OTHER" "$RUN" "$SCRATCH/moves" "$SCRATCH/pushes"
     g init --quiet --bare --initial-branch=main "$ORIGIN" || return 1
-    g clone --quiet "$ORIGIN" "$DESK" 2>/dev/null || return 1
-    g -C "$DESK" checkout --quiet -B main
-    mkdir -p "$DESK/Outreach" "$DESK/plugins/skill"
-    printf 'The motion.\n' > "$DESK/Outreach/README.md"
-    printf '# The skeleton\n\n## Placed Ahead\n' > "$DESK/$DEST"
-    printf 'An older roster.\n' > "$DESK/Outreach/2025-W52-roster.md"
-    printf 'A skill.\n' > "$DESK/plugins/skill/SKILL.md"
-    g -C "$DESK" add -A && g -C "$DESK" commit --quiet --no-verify -m "the repo" && g -C "$DESK" push --quiet origin HEAD:main || return 1
-    desk_push "a second commit" plugins/skill/SKILL.md "A skill, edited." || return 1
+    g clone --quiet "$ORIGIN" "$OTHER" 2>/dev/null || return 1
+    g -C "$OTHER" checkout --quiet -B main
+    mkdir -p "$OTHER/Outreach" "$OTHER/plugins/skill"
+    printf 'The motion.\n' > "$OTHER/Outreach/README.md"
+    printf '# The skeleton\n\n## Placed Ahead\n' > "$OTHER/$DEST"
+    printf 'An older roster.\n' > "$OTHER/Outreach/2025-W52-roster.md"
+    printf 'A skill.\n' > "$OTHER/plugins/skill/SKILL.md"
+    g -C "$OTHER" add -A && g -C "$OTHER" commit --quiet --no-verify -m "the repo" && g -C "$OTHER" push --quiet origin HEAD:main || return 1
+    other_push "a second commit" plugins/skill/SKILL.md "A skill, edited." || return 1
     g clone --quiet --depth 1 "file://$ORIGIN" "$RUN" || return 1
     RUN_HEAD="$(g -C "$RUN" rev-parse HEAD)"
     printf '# The W01 roster\n\nBuilt by the run.\n' > "$ROSTER"
@@ -126,25 +126,25 @@ echo "A main that moved between the clone and the push"
 fresh || bad "could not build the repositories"
 # Other sessions land work while the run is going: an edit to a file the
 # clone holds, an edit to an older roster, and a new file.
-desk_push "a skill edit" plugins/skill/SKILL.md "A skill, edited again." \
-    && desk_push "an older roster and a new file" Outreach/2025-W52-roster.md "An older roster, amended." plugins/skill/routine.md "A new file." \
-    || bad "the desk could not push"
-desk_tip="$(g -C "$ORIGIN" rev-parse main)"
+other_push "a skill edit" plugins/skill/SKILL.md "A skill, edited again." \
+    && other_push "an older roster and a new file" Outreach/2025-W52-roster.md "An older roster, amended." plugins/skill/routine.md "A new file." \
+    || bad "the other session could not push"
+other_tip="$(g -C "$ORIGIN" rev-parse main)"
 if land; then ok "the file lands with no rebase"; else bad "the file lands with no rebase ($(why))"; fi
 check "main holds the built roster" holds_roster
-[[ "$(g -C "$ORIGIN" rev-parse main^ 2>/dev/null)" == "$desk_tip" ]] && ok "the commit sits on the desk's tip" || bad "the commit sits on the desk's tip"
+[[ "$(g -C "$ORIGIN" rev-parse main^ 2>/dev/null)" == "$other_tip" ]] && ok "the commit sits on the other session's tip" || bad "the commit sits on the other session's tip"
 [[ "$(on_main plugins/skill/SKILL.md)" == "A skill, edited again." && "$(on_main plugins/skill/routine.md)" == "A new file." ]] \
-    && ok "the desk's work is all still there" || bad "the desk's work is all still there"
+    && ok "the other session's work is all still there" || bad "the other session's work is all still there"
 [[ "$(tip_files)" == "1" ]] && ok "the commit touches one file" || bad "the commit touches one file ($(tip_files))"
 check "the run's own checkout never moved, though main did" run_untouched
 
 echo "A main that moved on the roster's own path"
 fresh || bad "could not build the repositories"
 # Somebody places one more name on the week's skeleton while the run is going.
-desk_push "a name placed ahead" "$DEST" "# The skeleton, with a name placed ahead" || bad "the desk could not push"
-desk_tip="$(g -C "$ORIGIN" rev-parse main)"
+other_push "a name placed ahead" "$DEST" "# The skeleton, with a name placed ahead" || bad "the other session could not push"
+other_tip="$(g -C "$ORIGIN" rev-parse main)"
 if land; then bad "the run's copy is not pushed over theirs"; else ok "the run's copy is not pushed over theirs, so the caller falls back"; fi
-[[ "$(on_main "$DEST")" == "# The skeleton, with a name placed ahead" && "$(g -C "$ORIGIN" rev-parse main)" == "$desk_tip" ]] \
+[[ "$(on_main "$DEST")" == "# The skeleton, with a name placed ahead" && "$(g -C "$ORIGIN" rev-parse main)" == "$other_tip" ]] \
     && ok "main still holds their change, and nothing was pushed" || bad "main still holds their change, and nothing was pushed"
 check "and the log says why" said "changed on main while the run was going"
 check "the run's own checkout never moved" run_untouched
@@ -154,25 +154,25 @@ fresh && land || bad "could not land the first time ($(why))"
 if land; then ok "a second landing of the same file succeeds"; else bad "a second landing of the same file succeeds ($(why))"; fi
 check "and commits nothing" said "nothing to commit"
 
-# A git that counts the run's pushes and lets the desk push one more commit
+# A git that counts the run's pushes and lets the other session push one more commit
 # just before each of the first of them, as many times as the file
 # $SCRATCH/moves says: main moving in the moment between the run's fetch and
-# its push. The run's pushes are the ones that are not the desk's.
+# its push. The run's pushes are the ones that are not the other session's.
 mkdir -p "$SCRATCH/bin"
 cat > "$SCRATCH/bin/git" <<FAKE
 #!/usr/bin/env bash
 case " \$* " in
   *" push "*)
-    if [[ " \$* " != *" $DESK "* ]]; then
+    if [[ " \$* " != *" $OTHER "* ]]; then
         echo x >> "$SCRATCH/pushes"
         left=\$(cat "$SCRATCH/moves" 2>/dev/null || echo 0)
         if (( left > 0 )); then
             echo \$((left - 1)) > "$SCRATCH/moves"
-            "$REAL_GIT" -C "$DESK" pull --quiet origin main >/dev/null 2>&1
-            echo "moved \$left" > "$DESK/moved.txt"
-            "$REAL_GIT" -C "$DESK" add -A
-            "$REAL_GIT" -C "$DESK" -c user.name=test -c user.email=test@example.invalid commit --quiet --no-verify -m "main moves again"
-            "$REAL_GIT" -C "$DESK" push --quiet origin HEAD:main
+            "$REAL_GIT" -C "$OTHER" pull --quiet origin main >/dev/null 2>&1
+            echo "moved \$left" > "$OTHER/moved.txt"
+            "$REAL_GIT" -C "$OTHER" add -A
+            "$REAL_GIT" -C "$OTHER" -c user.name=test -c user.email=test@example.invalid commit --quiet --no-verify -m "main moves again"
+            "$REAL_GIT" -C "$OTHER" push --quiet origin HEAD:main
         fi
     fi ;;
 esac
@@ -187,7 +187,7 @@ fresh || bad "could not build the repositories"
 echo 2 > "$SCRATCH/moves"
 if counted; then ok "the third try lands"; else bad "the third try lands ($(why))"; fi
 check "main holds the built roster" holds_roster
-[[ "$(on_main moved.txt)" == "moved 1" ]] && ok "on top of both of the desk's pushes" || bad "on top of both of the desk's pushes ($(on_main moved.txt))"
+[[ "$(on_main moved.txt)" == "moved 1" ]] && ok "on top of both of the other session's pushes" || bad "on top of both of the other session's pushes ($(on_main moved.txt))"
 check "and the log says which try" said "landed on its new tip on try 3"
 check "the run's own checkout never moved" run_untouched
 

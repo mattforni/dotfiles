@@ -223,7 +223,7 @@ gmail_pull() {
 # handed three finished tables to write one sentence about. The code is the
 # Atelic repo's own: plugins/atelic/scripts/lib/hubspot.mjs, whose `week`
 # command is this pull. It is the one copy of the funnel rules, read by the
-# plumber runner and by the hand run commands in that repo too (ATE-656,
+# plumber runner and by the manual commands in that repo too (ATE-656,
 # 2026-10-13; the file lived in this repo's runners/lib until then). So the
 # pull needs an Atelic checkout: the one already at $ATELIC (this machine's
 # own, or a read only mount of it in a container rehearsal), or a shallow
