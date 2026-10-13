@@ -35,7 +35,7 @@ Anchor on LEVELS.md: the current state table, the Background paragraph, the last
 
 ### Phase 2: Audit
 
-One row per unattended routine (today: retro, recruiter, plumber; the roster lives in homebase `runners/`). Sources: `gcloud run jobs executions list --job <name> --project atelic --region us-central1`, `gcloud scheduler jobs list --project atelic --location us-central1`, the failed execution's log tail, and the runner mail in the consuming mailbox. Three columns:
+One row per unattended routine (today: retro, recruiter, plumber; retro and recruiter live in homebase `runners/`, the plumber in the Atelic repo's `runners/`). Sources: `gcloud run jobs executions list --job <name> --project atelic --region us-central1`, `gcloud scheduler jobs list --project atelic --location us-central1`, the failed execution's log tail, and the runner mail in the consuming mailbox. Three columns:
 
 - **Fired on schedule** (Y/N): the scheduler's last attempt matched an execution that started on time.
 - **Consumed without a rerun** (Y/N): the block that reads the mail ran on the scheduled fire, with no hand rerun between.

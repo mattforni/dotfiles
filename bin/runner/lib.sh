@@ -206,6 +206,26 @@ runner_source_path() {
     printf '%s' "$abs"
 }
 
+# Usage: runner_source_ignored <runner-dir> <absolute-file>
+# Whether a file is one its repository ignores, which is 0 for yes. A single
+# file a manifest names has to be one git can see: promote's dirty gate asks
+# git status about every source, and status says nothing at all about an
+# ignored file, so one named by a `context` line or brought as an agent
+# would ship in an image from a tree the gate had called clean, and no
+# commit would ever hold what shipped. A tracked file is never reported
+# here, whatever pattern it matches, and a runner in no repository has no
+# gate to route around, so both are 1.
+#
+# A directory source is not asked: its ignored contents (an install, a
+# build) are that directory's own business, and the staging already leaves
+# .git and .env.local out of one.
+runner_source_ignored() {
+    local fence
+    fence="$(runner_source_root "$1")"
+    env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX -u GIT_COMMON_DIR \
+        git -C "$fence" check-ignore -q -- "$2" 2>/dev/null
+}
+
 # Usage: runner_lexical_path <path>
 # A path with its `.` and `..` folded away by the text alone, no filesystem
 # asked, and returns non zero when it climbs above where it started. This is
@@ -285,7 +305,7 @@ runner_entrypoint_lib() { printf '%s/runners/lib/runner.sh' "$(runner_repo_root)
 # the brew build, which has no plugin context and answers every skill with
 # "Unknown skill".
 #
-# The Plumber shipped without the first two and every scheduled run died in
+# A runner shipped without the first two and every scheduled run died in
 # preflight on "hs not on PATH" (2026-08-31). launchd starts a job with an
 # empty environment and never sources a shell, so this cannot be inherited and
 # has to be stated. Keep it identical in launchagents/*.plist, which cannot
@@ -446,6 +466,17 @@ runner_execute() {
     export SKIP_PULLS="$reuse"
     [[ -z "$week" ]] || export WEEK="$week"
 
+    # Where the entrypoint side library is, for every runner alike. One in
+    # this repository finds runner.sh a level above itself and never reads
+    # this. One that lives in another repository has no such neighbour, so
+    # its entrypoint tries $RUNNER_LIB_DIR/runner.sh after the copy an image
+    # sets beside it, and the scaffold then finds the pull scripts and this
+    # runner's bundle from that same directory. Set unconditionally: a value
+    # inherited from a shell that ran another checkout's commands would
+    # source that checkout's library under this one's driver.
+    RUNNER_LIB_DIR="$(dirname "$(runner_entrypoint_lib)")"
+    export RUNNER_LIB_DIR
+
     # This runner's own bundle, built or refreshed before the entrypoint is
     # started, since on this path nothing else builds one and the scaffold
     # only ever reads the file. A bundle that will not build is said out loud
@@ -575,8 +606,8 @@ runner_build_context() {
     # scripts, and whatever joins them. Files only: this copy is flat, so a
     # directory under runners/lib makes cp fail and every promote and every
     # container run of every runner dies here, staging its context. That
-    # shipped once (ATE-630, the unit tests, 2026-10-07; they live in
-    # runners/tst now) and bin/lint/runners refuses it since.
+    # shipped once (ATE-630, the unit tests, 2026-10-07) and bin/lint/runners
+    # refuses it since.
     cp "$root/runners/lib/"* "$staged/lib/" || return 1
     # The node renderer's sources, as a sibling of lib/ rather than a child,
     # because the flat copy above carries files and not directories. Its
@@ -596,6 +627,10 @@ runner_build_context() {
                 src="$(runner_source_path "$dir" "$p" "the agent '$n' in $dir/agents, at")" || return 1
                 if [[ ! -f "$src" ]]; then
                     echo "the agent '$n' in $dir/agents names $p, which is not a file" >&2
+                    return 1
+                fi
+                if runner_source_ignored "$dir" "$src"; then
+                    echo "the agent '$n' in $dir/agents names $p, which git ignores; the dirty gate cannot see an ignored file, so it is never staged" >&2
                     return 1
                 fi
             else
@@ -643,6 +678,10 @@ runner_build_context() {
                 (cd "$src" && tar --exclude=.git --exclude=.env.local -cf - .) \
                     | (cd "$staged/$dest" && tar -xf -) || return 1
             else
+                if runner_source_ignored "$dir" "$src"; then
+                    echo "the context source '${entry%%:*}' in $dir/context is a file git ignores; the dirty gate cannot see an ignored file, so it is never staged" >&2
+                    return 1
+                fi
                 cp "$src" "$staged/$dest" || return 1
             fi
         done < <(runner_context_entries < "$dir/context")

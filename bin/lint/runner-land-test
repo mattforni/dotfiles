@@ -3,7 +3,7 @@
 # and that only ever fail on a morning nobody is watching:
 #
 #   runner_land_file   lands one file on a remote's main for a run whose
-#                      shallow clone main has moved past (the plumber's roster)
+#                      shallow clone main has moved past (a runner's weekly roster)
 #   runner_each_line   runs a function once per line, whatever quotes the
 #                      line carries and however long it is (the site pull)
 #

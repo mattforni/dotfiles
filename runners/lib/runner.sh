@@ -270,7 +270,7 @@ meta_line() {
 #   ATTACHMENT                  empty; a runner sets it to a file to send along
 #   PROMPT_FILE                 prompt.md beside the entrypoint
 #   LIB_DIR                     the shared library (render.cjs, gmail.mjs,
-#                               linear.mjs, text.mjs), wherever it was found
+#                               text.mjs), wherever it was found
 #   status fail_reason result rc
 # and traps runner_finish on EXIT.
 runner_init() {
