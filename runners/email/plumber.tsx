@@ -549,9 +549,9 @@ const WEEK_COLUMNS = ["Week", "Tracked", "Opened", "Open Rate", "Responded", "Re
 /**
  * The weeks the table may draw: completed weeks only, never the week the
  * mail is for nor any after it (Forni, 2026-10-12, "only include completed
- * weeks"). A Monday run is handed the week it runs in, still empty, and the
- * W42 mail drew it as its first row, "0 (-31)". A Sunday night run for the
- * week ahead is handed only completed weeks, so nothing is dropped there. A
+ * weeks"). A run inside its own week is handed the week it runs in, still empty, and the
+ * W42 mail drew it as its first row, "0 (-31)". A run on the night before
+ * its week is handed only completed weeks, so nothing is dropped there. A
  * week the renderer cannot read as YYYY-Www is kept, since it cannot be
  * judged. `weeks` is newest first, so what is dropped is always its head.
  */

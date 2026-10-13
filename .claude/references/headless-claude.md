@@ -116,7 +116,7 @@ and the plist's own `EnvironmentVariables`. Keep them identical.
 `.zshrc` finalizes with. `$HOME/.local/share/mise/shims` is how a non
 interactive shell reaches what `mise activate` wires for an interactive one, and
 the real `hs` lives there as an npm global under mise managed node. The
-Plumber shipped with neither and every Monday run died in preflight on `hs
+Plumber shipped with neither and every scheduled run died in preflight on `hs
 not on PATH` (2026-08-31); fixing only the first would have found the shim and
 then failed one layer down. launchd starts a job with an empty environment and
 never sources a shell, so none of this can be inherited.
