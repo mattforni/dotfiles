@@ -64,7 +64,7 @@ Mechanics (hard-won, do not rediscover):
 - Imported transactions land **unapproved**, and categorizing does NOT approve them. Approve as the final step (`approved: true`) or the changes never flow into budget views. This is the usual cause of "my changes aren't showing up."
 - YNAB clients use delta sync. After API writes, an open app or web session needs a hard refresh to display them.
 - Payee names carry HTML entities (`&amp;`). Decode before matching.
-- Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`, Atelic `e0d471f0-bf90-452c-8232-b1153b7411be`.
+- Budget IDs: Personal `a55b71e6-76e4-46d9-a5c6-336b36ddd14c`. The Atelic budget's id is in `~/Eudaimonia/Craft/Vocation/Atelic/Tools/ynab.md`.
 - **Check direct import status on every run, before trusting the queue.** `ynab accounts list --budget <id>` carries `direct_import_linked` and `direct_import_in_error` per account; any open, linked account in error is the first thing reported, since its missing rows make the queue and every spend number look lighter than they are. BofA Checking and BofA Cash Rewards sat silently in error until 2026-09-27.
 
 Conventions:
@@ -125,8 +125,6 @@ Payee corrections (session 2026-10-12):
 - `Chase Annual CC Fee` ANNUAL FEE REFUND -> `💳 Card Fees`, cancelling the fee it refunds.
 - `Alzheimer's Association` -> `🤲 Giving`.
 - A BofA `DES:CASHREWARD` deposit -> `Inflow: Ready to Assign`.
-- Atelic: the `Anthropic Claude` descriptor is reassigned to the existing `Anthropic` payee, `🤖 AI Tools`; `ChatGPT` (OPENAI) -> `🤖 AI Tools`.
-- Atelic: an `Improper City` charge with no memo gets its attendee from Forni while it is fresh (2026-10-08 was `🤝 w/ Kendall, Gnar Nights`).
 
 Payee cleanup mechanics (session 2026-07-18, hard-won):
 
@@ -135,25 +133,4 @@ Payee cleanup mechanics (session 2026-07-18, hard-won):
 - **The API cannot delete payees** (no DELETE endpoint). Emptied/orphan payees are removed by YNAB's own maintenance (unused payees auto-purge), but not on demand. For an immediate purge of hundreds of orphans, use the app's Manage Payees screen (multi-select delete / Combine). Native Renaming Rules to strip Venmo quoted-note sprawl are also app-only.
 - Only bother merging clusters where **two or more spellings both have transactions**; single-used-plus-orphan clusters need no action since the orphan auto-purges. Most Venmo note-variants (e.g. Azam Mughal 15 variants, 0 txns) are pure orphans.
 
-Atelic budget policy (session 2026-07-23, tree rebuilt with an accountant's hat; these govern the Atelic budget only, not Personal):
-
-- **Tree shape:** four groups. 💾 Software (🤖 AI Tools, 🖥️ Infrastructure, 🧰 Productivity), 🛠️ Operations (📶 Connectivity, 🚗 Mileage, 🤝 Client Meals, 🛫 Travel, 📦 Supplies, 🔖 Fees and Filings, 🏢 Workspace), 🧑‍🎓 Education (📚 Learning, 🎤 Conferences), 📑 Admin (💵 Salary, 🏦 SEP IRA, 💸 Payroll Taxes, 💼 CO Unemployment, 🙋 Personal). Vendor level detail lives in payee reports, never in per vendor categories.
-- **🙋 Personal is the pressure valve.** Any personal charge that hits the business card books there (a nondeductible owner distribution). No repayment gymnastics, no forced deduction. Precedents: Spotify, solo coffee and meals, Denver Tool Library, Yung Pueblo, driver license renewals, Costco membership, Archipelago, GEICO history, Toggle renters history, Anthem dental history, Strava.
-- **Meals gate (hard rule): every meal or coffee charge on Atelic requires a memo naming who and why** (`🤝 w/ Titus, working dinner`). No memo means ask Forni one at a time; solo eating books to 🙋 Personal. Himchuli Indian defaults to Titus, still confirm. IRS substantiation is amount, date, place, purpose, attendee; the transaction carries the first three, the memo the last two.
-- **Car is the mileage method.** No car insurance on Atelic; Forni logs client trips in MileIQ and the business reimburses per mile into 🚗 Mileage. GEICO must never reappear on the business card.
-- **Starlink is 100% business** (field connectivity for remote work, not home internet; home internet is $30 through the HOA and off the books). Phone and cloud storage (Mint Mobile, iCloud, Google One) run at 100% as solo practice tools.
-- **Gusto service fees are 🔖 Fees and Filings, not 💵 Salary.** Salary is only actual payroll. Wyoming Secretary of State annual reports also land in Fees and Filings.
-- **History recategorization is management books, not tax amendment.** Filed returns are untouched by YNAB moves; do not agonize over closed years when reclassifying history.
-- The mechanics rule above (write through the CLI behind the shim, approve as the final step, hard refresh open clients) applies doubly here: **the web app's stale delta sync will claim categories still have transactions after CLI moves; hard refresh the page before deleting categories in the app.** Category create and delete are app only, driven via agent-browser on the personal Chrome identity (`--identity personal`, signed in to YNAB once by hand in its headed window), with the YNAB tab's URL read back before each create or delete; rename and move go through `ynab categories update <id> --name --category-group-id` with history intact.
-
-Atelic payee corrections (session 2026-09-27):
-
-- `Cloudflare`, `Google Cloud`, `Google Workspace` -> `🖥️ Infrastructure` (Forni, 2026-10-05: "Google Workspace is not productivite. It's Infrastructure."). `Granola` -> `🤖 AI Tools`.
-- `Corporate Filings` (the billing name of Registered Agents Inc) and `Colorado Secretary of State` -> `🔖 Fees and Filings`.
-- `ACH Deposit ... MONEYLINE` (Fidelity MoneyLine) -> `Inflow: Ready to Assign`, a funding move from the RYLLC Fidelity account, not revenue. Every deposit mints a new payee name, so match the pattern.
-- `Improper City` on Atelic is `🤝 Client Meals`, memo `☕️ Client Coffee`: it is where Forni buys coffee for clients, never solo coffee (Forni, 2026-09-27, when all 27 charges since 2025-10 moved off `🙋 Personal`). Ask who was there while it is fresh and put the name in the memo; the generic memo stands when nobody can say. On the Personal budget it stays `☕️ Cafés`.
-- `Venmo` on Atelic is always a question. Tax preparation is `🔖 Fees and Filings` with a memo naming the preparer (precedent: $400 to Jeff, CPA, for the 2025 business return).
-- A purchase made to test a prospect's own checkout is `📦 Supplies`, memo naming the prospect (precedent: Outdoors Geek).
-- Parking, fares, and in flight wifi on a prospecting trip are `🛫 Travel`, memo naming the trip (precedents: Aspen parking, the August airport A Line fare and Alaska wifi). The legs of one trip follow the trip.
-- A transfer from FirstTech Operating to `BofA Checking` (the Atelic Bank of America account ending 6605, opened September 2026 and linked 2026-09-27) is company cash between business accounts, never an owner draw: match the legs as a transfer, or skip with a memo when unmatched.
-- A coffee bought at a meeting is `🤝 Client Meals` even when Forni buys only his own, memo naming who and why (precedent: `Crema Coffee House`, `🤝 w/ Kolton, re: Gremlin`, 2026-10-01). For an `Improper City` charge with no memo, check the calendar for a client event that day before falling back to the generic `☕️ Client Coffee`.
+**The Atelic budget's rules live in the Atelic repo, at `~/Eudaimonia/Craft/Vocation/Atelic/Tools/ynab.md`** (its policy, its payee corrections, its budget id). Read that file before grooming the Atelic budget; nothing in this section governs it except the mechanics above, which hold for both budgets.
