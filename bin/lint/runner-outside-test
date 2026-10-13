@@ -17,7 +17,8 @@
 # line copies a file or a directory to its dest, and is refused when its
 # source leaves the repository (by `..`, by an absolute path, through a
 # symlink), when its dest leaves the context or is taken, and when it is not
-# source:dest; the runner's own email/ lands beside the shared renderer and a
+# source:dest; a single file git ignores is refused, as a context source or
+# as an agent by path; the runner's own email/ lands beside the shared renderer and a
 # clash of names is refused; and, where the renderer's packages are
 # installed, the runner's page builds into a bundle of its own that never
 # passes for another directory's.
@@ -250,6 +251,31 @@ rm "$RUNNER/email/jq.ts"
 mkdir -p "$RUNNER/email/tst"
 printf 'not the test\n' > "$RUNNER/email/tst/render.test.mjs"
 refused "a clash in a folder under it" "has the name of a file in runners/email"
+
+echo "A single file git ignores is never staged"
+# The dirty gate asks git status about every source, and status is silent on
+# an ignored file, so one of those would ship from a tree the gate called
+# clean. A file is refused; a tracked file is never ignored, whatever pattern
+# it matches; a directory's ignored contents are its own business.
+fresh
+printf 'shared/one.mjs\n' > "$FAKE/.gitignore"
+refused "a context file git ignores" "is a file git ignores"
+check "and it was not staged" test ! -e "$STAGED/extra/one.mjs"
+git -C "$FAKE" add -f shared/one.mjs >/dev/null 2>&1
+if stage; then ok "the same file, once tracked, stages"; else bad "the same file, once tracked, stages ($(tr '\n' ' ' < "$WORK/err"))"; fi
+fresh
+printf 'definitions/own.md\n' > "$FAKE/.gitignore"
+refused "an agent by path git ignores" "which git ignores"
+check "and it was not staged" test ! -e "$STAGED/agents/own.md"
+fresh
+printf 'shared/rules/fold.mjs\n' > "$FAKE/.gitignore"
+if stage; then ok "a directory source with an ignored file under it still stages"; else bad "a directory source with an ignored file under it still stages ($(tr '\n' ' ' < "$WORK/err"))"; fi
+fresh
+printf 'shared/one.mjs\ndefinitions/own.md\n' > "$FAKE/.gitignore"
+rm -rf "$FAKE/.git"
+printf 'prompt.md:copy.md\n' > "$RUNNER/context"
+printf '%s\n' "$REAL_AGENT" > "$RUNNER/agents"
+if stage; then ok "a runner in no repository has no gate to route around"; else bad "a runner in no repository has no gate to route around ($(tr '\n' ' ' < "$WORK/err"))"; fi
 
 echo "What the dirty gate asks about"
 fresh

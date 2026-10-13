@@ -27,7 +27,7 @@ Return exactly this shape (every key present; arrays may be empty):
     {"day": "Tue 08-25", "vehicle": "Domino's"}
   ],
   "takeout_read": "one or two sentences: the confirmed count and any pattern (clustering, day of week, late night), or that there is too little data",
-  "atelic_read": "two or three sentences on the outreach week: the first send and bump counts against the five and five target, what the replies actually say, and the one company most worth attention on Monday",
+  "atelic_read": "two or three sentences on the outreach week: the first send and bump counts against the target atelic.json carries for each, what the replies actually say, and the one company most worth attention on Monday",
   "blind_spots": "one or two sentences naming what this draft cannot see: how the body felt, anything the sources do not carry"
 }
 

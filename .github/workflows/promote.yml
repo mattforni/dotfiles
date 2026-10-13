@@ -26,7 +26,6 @@ on:
         default: all
         options:
           - all
-          - plumber
           - recruiter
           - retro
 
@@ -121,7 +120,10 @@ jobs:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(needs.plan.outputs.runners) }}
-    # One promote per runner at a time. The script ends by deleting every
+    # One promote per runner at a time, among the runners of this repository:
+    # a group holds within one repository, so a runner that lives in another
+    # (its own workflow promotes it, with this same script) must never share
+    # a name with one here. The script ends by deleting every
     # other image of the runner, so two of them racing could each delete what
     # the other just pointed the job at. A later promote waits its turn and is
     # never cancelled mid build; GitHub keeps one waiting per group, so a third

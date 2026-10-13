@@ -37,7 +37,12 @@ while (( $# )); do
     esac
 done
 
-dir="$(runner_dir "$name")"
+# Checked, because this script runs without `set -e` (the block below has to
+# reach its closing banner whatever the runner did) and runner_dir reports a
+# bad name by exiting its own subshell: unchecked, a name that resolves to
+# nothing went on with an empty directory, logged to runner-.log, and ran
+# /entrypoint.sh. The reason is already on stderr.
+dir="$(runner_dir "$name")" || exit 1
 # A path names a runner as well as a name does, and either way the name used
 # from here on is the directory's own.
 name="$(basename "$dir")"

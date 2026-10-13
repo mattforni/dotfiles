@@ -24,9 +24,9 @@ jobs:
         with:
           globs: "**/*.{md,markdown}"
 
-  # The node renderer the runners mail their pages through. It stays green
-  # only once @atelic-action/ui is published and runners/email/package-lock.json
-  # is committed beside it, since `npm ci` refuses to run without a lockfile.
+  # The node renderer the runners mail their pages through. `npm ci` installs
+  # exactly what runners/email/package-lock.json pins, @atelic-action/ui among
+  # it, so a pin bumped without its lockfile fails here.
   renderer:
     name: Runner email renderer
     runs-on: ubuntu-latest
@@ -38,18 +38,11 @@ jobs:
         with:
           persist-credentials: false
 
-      # Node 20, the version the runner images ship and the version the bundle
-      # targets, so the gate runs what production runs.
+      # Node 24, the version the runner images ship (node:24-slim) and the
+      # version the bundle targets, so the gate runs what production runs.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "20"
-
-      # The Linear read the plumber hands the Pipeline mail's fold
-      # (runners/lib/linear.mjs): no dependency to install, so it runs ahead
-      # of the install and fails in seconds. The fold and the portal sweep
-      # are the Atelic repo's and are tested there.
-      - name: Runner lib tests
-        run: node --test ../tst/linear.test.mjs
+          node-version: "24"
 
       - name: Install
         run: npm ci
@@ -97,7 +90,7 @@ jobs:
       # A scheduled runner's PATH is stated in two files that cannot read each
       # other, and a plist names its runner as a bare XML string. Both drift
       # silently and both surface at 06:00 on a morning nobody is watching,
-      # which is how the Plumber went a week without once reaching its agent.
+      # which is how one runner went a week without once reaching its agent.
       - name: Check runners
         run: ./bin/lint/runners
 
@@ -115,8 +108,8 @@ jobs:
       - name: Test a runner outside this repository
         run: ./bin/lint/runner-outside-test
 
-      # A run lands its one file (the plumber's roster) on a main that moved
-      # while it ran, and reads its site list a line at a time. Both failed
+      # A run may land one file (a roster, say) on a main that moved while it
+      # ran, and read a list a line at a time. Both failed
       # in silence for weeks: a rebase across a shallow clone, and xargs
       # stopping at an apostrophe. A throwaway bare repository that moves
       # between the clone and the push holds the first; a list with quotes

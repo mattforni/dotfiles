@@ -36,8 +36,8 @@ Groom, every write). Before auditing, also read:
    Eudy and homebase since the last entry's date, the newest auto memory
    entries, and `wc -lc` on the four always on files against the last
    Load line.
-2. **Audit.** One row per unattended routine in homebase `runners/`
-   (retro, recruiter, plumber today). Sources, in order: `gcloud run jobs
+2. **Audit.** One row per unattended routine: retro and recruiter in homebase
+   `runners/`, and the plumber in the Atelic repo's `runners/`. Sources, in order: `gcloud run jobs
    executions list --job <name> --project atelic --region us-central1`,
    `gcloud scheduler jobs list --project atelic --location us-central1`,
    a failed execution's log tail through `gcloud logging read`, and the

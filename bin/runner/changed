@@ -14,20 +14,26 @@
 #                                        own runner's page and no other
 #   bin/runner/promote, bin/runner/lib.sh  every runner (they decide what ships)
 #   runners/<name>/                      that runner, unless every changed path
-#                                        there is one that never ships
+#                                        there is one that never ships (its
+#                                        README, mounts, out/, .build/,
+#                                        .env.local, and email/tst/)
 #   .claude/agents/<x>.md                each runner whose agents manifest lists x
 #   a path a manifest names              each runner whose context manifest has
 #                                        it as a source, or whose agents manifest
 #                                        brings an agent from it
 #
-# Only runners in this repository are ever printed. One that lives in another
-# repository is promoted by that repository's own workflow, with these same
-# commands, and nothing here can see it.
+# Without -C only runners in this repository are ever printed. One that lives
+# in another repository is promoted by that repository's own workflow, which
+# checks this one out and asks this same script about its own tree with -C:
+# the runners are read from runners/<name>/ there, and its manifests name what
+# else its images are built from. Asked that way the shared rules above match
+# nothing, since those paths are this repository's, so a change here to
+# runners/lib/ or runners/email/ is never an answer about a runner there.
 #
 # What an entrypoint reads from another repository at run time is in no image
-# and so in no rule here: the funnel rules the plumber and the retro run live
-# in the Atelic repo and are cloned by the run, so a change there is live on
-# the next run and promotes nothing.
+# and so in no rule here: the retro runs the funnel rules from a clone of the
+# repository that holds them, so a change there is live on its next run and
+# promotes nothing.
 #
 # Runners and manifests are read from the tree at <head>, never from a list
 # kept here, so a new runner is covered the day its Dockerfile lands. A base
@@ -48,7 +54,7 @@ while (( $# )); do
     case "$1" in
         -C)        repo="${2:-}"; [[ -n "$repo" ]] || die "-C needs a directory"; shift 2 ;;
         --all)     all=1; shift ;;
-        -h|--help) sed -n '2,37p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*)        die "unknown option $1" ;;
         *)
             # An empty base is a real argument here (a workflow hands one over
@@ -138,6 +144,11 @@ is_runner() { has_line "$every" "$1"; }
 never_ships() {
     local rest="$1" e
     [[ "$rest" != README.md ]] || return 0
+    # A runner that keeps its page in its own email/ folder keeps the page's
+    # tests, fixtures and goldens under email/tst/. They are staged beside
+    # the renderer, and the image's first stage copies one built file
+    # forward, so they are inputs to no image, as runners/email/tst/ is not.
+    [[ "$rest" != email/tst/* ]] || return 0
     for e in $RUNNER_CONTEXT_EXCLUDES; do
         [[ "$e" != agents && "$e" != context ]] || continue
         [[ "$rest" == "$e" || "$rest" == "$e"/* ]] && return 0

@@ -33,7 +33,7 @@ for (const { runner, fixture } of CASES) {
 }
 
 /*
- * The width gate on the two new text twins. The goldens only prove the text
+ * The width gate on the recruiter's text twin. The goldens only prove the text
  * has not moved; they cannot say it was right to begin with, and the first
  * recruiter twin was not: fixtures full of short invented strings froze a
  * layout that ran to 172 columns on a real draft and butted a long company
@@ -80,118 +80,6 @@ test("a long company name never runs into its reason", () => {
 	assert.ok(!lines[reasonAt].includes(lastCompanyWord), "with none of the company on the reason's line");
 });
 
-/*
- * What a count line says about its drafts (ATE-630). The goldens freeze the
- * mixed case; these hold the rule: a line speaks for its own names, from the
- * fires that went, and says nothing about drafts when none did.
- */
-const plumberDraft = () => JSON.parse(readFileSync(new URL("../fixtures/plumber.json", import.meta.url), "utf8"));
-const countLines = (draft) => renderRaw("plumber", "text", JSON.stringify(draft)).stdout.split("\n").filter((line) => /^\s+\d+\. (Second touch|First touches)/.test(line));
-
-test("a count line claims only the drafts that fired for its own names", () => {
-	assert.deepEqual(countLines(plumberDraft()).map((line) => line.replace(/^\s+\d+\. /, "")), [
-		"Second touch to people who opened: 1 draft ready",
-		"First touches: 12 of 15 a week, 1 of 12 drafts ready",
-		"Second touch to people who have not opened: 1",
-	]);
-});
-
-test("a dry run, a missing token, and a week with no fires make no claim about drafts", () => {
-	for (const outcome of ["dry run", "not fired", "failed"]) {
-		const draft = plumberDraft();
-		for (const fire of draft.drafting.fires) fire.outcome = outcome;
-		assert.ok(countLines(draft).every((line) => !/draft/.test(line)), `${outcome}: ${countLines(draft).join(" | ")}`);
-	}
-	const none = plumberDraft();
-	delete none.drafting;
-	assert.ok(countLines(none).every((line) => !/draft/.test(line)));
-});
-
-test("a fire is one draft, spent on one name, never claimed by two people at one company", () => {
-	const draft = plumberDraft();
-	const [opened, unopened] = draft.owed.bump;
-	// A second person at the opened name's company, on the other second touch line and on the same one.
-	draft.owed.bump.push({ ...unopened, person: "Second Contact", company: opened.company, company_url: opened.company_url, contact_url: null });
-	draft.owed.bump.push({ ...opened, person: "Third Contact", contact_url: null });
-	assert.deepEqual(countLines(draft).filter((line) => /Second touch/.test(line)).map((line) => line.replace(/^\s+\d+\. /, "")), [
-		"Second touch to people who opened: 2, 1 of 2 drafts ready",
-		"Second touch to people who have not opened: 2",
-	]);
-});
-
-/*
- * Completed weeks only (ATE-652, Forni 2026-10-12). Every golden renders for
- * 2026-W05, so W05 is the week the mail is for and is never a row; the
- * fixture hands it over the way a Monday run did, W01 to W05.
- */
-const weekRowsOf = (draft) =>
-	renderRaw("plumber", "text", JSON.stringify(draft))
-		.stdout.split("\n")
-		.filter((line) => /^\s+W\d+\s/.test(line))
-		.map((line) => line.trim().split(/\s+/)[0]);
-const sendWeek = (year, n) => ({ week: `${year}-W${String(n).padStart(2, "0")}`, tracked: 10 + n, opened: n, rate: null, responded: 0, respond_rate: null });
-
-test("the week table never draws the week the mail is for, and keeps the oldest completed week", () => {
-	const text = renderRaw("plumber", "text", JSON.stringify(plumberDraft())).stdout;
-	const rows = text.split("\n").filter((line) => /^\s+W\d+\s/.test(line));
-	assert.deepEqual(weekRowsOf(plumberDraft()), ["W4", "W3", "W2", "W1"]);
-	assert.ok(!/^\s+W5\s/m.test(text), "the current week is never a row");
-	assert.match(rows[0], /^\s+W4\s+30 \(\+10\)\s+18 \(\+6\)\s+60% \(0%\)/, "the newest completed week reads its change off the one before");
-	assert.match(rows[3], /^\s+W1\s+10\s+6\s+60%\s+1\s+10%$/, "the oldest completed week is drawn, with no change since nothing completed sits beneath it");
-});
-
-test("a run handed only completed weeks draws all but the oldest, which gives the last row its change", () => {
-	// The run on the night before its week: five completed weeks, four rows.
-	const draft = plumberDraft();
-	draft.health.weeks = [sendWeek(2025, 52), ...[1, 2, 3, 4].map((n) => sendWeek(2026, n))];
-	assert.deepEqual(weekRowsOf(draft), ["W4", "W3", "W2", "W1"]);
-	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout;
-	assert.ok(!/^\s+W52\s/m.test(text), "the fifth completed week is never drawn");
-	assert.match(text, /^\s+W1\s+11 \(-51\)/m, "and the oldest row drawn reads its change off it");
-});
-
-test("the week table draws the completed weeks it is handed less one, however many arrive", () => {
-	const draft = plumberDraft();
-	draft.health.weeks = [40, 41, 42, 43, 44, 45, 46].map((n) => sendWeek(2025, n));
-	assert.deepEqual(weekRowsOf(draft), ["W46", "W45", "W44", "W43", "W42", "W41"], "seven handed over, six drawn");
-	draft.health.weeks = [3, 4].map((n) => sendWeek(2026, n));
-	assert.deepEqual(weekRowsOf(draft), ["W4"]);
-	draft.health.weeks = [4].map((n) => sendWeek(2026, n));
-	assert.deepEqual(weekRowsOf(draft), ["W4"], "a lone week is drawn as it is");
-	draft.health.weeks = [4, 5, 6].map((n) => sendWeek(2026, n));
-	assert.deepEqual(weekRowsOf(draft), ["W4"], "the week the mail is for and any after it are never drawn");
-	draft.health.weeks = Array.from({ length: 30 }, (_, i) => sendWeek(2025, i + 1));
-	assert.equal(weekRowsOf(draft).length, 12, "and a runner that sends a year by mistake is capped");
-});
-
-test("a run handed no completed week draws no table at all", () => {
-	const draft = plumberDraft();
-	draft.health.weeks = [sendWeek(2026, 5)];
-	const flag = draft.health.flag;
-	assert.ok(flag, "the fixture carries a health flag");
-	draft.health.flag = "";
-	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout;
-	assert.deepEqual(weekRowsOf(draft), []);
-	assert.ok(!text.includes("Opens and Responses by Week"));
-	assert.ok(!renderRaw("plumber", "html", JSON.stringify(draft)).stdout.includes("Opens and Responses by Week"));
-	// A flag still reaches the mail when no week is drawn.
-	draft.health.flag = flag;
-	assert.ok(renderRaw("plumber", "text", JSON.stringify(draft)).stdout.replace(/\s+/g, " ").includes(flag.slice(0, 30)));
-	assert.ok(renderRaw("plumber", "html", JSON.stringify(draft)).stdout.includes("Flag"));
-});
-
-test("the groom line says what moved and nothing about a status left blank", () => {
-	// A blank Lead Status has one meaning since ATE-656: the record needs its
-	// status set, and the groom sets it. A draft from an older sweep that
-	// still carries the retired list renders without it.
-	const draft = plumberDraft();
-	draft.groom.cleared = [{ name: "An Invented Name", company: "An Invented Company" }];
-	const text = renderRaw("plumber", "text", JSON.stringify(draft)).stdout.replace(/\s+/g, " ");
-	assert.match(text, /The groom moved \d+ compan(y|ies) and \d+ contacts? to match what the record already showed\./);
-	assert.ok(!text.includes("cleared on purpose"));
-	assert.ok(!text.includes("An Invented Name"));
-});
-
 test("an unknown runner fails loudly", () => {
 	const result = render("nosuchrunner", "html", "retro", "retro");
 	assert.equal(result.status, 1);
@@ -205,9 +93,9 @@ test("an unknown runner fails loudly", () => {
  * it has to read exactly like a name nobody has: one line, exit one, no page.
  */
 test("a bundle asked for another runner's page fails the way an unknown runner does", () => {
-	const result = render("plumber", "html", "plumber", "retro");
+	const result = render("recruiter", "html", "recruiter", "retro");
 	assert.equal(result.status, 1);
-	assert.equal(result.stderr, 'render: unknown runner "plumber"; one of retro, failure\n');
+	assert.equal(result.stderr, 'render: unknown runner "recruiter"; one of retro, failure\n');
 	assert.equal(result.stdout, "");
 });
 

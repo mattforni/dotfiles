@@ -161,6 +161,7 @@ change "two pages reach their two runners"       "alpha beta"  runners/email/bet
 change "a page beside a shared file reaches all" "alpha beta gamma" runners/email/alpha.tsx runners/email/render.tsx
 change "the page of a runner with no Dockerfile" ""            runners/email/localonly.tsx
 change "a page a runner keeps in its own folder" "gamma"       runners/gamma/email/gamma.tsx
+change "and the helper it keeps beside it"       "gamma"       runners/gamma/email/gamma-rows.tsx
 # A runner that leaves takes its page with it, and no other image held it.
 put runners/delta/Dockerfile
 put runners/delta/entrypoint.sh
@@ -170,6 +171,34 @@ before="$(g rev-parse HEAD)"
 g rm --quiet -r runners/delta runners/email/delta.tsx
 after="$(commit)"
 expect "a runner and its page leaving reach no other runner" "" "$before" "$after"
+# A runner that moves to another repository leaves with everything that was
+# its alone: its directory, its page, the page's fixtures and goldens, and the
+# agent only its manifest named. None of that is in any image still built
+# here, and the runner itself must never be printed: a promote of a directory
+# that is gone fails red.
+put runners/delta/Dockerfile
+put runners/delta/entrypoint.sh
+printf 'delta\n' > "$FAKE/runners/delta/agents"
+put .claude/agents/delta.md
+put runners/email/delta.tsx
+put runners/email/fixtures/delta.json
+put runners/email/goldens/delta.html
+commit >/dev/null
+before="$(g rev-parse HEAD)"
+g rm --quiet -r runners/delta runners/email/delta.tsx runners/email/fixtures/delta.json runners/email/goldens/delta.html .claude/agents/delta.md
+after="$(commit)"
+expect "a runner leaving with its page, fixtures and agent promotes nothing" "" "$before" "$after"
+# The same leaving, with a pull only it used going out of the shared library
+# too: every image that is still here changed, and the one that left is not
+# among them.
+put runners/delta/Dockerfile
+put runners/delta/entrypoint.sh
+put runners/lib/delta-pull.mjs
+commit >/dev/null
+before="$(g rev-parse HEAD)"
+g rm --quiet -r runners/delta runners/lib/delta-pull.mjs
+after="$(commit)"
+expect "and with a shared library file, only the runners that stay" "alpha beta gamma" "$before" "$after"
 
 echo "Paths that never ship reach nothing"
 change "a runner's README"                       "" runners/alpha/README.md
@@ -178,6 +207,7 @@ change "a runner's out, .build and .env.local"   "" runners/alpha/out/email.html
 change "a name past ASCII under out"             "" "runners/alpha/out/café.html"
 change "the renderer's tests"                    "" runners/email/tst/render.test.mjs
 change "the renderer's fixtures and goldens"     "" runners/email/fixtures/alpha.json runners/email/goldens/alpha.html
+change "a runner's own page tests and goldens"   "" runners/gamma/email/tst/gamma.test.mjs runners/gamma/email/tst/goldens/gamma.html
 change "the library's tests in runners/tst"      "" runners/tst/lib.test.mjs
 change "runners/README.md"                       "" runners/README.md
 change "a runner with no Dockerfile"             "" runners/localonly/entrypoint.sh
