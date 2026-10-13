@@ -82,7 +82,7 @@ type Activity = {
 
 type FunnelRow = {
 	company?: unknown;
-	lifecycle?: string | null;
+	funnel?: unknown;
 	status?: unknown;
 	kind?: unknown;
 	touches?: unknown;
@@ -283,37 +283,35 @@ function verdict(draft: RetroDraft): string {
 
 /* ---------- the funnel ---------- */
 /*
- * Six stages, the operating model's own (Atelic Tools/hubspot.md): Lead, MQL,
- * SQL, Opportunity, Customer, Closed. Lifecycle places a company, a closed
- * lead status or a Closed Lost deal overrides it, and a Closed Won deal reads
- * as Customer even before the lifecycle catches up.
+ * Six stages: Lead, MQL, SQL, Opportunity, Customer, Closed. Which one a
+ * company sits in comes from the pull, which puts it on every row as
+ * `funnel`; the rule that decides it lives with the pull, in the Atelic
+ * repo, and this page only prints what it is given. A row that carries no
+ * stage, or one this page does not know (a draft from before the pull
+ * carried the field), is listed under No Stage after the six, so it is still
+ * on the page and nobody guesses where it belongs.
  */
 
-const LEAD_STAGES: Record<string, string> = {
-	lead: "Lead",
-	marketingqualifiedlead: "MQL",
-	salesqualifiedlead: "SQL",
-};
+const STAGE_NAMES = ["Lead", "MQL", "SQL", "Opportunity", "Customer", "Closed"];
+const NO_STAGE = "No Stage";
 
-function leadStage(row: FunnelRow): string {
-	const mapped = LEAD_STAGES[alt(row.lifecycle, "lead")];
-	return mapped === undefined ? "Lead" : mapped;
+type Staged = FunnelRow & { funnel: string; record: (row: FunnelRow) => RecordStackItem };
+
+function staged(rows: FunnelRow[] | null | undefined, record: (row: FunnelRow) => RecordStackItem): Staged[] {
+	return alt(rows, []).map((row) => ({
+		...row,
+		funnel: typeof row.funnel === "string" && STAGE_NAMES.includes(row.funnel) ? row.funnel : NO_STAGE,
+		record,
+	}));
 }
 
-function dealStage(row: FunnelRow): string {
-	if (row.stage === "Closed Lost") return "Closed";
-	if (row.stage === "Closed Won" || row.lifecycle === "customer") return "Customer";
-	return "Opportunity";
-}
-
-type Staged = FunnelRow & { funnel: string };
-
+/** Every row with its stage, and the card its own table would draw for it. */
 function funnel(draft: RetroDraft): Staged[] {
 	const atelic = alt(draft.atelic, {});
 	return [
-		...alt(atelic.open_leads, []).map((row) => ({ ...row, funnel: leadStage(row) })),
-		...alt(atelic.opportunities, []).map((row) => ({ ...row, funnel: dealStage(row) })),
-		...alt(atelic.closed_leads, []).map((row) => ({ ...row, funnel: "Closed" })),
+		...staged(atelic.open_leads, leadRecord),
+		...staged(atelic.opportunities, dealRecord),
+		...staged(atelic.closed_leads, closedRecord),
 	];
 }
 
@@ -410,10 +408,16 @@ function stages(draft: RetroDraft): Stage[] {
 		{ name: "Customer", label: "Customer", record: dealRecord },
 		{ name: "Closed", label: "Closed", record: closedRecord },
 	];
-	return shapes.map((shape) => {
+	const known: Stage[] = shapes.map((shape) => {
 		const rows = all.filter((row) => row.funnel === shape.name);
 		return { name: shape.name, label: shape.label, rows, records: rows.map(shape.record) };
 	});
+	// A row with no stage is drawn by the card of the table it came in on,
+	// and the group shows only when there is one, so a current pull reads
+	// exactly as it did.
+	const rest = all.filter((row) => row.funnel === NO_STAGE);
+	if (rest.length === 0) return known;
+	return [...known, { name: NO_STAGE, label: "No stage", rows: rest, records: rest.map((row) => row.record(row)) }];
 }
 
 /* ---------- html ---------- */

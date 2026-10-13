@@ -19,7 +19,7 @@ Return exactly this shape (every key present; arrays may be empty):
     {"modality": "PT", "logged": "1", "target": "4", "note": "Wed PT Achilles"}
   ],
   "what_moved": [
-    {"subject": "Outdoors Geek", "event": "sits at Proposal, $10,000 cash."}
+    {"subject": "Fernwood Bakery", "event": "sits at Proposal, $10,000 cash."}
   ],
   "what_moved_note": "one short line after the list, such as Everything else held its stage.",
   "movement_read": "two or three short sentences: the shape of the training week against its targets and the one thing worth noticing.",
