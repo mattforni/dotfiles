@@ -17,8 +17,8 @@
 #   GWS_OAUTH_TOKEN_JSON      forni-keys/gws-oauth-token-personal (authorized_user JSON)
 #   HUBSPOT_SERVICE_KEY       atelic-keys/hubspot-service-key-atelic (read only use here)
 #   EUDY_DEPLOY_KEY           forni-keys/github-deploy-key-eudy (read only deploy key on mattforni/Eudaimonia)
-#   ATELIC_DEPLOY_KEY         atelic-keys/github-deploy-key-atelic (read only deploy key on the Atelic repo); only
-#                             when the pulls run and no checkout is at $ATELIC
+#   ATELIC_DEPLOY_KEY         atelic-keys/github-deploy-key-atelic (read only deploy key on the Atelic repo); required
+#                             up front whenever the pulls run and no checkout is at $ATELIC
 # Plain configuration:
 #   REPORT_RECIPIENT          where the retro goes
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
@@ -62,14 +62,25 @@ STRAVA_SECRET_RESOURCE="${STRAVA_SECRET_RESOURCE:-projects/forni-keys/secrets/st
 AFTER_EPOCH="$(midnight_epoch "$MONDAY")"
 BEFORE_EPOCH="$(midnight_epoch "$NEXT_MONDAY")"
 
+# The Atelic checkout the HubSpot pull runs its funnel rules from (the pull
+# itself says why). Named here because whether its deploy key is needed is
+# decided with the rest of the environment, below.
+ATELIC="${ATELIC:-$HOME/Eudaimonia/Craft/Vocation/Atelic}"
+ATELIC_REPO="${ATELIC_REPO:-git@github.com:atelic-action/practice.git}"
+ATELIC_RULES="plugins/atelic/scripts/lib/hubspot.mjs"
+
 # What a run needs depends on what it will do. A dry run never sends, and a run
 # over cached pulls never authenticates to Strava, Google, HubSpot or GitHub, so
-# demanding all nine every time would make the fast local loops impossible.
-# ATELIC_DEPLOY_KEY is asked for later still, by the HubSpot pull, and only
-# when no Atelic checkout is already in place.
+# demanding every secret every time would make the fast local loops
+# impossible. ATELIC_DEPLOY_KEY is needed whenever the pulls run and no Atelic
+# checkout is already in place, which is every production run. It is asked
+# for here with the rest and not at the clone, so a job without it mapped
+# fails before the Strava pull rotates a refresh token for a run that cannot
+# finish.
 required=(CLAUDE_CODE_OAUTH_TOKEN)
 [[ "$DRY_RUN" == "1" ]] || required+=(RESEND_API_KEY REPORT_RECIPIENT)
 [[ "$SKIP_PULLS" == "1" ]] || required+=(STRAVA_CLIENT_ID STRAVA_CLIENT_SECRET STRAVA_REFRESH_TOKEN GWS_OAUTH_TOKEN_JSON EUDY_DEPLOY_KEY HUBSPOT_SERVICE_KEY)
+[[ "$SKIP_PULLS" == "1" || -f "$ATELIC/$ATELIC_RULES" ]] || required+=(ATELIC_DEPLOY_KEY)
 require "${required[@]}" || exit 1
 require_tools claude jq curl node timeout git || exit 1
 
@@ -218,9 +229,6 @@ gmail_pull() {
 # own, or a read only mount of it in a container rehearsal), or a shallow
 # clone over the read only deploy key, which is the production path. No image
 # carries the rules, so a rule changed there is live on the next run.
-ATELIC="${ATELIC:-$HOME/Eudaimonia/Craft/Vocation/Atelic}"
-ATELIC_REPO="${ATELIC_REPO:-git@github.com:atelic-action/practice.git}"
-ATELIC_RULES="plugins/atelic/scripts/lib/hubspot.mjs"
 atelic_pull() {
     runner_checkout "$ATELIC" "$ATELIC_REPO" "$ATELIC_RULES" ATELIC_DEPLOY_KEY atelic_deploy_key || return 1
     # The same Denver midnight epochs the Strava pull uses, so both weeks close

@@ -2,24 +2,27 @@
 # Test for the two pieces of runners/lib/runner.sh a run's output hangs on
 # and that only ever fail on a morning nobody is watching:
 #
-#   runner_land_file   lands one file on a remote's main from a shallow clone
-#                      that main has moved past (the plumber's roster)
+#   runner_land_file   lands one file on a remote's main for a run whose
+#                      shallow clone main has moved past (the plumber's roster)
 #   runner_each_line   runs a function once per line, whatever quotes the
-#                      line carries (the plumber's site pull)
+#                      line carries and however long it is (the site pull)
 #
 # The first is driven against a throwaway bare repository that moves between
 # the clone and the push, the way main moves during a twenty minute run: a
 # second clone, the desk, pushes commits of its own, to files the run never
-# touched and to files it did. The old retry fetched one commit deep and
-# rebased, and a rebase across a shallow boundary reports add/add conflicts
-# on files the commit never touched, so the roster rode the mail as an
-# attachment (2026-10-07). A fake git on PATH makes main move again in the
-# moment between a fetch and its push, which is the race the retries are for.
+# touched and to the run's own file. The old retry fetched one commit deep
+# and rebased, and a rebase across a shallow boundary reports add/add
+# conflicts on files the commit never touched, so the roster rode the mail as
+# an attachment (2026-10-07). A fake git on PATH makes main move again in the
+# moment between a fetch and its push, which is the race the retries are for,
+# and counts the pushes, so a refusal that must not be retried is held to one.
 #
 # Checks: an unmoved main, a main that moved, a main that moved on the very
-# file, a main that moves under the first pushes, a main that never stops
-# moving, a remote that refuses the push, a file main already holds, and the
-# line reader over names with apostrophes, quotes and spaces.
+# file (never pushed over), a file main already holds, a main that moves
+# under the first pushes, a main that never stops moving, a remote that
+# refuses the push (one try), a remote that cannot be reached, the run's own
+# checkout left where it was through all of them, and the line reader over
+# names with apostrophes and quotes and a line past 255 bytes.
 set -uo pipefail
 
 # Under the pre-commit hook git exports where its index and directory are, and
@@ -31,12 +34,23 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
 
+# No config but the repositories' own. The commit under test runs through
+# plain git inside runner_land_file, and on a machine whose global config
+# signs commits, sets a hooks path or a template, it would sign, prompt or
+# run a hook here and fail a test that is green in CI. A scratch HOME for
+# anything that still looks there.
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_NOSYSTEM=1
+export HOME="$SCRATCH/home"
+mkdir -p "$HOME"
+
 # shellcheck source=../../runners/lib/runner.sh
 . "$ROOT/runners/lib/runner.sh"
 
 pass=0; fail=0
 ok()   { printf '  \033[0;32mok\033[0m   %s\n' "$1"; pass=$((pass+1)); }
 bad()  { printf '  \033[0;31mFAIL\033[0m %s\n' "$1"; fail=$((fail+1)); }
+# Usage: check <label> <command...>. Passes when the command does.
+check() { local label="$1"; shift; if "$@"; then ok "$label"; else bad "$label"; fi; }
 
 REAL_GIT="$(command -v git)"
 ORIGIN="$SCRATCH/origin.git"
@@ -44,13 +58,13 @@ DESK="$SCRATCH/desk"
 RUN="$SCRATCH/run"
 ROSTER="$SCRATCH/built-roster.md"
 DEST="Outreach/2026-W01-roster.md"
-# The function writes git's stderr under the run's work directory.
+# The function keeps its landing clone under the run's work directory.
 WORK="$SCRATCH/work"
 mkdir -p "$WORK"
 # No pause between tries: nothing here needs the wait a real remote does.
 export RUNNER_LAND_PAUSE=0
 
-g() { "$REAL_GIT" -c user.name=test -c user.email=test@example.invalid -c commit.gpgsign=false "$@"; }
+g() { "$REAL_GIT" -c user.name=test -c user.email=test@example.invalid "$@"; }
 
 # Usage: desk_push <message> <path> <content> [<path> <content>...]
 # The desk writes files and pushes them to main, as another session would.
@@ -66,9 +80,10 @@ desk_push() {
 }
 
 # Usage: fresh. A new origin with a little history, a desk clone of it, and
-# the run's own clone, one commit deep, as the runner makes it.
+# the run's own clone, one commit deep, as the runner makes it. RUN_HEAD is
+# where the run's checkout stands, which no landing may move.
 fresh() {
-    rm -rf "$ORIGIN" "$DESK" "$RUN" "$SCRATCH/moves"
+    rm -rf "$ORIGIN" "$DESK" "$RUN" "$SCRATCH/moves" "$SCRATCH/pushes"
     g init --quiet --bare --initial-branch=main "$ORIGIN" || return 1
     g clone --quiet "$ORIGIN" "$DESK" 2>/dev/null || return 1
     g -C "$DESK" checkout --quiet -B main
@@ -80,20 +95,32 @@ fresh() {
     g -C "$DESK" add -A && g -C "$DESK" commit --quiet --no-verify -m "the repo" && g -C "$DESK" push --quiet origin HEAD:main || return 1
     desk_push "a second commit" plugins/skill/SKILL.md "A skill, edited." || return 1
     g clone --quiet --depth 1 "file://$ORIGIN" "$RUN" || return 1
+    RUN_HEAD="$(g -C "$RUN" rev-parse HEAD)"
     printf '# The W01 roster\n\nBuilt by the run.\n' > "$ROSTER"
 }
 
 # What main holds at a path, and how many files main's tip commit changed.
 on_main() { g -C "$ORIGIN" show "main:$1" 2>/dev/null; }
 tip_files() { g -C "$ORIGIN" show --format= --name-only main | sed '/^$/d' | wc -l | tr -d ' '; }
+holds_roster() { [[ "$(on_main "$DEST")" == "$(cat "$ROSTER")" ]]; }
+lacks_roster() { ! holds_roster; }
+said() { grep -q "$1" "$SCRATCH/land.out"; }
+# The run's own checkout: on the commit it started from, with nothing changed
+# or left in it, and no landing clone left behind under the work directory.
+run_untouched() {
+    [[ "$(g -C "$RUN" rev-parse HEAD)" == "$RUN_HEAD" ]] && [[ -z "$(g -C "$RUN" status --porcelain)" ]] \
+        && [[ -z "$(find "$WORK" -mindepth 1 -maxdepth 1 -name 'land.*')" ]]
+}
 
 land() { runner_land_file "$RUN" "$ROSTER" "$DEST" "" "the W01 roster" "built by the test" > "$SCRATCH/land.out" 2>&1; }
+why() { tr '\n' ' ' < "$SCRATCH/land.out"; }
 
 echo "A main that has not moved"
-if fresh && land; then ok "the file lands"; else bad "the file lands ($(tr '\n' ' ' < "$SCRATCH/land.out"))"; fi
-[[ "$(on_main "$DEST")" == "$(cat "$ROSTER")" ]] && ok "main holds the built roster" || bad "main holds the built roster"
+if fresh && land; then ok "the file lands"; else bad "the file lands ($(why))"; fi
+check "main holds the built roster" holds_roster
 [[ "$(tip_files)" == "1" ]] && ok "the commit touches one file" || bad "the commit touches one file ($(tip_files))"
 [[ -n "$LANDED_COMMIT" && "$LANDED_COMMIT" == "$(g -C "$ORIGIN" log -1 --format=%h main)" ]] && ok "LANDED_COMMIT names the commit on main" || bad "LANDED_COMMIT names the commit on main ('$LANDED_COMMIT')"
+check "the run's own checkout never moved, and nothing is left behind" run_untouched
 
 echo "A main that moved between the clone and the push"
 fresh || bad "could not build the repositories"
@@ -103,90 +130,123 @@ desk_push "a skill edit" plugins/skill/SKILL.md "A skill, edited again." \
     && desk_push "an older roster and a new file" Outreach/2025-W52-roster.md "An older roster, amended." plugins/skill/routine.md "A new file." \
     || bad "the desk could not push"
 desk_tip="$(g -C "$ORIGIN" rev-parse main)"
-if land; then ok "the file lands with no rebase"; else bad "the file lands with no rebase ($(tr '\n' ' ' < "$SCRATCH/land.out"))"; fi
-[[ "$(on_main "$DEST")" == "$(cat "$ROSTER")" ]] && ok "main holds the built roster" || bad "main holds the built roster"
+if land; then ok "the file lands with no rebase"; else bad "the file lands with no rebase ($(why))"; fi
+check "main holds the built roster" holds_roster
 [[ "$(g -C "$ORIGIN" rev-parse main^ 2>/dev/null)" == "$desk_tip" ]] && ok "the commit sits on the desk's tip" || bad "the commit sits on the desk's tip"
 [[ "$(on_main plugins/skill/SKILL.md)" == "A skill, edited again." && "$(on_main plugins/skill/routine.md)" == "A new file." ]] \
     && ok "the desk's work is all still there" || bad "the desk's work is all still there"
 [[ "$(tip_files)" == "1" ]] && ok "the commit touches one file" || bad "the commit touches one file ($(tip_files))"
+check "the run's own checkout never moved, though main did" run_untouched
 
 echo "A main that moved on the roster's own path"
 fresh || bad "could not build the repositories"
+# Somebody places one more name on the week's skeleton while the run is going.
 desk_push "a name placed ahead" "$DEST" "# The skeleton, with a name placed ahead" || bad "the desk could not push"
-if land; then ok "the file lands"; else bad "the file lands ($(tr '\n' ' ' < "$SCRATCH/land.out"))"; fi
-[[ "$(on_main "$DEST")" == "$(cat "$ROSTER")" ]] && ok "the run's roster is what main holds" || bad "the run's roster is what main holds"
+desk_tip="$(g -C "$ORIGIN" rev-parse main)"
+if land; then bad "the run's copy is not pushed over theirs"; else ok "the run's copy is not pushed over theirs, so the caller falls back"; fi
+[[ "$(on_main "$DEST")" == "# The skeleton, with a name placed ahead" && "$(g -C "$ORIGIN" rev-parse main)" == "$desk_tip" ]] \
+    && ok "main still holds their change, and nothing was pushed" || bad "main still holds their change, and nothing was pushed"
+check "and the log says why" said "changed on main while the run was going"
+check "the run's own checkout never moved" run_untouched
 
 echo "A file main already holds"
-if land; then ok "a second landing of the same file succeeds"; else bad "a second landing of the same file succeeds"; fi
-grep -q "nothing to commit" "$SCRATCH/land.out" && ok "and commits nothing" || bad "and commits nothing ($(tr '\n' ' ' < "$SCRATCH/land.out"))"
+fresh && land || bad "could not land the first time ($(why))"
+if land; then ok "a second landing of the same file succeeds"; else bad "a second landing of the same file succeeds ($(why))"; fi
+check "and commits nothing" said "nothing to commit"
 
-# A git that lets the desk push one more commit just before each of the
-# run's first pushes, as many times as the file $SCRATCH/moves says: main
-# moving in the moment between the run's fetch and its push.
+# A git that counts the run's pushes and lets the desk push one more commit
+# just before each of the first of them, as many times as the file
+# $SCRATCH/moves says: main moving in the moment between the run's fetch and
+# its push. The run's pushes are the ones that are not the desk's.
 mkdir -p "$SCRATCH/bin"
 cat > "$SCRATCH/bin/git" <<FAKE
 #!/usr/bin/env bash
-left=\$(cat "$SCRATCH/moves" 2>/dev/null || echo 0)
 case " \$* " in
   *" push "*)
-    if [[ " \$* " == *" $RUN "* ]] && (( left > 0 )); then
-        echo \$((left - 1)) > "$SCRATCH/moves"
-        "$REAL_GIT" -C "$DESK" pull --quiet origin main >/dev/null 2>&1
-        echo "moved \$left" > "$DESK/moved.txt"
-        "$REAL_GIT" -C "$DESK" add -A
-        "$REAL_GIT" -C "$DESK" -c user.name=test -c user.email=test@example.invalid -c commit.gpgsign=false commit --quiet --no-verify -m "main moves again"
-        "$REAL_GIT" -C "$DESK" push --quiet origin HEAD:main
+    if [[ " \$* " != *" $DESK "* ]]; then
+        echo x >> "$SCRATCH/pushes"
+        left=\$(cat "$SCRATCH/moves" 2>/dev/null || echo 0)
+        if (( left > 0 )); then
+            echo \$((left - 1)) > "$SCRATCH/moves"
+            "$REAL_GIT" -C "$DESK" pull --quiet origin main >/dev/null 2>&1
+            echo "moved \$left" > "$DESK/moved.txt"
+            "$REAL_GIT" -C "$DESK" add -A
+            "$REAL_GIT" -C "$DESK" -c user.name=test -c user.email=test@example.invalid commit --quiet --no-verify -m "main moves again"
+            "$REAL_GIT" -C "$DESK" push --quiet origin HEAD:main
+        fi
     fi ;;
 esac
 exec "$REAL_GIT" "\$@"
 FAKE
 chmod +x "$SCRATCH/bin/git"
-raced() { ( PATH="$SCRATCH/bin:$PATH"; land ); }
+counted() { ( PATH="$SCRATCH/bin:$PATH"; land ); }
+pushes() { if [[ -f "$SCRATCH/pushes" ]]; then wc -l < "$SCRATCH/pushes" | tr -d ' '; else echo 0; fi; }
 
 echo "A main that moves under the first two pushes"
 fresh || bad "could not build the repositories"
 echo 2 > "$SCRATCH/moves"
-if raced; then ok "the third try lands"; else bad "the third try lands ($(tr '\n' ' ' < "$SCRATCH/land.out"))"; fi
-[[ "$(on_main "$DEST")" == "$(cat "$ROSTER")" ]] && ok "main holds the built roster" || bad "main holds the built roster"
+if counted; then ok "the third try lands"; else bad "the third try lands ($(why))"; fi
+check "main holds the built roster" holds_roster
 [[ "$(on_main moved.txt)" == "moved 1" ]] && ok "on top of both of the desk's pushes" || bad "on top of both of the desk's pushes ($(on_main moved.txt))"
-grep -q "landed on its new tip on try 3" "$SCRATCH/land.out" && ok "and the log says which try" || bad "and the log says which try ($(tr '\n' ' ' < "$SCRATCH/land.out"))"
+check "and the log says which try" said "landed on its new tip on try 3"
+check "the run's own checkout never moved" run_untouched
 
 echo "A main that never stops moving"
 fresh || bad "could not build the repositories"
 echo 99 > "$SCRATCH/moves"
-if raced; then bad "the landing gives up"; else ok "the landing gives up after its tries"; fi
-[[ "$(on_main "$DEST")" != "$(cat "$ROSTER")" ]] && ok "main does not hold the roster, so the caller falls back" || bad "main does not hold the roster"
-grep -q "after 4 tries" "$SCRATCH/land.out" && ok "and says how many tries it made" || bad "and says how many tries it made ($(tr '\n' ' ' < "$SCRATCH/land.out"))"
+if counted; then bad "the landing gives up"; else ok "the landing gives up after its tries"; fi
+check "main does not hold the roster, so the caller falls back" lacks_roster
+[[ "$(pushes)" == "4" ]] && ok "four pushes, the default" || bad "four pushes, the default ($(pushes))"
+check "and says main kept moving" said "after 4 tries; main kept moving"
+check "the run's own checkout never moved" run_untouched
 
-echo "A remote that refuses the push"
+echo "A remote that refuses the push for a reason of its own"
 fresh || bad "could not build the repositories"
-printf '#!/bin/sh\necho "refused by the test" >&2\nexit 1\n' > "$ORIGIN/hooks/pre-receive"
+printf '#!/bin/sh\necho "refused by a rule of the remote" >&2\nexit 1\n' > "$ORIGIN/hooks/pre-receive"
 chmod +x "$ORIGIN/hooks/pre-receive"
-if RUNNER_LAND_TRIES=2 land; then bad "the landing fails"; else ok "the landing fails, so the caller falls back"; fi
-[[ "$(on_main "$DEST")" != "$(cat "$ROSTER")" ]] && ok "and main is as it was" || bad "and main is as it was"
+if counted; then bad "the landing fails"; else ok "the landing fails, so the caller falls back"; fi
+[[ "$(pushes)" == "1" ]] && ok "after one push: a refusal that is not a moved main is not tried again" || bad "after one push ($(pushes))"
+check "the log carries the remote's own words" said "refused by a rule of the remote"
+check "and says it was not tried again" said "not because main moved"
+check "main is as it was" lacks_roster
+check "the run's own checkout never moved" run_untouched
 
-echo "Every line whole, whatever quotes it carries"
+echo "A remote that cannot be reached"
+fresh || bad "could not build the repositories"
+g -C "$RUN" remote set-url origin "file://$SCRATCH/no-such-remote.git"
+if counted; then bad "the landing fails"; else ok "the landing fails at once"; fi
+[[ "$(pushes)" == "0" ]] && ok "with no push tried" || bad "with no push tried ($(pushes))"
+check "and says the clone failed" said "could not clone main"
+check "the run's own checkout never moved" run_untouched
+
+echo "Every line whole, whatever quotes it carries and however long it is"
 seen() { printf '%s\n' "$1" >> "$SCRATCH/seen.txt"; }
 export -f seen
 export SCRATCH
 lines="$SCRATCH/lines.txt"
+long="long.example.test|$(printf 'A Very Long Name With an Apostrophe in the Founder'"'"'s Family Trade %.0s' 1 2 3 4 5 6)|first_touch"
 {
     printf '%s\n' "one.example.test|A Plain Name|bumps_due"
     printf '%s\n' "two.example.test|Sam's Downtown Barbers|bumps_due"
     printf '\n'
     printf '%s\n' "three.example.test|The \"Best\" Roofers & Sons|visits_due"
+    printf '%s\n' "$long"
     printf '%s\n' "four.example.test|After the Apostrophe|first_touch"
 } > "$lines"
+(( ${#long} > 255 )) && ok "the long line is past 255 bytes (${#long})" || bad "the long line is past 255 bytes (${#long})"
 : > "$SCRATCH/seen.txt"
 if runner_each_line 1 seen < "$lines" 2>"$SCRATCH/each.err"; then ok "the reader runs clean"; else bad "the reader runs clean ($(tr '\n' ' ' < "$SCRATCH/each.err"))"; fi
 if [[ "$(cat "$SCRATCH/seen.txt")" == "$(sed '/^$/d' "$lines")" ]]; then
-    ok "every line reaches the function whole, the ones after an apostrophe included"
+    ok "every line reaches the function whole, the long one and the ones after an apostrophe included"
 else
     bad "every line reaches the function whole (got: $(tr '\n' ';' < "$SCRATCH/seen.txt"))"
 fi
 : > "$SCRATCH/seen.txt"
 runner_each_line 3 seen < "$lines" 2>/dev/null
 [[ "$(sort "$SCRATCH/seen.txt")" == "$(sed '/^$/d' "$lines" | sort)" ]] && ok "and in parallel too" || bad "and in parallel too"
+: > "$SCRATCH/seen.txt"
+runner_each_line 2 seen < /dev/null 2>/dev/null
+[[ ! -s "$SCRATCH/seen.txt" ]] && ok "an empty list runs the function not at all" || bad "an empty list runs the function not at all"
 
 echo
 printf 'pass %d, fail %d\n' "$pass" "$fail"

@@ -482,64 +482,105 @@ runner_checkout() {
 }
 
 # Usage: runner_land_file <checkout> <source file> <path in the repo> <ssh command> <subject> [<body>]
-# Lands one file on the remote's main from a clone that may have fallen
-# behind it, which a run of twenty minutes usually has. The commit is rebuilt
-# on the fresh tip every try: fetch main, reset the checkout to it, copy the
-# file in, commit, push. Never a rebase. The clone is one commit deep, and a
+# Lands one file on the remote's main for a run whose clone has fallen
+# behind it, which a run of twenty minutes usually has. The commit is built
+# on the fresh tip, in a clone of its own made for the landing: copy the file
+# in, commit, push. Never a rebase. The run's clone is one commit deep, and a
 # rebase across a shallow boundary has no common ancestor to work from, so it
 # reports add/add conflicts on files the commit never touched; that sent a
 # roster to the mail as an attachment on a morning main had only moved
-# (2026-10-07). A push that loses the race to another push is tried again on
-# the newer tip, RUNNER_LAND_TRIES times in all (four by default),
-# RUNNER_LAND_PAUSE seconds apart.
+# (2026-10-07).
 #
-# The checkout must be one this run cloned: the reset discards anything else
-# in it. The file is this run's own, so its copy replaces whatever main holds
-# at that path. Prints what happened, sets LANDED_COMMIT to the short hash on
-# main, and returns non zero with the reason printed when the file could not
-# be landed, so the caller can fall back.
+# The run's own checkout is read and never moved: it names the remote and
+# holds the file as the run read it at its start, and everything the run does
+# after the landing still stands on the revision it started from.
+#
+# Three ways a landing ends without the file on main, each said in the log
+# and each returning non zero so the caller falls back:
+#   - main holds a different file at that path than the run read at its
+#     start. Somebody changed it while the run was going, and the run's copy
+#     is not pushed over theirs.
+#   - the push was rejected because main moved again, RUNNER_LAND_TRIES times
+#     running (four by default, RUNNER_LAND_PAUSE seconds apart). Only this
+#     rejection is tried again, on the newer tip.
+#   - the remote refused for any other reason (a key, a branch rule, a
+#     hook), or could not be reached. That is not tried again: its own words
+#     go in the log and the caller falls back at once.
+#
+# Sets LANDED_COMMIT to the short hash on main.
 # shellcheck disable=SC2034
 runner_land_file() {
     local checkout="$1" src="$2" dest="$3" ssh_cmd="$4" subject="$5" body="${6:-}"
-    local tries="${RUNNER_LAND_TRIES:-4}" pause="${RUNNER_LAND_PAUSE:-3}" err="$WORK/git-stderr.txt" attempt
-    local ident=(-c user.name="${RUNNER_GIT_NAME:-Claude}" -c user.email="${RUNNER_GIT_EMAIL:-claude@atelic.me}")
+    local tries="${RUNNER_LAND_TRIES:-4}" pause="${RUNNER_LAND_PAUSE:-3}" attempt url tmp repo err base tip built rc=1 moved=0
+    # A runner's commit is never signed: no image holds a signing key, and a
+    # machine whose own config signs would stop here for a passphrase.
+    local ident=(-c user.name="${RUNNER_GIT_NAME:-Claude}" -c user.email="${RUNNER_GIT_EMAIL:-claude@atelic.me}" -c commit.gpgsign=false)
     local message=(-m "$subject")
     [[ -z "$body" ]] || message+=(-m "$body")
     LANDED_COMMIT=""
-    : > "$err"
+    if ! url="$(git -C "$checkout" remote get-url origin 2>/dev/null)"; then
+        echo "land: the checkout at $checkout names no origin to land on"
+        return 1
+    fi
+    # The file as the run read it at its start, and as the run built it, by
+    # blob. An absent file reads as empty on either side.
+    base="$(git -C "$checkout" rev-parse --quiet --verify "HEAD:$dest" 2>/dev/null || true)"
+    built="$(git hash-object "$src" 2>/dev/null)" || { echo "land: cannot read $src"; return 1; }
+    tmp="$(mktemp -d "$WORK/land.XXXXXX")" || { echo "land: cannot make a directory under $WORK"; return 1; }
+    repo="$tmp/repo"
+    err="$tmp/stderr.txt"
+    if ! GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git clone --quiet --depth 1 --branch main --no-tags "$url" "$repo" 2>"$err"; then
+        echo "land: could not clone main, so nothing was pushed: $(tail -c 300 "$err" | tr '\n' ' ')"
+        rm -rf "$tmp"
+        return 1
+    fi
     for (( attempt = 1; attempt <= tries; attempt++ )); do
-        (( attempt == 1 )) || sleep "$pause"
-        if ! GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$checkout" fetch --quiet --depth 1 origin main 2>>"$err"; then
-            echo "land: could not fetch main (try $attempt of $tries)"
+        if (( attempt > 1 )); then
+            sleep "$pause"
+            if ! GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$repo" fetch --quiet --depth 1 origin main 2>"$err" \
+                || ! git -C "$repo" reset --quiet --hard FETCH_HEAD 2>>"$err"; then
+                echo "land: could not fetch main again: $(tail -c 300 "$err" | tr '\n' ' ')"
+                break
+            fi
+        fi
+        tip="$(git -C "$repo" rev-parse --quiet --verify "HEAD:$dest" 2>/dev/null || true)"
+        if [[ "$tip" == "$built" ]]; then
+            LANDED_COMMIT="$(git -C "$repo" log -1 --format=%h)"
+            echo "land: main already holds this $dest; nothing to commit"
+            rc=0
+            break
+        fi
+        if [[ "$tip" != "$base" ]]; then
+            echo "land: $dest changed on main while the run was going, so the run's copy is not pushed over it"
+            break
+        fi
+        if ! { mkdir -p "$(dirname "$repo/$dest")" && cp "$src" "$repo/$dest" && git -C "$repo" add -- "$dest" \
+                && git -C "$repo" "${ident[@]}" commit --quiet "${message[@]}"; } 2>"$err"; then
+            echo "land: could not commit $dest: $(tail -c 300 "$err" | tr '\n' ' ')"
+            break
+        fi
+        # LC_ALL=C so the rejection reads the same wherever this runs.
+        if LC_ALL=C GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$repo" push origin HEAD:main >"$err" 2>&1; then
+            LANDED_COMMIT="$(git -C "$repo" log -1 --format=%h)"
+            (( attempt == 1 )) || echo "land: main had moved; landed on its new tip on try $attempt"
+            rc=0
+            break
+        fi
+        # "! [rejected]" is git saying the remote's main is ahead of the
+        # commit pushed. A hook or a rule that declines reads "! [remote
+        # rejected]", and a key that is refused never gets that far.
+        if grep -q '! \[rejected\]' "$err"; then
+            moved=$attempt
+            echo "land: main moved under the push (try $attempt of $tries)"
             continue
         fi
-        if ! git -C "$checkout" reset --quiet --hard FETCH_HEAD 2>>"$err"; then
-            echo "land: could not reset the checkout to main: $(tail -c 300 "$err")"
-            return 1
-        fi
-        if ! { mkdir -p "$(dirname "$checkout/$dest")" && cp "$src" "$checkout/$dest"; } 2>>"$err"; then
-            echo "land: could not copy $dest into the checkout: $(tail -c 300 "$err")"
-            return 1
-        fi
-        git -C "$checkout" add -- "$dest" 2>>"$err" || { echo "land: could not stage $dest: $(tail -c 300 "$err")"; return 1; }
-        if git -C "$checkout" diff --cached --quiet; then
-            LANDED_COMMIT="$(git -C "$checkout" log -1 --format=%h)"
-            echo "land: main already holds this $dest; nothing to commit"
-            return 0
-        fi
-        if ! git -C "$checkout" "${ident[@]}" commit --quiet "${message[@]}" 2>>"$err"; then
-            echo "land: commit failed: $(tail -c 300 "$err")"
-            return 1
-        fi
-        if GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$checkout" push --quiet origin HEAD:main 2>>"$err"; then
-            LANDED_COMMIT="$(git -C "$checkout" log -1 --format=%h)"
-            (( attempt == 1 )) || echo "land: main had moved; landed on its new tip on try $attempt"
-            return 0
-        fi
-        echo "land: the push did not land (try $attempt of $tries)"
+        moved=0
+        echo "land: the push was refused, and not because main moved, so it is not tried again: $(grep -v '^hint:' "$err" | head -c 400 | tr '\n' ' ')"
+        break
     done
-    echo "land: could not land $dest on main after $tries tries: $(tail -c 300 "$err" | tr '\n' ' ')"
-    return 1
+    (( rc == 0 || moved < tries )) || echo "land: could not land $dest on main after $tries tries; main kept moving"
+    rm -rf "$tmp"
+    return "$rc"
 }
 
 # Usage: runner_each_line <parallel> <exported function> < lines
@@ -550,11 +591,14 @@ runner_land_file() {
 # every line after it. A company with an apostrophe in its name did that to
 # the plumber's site pull for two weeks (2026-W41 and W42): the list is
 # ordered follow ups first, so the first touch sites at its foot were never
-# fetched.
+# fetched. The line is handed over as an argument of its own and never
+# through -I: BSD xargs stops replacing past 255 bytes and would hand the
+# function a literal {} for a long line. GNU xargs runs its command once on
+# empty input, which the count of arguments catches.
 runner_each_line() {
     local parallel="$1" fn="$2"
     sed '/^[[:space:]]*$/d' | tr '\n' '\0' \
-        | xargs -0 -P "$parallel" -I{} bash -c "$fn"' "$1"' _ {}
+        | xargs -0 -n 1 -P "$parallel" bash -c '(( $# )) || exit 0; '"$fn"' "$1"' _
 }
 
 # Usage: runner_claude <prompt> [claude -p arguments...]

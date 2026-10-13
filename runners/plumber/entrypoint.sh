@@ -221,8 +221,11 @@ place_roster() {
     chmod 600 "$keyfile"
     ssh_cmd="ssh -i $keyfile -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes"
     # Main usually moves during a run of twenty minutes, so the commit is
-    # built on the fresh tip and never rebased (runner_land_file in
-    # lib/runner.sh says why, and retries a push that lost a race).
+    # built on the fresh tip, in a clone of its own, and never rebased
+    # (runner_land_file in lib/runner.sh says why). This checkout is not
+    # moved. A roster somebody changed on main while the run was going is not
+    # pushed over, and a push refused for any reason but a moved main is not
+    # tried again: either way the roster rides the mail and the log says why.
     if ! runner_land_file "$ATELIC" "$ROSTER_MD" "Outreach/$WEEK-roster.md" "$ssh_cmd" \
             "Outreach: the $WEEK roster, built by the plumber runner" \
             "Built $(date +%F) from the portal sweep, both mailboxes and the pulled sites; the skeleton's Placed Ahead entries carried at the foot."; then
