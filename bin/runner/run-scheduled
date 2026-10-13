@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run a runner on this machine on a schedule, for real.
 #
-# Usage: run-scheduled <runner-name> [--week YYYY-Www]
+# Usage: run-scheduled <runner-name-or-path> [--week YYYY-Www]
 #
 # This is the launchd door. A LaunchAgent's ProgramArguments points here, and
 # everything about which runner, which secrets and which PATH is resolved from
@@ -38,6 +38,9 @@ while (( $# )); do
 done
 
 dir="$(runner_dir "$name")"
+# A path names a runner as well as a name does, and either way the name used
+# from here on is the directory's own.
+name="$(basename "$dir")"
 LOG="$HOME/.claude/debug/runner-$name.log"
 mkdir -p "$(dirname "$LOG")"
 

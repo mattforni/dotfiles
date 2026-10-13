@@ -7,7 +7,7 @@
  * Run it only when a layout change is intended, and read the diff before
  * committing it: a golden that moved without a reason is the renderer drifting
  * away from the design, which is the whole thing these files are here to
- * catch. Build first; this reads dist/render.cjs.
+ * catch. Each runner's bundle is built first, by fixtures.mjs.
  */
 
 import { writeFileSync } from "node:fs";

@@ -101,9 +101,11 @@ newest main and never an older one; the job summary names the commit built.
 | A Change To | Promotes |
 |---|---|
 | `runners/lib/`, `runners/email/` | every runner with a Dockerfile, since both ship in every image |
+| `runners/email/<name>.tsx` | the runner called `<name>` and no other, since a bundle carries its own runner's page |
 | `bin/runner/promote`, `bin/runner/lib.sh` | every runner with a Dockerfile, since they decide what ships |
-| `runners/<name>/` | that runner |
+| `runners/<name>/`, its `agents` and `context` manifests included | that runner |
 | `.claude/agents/<x>.md` | each runner whose `agents` manifest names `x` |
+| a path a runner's `context` manifest names as a source, or its `agents` manifest brings an agent from | that runner |
 | a runner's `README.md`, `mounts`, `out/`, `.build/`, `.env.local` | nothing: none of them reaches an image |
 | `runners/email/tst/`, `fixtures/`, `goldens/` | nothing: the image's first stage bundles `render.tsx` and what it imports, and copies only that file forward |
 | anything else (`runners/tst/`, this README, the other `bin/runner/` scripts) | nothing |
@@ -113,7 +115,10 @@ no path filter of its own. What a runner's directory keeps out of its image is
 one list in `bin/runner/lib.sh` (`RUNNER_CONTEXT_EXCLUDES`), read by both the
 staging and the rules, and one function there reads an `agents` manifest for
 both. Runners and manifests are read from the tree at the pushed commit, so a
-new runner's path rules apply the day its Dockerfile lands. **Its Cloud Run
+new runner's path rules apply the day its Dockerfile lands. Only a runner in
+this repository is ever on the list: one that lives in another repository is
+promoted by that repository's own workflow
+([A Runner in Another Repository](#a-runner-in-another-repository)). **Its Cloud Run
 job does not: the workflow updates a job and never creates one**, so a brand
 new runner needs its job created by hand once (with its service account,
 secrets and schedule) before a merge can promote it, and until then its
@@ -242,6 +247,8 @@ still reads the bucket. So `bin/runner/promote` no longer lets gcloud wait:
 | `fire <name>` | Executes the job now and prints its log. `--week` is applied, used, and cleared again. |
 | `mail <name>` | Mails whatever is rendered in `out/` to the production recipient, so a draft can be read in Gmail rather than a browser. Preview only; production sending stays in the runner. |
 
+**Every command that takes `<name>` takes a path as well.** A bare name is `runners/<name>` here; anything with a slash in it is a path to a runner directory, absolute or relative to where the command is typed, and the runner's name is then that directory's own name, which is also what its Cloud Run job and its image are called. That is how a runner in another repository is run, rendered, and promoted with the commands above.
+
 `out/` and `.env.local` are gitignored. `.env.local` is mode 600 and holds live credentials in plaintext: never commit it, never print it into a transcript.
 
 ### Two Things Worth Knowing
@@ -260,18 +267,24 @@ A runner's page (`runners/email/<name>.tsx`) composes what the package exports: 
 
 ## The Renderer
 
-**The page is rendered by `runners/email/`, a small node project that carries the three runner pages as React and bundles them into one CommonJS file.** The design itself is no longer written here: it is `@atelic-action/ui/email`, the shared component library every Atelic surface draws from, pinned to an exact version in `runners/email/package.json`. It is the only renderer in the tree and in every image: the jq one it replaced retired on 2026-09-22 (ATE-563), once the recruiter and the retro had each come back clean on the node path from Cloud Run, so a renderer that cannot start is now a failed run rather than a plainer email.
+**The page is rendered by `runners/email/`, a small node project that carries the runner pages as React and bundles each one, with the failure page, into a CommonJS file of its own.** The design itself is no longer written here: it is `@atelic-action/ui/email`, the shared component library every Atelic surface draws from, pinned to an exact version in `runners/email/package.json`. It is the only renderer in the tree and in every image: the jq one it replaced retired on 2026-09-22 (ATE-563), once the recruiter and the retro had each come back clean on the node path from Cloud Run, so a renderer that cannot start is now a failed run rather than a plainer email.
 
-The build is one esbuild call, and it is CommonJS on purpose:
+**A bundle carries one runner's page and no other** (ATE-656, 2026-10-13). `render.tsx` is the command line and the failure page, and it imports its page as `runner-page`, a name no file has: the build points it at `<name>.tsx` for the runner being built and tells the bundle that name. So the retro's image holds the retro's page, a change to one page promotes one runner, and a page can live with its runner in another repository. The command line did not change (`node render.cjs <name> <html|text> --week ...`, and `node render.cjs failure html ...`), and a bundle asked for a page it does not carry answers the way it answers any name it does not know, in one line: `render: unknown runner "plumber"; one of retro, failure`. A page is `<name>.tsx` beside `render.tsx`, and what makes it a page is one export, `page`, an object with an `html` and a `text` function.
+
+The build is `build.mjs`, one esbuild call per runner, and it is CommonJS on purpose:
 
 ```bash
-esbuild render.tsx --bundle --platform=node --format=cjs --target=node24 --jsx=automatic \
-    '--define:process.env.NODE_ENV="production"' --minify-syntax --outfile=dist/render.cjs
+RUNNER=retro npm run build          # writes dist/render-retro.cjs
+node build.mjs retro recruiter      # several at once, which is what the tests do
 ```
 
-**Do not switch the format to ESM.** It was tried under `node:20-slim` on node 20.20.2 and the bundle died at startup with `Dynamic require of util is not supported`: React's server renderer reaches for a CommonJS require that an ESM bundle cannot answer. CommonJS runs. Every image builds its own copy in a first stage (`FROM node:24-slim AS email`, `npm ci`, `npm run build`) and copies exactly one file forward to `/home/runner/lib/render.cjs`, so the final image gains no `node_modules`.
+It is the esbuild call it always was (`--bundle --platform=node --format=cjs --target=node24 --jsx=automatic`, production React, `--minify-syntax`) with two additions: the alias from `runner-page` to the page, and the runner's name defined as `RUNNER_NAME`. With no runner named it stops and says so.
 
-**When the renderer cannot start.** The scaffold looks for the bundle beside the shared library and then in the repo's own build, and when it is missing, exits non zero, or writes an empty file, it says so on one loud `RENDERER:` line and fails the run, which mails the failure page. That page is the one thing with a fallback left: it renders through the same bundle (`render.cjs failure html`, the log's tail on stdin) and drops to a bare `<pre>` if even that cannot run, because it mails at the moment everything else is already broken.
+**Do not switch the format to ESM.** It was tried under `node:20-slim` on node 20.20.2 and the bundle died at startup with `Dynamic require of util is not supported`: React's server renderer reaches for a CommonJS require that an ESM bundle cannot answer. CommonJS runs. Every image builds its own runner's bundle in a first stage (`FROM node:24-slim AS email`, `npm ci`, `RUNNER=<name> npm run build`) and copies exactly one file forward, `dist/render-<name>.cjs` to `/home/runner/lib/render.cjs`, so the final image gains no `node_modules` and the scaffold finds the bundle under the plain name it always looked for.
+
+**On this machine there is a bundle per runner, `runners/email/dist/render-<name>.cjs`,** which is where the scaffold looks second. `runner_email_bundle` in `bin/runner/lib.sh` builds it when it is missing, older than any source, or built for another directory of the same name (the directory is written beside the bundle), and `render-local` and a host run both ask it first. One file for every runner would be the last runner's page, and the next one to render would be told its page is unknown.
+
+**When the renderer cannot start.** The scaffold looks for the bundle beside the shared library and then in the repo's own build for this runner, and when it is missing, exits non zero, or writes an empty file, it says so on one loud `RENDERER:` line and fails the run, which mails the failure page. That page is the one thing with a fallback left: it renders through the same bundle (`render.cjs failure html`, the log's tail on stdin) and drops to a bare `<pre>` if even that cannot run, because it mails at the moment everything else is already broken.
 
 **A layout change is three steps, in order.** Change the component in the `ui` repo and release it; bump the exact pin in `runners/email/package.json` and commit the lockfile that moves with it; then merge, which promotes every runner because `runners/email/` ships in all of them, so each image carries the new bundle. Nothing about the email design is edited in this repo any more.
 
@@ -284,11 +297,11 @@ bin/runner/render-local retro --no-open
 node runners/email/parity.mjs runners/retro/out/email.html /tmp/before.html
 ```
 
-`parity.mjs` exits 0 only when the two parse to the same canonical tree and prints the first difference with its path otherwise; it ignores what only the markup differs on, which is what made it the check against the jq renderer this one replaced. For a change where the pixels are the question, screenshot both files at 800 and at 390 wide and compare them with `magick compare -metric AE`; zero at both widths is the bar the port was held to. `npm --prefix runners/email test` is the standing version of the same check: six invented fixtures, html and text, each frozen as a golden that has to match byte for byte. The folds that feed the Pipeline mail its named lines and send weeks are tested where they live, in the Atelic repo (`node --test plugins/atelic/scripts/tst/*.test.mjs` there); the Linear read they are handed is tested here, `node --test runners/tst/linear.test.mjs`, no install.
+`parity.mjs` exits 0 only when the two parse to the same canonical tree and prints the first difference with its path otherwise; it ignores what only the markup differs on, which is what made it the check against the jq renderer this one replaced. For a change where the pixels are the question, screenshot both files at 800 and at 390 wide and compare them with `magick compare -metric AE`; zero at both widths is the bar the port was held to. `npm --prefix runners/email test` is the standing version of the same check: six invented fixtures, html and text, each frozen as a golden that has to match byte for byte. It builds each runner's bundle first, the way that runner's image does, and every render goes through the built file. The folds that feed the Pipeline mail its named lines and send weeks are tested where they live, in the Atelic repo (`node --test plugins/atelic/scripts/tst/*.test.mjs` there); the Linear read they are handed is tested here, `node --test runners/tst/linear.test.mjs`, no install.
 
 ## Adding a Runner
 
-A runner is three things of its own: its pulls, its prompt, and its renderer. Everything else comes from the scaffold in `runners/lib/runner.sh` and the pull scripts beside it (`gmail.mjs`, both mailboxes by term; `linear.mjs`, the active cycle's open issues; `text.mjs`, a page to text with its links kept), which ship into every image as `lib/` and are reached from an entrypoint as `$LIB_DIR/<script>`. What a runner knows about the business is not among them: it is read from the Atelic checkout at run time (`runner_checkout` in `runner.sh` puts a repository in place, a present checkout used as it is and an absent one cloned over its read only deploy key). So a new runner directory is `entrypoint.sh` (executable), `prompt.md`, a page in `runners/email/`, and a `README.md`, plus a `Dockerfile` when it is meant for Cloud Run (copy `runners/recruiter/Dockerfile`: it installs the pinned Claude Code and copies `lib/` in), an `agents` file naming any agent definition it runs, and `mounts` for what a local container run needs from this machine.
+A runner is three things of its own: its pulls, its prompt, and its renderer. Everything else comes from the scaffold in `runners/lib/runner.sh` and the pull scripts beside it (`gmail.mjs`, both mailboxes by term; `linear.mjs`, the active cycle's open issues; `text.mjs`, a page to text with its links kept), which ship into every image as `lib/` and are reached from an entrypoint as `$LIB_DIR/<script>`. What a runner knows about the business is not among them: it is read from the Atelic checkout at run time (`runner_checkout` in `runner.sh` puts a repository in place, a present checkout used as it is and an absent one cloned over its read only deploy key). So a new runner directory is `entrypoint.sh` (executable), `prompt.md`, a page in `runners/email/` named for the runner (`<name>.tsx`, exporting `page`), and a `README.md`, plus a `Dockerfile` when it is meant for Cloud Run (copy `runners/recruiter/Dockerfile`: it installs the pinned Claude Code, builds the runner's own bundle, and copies `lib/` in), an `agents` file naming any agent definition it runs, a `context` file for anything else its image needs from its repository, and `mounts` for what a local container run needs from this machine.
 
 The entrypoint's shape, which all three runners share:
 
@@ -316,4 +329,39 @@ What each call does: `runner_init` makes the work directory and the log (stdout 
 
 Two conventions the flags rely on: `DRY_RUN=1` renders and never sends, and `SKIP_PULLS=1` reuses what is already in `$WORK` (the pulled files, for a runner that pulls; the saved result, for one that only runs an agent), since those two are the whole local loop. Every artifact name above is what `run-local`, `render-local` and `mail` look for, so a runner that uses the scaffold gets all three loops without doing anything. The entrypoint finds its siblings relative to itself rather than at an absolute container path, so it runs unchanged wherever it is.
 
-**An image is built from a staged context, never from the directory itself.** A Docker context cannot reach above its root, and neither can the tarball Cloud Build uploads, so `bin/runner/lib.sh` assembles `runners/<name>/.build/` fresh for every build: the runner's files, `lib/runner.sh`, and `agents/<name>.md` for each agent named one per line in the runner's `agents` file, copied from `.claude/agents/`. The Dockerfile copies from those paths (`lib/runner.sh` to where the entrypoint looks first, an agent to `/home/runner/.claude/agents/`). Two more optional files: `mounts` lists host paths a local container run mounts, one `host:container[:ro]` per line with `$HOME` expanded, which is how a checkout stands in for a deploy key clone on this machine; and `.dockerignore` keeps `.env.local` and `out/` out of the context. `runners/recruiter/` is the example that uses all of them.
+**An image is built from a staged context, never from the directory itself.** A Docker context cannot reach above its root, and neither can the tarball Cloud Build uploads, so `bin/runner/lib.sh` assembles `.build/` in the runner's directory fresh for every build: the runner's files, `lib/` and `email/` from this repository, `agents/<name>.md` for each agent its `agents` file names, and whatever its `context` file adds. The Dockerfile copies from those paths (`lib/runner.sh` to where the entrypoint looks first, an agent to `/home/runner/.claude/agents/`). The files that drive the staging, none of which ships itself:
+
+| File | One Line Is | What It Does |
+|---|---|---|
+| `agents` | `name` | stages `.claude/agents/<name>.md` from this repository as `agents/<name>.md` |
+| `agents` | `name=path` | stages the runner's own definition at `path`, relative to the runner's directory, as `agents/<name>.md` |
+| `context` | `source:dest` | copies a file or a directory at `source`, relative to the runner's directory, to `dest` in the staged context |
+| `mounts` | `host:container[:ro]` | mounts a host path into a local container run, `$HOME` expanded, which is how a checkout stands in for a deploy key clone on this machine |
+
+Blank lines and lines that open with `#` are skipped in all three. A path in `agents` or `context` may reach up with `..`, since what a runner ships can sit elsewhere in its own repository, and it is refused the moment it resolves outside that repository, through a symlink or otherwise: a manifest that could name any file on the machine would put it in an image. A `context` dest has to stay inside the staged context and has to be free, so a line can add to `lib/` and can never replace a file of it. A runner may also keep an `email/` folder of its own, whose files are staged beside the shared renderer's as though they had been written there; a file that shares a name with one of the renderer's is refused. `.dockerignore` keeps `.env.local` and `out/` out of the context. `runners/recruiter/` is the example in this repository, and it uses `agents` and `mounts`.
+
+### A Runner in Another Repository
+
+**A runner does not have to live here.** This repository keeps the machinery that runs any job, and a job whose every file is one business's own (its pulls, its prompt, its page, its agent, the rules it runs) belongs in that business's repository, where this public one never sees it. Such a runner is a directory there with the same files as a runner here, and that repository's workflow checks this one out at the tip of main and runs the same commands against its own directory:
+
+```bash
+<homebase>/bin/runner/run-local runners/<name> --reuse    # from the other repository's root
+<homebase>/bin/runner/render-local ./runners/<name>
+<homebase>/bin/runner/promote "$PWD/runners/<name>"
+```
+
+What comes from where:
+
+| Piece | Comes From |
+|---|---|
+| `lib/` (the scaffold and the generic pulls) | this repository's `runners/lib/`, always |
+| the renderer (`render.tsx`, `build.mjs`, the helpers, the pinned `ui` package) | this repository's `runners/email/`, always |
+| the page | the runner's own `email/<name>.tsx`, with any helper files beside it; it imports `./jq`, `./local`, `./text`, `./types` and `./records` as though it sat in `runners/email/` |
+| an agent | this repository's `.claude/agents/` for a bare name in `agents`, the runner's own repository for a `name=path` line |
+| anything else the image needs | the runner's own repository, through `context` |
+
+The Dockerfile is written against the staged context exactly as one here is, so `COPY lib/`, `COPY email/` and `RUN npm ci && RUNNER=<name> npm run build` read the same, and a `context` line such as `../../plugins/<plugin>/scripts/lib:rules` is how business code elsewhere in that repository reaches the image, pinned to the commit the image was built from.
+
+Three things are that repository's to carry, since nothing here reaches it. Its `.gitignore` has to keep `out/`, `.build/` and `.env.local` out of its history. Its workflow decides when to promote: `bin/runner/changed` only ever prints runners in this repository, so a change here to `runners/lib/` or `runners/email/` promotes nothing there until that workflow runs again. And its deploy identity is its own, because the one described above is pinned to this repository and no other can become it. The promote's dirty gate asks both repositories: the shared directories here, and in the runner's repository its directory and every path its manifests name.
+
+`bin/lint/runner-outside-test` holds all of it against a throwaway repository with an invented runner: the path resolution, what is staged and from where, every refusal above, and the page built into a bundle of its own.

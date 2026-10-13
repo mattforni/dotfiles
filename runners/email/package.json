@@ -2,13 +2,12 @@
   "name": "@homebase/runner-email",
   "private": true,
   "version": "0.1.0",
-  "description": "The runner email renderer: the three runner pages as React, bundled to one CommonJS file the entrypoints call",
+  "description": "The runner email renderer: each runner's page as React, bundled to one CommonJS file per runner that its entrypoint calls",
   "license": "UNLICENSED",
   "scripts": {
-    "build": "esbuild render.tsx --bundle --platform=node --format=cjs --target=node24 --jsx=automatic '--define:process.env.NODE_ENV=\"production\"' --minify-syntax --outfile=dist/render.cjs",
+    "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "goldens": "node tst/update-goldens.mjs",
-    "pretest": "npm run build",
     "test": "node --test tst/render.test.mjs"
   },
   "dependencies": {

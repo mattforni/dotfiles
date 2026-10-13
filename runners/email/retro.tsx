@@ -51,7 +51,7 @@ import {
 } from "./jq";
 import { RecordsRow, SessionsRow, SpacerRow } from "./local";
 import { recordCard } from "./records";
-import type { RenderContext } from "./types";
+import type { Page, RenderContext } from "./types";
 
 /*
  * The Retro email, ported from the jq renderer it replaced (git history,
@@ -695,3 +695,6 @@ export function retroText(input: unknown, context: RenderContext): string {
 	out += `\n\n${context.meta}\n`;
 	return out;
 }
+
+/** What the bundle built for this runner renders: build.mjs aliases "runner-page" to this file. */
+export const page: Page = { html: retroHTML, text: retroText };

@@ -746,10 +746,13 @@ runner_draft() {
 
 # Where the node bundle is: beside the shared library in an image, in the
 # repo's own build on this machine. The same two places, in the same order,
-# that an entrypoint looks for runner.sh itself.
+# that an entrypoint looks for runner.sh itself. A bundle carries one
+# runner's page, so an image holds exactly one, under the plain name, and
+# the repo's build holds one per runner, each under its runner's name
+# (bin/runner/lib.sh builds it before a run on this machine starts).
 runner_renderer_bundle() {
     local candidate
-    for candidate in "$LIB_DIR/render.cjs" "$LIB_DIR/../email/dist/render.cjs"; do
+    for candidate in "$LIB_DIR/render.cjs" "$LIB_DIR/../email/dist/render-${RUNNER_NAME:-}.cjs"; do
         if [[ -r "$candidate" ]]; then
             printf '%s' "$candidate"
             return 0
@@ -771,7 +774,7 @@ runner_render_node() {
     local format="$1" out="$2" errors="$3" meta="$4" bundle
     renderer_error=""
     if ! bundle="$(runner_renderer_bundle)"; then
-        renderer_error="no node bundle at $LIB_DIR/render.cjs or $LIB_DIR/../email/dist/render.cjs"
+        renderer_error="no node bundle at $LIB_DIR/render.cjs or $LIB_DIR/../email/dist/render-${RUNNER_NAME:-}.cjs"
         echo "RENDERER: $renderer_error"
         return 1
     fi

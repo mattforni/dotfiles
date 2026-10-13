@@ -1,14 +1,13 @@
 import { readFileSync } from "node:fs";
 import { renderFailureEmail } from "@atelic-action/ui/email/render";
-import { pipelineHTML, pipelineText } from "./plumber";
-import { recruiterHTML, recruiterText } from "./recruiter";
-import { retroHTML, retroText } from "./retro";
+import { page } from "runner-page";
 import type { Page, RenderContext } from "./types";
 
 /*
- * The renderer the runners call, bundled by esbuild into one CommonJS file:
+ * The renderer a runner calls, bundled by esbuild into one CommonJS file per
+ * runner (build.mjs): this file, that runner's page, and the failure page.
  *
- *   node render.cjs <retro|plumber|recruiter> <html|text> \
+ *   node render.cjs <runner> <html|text> \
  *       --week 2026-W38 --monday 2026-09-14 --sunday 2026-09-20 --meta "42s · $0.31"
  *
  * and the page a bad run mails instead, whose stdin is the log's tail rather
@@ -18,18 +17,21 @@ import type { Page, RenderContext } from "./types";
  *       --title Retro --eyebrow "Retro · 2026-W38" --reason "the render failed"
  *
  * The page leaves on stdout with exactly one trailing newline, which is what
- * every caller downstream counts on. A bad runner name, a draft that is not
+ * every caller downstream counts on. A bundle answers to its own runner's
+ * name and to no other: the page is whichever one build.mjs aliased
+ * "runner-page" to, under the name it defined as RUNNER_NAME, so asking the
+ * retro's bundle for another runner's page is an unknown name like any other.
+ * A bad runner name, a draft that is not
  * JSON, and a render that throws each print one line to stderr and exit non
  * zero, so the scaffold can say why in the log; for the failure page that is
  * the moment it drops to a bare <pre>, which is the last thing standing
  * between a broken renderer and no mail at all.
  */
 
-const PAGES: Record<string, Page> = {
-	retro: { html: retroHTML, text: retroText },
-	plumber: { html: pipelineHTML, text: pipelineText },
-	recruiter: { html: recruiterHTML, text: recruiterText },
-};
+/* Set by the build to the runner this bundle was built for. */
+declare const RUNNER_NAME: string;
+
+const PAGES: Record<string, Page> = { [RUNNER_NAME]: page };
 
 const FORMATS = ["html", "text"];
 

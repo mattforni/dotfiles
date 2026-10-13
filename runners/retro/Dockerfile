@@ -6,15 +6,17 @@
 # Nothing here writes back to the world except the rotated Strava refresh
 # token, which goes to the vault.
 
-# The email renderer, built in its own stage: the three runner pages as React
+# The email renderer, built in its own stage: this runner's page as React
 # over the shared @atelic-action/ui component library, bundled by esbuild into
-# one CommonJS file. CommonJS and not ESM on purpose, because the ESM bundle
+# one CommonJS file with the failure page. RUNNER names the page, since a
+# bundle carries one and the other runners' pages are no part of this image.
+# CommonJS and not ESM on purpose, because the ESM bundle
 # died at runtime on node 20 with "Dynamic require of util is not supported". Only that
 # one file is copied forward, so the final image gains no node_modules.
 FROM node:24-slim AS email
 WORKDIR /email
 COPY email/ /email/
-RUN npm ci && npm run build
+RUN npm ci && RUNNER=retro npm run build
 
 FROM node:24-slim
 
@@ -37,7 +39,7 @@ COPY --chown=runner:runner prompt.md /home/runner/prompt.md
 COPY --chown=runner:runner lib/ /home/runner/lib/
 # The bundled renderer, at the first place runner.sh looks for it, and the
 # only renderer in the image since the jq one retired (ATE-563).
-COPY --from=email --chown=runner:runner /email/dist/render.cjs /home/runner/lib/render.cjs
+COPY --from=email --chown=runner:runner /email/dist/render-retro.cjs /home/runner/lib/render.cjs
 RUN chmod +x /home/runner/entrypoint.sh
 
 # GitHub's published ed25519 host key, pinned so the clones never trust
