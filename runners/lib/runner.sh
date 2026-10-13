@@ -269,8 +269,8 @@ meta_line() {
 #                               runner renders one (runner_render_text)
 #   ATTACHMENT                  empty; a runner sets it to a file to send along
 #   PROMPT_FILE                 prompt.md beside the entrypoint
-#   LIB_DIR                     the shared library (render.cjs, hubspot.mjs,
-#                               text.mjs), wherever it was found
+#   LIB_DIR                     the shared library (render.cjs, gmail.mjs,
+#                               linear.mjs, text.mjs), wherever it was found
 #   status fail_reason result rc
 # and traps runner_finish on EXIT.
 runner_init() {
@@ -438,6 +438,123 @@ fill_prompt() {
         args+=(-e "s|{{$v}}|$val|g")
     done
     sed "${args[@]}" "$file"
+}
+
+# ---------- the repos a run reads and writes ----------
+
+# Usage: runner_checkout <path> <repo url> <marker file> <deploy key variable> <key file name>
+# Puts a repository where a run expects it. A checkout that is already there
+# is used as it is and never touched: on this machine that is the real
+# repository, and in a container rehearsal it is a read only mount of it.
+# Only an absent checkout is cloned, shallow, over its read only deploy key,
+# which is the production path. The marker is a file the run cannot do
+# without, so a path holding something else is refused and never cloned over.
+# The key variable is required only when the clone is: a run that finds its
+# checkout needs no key. A path this call cloned is added to CLONED_PATHS,
+# the only checkouts a run may write into. Sets fail_reason and returns non
+# zero on failure.
+# shellcheck disable=SC2034
+runner_checkout() {
+    local path="$1" repo="$2" marker="$3" keyvar="$4" keyfile="$HOME/.ssh/$5"
+    if [[ -f "$path/$marker" ]]; then
+        echo "repo: using the checkout at $path ($(git -C "$path" log -1 --format=%h 2>/dev/null || echo 'not a git checkout'))"
+        return 0
+    fi
+    if [[ -e "$path" ]]; then
+        fail_reason="$path exists but has no $marker; refusing to clone over it"
+        return 1
+    fi
+    require "$keyvar" || return 1
+    mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+    printf '%s\n' "${!keyvar}" > "$keyfile"
+    chmod 600 "$keyfile"
+    if ! GIT_SSH_COMMAND="ssh -i $keyfile -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes" \
+        timeout 2m git clone --quiet --depth 1 "$repo" "$path" 2>"$WORK/git-stderr.txt"; then
+        fail_reason="clone of $repo failed: $(head -c 300 "$WORK/git-stderr.txt")"
+        return 1
+    fi
+    if [[ ! -f "$path/$marker" ]]; then
+        fail_reason="the clone of $repo is missing $marker"
+        return 1
+    fi
+    echo "repo: $repo at $(git -C "$path" log -1 --format='%h %s' | cut -c1-80)"
+    CLONED_PATHS="${CLONED_PATHS:-} $path"
+}
+
+# Usage: runner_land_file <checkout> <source file> <path in the repo> <ssh command> <subject> [<body>]
+# Lands one file on the remote's main from a clone that may have fallen
+# behind it, which a run of twenty minutes usually has. The commit is rebuilt
+# on the fresh tip every try: fetch main, reset the checkout to it, copy the
+# file in, commit, push. Never a rebase. The clone is one commit deep, and a
+# rebase across a shallow boundary has no common ancestor to work from, so it
+# reports add/add conflicts on files the commit never touched; that sent a
+# roster to the mail as an attachment on a morning main had only moved
+# (2026-10-07). A push that loses the race to another push is tried again on
+# the newer tip, RUNNER_LAND_TRIES times in all (four by default),
+# RUNNER_LAND_PAUSE seconds apart.
+#
+# The checkout must be one this run cloned: the reset discards anything else
+# in it. The file is this run's own, so its copy replaces whatever main holds
+# at that path. Prints what happened, sets LANDED_COMMIT to the short hash on
+# main, and returns non zero with the reason printed when the file could not
+# be landed, so the caller can fall back.
+# shellcheck disable=SC2034
+runner_land_file() {
+    local checkout="$1" src="$2" dest="$3" ssh_cmd="$4" subject="$5" body="${6:-}"
+    local tries="${RUNNER_LAND_TRIES:-4}" pause="${RUNNER_LAND_PAUSE:-3}" err="$WORK/git-stderr.txt" attempt
+    local ident=(-c user.name="${RUNNER_GIT_NAME:-Claude}" -c user.email="${RUNNER_GIT_EMAIL:-claude@atelic.me}")
+    local message=(-m "$subject")
+    [[ -z "$body" ]] || message+=(-m "$body")
+    LANDED_COMMIT=""
+    : > "$err"
+    for (( attempt = 1; attempt <= tries; attempt++ )); do
+        (( attempt == 1 )) || sleep "$pause"
+        if ! GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$checkout" fetch --quiet --depth 1 origin main 2>>"$err"; then
+            echo "land: could not fetch main (try $attempt of $tries)"
+            continue
+        fi
+        if ! git -C "$checkout" reset --quiet --hard FETCH_HEAD 2>>"$err"; then
+            echo "land: could not reset the checkout to main: $(tail -c 300 "$err")"
+            return 1
+        fi
+        if ! { mkdir -p "$(dirname "$checkout/$dest")" && cp "$src" "$checkout/$dest"; } 2>>"$err"; then
+            echo "land: could not copy $dest into the checkout: $(tail -c 300 "$err")"
+            return 1
+        fi
+        git -C "$checkout" add -- "$dest" 2>>"$err" || { echo "land: could not stage $dest: $(tail -c 300 "$err")"; return 1; }
+        if git -C "$checkout" diff --cached --quiet; then
+            LANDED_COMMIT="$(git -C "$checkout" log -1 --format=%h)"
+            echo "land: main already holds this $dest; nothing to commit"
+            return 0
+        fi
+        if ! git -C "$checkout" "${ident[@]}" commit --quiet "${message[@]}" 2>>"$err"; then
+            echo "land: commit failed: $(tail -c 300 "$err")"
+            return 1
+        fi
+        if GIT_SSH_COMMAND="$ssh_cmd" timeout 2m git -C "$checkout" push --quiet origin HEAD:main 2>>"$err"; then
+            LANDED_COMMIT="$(git -C "$checkout" log -1 --format=%h)"
+            (( attempt == 1 )) || echo "land: main had moved; landed on its new tip on try $attempt"
+            return 0
+        fi
+        echo "land: the push did not land (try $attempt of $tries)"
+    done
+    echo "land: could not land $dest on main after $tries tries: $(tail -c 300 "$err" | tr '\n' ' ')"
+    return 1
+}
+
+# Usage: runner_each_line <parallel> <exported function> < lines
+# Runs the function once for every line of input, the whole line as its one
+# argument, <parallel> at a time. Blank lines are skipped. The lines go to
+# xargs NUL separated on purpose: fed lines, xargs reads quotes as its own,
+# and one apostrophe in a line stops it with "unterminated quote" and drops
+# every line after it. A company with an apostrophe in its name did that to
+# the plumber's site pull for two weeks (2026-W41 and W42): the list is
+# ordered follow ups first, so the first touch sites at its foot were never
+# fetched.
+runner_each_line() {
+    local parallel="$1" fn="$2"
+    sed '/^[[:space:]]*$/d' | tr '\n' '\0' \
+        | xargs -0 -P "$parallel" -I{} bash -c "$fn"' "$1"' _ {}
 }
 
 # Usage: runner_claude <prompt> [claude -p arguments...]
