@@ -165,11 +165,11 @@ gh pr view PR_NUMBER --json mergeStateStatus --jq '.mergeStateStatus'
 If `CLEAN`:
 
 ```bash
-gh pr merge PR_NUMBER --squash --delete-branch
+gh pr merge PR_NUMBER --squash
 ~/bin/review/landed REPO PR_NUMBER REVIEWED_SHA --fixed claude:N --declined claude:M --held-min X
 ```
 
-The second line records the landing on the scorecard (count the major and above findings across every pass on the PR, not the last pass alone; a landing with nothing to triage still gets the call so the hold is counted).
+No `--delete-branch` and no `--admin`: the branch stays until the merge is confirmed, and a bypass flag is a merge without review (lander discipline, 2026-10-07). The second line records the landing on the scorecard (count the major and above findings across every pass on the PR, not the last pass alone; a landing with nothing to triage still gets the call so the hold is counted).
 
 If `BEHIND` or `DIRTY` (merge conflict against base): bail to user. Rebasing into a conflicting state is judgment-call territory and shouldn't happen silently.
 
