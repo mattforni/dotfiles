@@ -83,7 +83,7 @@ Seven cheap fetches per board beats one broad query that returns welders. Add a 
 What actually qualifies a fractional role:
 
 - **Advisory or executive technical shape.** Fractional CTO, technical advisor, head of engineering, head of product, tech lead, architect. Management content is a positive.
-- **Rate at or above the band.** Forni's practice rate is $1,500 to $2,000 per day, roughly $190 to $250 per hour, or a $14,000 to $17,000 monthly retainer at half time (see the README's compensation section). Report the posted rate every time, and flag anything below $190 per hour as under band rather than dropping it silently.
+- **Rate at or above the band.** Forni's practice band (a day rate and a half time monthly retainer) is in the Compensation section of `~/Eudaimonia/Craft/Vocation/README.md`; read it there, and read an hourly posting against the day rate over an eight hour day. Report the posted rate every time, and flag anything below the band's floor as under band rather than dropping it silently.
 - **Remote, and in a workable time zone.** Same full remote rule as the W2 lane, and watch for postings restricted to ET or CT, which exclude Mountain.
 - **Hours that leave room.** 10 to 20 hours a week is the sweet spot. Flag anything at 30 or more as effectively a full time job in disguise.
 - **No mission gate.** This lane seeds the Atelic practice, so sector does not filter it. Note the sector, do not judge it.

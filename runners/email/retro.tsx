@@ -93,6 +93,8 @@ type FunnelRow = {
 	reason?: unknown;
 	last_touch?: unknown;
 	last_reply?: unknown;
+	/** A sentence the pull adds to a row it wants read twice (a half applied close). */
+	note?: unknown;
 };
 
 export type RetroDraft = {
@@ -107,6 +109,8 @@ export type RetroDraft = {
 	blind_spots?: unknown;
 	strava?: Activity[] | null;
 	atelic?: {
+		/** The funnel's stage names in funnel order, from the pull. */
+		stages?: string[] | null;
 		coverage?: AtelicCoverageRow[] | null;
 		open_leads?: FunnelRow[] | null;
 		opportunities?: FunnelRow[] | null;
@@ -283,35 +287,47 @@ function verdict(draft: RetroDraft): string {
 
 /* ---------- the funnel ---------- */
 /*
- * Six stages: Lead, MQL, SQL, Opportunity, Customer, Closed. Which one a
- * company sits in comes from the pull, which puts it on every row as
- * `funnel`; the rule that decides it lives with the pull, in the Atelic
- * repo, and this page only prints what it is given. A row that carries no
- * stage, or one this page does not know (a draft from before the pull
- * carried the field), is listed under No Stage after the six, so it is still
- * on the page and nobody guesses where it belongs.
+ * The stages and their order come from the pull, as `stages` on the week
+ * (Lead, MQL, SQL, Opportunity, Customer, Closed today), and which one a
+ * company sits in comes from the pull too, as `funnel` on every row. The
+ * rule that decides both lives with the pull, in the Atelic repo, and this
+ * page keeps no list of its own: it only prints what it is given. A row that
+ * carries no stage, or one the week does not name, is listed under No Stage
+ * after the rest, so it is still on the page and nobody guesses where it
+ * belongs.
  */
 
-const STAGE_NAMES = ["Lead", "MQL", "SQL", "Opportunity", "Customer", "Closed"];
 const NO_STAGE = "No Stage";
+
+/** A stage name too wide for the stat strip, shortened; any other reads as it is. */
+const STAGE_LABELS: Record<string, string> = { Opportunity: "Oppty" };
+
+/** The week's stage names, in funnel order. */
+function stageNames(draft: RetroDraft): string[] {
+	return alt(draft.atelic?.stages, []).filter((name): name is string => typeof name === "string");
+}
 
 type Staged = FunnelRow & { funnel: string; record: (row: FunnelRow) => RecordStackItem };
 
-function staged(rows: FunnelRow[] | null | undefined, record: (row: FunnelRow) => RecordStackItem): Staged[] {
+function staged(
+	rows: FunnelRow[] | null | undefined,
+	record: (row: FunnelRow) => RecordStackItem,
+	names: string[],
+): Staged[] {
 	return alt(rows, []).map((row) => ({
 		...row,
-		funnel: typeof row.funnel === "string" && STAGE_NAMES.includes(row.funnel) ? row.funnel : NO_STAGE,
+		funnel: typeof row.funnel === "string" && names.includes(row.funnel) ? row.funnel : NO_STAGE,
 		record,
 	}));
 }
 
 /** Every row with its stage, and the card its own table would draw for it. */
-function funnel(draft: RetroDraft): Staged[] {
+function funnel(draft: RetroDraft, names: string[]): Staged[] {
 	const atelic = alt(draft.atelic, {});
 	return [
-		...staged(atelic.open_leads, leadRecord),
-		...staged(atelic.opportunities, dealRecord),
-		...staged(atelic.closed_leads, closedRecord),
+		...staged(atelic.open_leads, leadRecord, names),
+		...staged(atelic.opportunities, dealRecord, names),
+		...staged(atelic.closed_leads, closedRecord, names),
 	];
 }
 
@@ -354,13 +370,16 @@ function leadRecord(row: FunnelRow): RecordStackItem {
 	const touches = row.touches === null || row.touches === undefined ? null : Number(row.touches);
 	const opens = row.opens === null || row.opens === undefined || row.opens === "-" ? null : Number(row.opens);
 	const replied = replyDay(row);
+	// The pull's own note on a row (a half applied close) rides on the muted
+	// line under the card, after the last touch.
+	const notes = [kind === "" ? "" : `Last touch: ${kind}`, jqToString(alt(row.note, ""))].filter((n) => n !== "");
 	return recordCard({
 		title: row.company,
 		badge: row.status,
 		// A dated reply rides on the clock ("replied Wed 10-07"); the bare
 		// word is only for a row that says yes with no day.
 		touch: { touches, opens, replied: replied === "" && row.replied === "yes", lastReply: replied },
-		note: kind === "" ? undefined : `Last touch: ${kind}`,
+		note: notes.length === 0 ? undefined : notes.join(" · "),
 	});
 }
 
@@ -372,21 +391,32 @@ function leadRecord(row: FunnelRow): RecordStackItem {
 function dealRecord(row: FunnelRow): RecordStackItem {
 	const cash = alt(row.cash, "-");
 	const replied = replyDay(row);
+	// The reason and the pull's note (a lost deal with no reason on the
+	// company) ride on the muted line, the way a lead's note does.
+	const reason = jqToString(alt(row.reason, ""));
+	const notes = [
+		replied === "" ? "" : `Replied ${replied}`,
+		reason === "" || reason === "-" ? "" : `Reason: ${titlecase(reason.replace(/_/g, " "))}`,
+		jqToString(alt(row.note, "")),
+	].filter((n) => n !== "");
 	return recordCard({
 		title: row.company,
 		badge: replied !== "" || row.replied === "yes" ? "Replied" : undefined,
 		deal: { stage: alt(row.stage, ""), amount: null, cash: cash === "-" ? "" : cash },
-		note: replied === "" ? undefined : `Replied ${replied}`,
+		note: notes.length === 0 ? undefined : notes.join(" · "),
 	});
 }
 
 function closedRecord(row: FunnelRow): RecordStackItem {
 	const reason = alt(row.reason, "-");
+	const notes = [replyDay(row) === "" ? "" : `Replied ${replyDay(row)}`, jqToString(alt(row.note, ""))].filter(
+		(n) => n !== "",
+	);
 	return recordCard({
 		title: row.company,
 		badge: row.stage === "Closed Lost" ? "Closed Lost" : row.status,
 		closed: reason === "-" ? null : { reason },
-		note: replyDay(row) === "" ? undefined : `Replied ${replyDay(row)}`,
+		note: notes.length === 0 ? undefined : notes.join(" · "),
 	});
 }
 
@@ -397,20 +427,31 @@ type Stage = {
 	records: RecordStackItem[];
 };
 
-/** Each stage with its rows and the records that list them. */
+/**
+ * The card a stage draws its rows on, where the stage decides it rather than
+ * the table the row came in on: a lead whose company became a customer reads
+ * as a deal, and a deal that was lost reads as closed. A stage not named here
+ * draws each row on its own table's card.
+ */
+const STAGE_CARDS: Record<string, (row: FunnelRow) => RecordStackItem> = {
+	Opportunity: dealRecord,
+	Customer: dealRecord,
+	Closed: closedRecord,
+};
+
+/** Each stage with its rows and the records that list them, in the week's order. */
 function stages(draft: RetroDraft): Stage[] {
-	const all = funnel(draft);
-	const shapes: { name: string; label: string; record: (row: FunnelRow) => RecordStackItem }[] = [
-		{ name: "Lead", label: "Lead", record: leadRecord },
-		{ name: "MQL", label: "MQL", record: leadRecord },
-		{ name: "SQL", label: "SQL", record: leadRecord },
-		{ name: "Opportunity", label: "Oppty", record: dealRecord },
-		{ name: "Customer", label: "Customer", record: dealRecord },
-		{ name: "Closed", label: "Closed", record: closedRecord },
-	];
-	const known: Stage[] = shapes.map((shape) => {
-		const rows = all.filter((row) => row.funnel === shape.name);
-		return { name: shape.name, label: shape.label, rows, records: rows.map(shape.record) };
+	const names = stageNames(draft);
+	const all = funnel(draft, names);
+	const known: Stage[] = names.map((name) => {
+		const rows = all.filter((row) => row.funnel === name);
+		const card = STAGE_CARDS[name];
+		return {
+			name,
+			label: STAGE_LABELS[name] ?? name,
+			rows,
+			records: rows.map((row) => (card ? card(row) : row.record(row))),
+		};
 	});
 	// A row with no stage is drawn by the card of the table it came in on,
 	// and the group shows only when there is one, so a current pull reads

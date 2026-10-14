@@ -10,6 +10,7 @@
   "blind_spots": "",
   "strava": [],
   "atelic": {
+    "stages": ["Lead", "MQL", "SQL", "Opportunity", "Customer", "Closed"],
     "coverage": [],
     "open_leads": [],
     "opportunities": [],
