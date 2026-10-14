@@ -134,6 +134,7 @@
     }
   ],
   "atelic": {
+    "stages": ["Lead", "MQL", "SQL", "Opportunity", "Customer", "Closed"],
     "coverage": [
       { "measure": "first_sends", "logged": "5", "target": "5" },
       { "measure": "bumps", "logged": "3", "target": "5" }
@@ -178,12 +179,13 @@
         "company": "Ridgeline Glass",
         "funnel": "Lead",
         "lifecycle": null,
-        "status": "NEW",
+        "status": "UNQUALIFIED",
         "kind": "email_send",
         "touches": 1,
         "opens": "0",
         "replied": "no",
-        "last_send": "2026-01-30"
+        "last_send": "2026-01-30",
+        "note": "half applied close: UNQUALIFIED with no Disqualification Reason on the company; set the reason or reopen the contact"
       }
     ],
     "opportunities": [

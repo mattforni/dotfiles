@@ -95,9 +95,11 @@ Lead · 2
     1 open
     Last touch: Walk in
 
-  Ridgeline Glass [New]
+  Ridgeline Glass [Unqualified]
     1 touch · no opens yet
-    Last touch: Email Send
+    Last touch: Email Send · half applied close: UNQUALIFIED with no
+    Disqualification Reason on the company; set the reason or reopen
+    the contact
 
 MQL · 1
   Harbor Line Plumbing [Contacted]

@@ -135,7 +135,7 @@ test("a render that throws fails loudly rather than writing half a page", () => 
 /*
  * The retro prints the stage the pull put on each row. A draft from before
  * the pull carried one still renders, with every company on the page under
- * No Stage and the six stages at zero, rather than throwing or guessing.
+ * No Stage and the week's stages at zero, rather than throwing or guessing.
  */
 test("a retro row with no stage is listed under No Stage, never dropped", () => {
 	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
@@ -162,6 +162,29 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
 	assert.equal(html.status, 0, html.stderr);
 	assert.ok(html.stdout.includes("No Stage · 10"));
 	for (const company of companies) assert.ok(html.stdout.includes(company), `${company} is on the page`);
+});
+
+/*
+ * The stages and their order are the pull's, read from `stages` on the week;
+ * the page keeps no list of its own. A week that names them in another order
+ * prints them in that order, and a stage the week does not name is no stage.
+ */
+test("the retro's funnel reads its stages and their order from the week", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
+	draft.atelic.stages = ["Closed", "Customer", "Opportunity", "SQL", "MQL"];
+	const text = renderRaw("retro", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const funnel = text.stdout.slice(text.stdout.indexOf("\nThe Funnel\n"));
+	const order = ["Closed", "Customer", "Oppty", "SQL", "MQL", "No stage"].map((label) =>
+		funnel.indexOf(`\n  ${label} `),
+	);
+	assert.ok(
+		order.every((at) => at >= 0),
+		"every stage the week names, and No stage, is on the funnel",
+	);
+	assert.deepEqual([...order].sort((a, b) => a - b), order, "in the week's order");
+	assert.match(funnel, /\n {2}No stage {2}2\n/, "the two Lead rows fall to No stage");
+	assert.ok(!/\n {2}Lead {6}/.test(funnel), "a stage the week does not name is not printed");
 });
 
 test("the parity canonicalizer ignores what only the markup differs on", () => {
