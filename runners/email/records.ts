@@ -49,7 +49,7 @@ export type RecordInput = {
 	url?: string | null;
 	/** A stage or status word for the pill, as the record carries it (CONTACTED, Closed Lost). */
 	badge?: unknown;
-	/** Facts that lead the meta line: the company on a contact card, the fit on a first touch. */
+	/** Facts that lead the meta line, such as the company on a contact card. */
 	lead?: unknown[];
 	touch?: TouchLine | null;
 	/** The deal's stage and cash; `cash` is a preformatted string for a mail whose rows carry one instead of a number. */
