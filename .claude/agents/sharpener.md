@@ -47,7 +47,7 @@ Before auditing, also read:
    or CLI already covers.
 3. **Context.** The four files as lines and bytes, the delta, and the
    best single bounded cut for this session's Cut phase. Run
-   `claude -p "/skill-doctor" --output-format text` for the per turn
+   `claude -p "/skill-doctor" --output-format text` for the per skill
    token count and any never used rows.
    Then the grooming flags carried in the last entry's Groomed line,
    each marked still holds or resolved, plus any new one, one line each;
@@ -98,7 +98,7 @@ Before auditing, also read:
 
 ## Output
 
-First dispatch, one page:
+First dispatch, one page, under 60 lines:
 
 - **Tooling**, **Context**, **Cleanup**, **Repetition**, **Held**: one
   short section each, ending in a recommended action with its pointer.

@@ -21,7 +21,7 @@ The `sharpener` agent (`~/.claude/agents/sharpener.md`) runs Ground and Audit in
 Every audit answers these, in this order. The answers are the session's whole input.
 
 1. **Tooling.** Has anything shipped since the last entry (a Claude Code release, an official skill or plugin, a harness capability, a CLI) that already covers something the setup does by hand or home spun? Search before build.
-2. **Context.** Is the always loaded context growing? The four files against the last Load line, and the skill doctor's per turn token count.
+2. **Context.** Is the always loaded context growing? The four files against the last Load line, and the skill doctor's per skill token counts.
 3. **Cleanup.** What corrections did Forni make since the last entry, and how do they get recodified? Every correction is classed by what it indicts (handoff, harness, wrapper, browser, routine, other) and by whether a rule already states it. The fix for a class goes to the strongest seat that holds it: a hook, then a flow step, then the output style, then a rule. A memory promoted to a rule is struck in the same change.
 4. **Repetition.** What did Forni or the session do by hand more than twice since the last entry that should become a skill, an agent, or a routine? Routines already built get one line here: any failure page mailed since the last entry, and whether the fix landed.
 5. **Held.** Did the last entry's codification hold? Read whether its correction class recurred, by the same evidence the Cleanup question uses.
@@ -77,7 +77,7 @@ Resume the sharpener with the outcomes; it drafts the entry and returns it. The 
 **Picked:** [the one action, with its PR or ticket]
 **Groomed:** [the flag taken and the flags carried; skill doctor in one line]
 **Load:** [GC, ~/CLAUDE.md, Eudy CLAUDE.md, MEMORY.md as lines and KB]
-**Next:** [one line]
+**Next:** [one line; any item closed, ticketed, or retired at Pick is named here with its ticket or reason]
 ```
 
 If the session altered the Current State table (a dimension's level or evidence genuinely changed), update it in the same commit. Be honest: a single session rarely moves a level.
