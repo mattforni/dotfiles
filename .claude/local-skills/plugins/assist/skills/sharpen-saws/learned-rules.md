@@ -6,7 +6,7 @@ Sharpen sessions are branched as `YYYY-MM-DD-sharpen-saws` in every repo touched
 
 **Why:** Forni wants a consistent way to find any sharpen session's work across both repos without hunting commit messages, with the date leading so listings sort by session.
 
-**How to apply:** At the top of Close, cut a worktree on the branch in each touched repo (`git -C <repo> worktree add <path> -b YYYY-MM-DD-sharpen-saws origin/main`), per the work-in-worktrees rule. If the branch already exists (rerun or continuation), enter its existing worktree instead.
+**How to apply:** At Pick, once he names the action and before the first write, cut a worktree on the branch in each touched repo (`git -C <repo> worktree add <path> -b YYYY-MM-DD-sharpen-saws origin/main`), per the work-in-worktrees rule. If the branch already exists (rerun or continuation), enter its existing worktree instead.
 
 ## Ticketed Rows Are Pointers, Never Counters
 
@@ -38,7 +38,7 @@ Before proposing a new headless routine, audit the feedback channels on existing
 
 ## Structural Moves Get Plan Mode Before Any File Is Written
 
-When a sharpen session creates or reshapes a durable surface (an agent, a skill, a hook, a workflow), enter plan mode and walk the design with Forni before authoring anything. Ground the design in the authoring conventions (`~/.claude/references/skills.md`) and, for anything agent shaped, a fresh read of Anthropic's guidance; settle the ownership and orchestration forks with him one at a time, then hand the build to a ticket; a build lands inside the session only on Forni's explicit call, as on 2026-09-23.
+When a sharpen session creates or reshapes a durable surface (an agent, a skill, a hook, a workflow), enter plan mode and walk the design with Forni before authoring anything. Ground the design in the authoring conventions (`~/.claude/references/skills.md`) and, for anything agent shaped, a fresh read of Anthropic's guidance; settle the ownership and orchestration forks with him one at a time, then land the build in the session once he approves the plan, or hand it to a ticket when it is ticket sized, as on 2026-09-23.
 
 **Why:** 2026-08-13. The sharpener agent's first version was authored minutes after the pick with no plan: the skill ended up orchestrating the agent ("Step 1: dispatch the sharpener") when Forni wanted the agent to run the method, and the scan was delegated to three scouts when one context held it fine. Forni: "This feels like we didn't really think about this very hard and didn't really come up with a plan." The whole build was redone through plan mode the same session.
 
@@ -58,7 +58,7 @@ Reduction of the always loaded context is a standing phase of every sharpen run 
 
 **Why:** 2026-08-27. The board proposed unloading homebase's CLAUDE.md from every session; Forni corrected the premise (the `~/CLAUDE.md` link is the design, homebase is the config store loaded into Eudy on purpose) and set the direction instead: "If we can slim down and go through and reduce, I think that is great. We should definitely have that reduction stage as a part of every sharpened saws run." The first cut took that file from 332 lines to 88 by moving depth into path scoped rules. On 2026-09-16 socrates found the phase text still gated the cut on the 200 line anchor while this rule said every session, and three entries had logged "no cut owed" past a named duplicate; the phase text was rewritten 2026-09-23 so the two agree.
 
-**How to apply:** The sharpener's Load line always names the best single cut; the main session takes it at Cut unless Ground found nothing bounded. The anchor decides whether a path scoped rule or tool doc move is due; it never excuses a session from the cut. Never turn the cut into a restructure; that is `assist:groom-context`.
+**How to apply:** The main session takes the best single cut at Cut unless Ground found nothing bounded; nothing excuses a session from the cut. Never turn the cut into a restructure; that is `assist:groom-context`.
 
 ## The Homebase Link Is the Design, Not a Placement Failure
 
@@ -82,7 +82,7 @@ When a scout or the sharpener dies on a server side error (a 529, a dropped conn
 
 **Why:** 2026-09-03. Two server 529s killed the sharpener mid scan. Resumed by id each time, it kept its reads and its board came back complete on the third resume; socrates, redispatched fresh after its own 529, spent the same tokens again and never returned. On 2026-09-23 the sharpener was forced out with both scouts still running; socrates reported to the main session on its own, and claude-code-guide never did until redispatched once.
 
-**How to apply:** A dead agent's id is in the failure notice; `SendMessage` to it first. If the resume also fails, one fresh dispatch, then stop. A report without a scout says so in that scout's paragraph; the log's Next line carries the miss so the next Ground rebriefs the same question.
+**How to apply:** A dead agent's id is in the failure notice; `SendMessage` to it first. If the resume also fails, one fresh dispatch, then stop (the sharpener itself cannot resume, so the main session does it). A report without a scout says so in that scout's paragraph; the log's Next line carries the miss so the next Ground rebriefs the same question.
 
 ## Skill Doctor Runs Headless
 
