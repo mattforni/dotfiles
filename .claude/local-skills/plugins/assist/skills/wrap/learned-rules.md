@@ -35,7 +35,7 @@ Skill-specific corrections that override SKILL.md. Populate as Forni corrects wr
   issue per item, each in the cycle where it can happen with an estimate and
   a cognitive load label, then close the original as Done. Never leave it
   open with a "landed and remains" comment: a comment buries schedulable work
-  where no cycle or calendar sees it. Overrides Step 5's partially done
+  where no cycle or calendar sees it. Overrides Step 2's partially done
   branch. Forni, 2026-09-24 (ATE-485): "let's not create follow-up comments
   for these ... Then let's go ahead and close this task." When the follow-up needs real
   calendar time, hand place a labeled Craft calendar block per
