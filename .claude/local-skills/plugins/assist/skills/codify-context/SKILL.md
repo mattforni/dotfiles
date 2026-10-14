@@ -35,7 +35,7 @@ Review the conversation for the durable thing. Name, in one line each: the rule,
 
 ### Step 2: Search Before Writing
 
-Grep every destination in Step 3 that could already hold the topic: the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the output style, any path scoped rule or nested CLAUDE.md that covers the files involved, the hooks in `settings.json`, the relevant tool doc under `~/Eudaimonia/Admin/Tools/`, the relevant skill's `learned-rules.md`, and the auto memory index. Three outcomes:
+Grep every destination in Step 3 that could already hold the topic: the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the output style, any path scoped rule or nested CLAUDE.md that covers the files involved, the hooks in `settings.json`, the relevant tool doc under `~/Eudaimonia/Admin/Tools/`, the relevant skill's `learned-rules.md`, and the auto memory files (`~/.claude/projects/*/memory/*.md`, not only the indexes). Three outcomes:
 
 - **Already stated.** Say where, strike any memory that duplicates the existing line (file and index line, named in Step 6), and stop, unless the incident shows the existing line was dropped; then the fix is placement or enforcement (scope it, move it to the point of use, propose a hook), never a restatement.
 - **Stated in conflict.** Two lines that cannot both be satisfied are the finding. Resolving the contradiction is the codification; adding a third statement is forbidden.
