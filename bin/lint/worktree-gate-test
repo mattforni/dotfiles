@@ -99,8 +99,17 @@ expect allow "$P"  "cd -L $WT && git commit -m x"
 # A subshell's cd ends at its paren.
 expect deny  "$P"  "(cd $WT && git commit -m x); git commit -m x"
 expect deny  "$P"  "echo \$(cd $WT && pwd) && git commit -m x"
-expect allow "$P"  "(cd $WT && git commit -m x)"
 expect deny  "$WT" "(cd $P && git commit -m x)"
+# Main's verdict is the floor: what it denies is lifted only for a plain
+# command, so a cd hidden in a subshell, a pipe, a background job, or quoted
+# text never lifts it.
+expect deny  "$P"  "(cd $WT && git commit -m x)"
+expect deny  "$P"  "cd $WT & git commit -m x"
+expect deny  "$P"  "cd $WT | git commit -m x"
+expect deny  "$P"  "echo \"next; cd $WT\"; git commit -m x"
+expect deny  "$P"  "echo 'then cd $WT &&' && git commit -m x"
+expect allow "$P"  "cd \"$WT\" && git commit -m \"a; b\""
+expect allow "$P"  "cd '$WT' && git add -A && git commit -m 'x'"
 
 # Scripts the command runs.
 expect allow "$P"  "bash $S/prints-git.sh"

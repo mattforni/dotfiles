@@ -8,8 +8,10 @@
 # The repo a git call targets is its `git -C <path>`, else the directory the
 # command has moved to: a typed `cd <path> && git commit` is judged on <path>,
 # not the session cwd. Options to cd are skipped; a cd whose target does not
-# exist, or cannot be known (`cd -`, `cd "$DIR"`, `cd $(...)`), leaves it where it was, since
-# that is where the shell stays; a cd inside `( )` or `$( )` ends at the paren.
+# exist, or cannot be known (`cd -`, `cd "$DIR"`, `cd $(...)`), leaves it where
+# it was; a cd inside `( )` or `$( )` ends at the paren. Following cd never
+# loosens the gate past the whole command judged against the cwd, except for a
+# plain command (no pipe, background &, paren, or backtick outside quotes).
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
 # `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
 # or wrapper) is read line by line, and each git call in it gets the same test as
@@ -161,66 +163,92 @@ judge_script() {
   return 1
 }
 
-# Split the typed command into simple commands and walk them in order, starting
-# from the session cwd. Each one is judged against the directory the commands
-# before it moved to, so `cd <primary> && git commit` is judged on the primary
-# whatever the cwd. A subshell gets its own directory: a paren pushes the
-# current one and its close pops it back. Then the script a segment runs, if
-# any, is read: env assignments and wrappers are skipped, and the script is the
-# word in command position (or the first operand of sh, bash, zsh, source, `.`).
-segments=$cmd
-for op in '$(' '(' ')'; do
-  segments=${segments//"$op"/$'\n'"${op#\$}"$'\n'}
-done
-for op in '&&' '||' ';' '&' '|' '`'; do
-  segments=${segments//"$op"/$'\n'}
-done
-base=$cwd
-stack=()
-while IFS= read -r segment; do
-  case "${segment//[[:space:]]/}" in
-    '(') stack+=("$base"); continue ;;
-    ')')
-      if (( ${#stack[@]} > 0 )); then
-        base=${stack[${#stack[@]} - 1]}
-        unset 'stack[${#stack[@]}-1]'
-      fi
-      continue
-      ;;
-  esac
-  judge "$segment" "$base" && deny
-  read -ra words <<<"$segment"
-  i=0
-  while (( i < ${#words[@]} )); do
-    case "${words[i]}" in
-      *=*|env|exec|nohup|time|command) i=$((i + 1)) ;;
-      *) break ;;
-    esac
+# Quoted text dropped, after unquoting a -C or cd path so the directory survives.
+strip_quoted() {
+  sed -E -e "s/-C[[:space:]]+\"([^\"]*)\"/-C \\1/g" -e "s/-C[[:space:]]+'([^']*)'/-C \\1/g" \
+    -e "s/(^|[;&|([:space:]])cd[[:space:]]+\"([^\"]*)\"/\\1cd \\2/g" \
+    -e "s/(^|[;&|([:space:]])cd[[:space:]]+'([^']*)'/\\1cd \\2/g" \
+    -e "s/\"[^\"]*\"|'[^']*'//g" <<<"$1"
+}
+
+# Walk a command's simple commands in order, starting from the session cwd, and
+# succeed when one runs mutating git against a primary. Each is judged against
+# the directory the commands before it moved to, so `cd <primary> && git commit`
+# is judged on the primary whatever the cwd. A subshell gets its own directory:
+# a paren pushes the current one and its close pops it back. With a second
+# argument of 1 the script a segment runs, if any, is read too: env assignments
+# and wrappers are skipped, and the script is the word in command position (or
+# the first operand of sh, bash, zsh, source, or `.`).
+walk() {
+  local segments=$1 read_scripts=$2 base=$cwd segment first next target script i op
+  local -a words stack=()
+  for op in '$(' '(' ')'; do
+    segments=${segments//"$op"/$'\n'"${op#\$}"$'\n'}
   done
-  (( i < ${#words[@]} )) || continue
-  first=$(strip_quotes "${words[i]}")
-  if [[ "$first" == cd ]]; then
-    next=$(cd_dest "$base" "${words[@]:i+1}") && base=$next
-    continue
-  fi
-  case "${first##*/}" in
-    sh|bash|zsh|source|.)
-      i=$((i + 1))
-      # Options are skipped; `-c <string>` and `< file` both name the script
-      # by the word that follows (the string's first word, for -c).
-      while (( i < ${#words[@]} )) && [[ "${words[i]}" == -* || "${words[i]}" == '<' ]]; do
-        if [[ "${words[i]}" == '<' || ( "${words[i]}" == *c* && "${words[i]}" != --* ) ]]; then
-          i=$((i + 1))
-          break
+  for op in '&&' '||' ';' '&' '|' '`'; do
+    segments=${segments//"$op"/$'\n'}
+  done
+  while IFS= read -r segment; do
+    case "${segment//[[:space:]]/}" in
+      '(') stack+=("$base"); continue ;;
+      ')')
+        if (( ${#stack[@]} > 0 )); then
+          base=${stack[${#stack[@]} - 1]}
+          unset 'stack[${#stack[@]}-1]'
         fi
+        continue
+        ;;
+    esac
+    judge "$segment" "$base" && return 0
+    read -ra words <<<"$segment"
+    i=0
+    while (( i < ${#words[@]} )); do
+      case "${words[i]}" in
+        *=*|env|exec|nohup|time|command) i=$((i + 1)) ;;
+        *) break ;;
+      esac
+    done
+    (( i < ${#words[@]} )) || continue
+    first=$(strip_quotes "${words[i]}")
+    if [[ "$first" == cd ]]; then
+      next=$(cd_dest "$base" "${words[@]:i+1}") && base=$next
+      continue
+    fi
+    [[ "$read_scripts" == 1 ]] || continue
+    case "${first##*/}" in
+      sh|bash|zsh|source|.)
         i=$((i + 1))
-      done
-      (( i < ${#words[@]} )) || continue
-      target=${words[i]}
-      ;;
-    *) target=$first ;;
-  esac
-  script=$(resolve "$target" "$base")
-  [[ -n "$script" ]] && is_script "$script" && judge_script "$script" "$base" && deny
-done <<<"$segments"
+        # Options are skipped; `-c <string>` and `< file` both name the script
+        # by the word that follows (the string's first word, for -c).
+        while (( i < ${#words[@]} )) && [[ "${words[i]}" == -* || "${words[i]}" == '<' ]]; do
+          if [[ "${words[i]}" == '<' || ( "${words[i]}" == *c* && "${words[i]}" != --* ) ]]; then
+            i=$((i + 1))
+            break
+          fi
+          i=$((i + 1))
+        done
+        (( i < ${#words[@]} )) || continue
+        target=${words[i]}
+        ;;
+      *) target=$first ;;
+    esac
+    script=$(resolve "$target" "$base")
+    [[ -n "$script" ]] && is_script "$script" && judge_script "$script" "$base" && return 0
+  done <<<"$segments"
+  return 1
+}
+
+# The floor is main's old verdict: the whole command judged against the cwd.
+# Following cd may lift that deny only when the command is plain enough to walk
+# with confidence: quoted text dropped, and no pipe, background &, paren, or
+# backtick left, since a cd inside any of those does not move the shell. Then
+# the walk of that plain text must clear every git call.
+if judge "$cmd" "$cwd"; then
+  plain=$(strip_quoted "$cmd")
+  rest=${plain//&&/}
+  rest=${rest//||/}
+  [[ "$rest" == *[\|\&\(\)\`]* ]] && deny
+  walk "$plain" 0 && deny
+fi
+walk "$cmd" 1 && deny
 exit 0
