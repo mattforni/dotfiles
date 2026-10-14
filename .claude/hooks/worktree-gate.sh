@@ -21,6 +21,9 @@
 # Fails OPEN: any resolution error exits 0, never worse than an ungated command.
 # That includes a path the hook cannot resolve, like `git -C "$REPO"` or
 # `cd "$DIR"` inside a script; only ~, $HOME, and ${HOME} are expanded.
+# Changing this hook: merge on no regression against main (pipe the same input
+# into main's hook and this one; nothing main denies may pass here). Prefer a
+# narrow check that only adds a deny over a general shell parser (ATE-634).
 set -uo pipefail
 unset CDPATH
 
