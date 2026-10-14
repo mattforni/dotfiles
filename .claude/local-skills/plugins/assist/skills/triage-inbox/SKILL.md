@@ -46,13 +46,14 @@ clean inbox. Prefer dispatching the `clerk` agent, which does both mailboxes;
 the steps below are the manual fallback.
 
 1. Read this skill's local [learned-rules.md](learned-rules.md), then the plugin-wide [learned-rules.md](../../learned-rules.md) and [email-rules.md](../../reference/email-rules.md) (corrections override everything below), then [triage-rules.md](../../reference/triage-rules.md) and [label-map.md](../../reference/label-map.md) for classification and routing.
-2. Resolve label name to ID mapping (needed for every modify call):
+2. For the Atelic mailbox, route by the Atelic label map instead, at `~/Eudaimonia/Craft/Vocation/Atelic/Tools/Google/gmail-labels.md` in the Atelic repo. [label-map.md](../../reference/label-map.md) is the personal account's tree only, and a label never crosses accounts.
+3. Resolve label name to ID mapping (needed for every modify call):
 
    ```bash
    GWS_FORCE_PROFILE=<profile> gws gmail users labels list --params '{"userId":"me"}' --format json 2>&1 | grep -v "^Using"
    ```
 
-3. Pull the authoritative inbox:
+4. Pull the authoritative inbox:
 
    ```bash
    GWS_FORCE_PROFILE=<profile> gws gmail users messages list --params '{"userId":"me","q":"in:inbox","maxResults":50}' --format json 2>&1 | grep -v "^Using"
