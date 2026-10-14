@@ -206,19 +206,21 @@ runner_source_path() {
     printf '%s' "$abs"
 }
 
-# Usage: runner_source_ignored <runner-dir> <absolute-file>
-# Whether a file is one its repository ignores, which is 0 for yes. A single
-# file a manifest names has to be one git can see: promote's dirty gate asks
-# git status about every source, and status says nothing at all about an
-# ignored file, so one named by a `context` line or brought as an agent
-# would ship in an image from a tree the gate had called clean, and no
-# commit would ever hold what shipped. A tracked file is never reported
-# here, whatever pattern it matches, and a runner in no repository has no
-# gate to route around, so both are 1.
+# Usage: runner_source_ignored <runner-dir> <absolute-path>
+# Whether a file or a folder is one its repository ignores, which is 0 for
+# yes. What a manifest names has to be something git can see: promote's
+# dirty gate asks git status about every source, and status says nothing at
+# all about an ignored path, so one named by a `context` line or brought as
+# an agent would ship in an image from a tree the gate had called clean, and
+# no commit would ever hold what shipped. A folder counts when it is ignored
+# itself or sits under one that is, a gitignored clone being the likely
+# case. A tracked file is never reported here, whatever pattern it matches,
+# and a runner in no repository has no gate to route around, so both are 1.
 #
-# A directory source is not asked: its ignored contents (an install, a
-# build) are that directory's own business, and the staging already leaves
-# .git and .env.local out of one.
+# Only the folder a line names is asked, never what is inside it: the
+# ignored contents of a folder git can see (an install, a build) are that
+# folder's own business, and the staging already leaves .git and .env.local
+# out of one.
 runner_source_ignored() {
     local fence
     fence="$(runner_source_root "$1")"
@@ -670,6 +672,14 @@ runner_build_context() {
                 echo "the dest '$dest' in $dir/context is already in the staged context, and nothing is overwritten" >&2
                 return 1
             fi
+            if runner_source_ignored "$dir" "$src"; then
+                if [[ -d "$src" ]]; then
+                    echo "the context source '${entry%%:*}' in $dir/context is a folder git ignores; the dirty gate cannot see an ignored folder, so it is never staged" >&2
+                else
+                    echo "the context source '${entry%%:*}' in $dir/context is a file git ignores; the dirty gate cannot see an ignored file, so it is never staged" >&2
+                fi
+                return 1
+            fi
             mkdir -p "$(dirname "$staged/$dest")" || return 1
             if [[ -d "$src" ]]; then
                 # A repository's own directory and a fetched environment
@@ -678,10 +688,6 @@ runner_build_context() {
                 (cd "$src" && tar --exclude=.git --exclude=.env.local -cf - .) \
                     | (cd "$staged/$dest" && tar -xf -) || return 1
             else
-                if runner_source_ignored "$dir" "$src"; then
-                    echo "the context source '${entry%%:*}' in $dir/context is a file git ignores; the dirty gate cannot see an ignored file, so it is never staged" >&2
-                    return 1
-                fi
                 cp "$src" "$staged/$dest" || return 1
             fi
         done < <(runner_context_entries < "$dir/context")
