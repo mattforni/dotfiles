@@ -49,6 +49,9 @@ Before auditing, also read:
    best single bounded cut for this session's Cut phase. Run
    `claude -p "/skill-doctor" --output-format text` for the per turn
    token count and any never used rows.
+   Then the grooming flags carried in the last entry's Groomed line,
+   each marked still holds or resolved, plus any new one, one line each;
+   the Groom phase takes one of them.
 4. **Cleanup.** Every correction Forni made since the last entry: the
    memory files from Ground, the learned rules diff, and his quotes in
    commit messages. Class each by what it indicts (handoff, harness,

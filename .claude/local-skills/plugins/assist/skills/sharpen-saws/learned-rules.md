@@ -74,7 +74,7 @@ The sharpener runs on Bash, and once the main session has entered a worktree (En
 
 **Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the isolation refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
 
-**How to apply:** Step 4 of Before Every Invocation happens at the top of Pick, never before the sharpener returns. A session that edits two repos adds both worktrees with `git worktree add` and never enters either, so gcloud, Linear, and both repos stay reachable. A report built read only should say so in its Signals.
+**How to apply:** Step 4 of Before Every Invocation happens at Pick, once Forni names the action, never before the sharpener returns. A session that edits two repos adds both worktrees with `git worktree add` and never enters either, so gcloud, Linear, and both repos stay reachable. A report built read only should say so in its Signals.
 
 ## Resume Before Redispatch After an Overload
 

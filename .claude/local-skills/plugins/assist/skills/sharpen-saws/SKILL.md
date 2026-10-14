@@ -14,7 +14,7 @@ The `sharpener` agent (`~/.claude/agents/sharpener.md`) runs Ground and Audit in
 1. Read [learned-rules.md](../../learned-rules.md) for any prior corrections about how Forni wants sharpen to run.
 2. Read [LEVELS.md](../../../../../../Eudaimonia/LEVELS.md) (absolute path: `~/Eudaimonia/LEVELS.md`) to anchor on the current state table and the last log entry.
 3. Check this skill's directory for a local `learned-rules.md` and read it if present.
-4. Dispatch the sharpener from the primary checkout; cut the session's worktree branch `YYYY-MM-DD-sharpen-saws` (one per repo touched) only after it returns, at the top of Pick.
+4. Dispatch the sharpener from the primary checkout; cut the session's worktree branch `YYYY-MM-DD-sharpen-saws` (one per repo touched) only after it returns, at Pick, once Forni names the action and before the first write.
 
 ## The Five Questions
 
