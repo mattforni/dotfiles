@@ -7,3 +7,11 @@ Corrections and calibration for how `assist:codify-context` should reason about 
 - **GC has one source of truth, homebase `.claude/CLAUDE.md`.** `~/.claude/CLAUDE.md` is a symlink to it, so an edit through either path hits the same file and the same homebase git history. The profile directories that once also linked to it retired 2026-08-12 (ATE-463).
 
 - **Present deltas in the stream, as the final text of the turn.** Text preceding a tool call can render as a collapsed "Thought for Xs" marker in some views, and the AskUserQuestion dialog truncates content. Print the file by file deltas as the turn's last message, then let the user approve in plain chat. Never ask for approval in a message whose draft content lives only in mid turn text. Codified 2026-07-20 after three consecutive invisible draft rounds.
+
+## A Promotion Deletes the Memory
+
+When a codification lands in a rule file (a learned-rules.md, a tool doc, a CLAUDE.md, the output style), the auto memory that held the same learning is deleted once the rule has landed, file and index line: in the same commit for a direct landing, right after the merge report for a PR.
+
+**Why:** 2026-10-14 sharpen. The loop ran memory to rule and never struck: seven Eudy memories written since 09-30 duplicated a rule written the same day, thirteen in all once checked, and the Atelic store had grown to 199 files with an 86 line index loading into every session there. Forni: "I very much like the codify step deleting the memory promoted."
+
+**How to apply:** Step 4 lists the memory files to strike, found by grepping the memory files themselves (many are unindexed) in each project whose sessions load the new seat; a memory in a project that never loads the seat stays. Step 6 deletes them once the rule has landed and names what was struck; the main session does the strike, never a lander. The sharpen session's Held question reads next week whether new memories still duplicate rules; the target is zero.
