@@ -7,7 +7,9 @@
 #      (a landing step, or committing symlinked homebase config like GC itself).
 # The repo a git call targets is its `git -C <path>`, else the directory the
 # command has moved to: a typed `cd <path> && git commit` is judged on <path>,
-# not the session cwd. A `cd` that cannot be resolved leaves it where it was.
+# not the session cwd. Options to cd are skipped; a cd whose target does not
+# exist, or cannot be known (`cd -`, `cd "$DIR"`), leaves it where it was, since
+# that is where the shell stays; a cd inside `( )` or `$( )` ends at the paren.
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
 # `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
 # or wrapper) is read line by line, and each git call in it gets the same test as
@@ -20,8 +22,9 @@
 # a script merely read (cat, grep) is not judged; a script piped into a shell
 # (`cat s.sh | bash`) is not read; paths with spaces are not parsed.
 # Fails OPEN: any resolution error exits 0, never worse than an ungated command.
-# That includes a path the hook cannot resolve, like `git -C "$REPO"` or
-# `cd "$DIR"` inside a script; only ~, $HOME, and ${HOME} are expanded.
+# That includes a path the hook cannot resolve, like `git -C "$REPO"`, or a
+# `cd "$DIR"` inside a script (a typed one keeps the directory, as above); only
+# ~, $HOME, and ${HOME} are expanded.
 set -uo pipefail
 unset CDPATH
 
@@ -68,6 +71,25 @@ resolve() {
   elif [[ -n "$base" ]]; then
     printf '%s/%s' "$base" "$p"
   fi
+}
+
+# Where a cd lands, given the base and the words after `cd`. Options are skipped
+# and a bare cd is $HOME. Prints the directory and returns 0; returns 1 when the
+# target does not exist (the cd fails and the shell stays put), 2 when it cannot
+# be known (`cd -`, a variable, a relative path from an unknown base).
+cd_dest() {
+  local base=$1 t
+  shift
+  while [[ $# -gt 0 && "$1" == -?* ]]; do
+    [[ "$1" == -- ]] && { shift; break; }
+    shift
+  done
+  t=${1:-$HOME}
+  [[ "$t" == - ]] && return 2
+  t=$(resolve "$t" "$base")
+  [[ -z "$t" ]] && return 2
+  [[ -d "$t" ]] || return 1
+  printf '%s' "$t"
 }
 
 # Only mutating git operations (working tree or branch state changers).
@@ -117,13 +139,20 @@ is_script() {
 
 # Judge every line of a script, starting from the directory it runs in.
 judge_script() {
-  local line fallback=$2
-  local cd_re='^cd[[:space:]]+([^;&|[:space:]]+)[[:space:]]*($|[;&|])'
+  local line fallback=$2 dest rc
+  local -a cd_words
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=${line#"${line%%[![:space:]]*}"}
     [[ -z "$line" || "$line" == \#* ]] && continue
-    if [[ "$line" =~ $cd_re ]]; then
-      fallback=$(resolve "${BASH_REMATCH[1]}" "$fallback")
+    # A cd that cannot be known fails open; one to a missing directory stays put.
+    if [[ "$line" =~ ^cd([[:space:]]|$) ]]; then
+      read -ra cd_words <<<"${line%%[;&|]*}"
+      dest=$(cd_dest "$fallback" "${cd_words[@]:1}"); rc=$?
+      if (( rc == 0 )); then
+        fallback=$dest
+      elif (( rc == 2 )); then
+        fallback=""
+      fi
     fi
     # Quoted text is data, not a command (echo "then git commit"), so it is
     # dropped before judging, after unquoting a -C path so the repo survives.
@@ -137,16 +166,30 @@ judge_script() {
 # Split the typed command into simple commands and walk them in order, starting
 # from the session cwd. Each one is judged against the directory the commands
 # before it moved to, so `cd <primary> && git commit` is judged on the primary
-# whatever the cwd. A `cd` the hook cannot resolve leaves the directory where it
-# was. Then the script it runs, if any, is read: env assignments and wrappers
-# are skipped, and the script is the word in command position (or the first
-# operand of sh, bash, zsh, source, or `.`).
+# whatever the cwd. A subshell gets its own directory: a paren pushes the
+# current one and its close pops it back. Then the script a segment runs, if
+# any, is read: env assignments and wrappers are skipped, and the script is the
+# word in command position (or the first operand of sh, bash, zsh, source, `.`).
 segments=$cmd
-for op in '&&' '||' ';' '&' '|' '`' '$(' '(' ')'; do
+for op in '$(' '(' ')'; do
+  segments=${segments//"$op"/$'\n'"${op#\$}"$'\n'}
+done
+for op in '&&' '||' ';' '&' '|' '`'; do
   segments=${segments//"$op"/$'\n'}
 done
 base=$cwd
+stack=()
 while IFS= read -r segment; do
+  case "${segment//[[:space:]]/}" in
+    '(') stack+=("$base"); continue ;;
+    ')')
+      if (( ${#stack[@]} > 0 )); then
+        base=${stack[${#stack[@]} - 1]}
+        unset 'stack[${#stack[@]}-1]'
+      fi
+      continue
+      ;;
+  esac
   judge "$segment" "$base" && deny
   read -ra words <<<"$segment"
   i=0
@@ -159,8 +202,7 @@ while IFS= read -r segment; do
   (( i < ${#words[@]} )) || continue
   first=$(strip_quotes "${words[i]}")
   if [[ "$first" == cd ]]; then
-    next=$(resolve "${words[i + 1]:-$HOME}" "$base")
-    [[ -n "$next" ]] && base=$next
+    next=$(cd_dest "$base" "${words[@]:i+1}") && base=$next
     continue
   fi
   case "${first##*/}" in

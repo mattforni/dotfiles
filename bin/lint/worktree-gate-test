@@ -40,6 +40,8 @@ printf 'echo "then git checkout main"\nprintf "cd x && git reset --hard\\n"\n' >
 printf 'echo "done" && git -C %s commit -m x\n' "$P" >"$S/print-chain.sh"
 printf 'echo "done" && git -C "%s" commit -m "x"\n' "$P" >"$S/print-chain-quoted.sh"
 printf "git -C '%s' reset --hard\n" "$P" >"$S/single-quoted.sh"
+printf 'cd %s/missing\ngit commit -m x\n' "$TMP" >"$S/cd-missing.sh"
+printf 'cd -P %s\ngit commit -m x\n' "$P" >"$S/cd-option.sh"
 chmod +x "$S/primary.sh" "$S/runme"
 
 pass=0; fail=0
@@ -81,12 +83,27 @@ expect allow "$WT" "cd $P && git status"
 expect allow "$WT" "git commit -m x && cd $P"
 expect deny  "$P"  "cd \"\$X\" && git commit -m x"
 expect allow "$WT" "cd \"\$X\" && git commit -m x"
+# A cd that fails leaves the shell where it was.
+expect deny  "$P"  "cd $TMP/missing; git commit -m x"
+expect allow "$WT" "cd $TMP/missing; git commit -m x"
+expect deny  "$P"  "cd -; git commit -m x"
+# Options to cd are not the target.
+expect deny  "$WT" "cd -P $P && git commit -m x"
+expect deny  "$WT" "cd -- $P && git commit -m x"
+expect allow "$P"  "cd -L $WT && git commit -m x"
+# A subshell's cd ends at its paren.
+expect deny  "$P"  "(cd $WT && git commit -m x); git commit -m x"
+expect deny  "$P"  "echo \$(cd $WT && pwd) && git commit -m x"
+expect allow "$P"  "(cd $WT && git commit -m x)"
+expect deny  "$WT" "(cd $P && git commit -m x)"
 
 # Scripts the command runs.
 expect allow "$P"  "bash $S/prints-git.sh"
 expect deny  "$WT" "bash $S/print-chain.sh"
 expect deny  "$WT" "bash $S/print-chain-quoted.sh"
 expect deny  "$WT" "bash $S/single-quoted.sh"
+expect deny  "$P"  "bash $S/cd-missing.sh"
+expect deny  "$WT" "bash $S/cd-option.sh"
 expect deny  "$WT" "bash -c $S/primary.sh"
 expect deny  "$WT" "bash -c '$S/primary.sh --flag'"
 expect deny  "$WT" "sh -xc \"$S/primary.sh\""
