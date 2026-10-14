@@ -231,6 +231,16 @@
     ],
     "SessionStart": [
       {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/sync-homebase.sh",
+            "timeout": 30
+          }
+        ]
+      },
+      {
         "matcher": "compact",
         "hooks": [
           {
