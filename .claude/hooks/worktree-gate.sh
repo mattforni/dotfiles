@@ -5,45 +5,164 @@
 #   1. `merge` is allowed on primary (landing a branch into main is a landing step).
 #   2. Prefix a command with WT_GATE_BYPASS=1 to override for genuine primary work
 #      (a landing step, or committing symlinked homebase config like GC itself).
+# Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
+# `source s.sh`, after any `cd`, env assignment, or wrapper) is read line by line,
+# and each git call in it gets the same test as a typed one, so wrapping
+# `git -C <primary> commit` in a scratchpad script no longer walks around the
+# gate. Inside a script a plain `cd <path>` line moves the fallback directory.
+# Limits: one level deep (a script a script calls is not read); shell scripts
+# only (a .sh, .bash, or .zsh name, or a sh, bash, or zsh shebang, under 256 KB);
+# a script merely read (cat, grep) is not judged.
 # Fails OPEN: any resolution error exits 0, never worse than an ungated command.
+# That includes a path the hook cannot resolve, like `git -C "$REPO"` or
+# `cd "$DIR"` inside a script; only ~, $HOME, and ${HOME} are expanded.
 set -uo pipefail
 unset CDPATH
 
 input=$(cat)
 cmd=$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)
 [[ -z "$cmd" ]] && exit 0
+cwd=$(jq -r '.cwd // empty' <<<"$input" 2>/dev/null)
+[[ -z "$cwd" ]] && cwd=$PWD
 
 # Explicit escape hatch. Prefix the command with WT_GATE_BYPASS=1 to allow a
 # genuine primary-checkout mutation (landing step, symlinked-config commit).
 grep -qE '(^|[[:space:]])WT_GATE_BYPASS=1([[:space:]]|$)' <<<"$cmd" && exit 0
 
+deny() {
+  cat <<'JSON'
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Worktree gate: this mutating git command targets a repo PRIMARY checkout. Per GC, session work must run in a dedicated worktree (EnterWorktree) so concurrent sessions never collide. Cut a worktree and rerun there. For another repo, cut one from its primary with `git -C <repo> worktree add <path> -b <branch> origin/main`, never a fresh clone, which reads as a primary here. For a genuine landing step or a symlinked-config commit that must run on primary, prefix the command with WT_GATE_BYPASS=1."}}
+JSON
+  exit 0
+}
+
+expand_home() {
+  local p=$1
+  p=${p/#\~/$HOME}
+  p=${p//\$\{HOME\}/$HOME}
+  p=${p//\$HOME/$HOME}
+  printf '%s' "$p"
+}
+
+strip_quotes() {
+  local w=$1
+  w=${w#[\"\']}
+  w=${w%[\"\']}
+  printf '%s' "$w"
+}
+
+# Resolve a path against a base directory. Prints nothing when the path still
+# holds a variable or the base is unknown, which callers treat as fail open.
+resolve() {
+  local p base=$2
+  p=$(expand_home "$(strip_quotes "$1")")
+  [[ -z "$p" || "$p" == *'$'* ]] && return
+  if [[ "$p" == /* ]]; then
+    printf '%s' "$p"
+  elif [[ -n "$base" ]]; then
+    printf '%s/%s' "$base" "$p"
+  fi
+}
+
 # Only mutating git operations (working tree or branch state changers).
 # `merge` is intentionally EXCLUDED from the blocked set: it is the landing step
 # that runs on the primary checkout. Tolerates global options between git and
 # the subcommand. Read only stash invocations (list/show) are stripped first.
-filtered_cmd=$(sed -E "s/(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+stash[[:space:]]+(list|show)([^;&|]*)/ /g" <<<"$cmd")
-if ! grep -qE "(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+(commit|checkout|switch|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$filtered_cmd"; then
-  exit 0
-fi
-
-# Resolve the repo the command targets: honor git -C <path> (quoted or not),
-# else the session cwd
-dir=$(sed -nE "s/.*git[[:space:]]+-C[[:space:]]+(\"([^\"]+)\"|'([^']+)'|([^[:space:]]+)).*/\\2\\3\\4/p" <<<"$cmd" | head -1)
-dir=${dir/#\~/$HOME}
-if [[ -z "$dir" ]]; then
-  dir=$(jq -r '.cwd // empty' <<<"$input" 2>/dev/null)
-fi
-[[ -z "$dir" ]] && dir=$PWD
-
-git_dir=$(git -C "$dir" rev-parse --absolute-git-dir 2>/dev/null) || exit 0
-common_dir=$(git -C "$dir" rev-parse --git-common-dir 2>/dev/null) || exit 0
-common_dir=$(cd "$dir" 2>/dev/null && cd "$common_dir" 2>/dev/null && pwd) || common_dir="$common_dir"
+GIT_PREFIX="(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)|[[:space:]]+--?[^[:space:]]+)*[[:space:]]+"
+is_mutating() {
+  local filtered
+  filtered=$(sed -E "s/${GIT_PREFIX}stash[[:space:]]+(list|show)([^;&|]*)/ /g" <<<"$1")
+  grep -qE "${GIT_PREFIX}(commit|checkout|switch|rebase|cherry-pick|reset|restore|stash|revert|am)([[:space:]]|\$)" <<<"$filtered"
+}
 
 # Linked worktrees have git-dir != git-common-dir; a primary checkout matches.
-if [[ "$git_dir" == "$common_dir" ]]; then
-  cat <<'JSON'
-{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Worktree gate: this mutating git command targets a repo PRIMARY checkout. Per GC, session work must run in a dedicated worktree (EnterWorktree) so concurrent sessions never collide. Cut a worktree and rerun there. For a genuine landing step or a symlinked-config commit that must run on primary, prefix the command with WT_GATE_BYPASS=1."}}
-JSON
-  exit 0
-fi
+is_primary() {
+  local dir=$1 git_dir common_dir
+  git_dir=$(git -C "$dir" rev-parse --absolute-git-dir 2>/dev/null) || return 1
+  common_dir=$(git -C "$dir" rev-parse --git-common-dir 2>/dev/null) || return 1
+  common_dir=$(cd "$dir" 2>/dev/null && cd "$common_dir" 2>/dev/null && pwd -P) || return 1
+  [[ "$git_dir" == "$common_dir" ]]
+}
+
+# Judge one line: succeeds when it runs mutating git against a primary. The repo
+# is the line's git -C <path> (quoted or not), else the fallback directory.
+judge() {
+  local line=$1 fallback=$2 raw dir
+  is_mutating "$line" || return 1
+  raw=$(sed -nE "s/.*git[[:space:]]+-C[[:space:]]+(\"([^\"]+)\"|'([^']+)'|([^[:space:]]+)).*/\\2\\3\\4/p" <<<"$line" | head -1)
+  if [[ -n "$raw" ]]; then
+    dir=$(resolve "$raw" "$fallback")
+  else
+    dir=$fallback
+  fi
+  [[ -z "$dir" ]] && return 1
+  is_primary "$dir"
+}
+
+is_script() {
+  local f=$1
+  [[ -f "$f" && -r "$f" ]] || return 1
+  [[ $(wc -c <"$f" 2>/dev/null || echo 999999) -le 262144 ]] || return 1
+  case "$f" in
+    *.sh|*.bash|*.zsh) return 0 ;;
+  esac
+  head -n1 "$f" 2>/dev/null | grep -qE '^#!.*[/[:space:]](ba|z)?sh([[:space:]]|$)'
+}
+
+# Judge every line of a script, starting from the directory it runs in.
+judge_script() {
+  local line fallback=$2
+  local cd_re='^cd[[:space:]]+([^;&|[:space:]]+)[[:space:]]*($|[;&|])'
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line=${line#"${line%%[![:space:]]*}"}
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    if [[ "$line" =~ $cd_re ]]; then
+      fallback=$(resolve "${BASH_REMATCH[1]}" "$fallback")
+    fi
+    judge "$line" "$fallback" && return 0
+  done <"$1"
+  return 1
+}
+
+# The typed command itself, judged as a whole against the session cwd.
+judge "$cmd" "$cwd" && deny
+
+# The scripts the command runs. Split it into simple commands, follow `cd`,
+# skip env assignments and wrappers, and read the script in command position
+# (or the first operand of sh, bash, zsh, source, or `.`).
+segments=$cmd
+for op in '&&' '||' ';' '&' '|' '`' '$(' '(' ')'; do
+  segments=${segments//"$op"/$'\n'}
+done
+base=$cwd
+while IFS= read -r segment; do
+  read -ra words <<<"$segment"
+  i=0
+  while (( i < ${#words[@]} )); do
+    case "${words[i]}" in
+      *=*|env|exec|nohup|time|command) i=$((i + 1)) ;;
+      *) break ;;
+    esac
+  done
+  (( i < ${#words[@]} )) || continue
+  first=$(strip_quotes "${words[i]}")
+  if [[ "$first" == cd ]]; then
+    base=$(resolve "${words[i + 1]:-$HOME}" "$base")
+    continue
+  fi
+  case "${first##*/}" in
+    sh|bash|zsh|source|.)
+      i=$((i + 1))
+      while (( i < ${#words[@]} )) && [[ "${words[i]}" == -* ]]; do
+        [[ "${words[i]}" == *c* && "${words[i]}" != --* ]] && continue 2
+        i=$((i + 1))
+      done
+      (( i < ${#words[@]} )) || continue
+      target=${words[i]}
+      ;;
+    *) target=$first ;;
+  esac
+  script=$(resolve "$target" "$base")
+  [[ -n "$script" ]] && is_script "$script" && judge_script "$script" "$base" && deny
+done <<<"$segments"
 exit 0
