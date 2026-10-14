@@ -37,7 +37,7 @@ Review the conversation for the durable thing. Name, in one line each: the rule,
 
 Grep every destination in Step 3 that could already hold the topic: the always loaded files (GC, `~/CLAUDE.md`, the repo's root CLAUDE.md), the output style, any path scoped rule or nested CLAUDE.md that covers the files involved, the hooks in `settings.json`, the relevant tool doc under `~/Eudaimonia/Admin/Tools/`, the relevant skill's `learned-rules.md`, and the auto memory index. Three outcomes:
 
-- **Already stated.** Say where, offer to strike any duplicate memory (Step 4 lists it), and stop, unless the incident shows the existing line was dropped; then the fix is placement or enforcement (scope it, move it to the point of use, propose a hook), never a restatement.
+- **Already stated.** Say where, strike any memory that duplicates the existing line (file and index line, named in Step 6), and stop, unless the incident shows the existing line was dropped; then the fix is placement or enforcement (scope it, move it to the point of use, propose a hook), never a restatement.
 - **Stated in conflict.** Two lines that cannot both be satisfied are the finding. Resolving the contradiction is the codification; adding a third statement is forbidden.
 - **Absent.** Route it in Step 3.
 
@@ -53,7 +53,7 @@ Apply the placement rule: name the trigger, read the destination off the routing
 - **A skill's `learned-rules.md`**: a correction to how a skill decides. Never learned rule content inside SKILL.md; every skill carries the separate file, and SKILL.md's own `## Learned Rules` section holds only the pointer to it.
 - **A hook**: anything that must happen every time or must never happen. Propose the hook; writing `settings.json` is `update-config` work and needs its own yes.
 - **A tool doc** (the tool's own doc, wherever the placement rule's table puts it: Eudy `Admin/Tools/` or the owning repo's `Tools/`): a tool's mechanics, gotchas, costs, and the reason we picked it, in the one pager shape of `Admin/Tools/CLAUDE.md`.
-- **Auto memory**: a Claude discovered learning that need not survive a machine swap. Usually already saved by the time Forni says codify; check before duplicating, and when the codification lands in a rule file the memory is struck (Step 5).
+- **Auto memory**: a Claude discovered learning that need not survive a machine swap. Usually already saved by the time Forni says codify; check before duplicating, and when the codification lands in a rule file the memory is struck once the rule has landed (Step 6).
 - **Nowhere**: anything derivable from the code, git history, or the tool's own help.
 
 ### Step 4: Draft and Present
@@ -64,11 +64,11 @@ Draft the delta only, never the full file, and print it as the final text of the
 
 ### Step 5: Write
 
-After approval, write the destination from the session worktree, never a primary checkout. **Strike the memory the rule promotes** once the rule has landed (a homebase destination lands by PR, so strike after the merge, never while the change can still fail), and only the files Step 4 listed (see learned rules). When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
+After approval, write the destination from the session worktree, never a primary checkout. When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
 
 ### Step 6: Confirm
 
-Paths written, the memory struck (file and index line) or the words "no memory held it", and anything else removed or moved in the process. Keep it to a few lines.
+Runs once the rule has landed: in the same commit for a direct landing, and right after the lander reports the merge for a PR, since a strike before the merge loses the learning if the PR dies. The main session deletes the memory files Step 4 listed, with their index lines; a lander never touches memory. Report the paths written, the memory struck or the words "no memory held it", and anything else removed or moved. Keep it to a few lines.
 
 ## What Makes Good Codification
 
