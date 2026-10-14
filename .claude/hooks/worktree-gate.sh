@@ -8,7 +8,7 @@
 # The repo a git call targets is its `git -C <path>`, else the directory the
 # command has moved to: a typed `cd <path> && git commit` is judged on <path>,
 # not the session cwd. Options to cd are skipped; a cd whose target does not
-# exist, or cannot be known (`cd -`, `cd "$DIR"`), leaves it where it was, since
+# exist, or cannot be known (`cd -`, `cd "$DIR"`, `cd $(...)`), leaves it where it was, since
 # that is where the shell stays; a cd inside `( )` or `$( )` ends at the paren.
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
 # `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
@@ -23,7 +23,8 @@
 # (`cat s.sh | bash`) is not read; paths with spaces are not parsed.
 # Fails OPEN: any resolution error exits 0, never worse than an ungated command.
 # That includes a path the hook cannot resolve, like `git -C "$REPO"`, or a
-# `cd "$DIR"` inside a script (a typed one keeps the directory, as above); only
+# `cd "$DIR"` or a cd to a directory the script makes first, inside a script (a
+# typed one keeps the directory, as above); only
 # ~, $HOME, and ${HOME} are expanded.
 set -uo pipefail
 unset CDPATH
@@ -73,10 +74,11 @@ resolve() {
   fi
 }
 
-# Where a cd lands, given the base and the words after `cd`. Options are skipped
-# and a bare cd is $HOME. Prints the directory and returns 0; returns 1 when the
-# target does not exist (the cd fails and the shell stays put), 2 when it cannot
-# be known (`cd -`, a variable, a relative path from an unknown base).
+# Where a cd lands, given the base and the words after `cd`. Options are skipped.
+# Prints the directory and returns 0; returns 1 when the target does not exist
+# yet, 2 when it cannot be known (`cd -`, a variable, a relative path from an
+# unknown base, or no word at all, which is what `cd $(...)` and a backtick cd
+# leave once the command is split).
 cd_dest() {
   local base=$1 t
   shift
@@ -84,8 +86,8 @@ cd_dest() {
     [[ "$1" == -- ]] && { shift; break; }
     shift
   done
-  t=${1:-$HOME}
-  [[ "$t" == - ]] && return 2
+  t=${1:-}
+  [[ -z "$t" || "$t" == - ]] && return 2
   t=$(resolve "$t" "$base")
   [[ -z "$t" ]] && return 2
   [[ -d "$t" ]] || return 1
@@ -139,20 +141,16 @@ is_script() {
 
 # Judge every line of a script, starting from the directory it runs in.
 judge_script() {
-  local line fallback=$2 dest rc
+  local line fallback=$2
   local -a cd_words
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=${line#"${line%%[![:space:]]*}"}
     [[ -z "$line" || "$line" == \#* ]] && continue
-    # A cd that cannot be known fails open; one to a missing directory stays put.
+    # A cd that cannot be known fails open, and so does one to a directory that
+    # does not exist yet, since a script often makes it first (worktree add).
     if [[ "$line" =~ ^cd([[:space:]]|$) ]]; then
       read -ra cd_words <<<"${line%%[;&|]*}"
-      dest=$(cd_dest "$fallback" "${cd_words[@]:1}"); rc=$?
-      if (( rc == 0 )); then
-        fallback=$dest
-      elif (( rc == 2 )); then
-        fallback=""
-      fi
+      fallback=$(cd_dest "$fallback" "${cd_words[@]:1}") || fallback=""
     fi
     # Quoted text is data, not a command (echo "then git commit"), so it is
     # dropped before judging, after unquoting a -C path so the repo survives.

@@ -42,6 +42,8 @@ printf 'echo "done" && git -C "%s" commit -m "x"\n' "$P" >"$S/print-chain-quoted
 printf "git -C '%s' reset --hard\n" "$P" >"$S/single-quoted.sh"
 printf 'cd %s/missing\ngit commit -m x\n' "$TMP" >"$S/cd-missing.sh"
 printf 'cd -P %s\ngit commit -m x\n' "$P" >"$S/cd-option.sh"
+# The deny message's own recipe: a worktree made, entered, and committed in.
+printf 'git -C %s worktree add %s/fresh -b fresh\ncd %s/fresh\ngit commit -m x\n' "$P" "$TMP" "$TMP" >"$S/recipe.sh"
 chmod +x "$S/primary.sh" "$S/runme"
 
 pass=0; fail=0
@@ -87,6 +89,9 @@ expect allow "$WT" "cd \"\$X\" && git commit -m x"
 expect deny  "$P"  "cd $TMP/missing; git commit -m x"
 expect allow "$WT" "cd $TMP/missing; git commit -m x"
 expect deny  "$P"  "cd -; git commit -m x"
+expect deny  "$P"  "cd \$(git rev-parse --show-toplevel) && git commit -m x"
+expect deny  "$P"  "cd \`git rev-parse --show-toplevel\` && git commit -m x"
+expect deny  "$P"  "cd && git commit -m x"
 # Options to cd are not the target.
 expect deny  "$WT" "cd -P $P && git commit -m x"
 expect deny  "$WT" "cd -- $P && git commit -m x"
@@ -102,7 +107,8 @@ expect allow "$P"  "bash $S/prints-git.sh"
 expect deny  "$WT" "bash $S/print-chain.sh"
 expect deny  "$WT" "bash $S/print-chain-quoted.sh"
 expect deny  "$WT" "bash $S/single-quoted.sh"
-expect deny  "$P"  "bash $S/cd-missing.sh"
+expect allow "$P"  "bash $S/cd-missing.sh"
+expect allow "$P"  "bash $S/recipe.sh"
 expect deny  "$WT" "bash $S/cd-option.sh"
 expect deny  "$WT" "bash -c $S/primary.sh"
 expect deny  "$WT" "bash -c '$S/primary.sh --flag'"
