@@ -70,6 +70,18 @@ expect allow "$P"  "git status"
 expect allow "$P"  "git -C $P worktree add $TMP/other -b other origin/main"
 expect allow "$P"  "WT_GATE_BYPASS=1 git commit -m x"
 
+# A typed cd moves the directory the git calls after it are judged in.
+expect deny  "$WT" "cd $P && git commit -m x"
+expect deny  "$WT" "cd '$P'; git reset --hard"
+expect deny  "$WT" "cd $P && git status && git checkout -b feature"
+expect deny  "$WT" "cd $WT && cd $P && git commit -m x"
+expect allow "$P"  "cd $WT && git commit -m x"
+expect allow "$WT" "cd $P && git -C $WT commit -m x"
+expect allow "$WT" "cd $P && git status"
+expect allow "$WT" "git commit -m x && cd $P"
+expect deny  "$P"  "cd \"\$X\" && git commit -m x"
+expect allow "$WT" "cd \"\$X\" && git commit -m x"
+
 # Scripts the command runs.
 expect allow "$P"  "bash $S/prints-git.sh"
 expect deny  "$WT" "bash $S/print-chain.sh"

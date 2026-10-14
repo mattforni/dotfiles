@@ -5,6 +5,9 @@
 #   1. `merge` is allowed on primary (landing a branch into main is a landing step).
 #   2. Prefix a command with WT_GATE_BYPASS=1 to override for genuine primary work
 #      (a landing step, or committing symlinked homebase config like GC itself).
+# The repo a git call targets is its `git -C <path>`, else the directory the
+# command has moved to: a typed `cd <path> && git commit` is judged on <path>,
+# not the session cwd. A `cd` that cannot be resolved leaves it where it was.
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
 # `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
 # or wrapper) is read line by line, and each git call in it gets the same test as
@@ -131,18 +134,20 @@ judge_script() {
   return 1
 }
 
-# The typed command itself, judged as a whole against the session cwd.
-judge "$cmd" "$cwd" && deny
-
-# The scripts the command runs. Split it into simple commands, follow `cd`,
-# skip env assignments and wrappers, and read the script in command position
-# (or the first operand of sh, bash, zsh, source, or `.`).
+# Split the typed command into simple commands and walk them in order, starting
+# from the session cwd. Each one is judged against the directory the commands
+# before it moved to, so `cd <primary> && git commit` is judged on the primary
+# whatever the cwd. A `cd` the hook cannot resolve leaves the directory where it
+# was. Then the script it runs, if any, is read: env assignments and wrappers
+# are skipped, and the script is the word in command position (or the first
+# operand of sh, bash, zsh, source, or `.`).
 segments=$cmd
 for op in '&&' '||' ';' '&' '|' '`' '$(' '(' ')'; do
   segments=${segments//"$op"/$'\n'}
 done
 base=$cwd
 while IFS= read -r segment; do
+  judge "$segment" "$base" && deny
   read -ra words <<<"$segment"
   i=0
   while (( i < ${#words[@]} )); do
@@ -154,7 +159,8 @@ while IFS= read -r segment; do
   (( i < ${#words[@]} )) || continue
   first=$(strip_quotes "${words[i]}")
   if [[ "$first" == cd ]]; then
-    base=$(resolve "${words[i + 1]:-$HOME}" "$base")
+    next=$(resolve "${words[i + 1]:-$HOME}" "$base")
+    [[ -n "$next" ]] && base=$next
     continue
   fi
   case "${first##*/}" in
