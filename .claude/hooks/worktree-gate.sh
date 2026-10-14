@@ -116,8 +116,11 @@ judge_script() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=${line#"${line%%[![:space:]]*}"}
     [[ -z "$line" || "$line" == \#* ]] && continue
-    # Lines that only print or search text mention git without running it.
-    [[ "$line" =~ ^(echo|printf|expect|cat|grep|rg)[[:space:]] ]] && continue
+    # Quoted text on a print or search line is data, not a command; drop it and
+    # still judge anything chained after (echo done && git commit).
+    if [[ "$line" =~ ^(echo|printf|expect|cat|grep|rg)[[:space:]] ]]; then
+      line=$(sed -E "s/\"[^\"]*\"|'[^']*'//g" <<<"$line")
+    fi
     if [[ "$line" =~ $cd_re ]]; then
       fallback=$(resolve "${BASH_REMATCH[1]}" "$fallback")
     fi

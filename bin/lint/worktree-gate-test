@@ -37,6 +37,7 @@ printf '# git -C %s commit -m x\n' "$P" >"$S/commented.sh"
 printf '#!/usr/bin/env bash\ngit -C %s reset --hard\n' "$P" >"$S/runme"
 printf 'import subprocess\nsubprocess.run(["git", "-C", "%s", "commit"])\ngit -C %s commit\n' "$P" "$P" >"$S/tool.py"
 printf 'echo "then git checkout main"\nprintf "cd x && git reset --hard\\n"\n' >"$S/prints-git.sh"
+printf 'echo "done" && git -C %s commit -m x\n' "$P" >"$S/print-chain.sh"
 chmod +x "$S/primary.sh" "$S/runme"
 
 pass=0; fail=0
@@ -69,6 +70,7 @@ expect allow "$P"  "WT_GATE_BYPASS=1 git commit -m x"
 
 # Scripts the command runs.
 expect allow "$P"  "bash $S/prints-git.sh"
+expect deny  "$WT" "bash $S/print-chain.sh"
 expect deny  "$WT" "bash $S/primary.sh"
 expect deny  "$WT" "sh -x $S/primary.sh"
 expect deny  "$WT" "zsh '$S/primary.sh'"
