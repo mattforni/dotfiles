@@ -5,6 +5,8 @@
 #   1. `merge` is allowed on primary (landing a branch into main is a landing step).
 #   2. Prefix a command with WT_GATE_BYPASS=1 to override for genuine primary work
 #      (a landing step, or committing symlinked homebase config like GC itself).
+# A typed command is judged against the session cwd, and also against the
+# directory a leading `cd <path> &&` moves to; no other typed cd is followed.
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
 # `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
 # or wrapper) is read line by line, and each git call in it gets the same test as
@@ -133,6 +135,21 @@ judge_script() {
 
 # The typed command itself, judged as a whole against the session cwd.
 judge "$cmd" "$cwd" && deny
+
+# A command that opens by moving into a primary is judged there too, so
+# `cd <primary> && git commit` from a worktree is denied. Only a leading,
+# unquoted cd to an existing directory, followed by &&, counts; this check only
+# ever adds a deny. Any other cd in a typed command is not followed: commit in a
+# worktree with `git -C <worktree> commit`, not `cd <worktree> && git commit`.
+lead_re='^[[:space:]]*cd[[:space:]]+(-[LP][[:space:]]+)*([^[:space:];&|]+)[[:space:]]*&&(.*)$'
+if [[ "$cmd" =~ $lead_re ]]; then
+  lead_target=${BASH_REMATCH[2]}
+  lead_rest=${BASH_REMATCH[3]}
+  if [[ "$lead_target" != *[\"\'\$\(\)\`]* ]]; then
+    lead_dir=$(resolve "$lead_target" "$cwd")
+    [[ -n "$lead_dir" && -d "$lead_dir" ]] && judge "$lead_rest" "$lead_dir" && deny
+  fi
+fi
 
 # The scripts the command runs. Split it into simple commands, follow `cd`,
 # skip env assignments and wrappers, and read the script in command position

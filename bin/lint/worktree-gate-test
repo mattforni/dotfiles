@@ -41,6 +41,11 @@ printf 'echo "done" && git -C %s commit -m x\n' "$P" >"$S/print-chain.sh"
 printf 'echo "done" && git -C "%s" commit -m "x"\n' "$P" >"$S/print-chain-quoted.sh"
 printf "git -C '%s' reset --hard\n" "$P" >"$S/single-quoted.sh"
 chmod +x "$S/primary.sh" "$S/runme"
+# Heredoc commit commands, built so no git command sits bare in this file (the
+# gate reads this file when it runs, and its quote pairing is line by line).
+HD_WT=$(printf '%s -C %s commit -m "$(cat <<%sEOF%s\nnow %s checkout main is denied; %s reset docs\nEOF\n)"' \
+  git "$WT" "'" "'" git git)
+HD_CD=$(printf 'cd %s && %s commit -m "$(cat <<%sEOF%s\nmsg\nEOF\n)"' "$P" git "'" "'")
 
 pass=0; fail=0
 expect() {
@@ -69,6 +74,19 @@ expect allow "$P"  "git stash list"
 expect allow "$P"  "git status"
 expect allow "$P"  "git -C $P worktree add $TMP/other -b other origin/main"
 expect allow "$P"  "WT_GATE_BYPASS=1 git commit -m x"
+# A commit message that quotes git commands, in the -C heredoc form commits use.
+expect allow "$P"  "$HD_WT"
+
+# A leading cd into a primary is judged there; it only ever adds a deny.
+expect deny  "$WT" "cd $P && git commit -m x"
+expect deny  "$WT" "  cd -P $P && git add -A && git commit -m \"x\""
+expect deny  "$WT" "cd $P && git status && git checkout -b feature"
+expect deny  "$WT" "$HD_CD"
+expect allow "$WT" "cd $P && git -C $WT commit -m x"
+expect allow "$WT" "cd $P && git status"
+expect allow "$WT" "cd $TMP/missing && git commit -m x"
+expect allow "$WT" "cd $WT && git commit -m x"
+expect deny  "$P"  "cd $WT && git commit -m x"
 
 # Scripts the command runs.
 expect allow "$P"  "bash $S/prints-git.sh"
