@@ -11,7 +11,7 @@
 # exist, or cannot be known (`cd -`, `cd "$DIR"`, `cd $(...)`), leaves it where
 # it was; a cd inside `( )` or `$( )` ends at the paren. Following cd never
 # loosens the gate past the whole command judged against the cwd, except for a
-# plain command (no pipe, background &, paren, or backtick outside quotes).
+# plain && chain (nothing else joins its commands outside quotes).
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
 # `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
 # or wrapper) is read line by line, and each git call in it gets the same test as
@@ -211,7 +211,14 @@ walk() {
     (( i < ${#words[@]} )) || continue
     first=$(strip_quotes "${words[i]}")
     if [[ "$first" == cd ]]; then
-      next=$(cd_dest "$base" "${words[@]:i+1}") && base=$next
+      # Lifting main's deny (no scripts read) needs every cd followed exactly,
+      # so one the walk cannot follow (`cd -`, a variable, a missing directory)
+      # keeps the deny. Otherwise the directory stays where it was.
+      if next=$(cd_dest "$base" "${words[@]:i+1}"); then
+        base=$next
+      elif [[ "$read_scripts" != 1 ]]; then
+        return 0
+      fi
       continue
     fi
     [[ "$read_scripts" == 1 ]] || continue
@@ -239,15 +246,18 @@ walk() {
 }
 
 # The floor is main's old verdict: the whole command judged against the cwd.
-# Following cd may lift that deny only when the command is plain enough to walk
-# with confidence: quoted text dropped, and no pipe, background &, paren, or
-# backtick left, since a cd inside any of those does not move the shell. Then
-# the walk of that plain text must clear every git call.
+# Following cd may lift that deny only when the command is a plain && chain:
+# quoted text and redirects like 2>&1 dropped, nothing joins its commands but
+# &&, and no pipe, background &, paren, or backtick is left. In such a chain a
+# later command runs only if every earlier one, each cd included, succeeded, so
+# a cd the walk follows exactly is where the shell is. Then the walk of that
+# plain text must clear every git call.
 if judge "$cmd" "$cwd"; then
   plain=$(strip_quoted "$cmd")
   rest=${plain//&&/}
-  rest=${rest//||/}
-  [[ "$rest" == *[\|\&\(\)\`]* ]] && deny
+  rest=${rest//>&/}
+  rest=${rest//&>/}
+  [[ "$rest" == *[\|\&\(\)\`\;]* || "$rest" == *$'\n'* ]] && deny
   walk "$plain" 0 && deny
 fi
 walk "$cmd" 1 && deny
