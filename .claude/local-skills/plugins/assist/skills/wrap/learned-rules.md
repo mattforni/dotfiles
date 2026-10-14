@@ -24,8 +24,20 @@ Skill-specific corrections that override SKILL.md. Populate as Forni corrects wr
 
 - **Business follow-ups go to Linear, never Todoist.** Anything in service of
   Atelic (prospect follow-ups, walk-ins, client work, template fixes) is
-  tracked as an ATE issue, even when it is an errand rather than code. Todoist
-  is for personal and operational tasks only. When the follow-up needs real
+  tracked as an ATE issue. Todoist is for personal and operational tasks only.
+  **The one exception is a physical errand** (print these, go to the bank, go
+  to the post office): that gets a Todoist task in `🛠️ Craft / 💻 Atelic` with
+  every PDF attached as a comment, so the documents travel with the reminder
+  and Forni prints straight from the task; the Linear issue keeps the record
+  and the link (Forni, 2026-09-08, the ATE-524 Wyoming mailing).
+- **Work left under a ticket gets its own tickets, and the original closes.**
+  When a session ends with items remaining under its issue, mint one Linear
+  issue per item, each in the cycle where it can happen with an estimate and
+  a cognitive load label, then close the original as Done. Never leave it
+  open with a "landed and remains" comment: a comment buries schedulable work
+  where no cycle or calendar sees it. Overrides Step 5's partially done
+  branch. Forni, 2026-09-24 (ATE-485): "let's not create follow-up comments
+  for these ... Then let's go ahead and close this task." When the follow-up needs real
   calendar time, hand place a labeled Craft calendar block per
   `~/Eudaimonia/Admin/Tools/google-calendar.md` (the Reclaim label convention
   retired 2026-08-03 with the Linear sync).

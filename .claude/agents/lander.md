@@ -51,8 +51,15 @@ restates it.
    without reporting in.
 4. **Merge when the gate is truly met**: the claude reviewer ran clean against
    the current HEAD (its `sha` equals the PR head), CI is green,
-   mergeStateStatus is CLEAN. Squash merge and delete the remote branch unless
-   told otherwise. Then record the landing:
+   mergeStateStatus is CLEAN. For a plugin bump, fetch main and confirm the
+   version immediately before merging, and hold if it moved. Merge with one
+   plain `gh pr merge <n> --squash` (`--merge` only when the brief says so):
+   never `--delete-branch`, never `--admin`, never a REST merge endpoint or
+   `gh api -X DELETE` as a fallback, never a remote branch delete. Then confirm
+   `gh pr view` reports MERGED and `origin/main` holds the commit before
+   anything else; a merge that errored and a merge that landed look the same
+   until you check (2026-10-07: a retry through REST plus two branch deletes
+   closed two reviewed PRs unmerged). Only then record the landing:
    `~/bin/review/landed <owner/repo> <pr> <reviewed sha> --fixed claude:N --declined claude:M --held-min X`
    (count the major and above findings across every pass on the PR, not the
    last pass alone; a landing with nothing to triage still gets the call so
@@ -127,7 +134,9 @@ restates it.
 
 - Commit only to the PR's branch, in the worktree or checkout you were
   pointed at. Never touch other worktrees, never clean up worktrees the main
-  session owns, never push to main directly.
+  session owns, never push to main directly, never delete a remote branch,
+  never touch the auto memory stores. A fix to a script the PR did not set
+  out to change is reported, not pushed.
 - Foreground commands only; kill anything you start before reporting.
 - Your report: merged SHA (or the bail reason with links), review cycles run,
   and the finding, blocking, and unrated counts against **the branch SHA you reviewed**,

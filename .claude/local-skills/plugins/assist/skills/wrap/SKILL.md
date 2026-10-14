@@ -76,7 +76,7 @@ When the session's merged branches are already cleaned up, this step is usually 
 Identify every tracker item the session touched: an issue named in the session, an issue whose `gitBranchName` matches a branch worked on, or one moved to In Progress during the session. For each:
 
 - **Work complete and merged.** Post a closing comment, then move the issue to Done. The comment is a record, not a receipt: what shipped and where (PR links), what was verified on the machine rather than only in a test harness, anything that changed from the ticket's stated definition of done and why, and anything deliberately deferred so it is not silently lost.
-- **Work partially done.** Leave it open, comment with what landed and what remains, and surface it in the Step 8 summary. Do not close a ticket because the session ended.
+- **Work partially done.** Mint one Linear issue per remaining item, placed in a cycle with an estimate and a cognitive load label, then close the original as Done with a comment that points at them (see [learned-rules.md](learned-rules.md), 2026-09-24). Surface the new issues in the Step 8 summary.
 - **Work abandoned or superseded.** Ask before cancelling. That is a judgment call, not a cleanup.
 
 Follow the repo's tracker split: engineering and client work is a Linear issue, personal and operational work is Todoist (see [learned-rules.md](learned-rules.md)). Ticket hygiene conventions, including body-is-the-spec and comments-are-the-timeline, live in Eudy's root `CLAUDE.md`.
