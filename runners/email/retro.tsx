@@ -391,21 +391,32 @@ function leadRecord(row: FunnelRow): RecordStackItem {
 function dealRecord(row: FunnelRow): RecordStackItem {
 	const cash = alt(row.cash, "-");
 	const replied = replyDay(row);
+	// The reason and the pull's note (a lost deal with no reason on the
+	// company) ride on the muted line, the way a lead's note does.
+	const reason = jqToString(alt(row.reason, ""));
+	const notes = [
+		replied === "" ? "" : `Replied ${replied}`,
+		reason === "" || reason === "-" ? "" : `Reason: ${titlecase(reason.replace(/_/g, " "))}`,
+		jqToString(alt(row.note, "")),
+	].filter((n) => n !== "");
 	return recordCard({
 		title: row.company,
 		badge: replied !== "" || row.replied === "yes" ? "Replied" : undefined,
 		deal: { stage: alt(row.stage, ""), amount: null, cash: cash === "-" ? "" : cash },
-		note: replied === "" ? undefined : `Replied ${replied}`,
+		note: notes.length === 0 ? undefined : notes.join(" · "),
 	});
 }
 
 function closedRecord(row: FunnelRow): RecordStackItem {
 	const reason = alt(row.reason, "-");
+	const notes = [replyDay(row) === "" ? "" : `Replied ${replyDay(row)}`, jqToString(alt(row.note, ""))].filter(
+		(n) => n !== "",
+	);
 	return recordCard({
 		title: row.company,
 		badge: row.stage === "Closed Lost" ? "Closed Lost" : row.status,
 		closed: reason === "-" ? null : { reason },
-		note: replyDay(row) === "" ? undefined : `Replied ${replyDay(row)}`,
+		note: notes.length === 0 ? undefined : notes.join(" · "),
 	});
 }
 

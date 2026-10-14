@@ -148,19 +148,19 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
 		}
 	}
 	draft.atelic.open_leads[0].funnel = "A Stage Nobody Knows";
-	assert.equal(companies.length, 10);
+	assert.equal(companies.length, 11);
 
 	const text = renderRaw("retro", "text", JSON.stringify(draft));
 	assert.equal(text.status, 0, text.stderr);
-	assert.ok(text.stdout.includes("\nNo Stage · 10\n"), "the group is headed with its count");
-	assert.match(text.stdout, /\n  No stage  10\n/);
+	assert.ok(text.stdout.includes("\nNo Stage · 11\n"), "the group is headed with its count");
+	assert.match(text.stdout, /\n  No stage  11\n/);
 	assert.match(text.stdout, /\n  Lead      0\n/);
-	const listed = text.stdout.slice(text.stdout.indexOf("\nNo Stage · 10\n"));
+	const listed = text.stdout.slice(text.stdout.indexOf("\nNo Stage · 11\n"));
 	for (const company of companies) assert.ok(listed.includes(company), `${company} is listed`);
 
 	const html = renderRaw("retro", "html", JSON.stringify(draft));
 	assert.equal(html.status, 0, html.stderr);
-	assert.ok(html.stdout.includes("No Stage · 10"));
+	assert.ok(html.stdout.includes("No Stage · 11"));
 	for (const company of companies) assert.ok(html.stdout.includes(company), `${company} is on the page`);
 });
 

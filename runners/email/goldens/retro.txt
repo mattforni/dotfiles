@@ -86,7 +86,7 @@ The Funnel
   Lead      2
   MQL       1
   SQL       1
-  Oppty     2
+  Oppty     3
   Customer  1
   Closed    3
 
@@ -111,13 +111,18 @@ SQL · 1
     4 touches · 7 opens · replied Wed 01-28
     Last touch: Email Send
 
-Opportunity · 2
+Opportunity · 3
   Alder Court Dental [Replied]
     Proposal · $12,000
     Replied Thu 01-29
 
   Fernwood Bakery
     no stage set
+
+  Birchwood Tile
+    Closed Lost
+    deal lost with no Disqualification Reason on the company; close
+    the company so the reason mirrors
 
 Customer · 1
   Copper Kettle Catering

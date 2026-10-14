@@ -208,6 +208,15 @@
         "last_send": "2026-01-30"
       },
       {
+        "company": "Birchwood Tile",
+        "funnel": "Opportunity",
+        "lifecycle": "opportunity",
+        "stage": "Closed Lost",
+        "cash": "-",
+        "last_send": "2026-01-30",
+        "note": "deal lost with no Disqualification Reason on the company; close the company so the reason mirrors"
+      },
+      {
         "company": "Copper Kettle Catering",
         "funnel": "Customer",
         "lifecycle": "opportunity",
