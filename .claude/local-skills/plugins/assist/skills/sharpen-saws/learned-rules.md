@@ -6,7 +6,7 @@ Sharpen sessions are branched as `YYYY-MM-DD-sharpen-saws` in every repo touched
 
 **Why:** Forni wants a consistent way to find any sharpen session's work across both repos without hunting commit messages, with the date leading so listings sort by session.
 
-**How to apply:** At the top of Close, cut a worktree on the branch in each touched repo (`git -C <repo> worktree add <path> -b YYYY-MM-DD-sharpen-saws origin/main`), per the work-in-worktrees rule. If the branch already exists (rerun or continuation), enter its existing worktree instead.
+**How to apply:** At Pick, once he names the action and before the first write, cut a worktree on the branch in each touched repo (`git -C <repo> worktree add <path> -b YYYY-MM-DD-sharpen-saws origin/main`), per the work-in-worktrees rule. If the branch already exists (rerun or continuation), enter its existing worktree instead.
 
 ## Ticketed Rows Are Pointers, Never Counters
 
@@ -14,7 +14,7 @@ A Background row that has a Linear ticket is read from Linear at Ground and neve
 
 **Why:** 2026-09-23. The count 2 row ("the outreacher's drafting half to Cloud Run, Tuesday 05:00") was stale on all three of its facts: the agent had been renamed plumber, the fire time decided was Monday 22:00, and ATE-551 already held the job, seven secrets, and a local fire. Taking it would have duplicated the ticket; retiring it was bookkeeping. socrates traced the same pattern through every carried row on record.
 
-**How to apply:** At Close, every deferral gets one of three ends: closed, ticketed, or retired. A ticketed row leaves the paragraph; the next Ground reads its state with `linear issue view`. Only unticketed rows stay in Background, each with its first date, and none survives two entries.
+**How to apply:** At Ground, every ticketed pointer in the last entry is read with `linear issue view`. An unticketed item in the last entry's Next line gets one of three ends at Pick: closed, ticketed, or retired. Nothing is carried on a counter.
 
 ## CronCreate Is Not a Level 7 Primitive
 
@@ -33,12 +33,12 @@ Before proposing a new headless routine, audit the feedback channels on existing
 **How to apply:**
 
 - For each live headless routine, ask: "If this fails silently, how would Forni find out?" If the answer is "macOS notification" alone, that is insufficient.
-- The current robust pattern is per-run email via Resend with API key in the vault, recipient in `REPORT_RECIPIENT`, the failure page mailed by the runner's EXIT trap. See `homebase/.claude/references/headless-claude.md` "Email reporting via Resend" section. The Audit phase's failed fire row is where this gets checked every week (the W39 recruiter fire, 2026-09-21, mailed its failure page and was fixed by hand the next morning).
+- The current robust pattern is per-run email via Resend with API key in the vault, recipient in `REPORT_RECIPIENT`, the failure page mailed by the runner's EXIT trap. See `homebase/.claude/references/headless-claude.md` "Email reporting via Resend" section. The Repetition question's routine line is where this gets checked every week (the W39 recruiter fire, 2026-09-21, mailed its failure page and was fixed by hand the next morning).
 - Apply this scrutiny in proportion to schedule frequency. A weekly routine that fails silently for a week is much worse than a daily one that fails silently once.
 
 ## Structural Moves Get Plan Mode Before Any File Is Written
 
-When a sharpen session creates or reshapes a durable surface (an agent, a skill, a hook, a workflow), enter plan mode and walk the design with Forni before authoring anything. Ground the design in the authoring conventions (`~/.claude/references/skills.md`) and, for anything agent shaped, a fresh read of Anthropic's guidance; settle the ownership and orchestration forks with him one at a time, then hand the build to a ticket; a build lands inside the session only on Forni's explicit call, as on 2026-09-23.
+When a sharpen session creates or reshapes a durable surface (an agent, a skill, a hook, a workflow), enter plan mode and walk the design with Forni before authoring anything. Ground the design in the authoring conventions (`~/.claude/references/skills.md`) and, for anything agent shaped, a fresh read of Anthropic's guidance; settle the ownership and orchestration forks with him one at a time, then land the build in the session once he approves the plan, or hand it to a ticket when it is ticket sized, as on 2026-09-23.
 
 **Why:** 2026-08-13. The sharpener agent's first version was authored minutes after the pick with no plan: the skill ended up orchestrating the agent ("Step 1: dispatch the sharpener") when Forni wanted the agent to run the method, and the scan was delegated to three scouts when one context held it fine. Forni: "This feels like we didn't really think about this very hard and didn't really come up with a plan." The whole build was redone through plan mode the same session.
 
@@ -58,7 +58,7 @@ Reduction of the always loaded context is a standing phase of every sharpen run 
 
 **Why:** 2026-08-27. The board proposed unloading homebase's CLAUDE.md from every session; Forni corrected the premise (the `~/CLAUDE.md` link is the design, homebase is the config store loaded into Eudy on purpose) and set the direction instead: "If we can slim down and go through and reduce, I think that is great. We should definitely have that reduction stage as a part of every sharpened saws run." The first cut took that file from 332 lines to 88 by moving depth into path scoped rules. On 2026-09-16 socrates found the phase text still gated the cut on the 200 line anchor while this rule said every session, and three entries had logged "no cut owed" past a named duplicate; the phase text was rewritten 2026-09-23 so the two agree.
 
-**How to apply:** The sharpener's Load line always names the best single cut; the main session takes it at Cut unless Ground found nothing bounded. The anchor decides whether a path scoped rule or tool doc move is due; it never excuses a session from the cut. Never turn the cut into a restructure; that is `assist:groom-context`.
+**How to apply:** The main session takes the best single cut at Cut unless Ground found nothing bounded; nothing excuses a session from the cut. Never turn the cut into a restructure; that is `assist:groom-context`.
 
 ## The Homebase Link Is the Design, Not a Placement Failure
 
@@ -74,7 +74,7 @@ The sharpener runs on Bash, and once the main session has entered a worktree (En
 
 **Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the isolation refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
 
-**How to apply:** Step 4 of Before Every Invocation happens at the top of Close, never before the sharpener returns. A session that edits two repos adds both worktrees with `git worktree add` and never enters either, so gcloud, Linear, and both repos stay reachable. A report built read only should say so in its Signals.
+**How to apply:** Step 4 of Before Every Invocation happens at Pick, once Forni names the action, never before the sharpener returns. A session that edits two repos adds both worktrees with `git worktree add` and never enters either, so gcloud, Linear, and both repos stay reachable. A report built read only should say so in its Signals.
 
 ## Resume Before Redispatch After an Overload
 
@@ -82,7 +82,7 @@ When a scout or the sharpener dies on a server side error (a 529, a dropped conn
 
 **Why:** 2026-09-03. Two server 529s killed the sharpener mid scan. Resumed by id each time, it kept its reads and its board came back complete on the third resume; socrates, redispatched fresh after its own 529, spent the same tokens again and never returned. On 2026-09-23 the sharpener was forced out with both scouts still running; socrates reported to the main session on its own, and claude-code-guide never did until redispatched once.
 
-**How to apply:** A dead agent's id is in the failure notice; `SendMessage` to it first. If the resume also fails, one fresh dispatch, then stop. A report without a scout says so in that scout's paragraph; the log's Next line carries the miss so the next Ground rebriefs the same question.
+**How to apply:** A dead agent's id is in the failure notice; `SendMessage` to it first. If the resume also fails, one fresh dispatch, then stop (the sharpener itself cannot resume, so the main session does it). A report without a scout says so in that scout's paragraph; the log's Next line carries the miss so the next Ground rebriefs the same question.
 
 ## Skill Doctor Runs Headless
 
@@ -92,10 +92,18 @@ When a scout or the sharpener dies on a server side error (a 529, a dropped conn
 
 **How to apply:** Run it at Groom, read the never used rows against what replaced them, and propose the turn offs; a skill is turned off only on Forni's yes.
 
-## Check gcloud Auth Before Dispatching the Sharpener
+## Check gcloud Auth When a Failure Page Was Mailed
 
-The atelic gcloud identity is logged out by a daily reauth, and the login is a browser step only Forni can take. Before dispatching the sharpener, run one read (`gcloud run jobs list --project atelic --region us-central1`); if it fails on reauthentication, ask Forni to run `gcloud auth login` first, and dispatch once it passes.
+The atelic gcloud identity is logged out by a daily reauth, and the login is a browser step only Forni can take. The routine line rests on runner mail, so gcloud is read only when a failure page needs its log tail. When one was mailed since the last entry, run one read before dispatching the sharpener (`gcloud run jobs list --project atelic --region us-central1`); if it fails on reauthentication, ask Forni to run `gcloud auth login` first, and dispatch once it passes.
 
 **Why:** 2026-09-30. The audit ran logged out, so executions, scheduler entries, and image digests went unread and every row rested on runner mail, the ledger, and git. The sharpener said so, as its own rule requires, but the one fact the week turned on (the plumber fired on an image five days stale) is exactly what a digest read shows and mail cannot.
 
-**How to apply:** The check is the first step of Before Every Invocation, ahead of the dispatch. If Forni is away or declines, dispatch anyway and carry the caveat into the log's Routines line; never work around the login.
+**How to apply:** The check precedes the dispatch only when a failure page is in the mailbox. If Forni is away or declines, dispatch anyway and carry the caveat into the log's Repetition line; never work around the login.
+
+## Sharpen Measures the Setup, Not the Routines
+
+Sharpen answers five questions about the whole AI setup (new tooling to adopt, context growth, corrections to recodify, repetition to automate, whether last week's fix held) and acts on one. The routine table, the whole measure from 2026-09-23 to 2026-10-14, is gone; routines already built get one line under the Repetition question, and a broken fire surfaces through its mailed failure page.
+
+**Why:** 2026-10-14. Three audit sessions in a row verified three cloud routines that already worked, and Forni asked whether sharpen was "tilting at windmills." His own words for what it was meant to be: "making my AI development cycles and AI routines better, moving things up the levels path, and ensuring that I'm using my AI tooling in the right way." socrates traced the drift to the LEVELS.md Direction line ("toward Level 7 or 8"), which both method versions had obeyed faithfully; the routine audit was its logical endpoint. The same fortnight held 38 corrections from Forni inside live sessions, which the routine measure could not see.
+
+**How to apply:** The audit answers all five questions every week and the session acts on the top pick. A single layer never becomes the measure again; a session that only verifies routines or only trims context has lost the plot. The levels are the map, not the destination.
