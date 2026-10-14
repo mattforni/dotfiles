@@ -14,7 +14,7 @@ A Background row that has a Linear ticket is read from Linear at Ground and neve
 
 **Why:** 2026-09-23. The count 2 row ("the outreacher's drafting half to Cloud Run, Tuesday 05:00") was stale on all three of its facts: the agent had been renamed plumber, the fire time decided was Monday 22:00, and ATE-551 already held the job, seven secrets, and a local fire. Taking it would have duplicated the ticket; retiring it was bookkeeping. socrates traced the same pattern through every carried row on record.
 
-**How to apply:** At Close, every deferral gets one of three ends: closed, ticketed, or retired. A ticketed row leaves the paragraph; the next Ground reads its state with `linear issue view`. Only unticketed rows stay in Background, each with its first date, and none survives two entries.
+**How to apply:** At Ground, every ticketed pointer in the last entry is read with `linear issue view`. An unticketed item in the last entry's Next line gets one of three ends at Pick: closed, ticketed, or retired. Nothing is carried on a counter.
 
 ## CronCreate Is Not a Level 7 Primitive
 
@@ -33,7 +33,7 @@ Before proposing a new headless routine, audit the feedback channels on existing
 **How to apply:**
 
 - For each live headless routine, ask: "If this fails silently, how would Forni find out?" If the answer is "macOS notification" alone, that is insufficient.
-- The current robust pattern is per-run email via Resend with API key in the vault, recipient in `REPORT_RECIPIENT`, the failure page mailed by the runner's EXIT trap. See `homebase/.claude/references/headless-claude.md` "Email reporting via Resend" section. The Audit phase's failed fire row is where this gets checked every week (the W39 recruiter fire, 2026-09-21, mailed its failure page and was fixed by hand the next morning).
+- The current robust pattern is per-run email via Resend with API key in the vault, recipient in `REPORT_RECIPIENT`, the failure page mailed by the runner's EXIT trap. See `homebase/.claude/references/headless-claude.md` "Email reporting via Resend" section. The Repetition question's routine line is where this gets checked every week (the W39 recruiter fire, 2026-09-21, mailed its failure page and was fixed by hand the next morning).
 - Apply this scrutiny in proportion to schedule frequency. A weekly routine that fails silently for a week is much worse than a daily one that fails silently once.
 
 ## Structural Moves Get Plan Mode Before Any File Is Written
@@ -74,7 +74,7 @@ The sharpener runs on Bash, and once the main session has entered a worktree (En
 
 **Why:** 2026-08-27 afternoon. The sharpener was dispatched first and the main session cut the Eudy worktree while it scanned; from that moment the isolation refused its git log, Linear, and grep calls, so it scanned read only, reported ATE-471 as Todo (it was In Progress) and missed the outreacher routine that had gone live the day before. Both reached the board as facts and had to be corrected during Implement.
 
-**How to apply:** Step 4 of Before Every Invocation happens at the top of Close, never before the sharpener returns. A session that edits two repos adds both worktrees with `git worktree add` and never enters either, so gcloud, Linear, and both repos stay reachable. A report built read only should say so in its Signals.
+**How to apply:** Step 4 of Before Every Invocation happens at the top of Pick, never before the sharpener returns. A session that edits two repos adds both worktrees with `git worktree add` and never enters either, so gcloud, Linear, and both repos stay reachable. A report built read only should say so in its Signals.
 
 ## Resume Before Redispatch After an Overload
 
@@ -92,10 +92,18 @@ When a scout or the sharpener dies on a server side error (a 529, a dropped conn
 
 **How to apply:** Run it at Groom, read the never used rows against what replaced them, and propose the turn offs; a skill is turned off only on Forni's yes.
 
-## Check gcloud Auth Before Dispatching the Sharpener
+## Check gcloud Auth When a Failure Page Was Mailed
 
-The atelic gcloud identity is logged out by a daily reauth, and the login is a browser step only Forni can take. Before dispatching the sharpener, run one read (`gcloud run jobs list --project atelic --region us-central1`); if it fails on reauthentication, ask Forni to run `gcloud auth login` first, and dispatch once it passes.
+The atelic gcloud identity is logged out by a daily reauth, and the login is a browser step only Forni can take. The routine line rests on runner mail, so gcloud is read only when a failure page needs its log tail. When one was mailed since the last entry, run one read before dispatching the sharpener (`gcloud run jobs list --project atelic --region us-central1`); if it fails on reauthentication, ask Forni to run `gcloud auth login` first, and dispatch once it passes.
 
 **Why:** 2026-09-30. The audit ran logged out, so executions, scheduler entries, and image digests went unread and every row rested on runner mail, the ledger, and git. The sharpener said so, as its own rule requires, but the one fact the week turned on (the plumber fired on an image five days stale) is exactly what a digest read shows and mail cannot.
 
-**How to apply:** The check is the first step of Before Every Invocation, ahead of the dispatch. If Forni is away or declines, dispatch anyway and carry the caveat into the log's Routines line; never work around the login.
+**How to apply:** The check precedes the dispatch only when a failure page is in the mailbox. If Forni is away or declines, dispatch anyway and carry the caveat into the log's Repetition line; never work around the login.
+
+## Sharpen Measures the Setup, Not the Routines
+
+Sharpen answers five questions about the whole AI setup (new tooling to adopt, context growth, corrections to recodify, repetition to automate, whether last week's fix held) and acts on one. The routine table, the whole measure from 2026-09-23 to 2026-10-14, is gone; routines already built get one line under the Repetition question, and a broken fire surfaces through its mailed failure page.
+
+**Why:** 2026-10-14. Three audit sessions in a row verified three cloud routines that already worked, and Forni asked whether sharpen was "tilting at windmills." His own words for what it was meant to be: "making my AI development cycles and AI routines better, moving things up the levels path, and ensuring that I'm using my AI tooling in the right way." socrates traced the drift to the LEVELS.md Direction line ("toward Level 7 or 8"), which both method versions had obeyed faithfully; the routine audit was its logical endpoint. The same fortnight held 38 corrections from Forni inside live sessions, which the routine measure could not see.
+
+**How to apply:** The audit answers all five questions every week and the session acts on the top pick. A single layer never becomes the measure again; a session that only verifies routines or only trims context has lost the plot. The levels are the map, not the destination.
