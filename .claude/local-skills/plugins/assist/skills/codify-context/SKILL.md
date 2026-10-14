@@ -58,13 +58,13 @@ Apply the placement rule: name the trigger, read the destination off the routing
 
 ### Step 4: Draft and Present
 
-Draft the delta only, never the full file, and print it as the final text of the turn so it renders (see learned rules). Rule first, incident after, dated. For an always loaded destination, the delta includes the line being displaced or the reason nothing is.
+Draft the delta only, never the full file, and print it as the final text of the turn so it renders (see learned rules). Rule first, incident after, dated. For an always loaded destination, the delta includes the line being displaced or the reason nothing is. When the destination is a rule file, the delta also lists each auto memory file the rule promotes (found by grepping `~/.claude/projects/*/memory/*.md`, not only the indexes, in every project whose sessions load the new seat), so the strike is approved with the rule.
 
 **The project directory pattern** (a nested directory in Eudy or a repo): the directory's `README.md` holds the full account for humans, the what and the why with examples; the directory's `CLAUDE.md` holds the conventions for Claude in under 20 lines and points to the README; the root CLAUDE.md gets a one line pointer only when the directory is not already in its map, since a nested CLAUDE.md loads on its own the moment a file in that directory is read. Never duplicate across the three; each layer points to the next.
 
 ### Step 5: Write
 
-After approval, write the destination from the session worktree, never a primary checkout. **Strike the memory the rule promotes in the same change:** grep every project's memory index (`~/.claude/projects/*/memory/MEMORY.md`) for the topic, delete the memory file and its index line, and name both in Step 6. The rule file is the seat now, and a memory that survives its own promotion loads a duplicate into every session until someone notices (thirteen such duplicates were struck by hand on 2026-10-14). When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
+After approval, write the destination from the session worktree, never a primary checkout. **Strike the memory the rule promotes** once the rule is written, and only the files Step 4 listed (see learned rules). When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
 
 ### Step 6: Confirm
 
