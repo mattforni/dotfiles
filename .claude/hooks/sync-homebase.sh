@@ -16,6 +16,11 @@ LOG="$HOME/.claude/.homebase-reconciled.log"
 LOCK="$STAMP.lock"
 
 [[ -d "$HB/.git" ]] || exit 0
+# A lock older than two minutes is stale (a killed hook never runs its trap);
+# the hook timeout is 30 seconds, so a live holder is never that old.
+if [[ -d "$LOCK" ]] && [[ -n "$(find "$LOCK" -maxdepth 0 -mmin +2 2>/dev/null)" ]]; then
+  rmdir "$LOCK" 2>/dev/null
+fi
 mkdir "$LOCK" 2>/dev/null || exit 0
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 
@@ -23,10 +28,12 @@ trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 # untracked paths (the worktrees directory) do not count. A fetch that hangs is
 # cut by the hook timeout, and a failed fetch or merge leaves HEAD where it was.
 branch=$(git -C "$HB" rev-parse --abbrev-ref HEAD 2>/dev/null)
-if [[ "$branch" == "main" ]] && [[ -z "$(git -C "$HB" status --porcelain --untracked-files=no 2>/dev/null)" ]]; then
-  git -C "$HB" fetch --quiet origin main 2>/dev/null \
-    && git -C "$HB" merge --ff-only --quiet origin/main >/dev/null 2>&1
-fi
+# Off main or dirty means the tree is not what main carries, so nothing is
+# reconciled from it either.
+[[ "$branch" == "main" ]] || exit 0
+[[ -z "$(git -C "$HB" status --porcelain --untracked-files=no 2>/dev/null)" ]] || exit 0
+git -C "$HB" fetch --quiet origin main 2>/dev/null \
+  && git -C "$HB" merge --ff-only --quiet origin/main >/dev/null 2>&1
 
 head=$(git -C "$HB" rev-parse HEAD 2>/dev/null) || exit 0
 last=$(cat "$STAMP" 2>/dev/null || true)
@@ -34,7 +41,7 @@ last=$(cat "$STAMP" 2>/dev/null || true)
 
 if "$HB/setup.sh" --reconcile >"$LOG" 2>&1; then
   printf '%s\n' "$head" >"$STAMP"
-  echo "Homebase reconciled to ${head:0:8} (copy and merge mode files are current; log: $LOG)."
+  echo "Homebase reconciled to ${head:0:8} (copy and merge mode files are current from the next session; log: $LOG)."
 else
   echo "Homebase reconcile failed at ${head:0:8}; read $LOG. Hooks and settings merged since the last reconcile may not be live."
 fi
