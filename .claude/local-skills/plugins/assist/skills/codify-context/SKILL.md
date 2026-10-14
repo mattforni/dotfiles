@@ -53,7 +53,7 @@ Apply the placement rule: name the trigger, read the destination off the routing
 - **A skill's `learned-rules.md`**: a correction to how a skill decides. Never learned rule content inside SKILL.md; every skill carries the separate file, and SKILL.md's own `## Learned Rules` section holds only the pointer to it.
 - **A hook**: anything that must happen every time or must never happen. Propose the hook; writing `settings.json` is `update-config` work and needs its own yes.
 - **A tool doc** (the tool's own doc, wherever the placement rule's table puts it: Eudy `Admin/Tools/` or the owning repo's `Tools/`): a tool's mechanics, gotchas, costs, and the reason we picked it, in the one pager shape of `Admin/Tools/CLAUDE.md`.
-- **Auto memory**: a Claude discovered learning that need not survive a machine swap. Usually already saved by the time Forni says codify; check before duplicating.
+- **Auto memory**: a Claude discovered learning that need not survive a machine swap. Usually already saved by the time Forni says codify; check before duplicating, and when the codification lands in a rule file the memory is struck (Step 5).
 - **Nowhere**: anything derivable from the code, git history, or the tool's own help.
 
 ### Step 4: Draft and Present
@@ -64,11 +64,11 @@ Draft the delta only, never the full file, and print it as the final text of the
 
 ### Step 5: Write
 
-After approval, write the destination from the session worktree, never a primary checkout. When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
+After approval, write the destination from the session worktree, never a primary checkout. **Strike the memory the rule promotes in the same change:** grep every project's memory index (`~/.claude/projects/*/memory/MEMORY.md`) for the topic, delete the memory file and its index line, and name both in Step 6. The rule file is the seat now, and a memory that survives its own promotion loads a duplicate into every session until someone notices (thirteen such duplicates were struck by hand on 2026-10-14). When the destination is a homebase file, land by the homebase heuristic (prose under 20 lines merges direct to main; anything executable or any plugin file goes by PR with the version bump). When it is an Eudy file, commit from the session worktree.
 
 ### Step 6: Confirm
 
-Paths written, and anything removed or moved in the process. Keep it to a few lines.
+Paths written, the memory struck (file and index line) or the words "no memory held it", and anything else removed or moved in the process. Keep it to a few lines.
 
 ## What Makes Good Codification
 
