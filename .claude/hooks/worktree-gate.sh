@@ -6,13 +6,16 @@
 #   2. Prefix a command with WT_GATE_BYPASS=1 to override for genuine primary work
 #      (a landing step, or committing symlinked homebase config like GC itself).
 # Scripts are judged too: a shell script the command runs (`./s.sh`, `bash s.sh`,
-# `source s.sh`, after any `cd`, env assignment, or wrapper) is read line by line,
-# and each git call in it gets the same test as a typed one, so wrapping
-# `git -C <primary> commit` in a scratchpad script no longer walks around the
-# gate. Inside a script a plain `cd <path>` line moves the fallback directory.
+# `source s.sh`, `bash -c ./s.sh`, `bash < s.sh`, after any `cd`, env assignment,
+# or wrapper) is read line by line, and each git call in it gets the same test as
+# a typed one, so wrapping `git -C <primary> commit` in a scratchpad script no
+# longer walks around the gate. Inside a script a plain `cd <path>` line moves
+# the fallback directory, and quoted text is dropped (a -C path is unquoted
+# first), so `echo "then git commit"` is data, not a command.
 # Limits: one level deep (a script a script calls is not read); shell scripts
 # only (a .sh, .bash, or .zsh name, or a sh, bash, or zsh shebang, under 256 KB);
-# a script merely read (cat, grep) is not judged.
+# a script merely read (cat, grep) is not judged; a script piped into a shell
+# (`cat s.sh | bash`) is not read; paths with spaces are not parsed.
 # Fails OPEN: any resolution error exits 0, never worse than an ungated command.
 # That includes a path the hook cannot resolve, like `git -C "$REPO"` or
 # `cd "$DIR"` inside a script; only ~, $HOME, and ${HOME} are expanded.
@@ -116,14 +119,13 @@ judge_script() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=${line#"${line%%[![:space:]]*}"}
     [[ -z "$line" || "$line" == \#* ]] && continue
-    # Quoted text on a print or search line is data, not a command; drop it and
-    # still judge anything chained after (echo done && git commit).
-    if [[ "$line" =~ ^(echo|printf|expect|cat|grep|rg)[[:space:]] ]]; then
-      line=$(sed -E "s/\"[^\"]*\"|'[^']*'//g" <<<"$line")
-    fi
     if [[ "$line" =~ $cd_re ]]; then
       fallback=$(resolve "${BASH_REMATCH[1]}" "$fallback")
     fi
+    # Quoted text is data, not a command (echo "then git commit"), so it is
+    # dropped before judging, after unquoting a -C path so the repo survives.
+    line=$(sed -E -e "s/-C[[:space:]]+\"([^\"]*)\"/-C \\1/g" -e "s/-C[[:space:]]+'([^']*)'/-C \\1/g" \
+      -e "s/\"[^\"]*\"|'[^']*'//g" <<<"$line")
     judge "$line" "$fallback" && return 0
   done <"$1"
   return 1
@@ -158,8 +160,13 @@ while IFS= read -r segment; do
   case "${first##*/}" in
     sh|bash|zsh|source|.)
       i=$((i + 1))
-      while (( i < ${#words[@]} )) && [[ "${words[i]}" == -* ]]; do
-        [[ "${words[i]}" == *c* && "${words[i]}" != --* ]] && continue 2
+      # Options are skipped; `-c <string>` and `< file` both name the script
+      # by the word that follows (the string's first word, for -c).
+      while (( i < ${#words[@]} )) && [[ "${words[i]}" == -* || "${words[i]}" == '<' ]]; do
+        if [[ "${words[i]}" == '<' || ( "${words[i]}" == *c* && "${words[i]}" != --* ) ]]; then
+          i=$((i + 1))
+          break
+        fi
         i=$((i + 1))
       done
       (( i < ${#words[@]} )) || continue
