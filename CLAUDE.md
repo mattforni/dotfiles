@@ -22,7 +22,7 @@ Every change inside `plugins/<plugin>/...` or `.claude/local-skills/plugins/<plu
 
 `./setup.sh` reconciles `$HOME` against the deploy table in `bin/lib/deploy-table.sh` (creating what is missing, fixing what is wrong, removing what homebase used to deploy and no longer does), then installs brew packages, mise runtimes, npm globals, IDE extensions, and Claude plugins, and runs authentication setup. `./setup.sh --dry-run` shows every change, removals included, without installing anything. It refuses to run from a git worktree, since the symlinks would resolve into a checkout that disappears on merge.
 
-Most tracked files are symlinked into `$HOME`, so an edit in the repo is already live. Run `./setup.sh` only when the deploy table itself changed or to pick up brew, node, and plugin updates. There is no step for copying changes back out of `$HOME`. Never link a directory that receives foreign writes, which is why `~/.claude` is listed child by child. Depth: `.claude/rules/setup.md`.
+Most tracked files are symlinked into `$HOME`, so an edit in the repo is already live; the copy and merge mode files (settings, plugin config) land through a session start hook that pulls main and runs `./setup.sh --reconcile` when the commit moved. Run the full `./setup.sh` to pick up brew, node, and plugin updates. There is no step for copying changes back out of `$HOME`. Never link a directory that receives foreign writes, which is why `~/.claude` is listed child by child. Depth: `.claude/rules/setup.md`.
 
 ## Configuration Files
 

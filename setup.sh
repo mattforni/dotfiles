@@ -20,14 +20,18 @@ fi
 # Parse flags
 FORCE=false
 DRY_RUN=false
+RECONCILE_ONLY=false
 
 usage() {
   cat <<'USAGE'
-Usage: ./setup.sh [-f|--force] [-n|--dry-run]
+Usage: ./setup.sh [-f|--force] [-n|--dry-run] [-r|--reconcile]
 
   -f, --force     Reinstall or refresh even where something looks up to date
   -n, --dry-run   Print every change the home reconciliation would make,
                   removals included, and touch nothing
+  -r, --reconcile Reconcile \$HOME against the deploy table and stop: no
+                  brew, runtimes, plugins, or auth. What the session start
+                  hook runs when homebase main has moved
   -h, --help      This message
 USAGE
 }
@@ -36,6 +40,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -f|--force) FORCE=true; shift ;;
     -n|--dry-run) DRY_RUN=true; shift ;;
+    -r|--reconcile) RECONCILE_ONLY=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) usage >&2; exit 1 ;;
   esac
@@ -1542,6 +1547,14 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     warn "Dry run: installing nothing. Home changes only."
     run_phase reconcile_home
     run_phase retire_brave_launcher
+  elif [[ "$RECONCILE_ONLY" == true ]]; then
+    # The deploy table pass alone. Link mode files are live the moment the
+    # checkout moves, but copy and merge mode files (settings.json, the plugin
+    # config) only reach $HOME through this phase, so a merged hook or
+    # permission rule stayed dormant until the next hand run of mise. The
+    # session start hook (.claude/hooks/sync-homebase.sh) runs this whenever
+    # the primary checkout's commit changes.
+    run_phase reconcile_home
   else
     run_phase setup_prerequisites
     run_phase install_brew_packages
