@@ -29,7 +29,7 @@ Usage: ./setup.sh [-f|--force] [-n|--dry-run] [-r|--reconcile]
   -f, --force     Reinstall or refresh even where something looks up to date
   -n, --dry-run   Print every change the home reconciliation would make,
                   removals included, and touch nothing
-  -r, --reconcile Reconcile \$HOME against the deploy table and stop: no
+  -r, --reconcile Reconcile $HOME against the deploy table and stop: no
                   brew, runtimes, plugins, or auth. What the session start
                   hook runs when homebase main has moved
   -h, --help      This message
@@ -767,9 +767,13 @@ if dry:
     sys.exit(4)
 
 os.makedirs(os.path.dirname(dst), exist_ok=True)
-with open(dst, "w") as f:
+# Write beside the destination and rename, so a session reading the file
+# mid-run never sees it truncated.
+tmp = dst + ".homebase-tmp"
+with open(tmp, "w") as f:
     json.dump(merged, f, indent=2)
     f.write("\n")
+os.replace(tmp, dst)
 PY
 
   case "$rc" in
