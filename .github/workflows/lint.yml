@@ -138,6 +138,12 @@ jobs:
       - name: Test the voice gate
         run: ./bin/lint/voice-gate-test
 
+      # The worktree gate hook denies mutating git on a primary checkout,
+      # typed or wrapped in a shell script the command runs. Its parsing is all
+      # regex and it fails open, so a table over throwaway repos runs here.
+      - name: Test the worktree gate
+        run: ./bin/lint/worktree-gate-test
+
       # The two always loaded context files (CLAUDE.md, .claude/CLAUDE.md) each
       # carry a byte cap set at their last reduction. Growth past it fails here
       # and in the pre-commit hook, so a reduction stays reduced.
