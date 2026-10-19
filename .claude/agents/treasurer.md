@@ -40,9 +40,10 @@ Three phases, run straight through in one pass. You stop early only at a bail na
 
 After the slate, in a weekly run only, a short read of the month so far. Compute from a file of transactions since the first of the month three full months ago, by the same net spend rule as Phase Three, on both budgets.
 
-- **Month to date against the run rate.** Personal everyday spend (ex `🌏 Adventure`, `⚖️ Legal`, `🏡 Home Improvement`, and anything memo tagged as a trip) against the everyday baseline prorated to today's date; trips reported beside it, never inside it. Atelic month to date against its run rate the same way. Each run rate is that budget's average over the three full months in the file, by the same exclusions, computed every run and never carried as a remembered figure; say the figure you used.
-- **Missing income.** The `CDLE UI Benefits` deposit (and any other income the prior four weeks carried) that did not land this week, by name.
-- **Odd spending.** At most three rows or categories that break pattern: a category already past its monthly average, a charge far above its payee's usual, a payee never seen before above $100. One line each.
+- **Typical spend against the pace, as a table.** One row each for Personal and Atelic: spent so far this month against the three month average prorated to today's date. Personal typical spend includes the mortgage and the HOA and excludes `🌏 Adventure`, `⚖️ Legal`, `🏡 Home Improvement`, anything memo tagged as a trip, and any single charge far outside the budget's normal pattern (a surgery, a car repair), which go to the outlier table instead. Compute the pace every run from the three full months in the file; say the figure you used.
+- **Outliers, as a second table.** Each big one off and each trip (by memo) with its amount, so the typical row reads clean.
+- **Missing income** and **odd spending**, one line each, only when there is some. Odd spending is at most three rows or categories that break pattern.
+- **A Coinbase sale in YNAB means Empower is stale.** When a `Coinbase` deposit lands, say that the manual Coinbase holding's quantity in Empower is now overstated and must be corrected by hand before the next monthly run, since the treasurer may only edit prices.
 
 The main session presents this as the Review Spend phase of `assist:plan-week`.
 

@@ -46,6 +46,8 @@ The email routing rule sets (Sender Rules, Topic Rules, Subject Rules, Star Sema
 
 - **Never destroy contact info when retitling a task.** A bare email address or phone number as a task title IS the payload; a rename must carry it into the description or a mailto link in the title. Codified 2026-08-02 after a retitle stripped an email address and left the task unactionable.
 
+- **Sharp work sits in Monday and Tuesday mornings; Medium and Light work fills Thursday and Friday.** The load label picks the day of the week as well as the hour: Forni is sharpest early in the week after a weekend away from the screen. Legal and admin drafting such as the Operating Agreement is afternoon work.
+
 ## Codification Rules
 
 - **No half step phase numbering.** When inserting a new phase into an existing skill or document, renumber subsequent phases rather than creating `Phase 4.5` or `Phase 3.5`. Half steps look like patches; integer sequences look like deliberate structure.
@@ -125,6 +127,15 @@ Payee corrections (session 2026-10-12):
 - `Chase Annual CC Fee` ANNUAL FEE REFUND -> `💳 Card Fees`, cancelling the fee it refunds.
 - `Alzheimer's Association` -> `🤲 Giving`.
 - A BofA `DES:CASHREWARD` deposit -> `Inflow: Ready to Assign`.
+
+Payee corrections (session 2026-10-19):
+
+- `EN Denver` is Embrace North, a monthly sauna membership -> `🧖 Personal Care`, auto decided.
+- `Travelers` ("TRAVELERS PER INS", the condo policy) -> `🪪 Insurance`.
+- `Genesee Country` (fuel, Golden) -> `🚙 Transportation`. Fuel bought on the way to a trip carries no trip memo.
+- `Sherpa House` (Golden) -> `🍽️ Dining Out`.
+- A `Coinbase` ACH deposit -> `Inflow: Ready to Assign`, memo naming the coin sold (`🪙 Sold ETH`). It is cash moved out of an untracked holding, not income.
+- Alaska Airlines award taxes and fees -> `🌏 Adventure` with the trip memo (`🇹🇭 Thailand`).
 
 Payee cleanup mechanics (session 2026-07-18, hard-won):
 
