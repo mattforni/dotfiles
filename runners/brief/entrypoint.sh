@@ -192,8 +192,13 @@ homebase_pull() {
         fi
         # A clone this runner made on an earlier run is replaced, not reused,
         # so the rules are today's; it is public, shallow and takes seconds.
+    elif [[ -e "$HOMEBASE" && "$HOMEBASE" != "$WORK/homebase" ]]; then
+        # Only a clone this script made, under its own work directory, is
+        # ever removed. Anything else at the path was put there by someone.
+        fail_reason="$HOMEBASE exists but has no $HOMEBASE_RULES; refusing to clone over it"
+        return 1
     fi
-    rm -rf "$HOMEBASE"
+    [[ "$HOMEBASE" == "$WORK/homebase" ]] && rm -rf "$HOMEBASE"
     if ! GIT_SSH_COMMAND="" timeout 2m git clone --quiet --depth 1 "$HOMEBASE_REPO" "$HOMEBASE" 2>"$WORK/homebase-stderr.txt"; then
         fail_reason="homebase clone failed: $(head -c 300 "$WORK/homebase-stderr.txt")"
         return 1
@@ -408,13 +413,40 @@ calendar_pull() {
     GCAL_TOKEN="$PERSONAL_TOKEN" CALENDARS="$CALENDARS" planning_pull calendar calendar.json 4m node "$SELF_DIR/calendar.mjs" pull "$WORK" "$NEXT_MONDAY" "$NEXT_NEXT_MONDAY"
 }
 inbox_pull() {
-    GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" planning_pull inbox inbox-personal.json 10m node "$SELF_DIR/inbox.mjs" pull "$WORK"
+    # One script, two mailboxes, each judged on its own file: the script
+    # writes one per mailbox it could read and names the one it could not on
+    # stderr, so a failure in one never removes or misreports the other.
+    local err="$WORK/inbox-stderr.txt" rc name why
+    rm -f "$WORK/inbox-personal.json" "$WORK/inbox-atelic.json"
+    GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" timeout 10m node "$SELF_DIR/inbox.mjs" pull "$WORK" 2>"$err"
+    rc=$?
+    for name in personal atelic; do
+        if [[ "$name" == atelic && -z "$ATELIC_TOKEN" ]]; then continue; fi   # already in the ledger from google_tokens
+        if [[ -s "$WORK/inbox-$name.json" ]]; then
+            pull_note "inbox-$name" ok ""
+            grep "^inbox: $name:" "$err" 2>/dev/null | head -n 1 | sed 's/^/  /'
+        else
+            if (( rc == 124 )); then why="the read timed out after 10m"; else why="$(grep "^inbox: $name: not read" "$err" 2>/dev/null | head -n 1 | sed 's/^inbox: [a-z]*: not read, //' | head -c 160)"; fi
+            pull_note "inbox-$name" failed "${why:-the read returned nothing}"
+            echo "inbox-$name: not read, ${why:-the read returned nothing}"
+        fi
+    done
+    return 0
 }
 ynab_pull() {
     if [[ -z "${YNAB_API_KEY:-}" ]]; then pull_note ynab failed "no YNAB_API_KEY in the environment"; echo "ynab: not read, no key"; return 0; fi
     YNAB_API_KEY="$YNAB_API_KEY" YNAB_BUDGETS="$YNAB_BUDGETS" planning_pull ynab ynab-personal.json 6m node "$SELF_DIR/ynab.mjs" pull "$WORK" "$TODAY"
     if [[ -s "$WORK/ynab-personal.json" ]]; then
-        node "$SELF_DIR/ynab.mjs" week "$WORK" "$TODAY" 2>&1 | sed 's/^/  /' || echo "ynab: the spend tables could not be computed"
+        # The tables are their own ledger line: the queue can be read while
+        # the arithmetic fails, and the mail then says so under Money.
+        if node "$SELF_DIR/ynab.mjs" week "$WORK" "$TODAY" 2>"$WORK/ynab-week-stderr.txt"; then
+            pull_note spend ok ""
+            sed 's/^/  /' "$WORK/ynab-week-stderr.txt"
+        else
+            rm -f "$WORK/spend.json"
+            pull_note spend failed "the spend tables could not be computed: $(tail -n 1 "$WORK/ynab-week-stderr.txt" | head -c 160)"
+            echo "spend: not computed, $(tail -n 1 "$WORK/ynab-week-stderr.txt" | head -c 160)"
+        fi
     fi
 }
 linear_pull() {
@@ -423,7 +455,11 @@ linear_pull() {
 }
 todoist_pull() {
     if [[ -z "${TODOIST_API_TOKEN:-}" ]]; then pull_note todoist failed "no TODOIST_API_TOKEN in the environment"; echo "todoist: not read, no key"; return 0; fi
-    TODOIST_API_TOKEN="$TODOIST_API_TOKEN" planning_pull todoist todoist.json 4m node "$SELF_DIR/todoist.mjs" pull "$WORK" "$NEXT_MONDAY"
+    # The landing Monday is the one that opens the week being planned, where
+    # deferrals accumulate; the filter's bound is the Monday after it, as an
+    # explicit date, since Todoist reads "next monday" differently on a
+    # Sunday night and a Monday morning.
+    TODOIST_API_TOKEN="$TODOIST_API_TOKEN" planning_pull todoist todoist.json 4m node "$SELF_DIR/todoist.mjs" pull "$WORK" "$NEXT_MONDAY" "$NEXT_NEXT_MONDAY"
 }
 
 if [[ "$SKIP_PULLS" == "1" ]]; then
@@ -525,7 +561,8 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; the
     # The Google tokens were minted before the pulls and live an hour, which
     # the pulls and the model call together can outrun, so they are minted
     # again here; a failure costs the inbox moves, never the mail.
-    google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; }
+    TOKENS_FOR_APPLY=1
+    google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; TOKEN_FAILURE="$fail_reason"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; TOKENS_FOR_APPLY=0; }
     jq '[.money.rows[] | select((.band // "" | ascii_downcase) == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
     jq '[.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
     # A high row the apply never tries is still accounted for: an action the
@@ -548,8 +585,13 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; the
         fi
     fi
     if [[ "$(jq length "$WORK/apply-gmail.json")" != "0" ]]; then
-        GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" timeout 5m node "$SELF_DIR/inbox.mjs" apply "$WORK" "$WORK/apply-gmail.json" > "$WORK/gmail-applied.json" 2>"$WORK/gmail-apply-stderr.txt" \
-            || { echo "apply: the inbox moves failed: $(tail -n 1 "$WORK/gmail-apply-stderr.txt" | head -c 200)"; echo '{"gmail": [], "dropped": [{"kind": "gmail", "id": "every high row", "reason": "the apply script failed or timed out, so whether the moves landed is unknown; check the inbox"}]}' > "$WORK/gmail-applied.json"; }
+        if [[ "$TOKENS_FOR_APPLY" == 1 ]]; then
+            GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" timeout 5m node "$SELF_DIR/inbox.mjs" apply "$WORK" "$WORK/apply-gmail.json" > "$WORK/gmail-applied.json" 2>"$WORK/gmail-apply-stderr.txt" \
+                || { echo "apply: the inbox moves failed: $(tail -n 1 "$WORK/gmail-apply-stderr.txt" | head -c 200)"; echo '{"gmail": [], "dropped": [{"kind": "gmail", "id": "every high row", "reason": "the apply script failed or timed out, so whether the moves landed is unknown; check the inbox"}]}' > "$WORK/gmail-applied.json"; }
+        else
+            # No token, so nothing is tried, and the reason is the real one.
+            jq --arg why "the Google token could not be minted again at apply time: ${TOKEN_FAILURE:-unknown}" '{gmail: [], dropped: [.[] | {kind: "gmail", id, reason: $why}]}' "$WORK/apply-gmail.json" > "$WORK/gmail-applied.json"
+        fi
     fi
     jq -s '{writes: true, ynab: (.[0].ynab // []), gmail: (.[1].gmail // []), dropped: ((.[0].dropped // []) + (.[1].dropped // []) + (.[2] // []))}' "$WORK/ynab-applied.json" "$WORK/gmail-applied.json" "$WORK/apply-skipped.json" > "$APPLIED"
     echo "apply: $(jq -r '"\(.ynab | length) YNAB rows approved, \(.gmail | length) messages moved, \(.dropped | length) dropped"' "$APPLIED")"

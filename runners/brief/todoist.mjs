@@ -73,18 +73,28 @@ export function shapeTask(t, projects, sections) {
     };
 }
 
-async function pull(outDir, monday) {
+/**
+ * The Schedule filter with its relative bound made explicit: Todoist reads
+ * "next monday" as tomorrow on a Sunday night and as a week away on a Monday
+ * morning, so the caller names the Monday the bound falls on.
+ */
+export const scheduleFilter = (before) => (before
+    ? SCHEDULE_FILTER.replace(/due before:\s*next monday/i, `due before: ${filterDate(before)}`)
+    : SCHEDULE_FILTER);
+
+async function pull(outDir, monday, before) {
     mkdirSync(outDir, { recursive: true });
     const [projects, sections] = await Promise.all([all("projects"), all("sections")]);
     const projectNames = new Map(projects.map((p) => [p.id, p.name]));
     const sectionNames = new Map(sections.map((s) => [s.id, s.name]));
-    const schedule = await all("tasks/filter", { query: SCHEDULE_FILTER });
+    const filter = scheduleFilter(before);
+    const schedule = await all("tasks/filter", { query: filter });
     const landing = await all("tasks/filter", { query: `due: ${filterDate(monday)}` });
     const seen = new Set();
     const shape = (list) => list.filter((t) => !seen.has(t.id) && seen.add(t.id)).map((t) => shapeTask(t, projectNames, sectionNames));
     const out = {
         pulled_at: new Date().toISOString(),
-        filter: SCHEDULE_FILTER,
+        filter,
         landing_monday: monday,
         schedule: shape(schedule),
         landing: shape(landing),
@@ -94,9 +104,9 @@ async function pull(outDir, monday) {
 }
 
 async function main() {
-    const [cmd, outDir, monday] = process.argv.slice(2);
-    if (cmd === "pull" && outDir && monday) return pull(outDir, monday);
-    process.stderr.write("usage: todoist.mjs pull <out-dir> <landing-monday YYYY-MM-DD>\n");
+    const [cmd, outDir, monday, before] = process.argv.slice(2);
+    if (cmd === "pull" && outDir && monday) return pull(outDir, monday, before);
+    process.stderr.write("usage: todoist.mjs pull <out-dir> <landing-monday YYYY-MM-DD> [<due-before YYYY-MM-DD>]\n");
     process.exit(2);
 }
 

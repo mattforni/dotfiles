@@ -85,6 +85,19 @@ test("the mortgage stays typical because it recurs, and the exclusions only bite
     assert.deepEqual(atelic.outliers.map((o) => o.payee), ["Home Depot"]);
 });
 
+test("a split transaction counts through its parts, not its uncategorized parent", () => {
+    const split = {
+        id: "split", date: "2026-10-12", amount: -150, payee_name: "Costco", category_id: null, category_name: "", memo: "",
+        transfer_account_id: null, deleted: false, account_name: "Card",
+        subtransactions: [
+            { id: "s1", amount: -100, category_id: "c", category_name: "🛒 Groceries", payee_name: "Costco", memo: "", transfer_account_id: null },
+            { id: "s2", amount: -50, category_id: "c", category_name: "🧥 Clothing", payee_name: "Costco", memo: "", transfer_account_id: null },
+        ],
+    };
+    const s = spendFor(file([split]), TODAY, true);
+    assert.equal(s.typical.spent, -150);
+});
+
 test("accounts in error are the open, linked ones", () => {
     const accounts = [
         { name: "BofA Checking", closed: false, direct_import_linked: true, direct_import_in_error: true },

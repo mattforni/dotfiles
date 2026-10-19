@@ -15,7 +15,12 @@ test("unemployment insurance mail is never archived by the runner", () => {
     assert.equal(NEVER_ARCHIVE.test("Blue Spruce Maids <info@bluesprucemaids.com> Cleaning"), false);
 });
 import { shapeIssue } from "../linear.mjs";
-import { filterDate, priorityWord, shapeTask } from "../todoist.mjs";
+import { filterDate, priorityWord, scheduleFilter, shapeTask } from "../todoist.mjs";
+
+test("the Schedule filter's relative bound becomes the named Monday", () => {
+    assert.match(scheduleFilter("2026-10-26"), /due before: 10\/26\/2026$/);
+    assert.match(scheduleFilter(undefined), /due before: next monday$/);
+});
 
 test("a message keeps its headers, its user labels by name, and a link that opens in the right account", () => {
     const names = new Map([["Label_1", "📑 Admin"], ["Label_2", "🍏 Constitution/🧖 Personal Care"]]);

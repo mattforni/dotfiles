@@ -140,8 +140,24 @@ function shapeTransaction(t) {
         cleared: t.cleared || "",
         flag_color: t.flag_color || null,
         deleted: Boolean(t.deleted),
+        // A split keeps its parts: the parent carries no category of its own,
+        // so the spend lives in the parts and the arithmetic reads them.
+        subtransactions: (t.subtransactions || []).filter((s) => !s.deleted).map((s) => ({
+            id: s.id,
+            amount: dollars(s.amount),
+            category_id: s.category_id || null,
+            category_name: s.category_name || "",
+            payee_name: s.payee_name || t.payee_name || "",
+            memo: s.memo || t.memo || "",
+            transfer_account_id: s.transfer_account_id || null,
+        })),
     };
 }
+
+/** A transaction as the rows the arithmetic reads: itself, or its parts when it is a split. */
+export const spendRows = (t) => (t.subtransactions && t.subtransactions.length > 0
+    ? t.subtransactions.map((s) => ({ ...s, date: t.date, account_name: t.account_name, deleted: false }))
+    : [t]);
 
 async function pull(outDir, today) {
     mkdirSync(outDir, { recursive: true });
@@ -206,7 +222,7 @@ export const isTripMemo = (memo) => {
 export function spendFor(file, today, personal) {
     const month = monthOf(today);
     const windowMonths = [3, 2, 1].map((b) => monthOf(monthsBack(today, b)));
-    const rows = file.transactions.filter(isSpend);
+    const rows = file.transactions.flatMap(spendRows).filter(isSpend);
     const monthsByPayee = new Map();
     for (const t of rows) {
         const key = t.payee_name.toLowerCase();
