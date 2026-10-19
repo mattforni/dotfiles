@@ -431,7 +431,7 @@ google_access_token() {
 fill_prompt() {
     local file="$1" v val args=()
     TODAY="$(date +%F)"
-    for v in WEEK MONDAY SUNDAY NEXT_MONDAY TODAY WORK EUDY PULLS ATELIC TEXT; do
+    for v in WEEK MONDAY SUNDAY NEXT_MONDAY NEXT_WEEK NEXT_SUNDAY TODAY WORK EUDY PULLS ATELIC HOMEBASE TEXT; do
         val="${!v:-}"
         [[ -n "$val" ]] || continue
         val="$(printf '%s' "$val" | sed -e 's/[|&\\]/\\&/g')"

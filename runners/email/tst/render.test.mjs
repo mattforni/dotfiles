@@ -187,6 +187,77 @@ test("the brief's funnel reads its stages and their order from the week", () => 
 	assert.ok(!/\n {2}Lead {6}/.test(funnel), "a stage the week does not name is not printed");
 });
 
+/*
+ * The planning pass. The board is what Forni answers by number, so its
+ * numbers are positions, one to n in the order the model ranked, whatever
+ * the draft's own n says.
+ */
+const sectionOf = (text, name) => {
+	const start = text.indexOf(`\n${name.toUpperCase()}\n`);
+	assert.ok(start >= 0, `${name} is on the page`);
+	const next = text.indexOf("\n================================================================\n", start + name.length + 70);
+	return text.slice(start, next < 0 ? undefined : next);
+};
+
+test("the board numbers its rows in order", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	for (const row of draft.board) row.n = 9;
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const board = sectionOf(text.stdout, "Needed From You");
+	const at = draft.board.map((row, index) => board.indexOf(`  ${index + 1}. ${row.item.split(" ").slice(0, 3).join(" ")}`));
+	assert.ok(at.every((position) => position >= 0), "every entry is numbered by its position");
+	assert.deepEqual([...at].sort((a, b) => a - b), at, "in the order the draft ranked them");
+	assert.ok(!board.includes("  9. "), "the draft's own n is not what is printed");
+
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	const order = draft.board.map((_, index) => html.stdout.indexOf(`>${index + 1}. `));
+	assert.ok(order.every((position) => position >= 0));
+	assert.deepEqual([...order].sort((a, b) => a - b), order);
+});
+
+test("a high money row is tallied under Handled and a medium one listed under Spot Check", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	draft.money.rows = [
+		{ budget: "Personal", id: "t-1", date: "2026-01-27", amount: "-9.00", payee: "Tally Only Bakery", category: "🥐 Bakery Test", memo: "", band: "high", rule: "an invented rule", reason: "" },
+		{ budget: "Personal", id: "t-2", date: "2026-01-28", amount: "-11.00", payee: "Spot Check Diner", category: "🍽️ Diner Test", memo: "", band: "medium", rule: "an invented family", reason: "" },
+	];
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const money = sectionOf(text.stdout, "Money");
+	const handled = money.slice(money.indexOf("\nHandled · "), money.indexOf("\nSpot Check · "));
+	const spot = money.slice(money.indexOf("\nSpot Check · "), money.indexOf("\nDecisions · "));
+	assert.match(handled, /🥐 Bakery Test +1 +\$9\.00/, "the high row is counted under its category");
+	assert.ok(!handled.includes("Spot Check Diner"), "the medium row is not tallied");
+	assert.ok(spot.includes("Spot Check Diner"), "the medium row is listed for a spot check");
+	assert.ok(!spot.includes("Tally Only Bakery"), "the high row is not");
+	assert.ok(money.includes("\nHandled · Proposed, Writes Were Off\n"), "writes off reads as proposed");
+
+	draft.applied.writes = true;
+	const on = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.ok(sectionOf(on.stdout, "Money").includes("\nHandled · Applied\n"), "writes on reads as applied");
+});
+
+test("a pull that was not read opens its section with a notice and is listed in This Run", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	draft.pulls = draft.pulls.map((pull) =>
+		pull.name === "linear" ? { ...pull, ok: false, note: "the cycle read failed" } : { ...pull, ok: true, note: "" },
+	);
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const work = sectionOf(text.stdout, "Work");
+	assert.ok(work.includes("\n  Not read this run: the cycle read failed\n"), "the notice opens Work");
+	assert.ok(work.indexOf("Not read this run") < work.indexOf("The Read"), "before the read");
+	assert.ok(!sectionOf(text.stdout, "Tasks").includes("Not read this run"), "and no other section");
+	const run = sectionOf(text.stdout, "This Run");
+	assert.ok(run.includes("\nNot Read · 1\n  linear\n    the cycle read failed"), "This Run names it");
+
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	assert.ok(html.stdout.includes(">Not read this run: the cycle read failed<"));
+});
+
 test("the parity canonicalizer ignores what only the markup differs on", () => {
 	const jqShape = '<table><tr><td style="color:#FC4A1A; padding:2px;">a &#39;b&#39;</td></tr></table>';
 	const reactShape =

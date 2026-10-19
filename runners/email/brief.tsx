@@ -10,7 +10,9 @@ import {
 	Eyebrow,
 	Footer,
 	GroupRow,
+	lpad,
 	Masthead,
+	Note,
 	ReadBlock,
 	RecordStack,
 	type RecordStackItem,
@@ -51,6 +53,7 @@ import {
 } from "./jq";
 import { RecordsRow, SessionsRow, SpacerRow } from "./local";
 import { recordCard } from "./records";
+import { hang } from "./text";
 import type { Page, RenderContext } from "./types";
 
 /*
@@ -116,6 +119,22 @@ export type BriefDraft = {
 		opportunities?: FunnelRow[] | null;
 		closed_leads?: FunnelRow[] | null;
 	} | null;
+	/* The planning pass: the model's keys (prompt.md, The Shape). */
+	board?: BoardRow[] | null;
+	money?: {
+		read?: unknown;
+		rows?: MoneyRow[] | null;
+		deletes?: DeleteRow[] | null;
+		trips?: TripMemo[] | null;
+	} | null;
+	inbox?: { rows?: InboxRow[] | null } | null;
+	work?: { read?: unknown; flags?: FlagRow[] | null; unplaced?: UnplacedRow[] | null } | null;
+	calendar?: { read?: unknown; findings?: Finding[] | null } | null;
+	tasks?: { read?: unknown; rows?: TaskRow[] | null } | null;
+	/* The entrypoint's keys, merged in after the model runs: data, never prose. */
+	spend?: { personal?: BudgetSpend | null; atelic?: BudgetSpend | null } | null;
+	applied?: Applied | null;
+	pulls?: Pull[] | null;
 };
 
 /* ---------- the week, derived ---------- */
@@ -461,6 +480,858 @@ function stages(draft: BriefDraft): Stage[] {
 	return [...known, { name: NO_STAGE, label: "No stage", rows: rest, records: rest.map((row) => row.record(row)) }];
 }
 
+/* ---------- the planning pass ---------- */
+/*
+ * The second half of the mail: the Monday planning pass, drafted the night
+ * before. The board leads, right under the title card, so the decisions are
+ * the first thing read; the sections below the retro hold their detail. The
+ * model supplies the reads, the rows and their bands (prompt.md, The Shape);
+ * the entrypoint merges in the spend tables, what it applied, and which
+ * pulls it could read, and nothing here recomputes either.
+ *
+ * Long text never sits in a fixed column: a row with prose in it is a
+ * RecordStack record, the name on its own line so it wraps on a phone, and
+ * only numbers and short words go in a Records table.
+ */
+
+type BoardRow = { n?: unknown; area?: unknown; item?: unknown; default?: unknown; link?: unknown };
+
+type MoneyRow = {
+	budget?: unknown;
+	id?: unknown;
+	date?: unknown;
+	amount?: unknown;
+	payee?: unknown;
+	category?: unknown;
+	memo?: unknown;
+	band?: unknown;
+	rule?: unknown;
+	reason?: unknown;
+};
+
+type DeleteRow = {
+	budget?: unknown;
+	id?: unknown;
+	date?: unknown;
+	amount?: unknown;
+	payee?: unknown;
+	reason?: unknown;
+};
+
+type TripMemo = { memo?: unknown; ids?: unknown[] | null };
+
+type InboxRow = {
+	mailbox?: unknown;
+	id?: unknown;
+	thread_id?: unknown;
+	from?: unknown;
+	subject?: unknown;
+	date?: unknown;
+	what?: unknown;
+	action?: unknown;
+	labels?: unknown[] | null;
+	star?: unknown;
+	band?: unknown;
+	rule?: unknown;
+	link?: unknown;
+};
+
+type FlagRow = { key?: unknown; title?: unknown; what?: unknown; flag?: unknown; default?: unknown };
+type UnplacedRow = { key?: unknown; title?: unknown; what?: unknown; points?: unknown; load?: unknown };
+type Finding = { kind?: unknown; what?: unknown; when?: unknown; default?: unknown };
+type TaskRow = {
+	id?: unknown;
+	content?: unknown;
+	due?: unknown;
+	priority?: unknown;
+	kind?: unknown;
+	default?: unknown;
+	load?: unknown;
+};
+
+type SpendLine = { date?: unknown; payee?: unknown; amount?: unknown; category?: unknown; memo?: unknown };
+type SpendTrip = { memo?: unknown; total?: unknown; count?: unknown };
+
+type BudgetSpend = {
+	month?: unknown;
+	day_of_month?: unknown;
+	days_in_month?: unknown;
+	typical?: {
+		spent?: unknown;
+		pace?: unknown;
+		monthly_average?: unknown;
+		months?: { month?: unknown; total?: unknown }[] | null;
+	} | null;
+	outliers?: SpendLine[] | null;
+	trips?: SpendTrip[] | null;
+	accounts_in_error?: unknown[] | null;
+	rule?: unknown;
+};
+
+type Applied = {
+	writes?: unknown;
+	ynab?: { budget?: unknown; id?: unknown; payee?: unknown; amount?: unknown; category?: unknown }[] | null;
+	gmail?: { mailbox?: unknown; id?: unknown; subject?: unknown; labels?: unknown[] | null; archived?: unknown }[] | null;
+	dropped?: { kind?: unknown; id?: unknown; reason?: unknown }[] | null;
+};
+
+type Pull = { name?: unknown; ok?: unknown; note?: unknown };
+
+/** A value as a string, a missing one as nothing rather than the word null. */
+function str(value: unknown): string {
+	return jqToString(alt(value, ""));
+}
+
+/** An array, or nothing when the draft carries anything else there. */
+function list<T>(value: T[] | null | undefined): T[] {
+	return Array.isArray(value) ? value : [];
+}
+
+/** "Fri 10-17" from 2026-10-17, the way the brief writes a day; anything else as it came. */
+function dayOf(value: unknown): string {
+	const date = str(value);
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+	return `${weekdayName(fromDate(`${date}T00:00:00Z`))} ${slice(date, 5)}`;
+}
+
+/**
+ * A day that stays on one line in a squeezed table column: a no break space
+ * and a no break hyphen, so a phone never splits "Wed 01-14" after the hyphen.
+ */
+function unbroken(day: string): string {
+	return day.replace(/ /g, "\u00a0").replace(/-/g, "\u2011");
+}
+
+/** "$1,850.00": dollars and cents with thousands marked, the sign left off. */
+function usd(value: number): string {
+	const [whole, cents] = two(Math.abs(value)).split(".");
+	return `$${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${cents}`;
+}
+
+/**
+ * A transaction's amount. Outflows are negative in YNAB and are most of what
+ * the page lists, so they read bare; an inflow carries a plus.
+ */
+function signed(value: unknown): string {
+	const amount = num(value);
+	return amount > 0 ? `+${usd(amount)}` : usd(amount);
+}
+
+function band(row: { band?: unknown }): string {
+	return asciiDowncase(str(row.band));
+}
+
+function writesOn(draft: BriefDraft): boolean {
+	return draft.applied?.writes === true;
+}
+
+/** What the Handled rollups are headed: applied when writes were on, proposed when they were off. */
+function handledTitle(draft: BriefDraft): string {
+	return writesOn(draft) ? "Handled · Applied" : "Handled · Proposed, Writes Were Off";
+}
+
+/*
+ * Which pull feeds which section, matched on the front of the pull's name
+ * (ynab covers ynab-personal and ynab-atelic). A pull named nothing here
+ * still shows in This Run.
+ */
+const SECTION_PULLS: Record<string, string[]> = {
+	Money: ["ynab", "spend"],
+	Inbox: ["gmail", "inbox"],
+	Work: ["linear"],
+	Calendar: ["calendar"],
+	Tasks: ["todoist"],
+};
+
+function missedPulls(draft: BriefDraft): Pull[] {
+	return list(draft.pulls).filter((pull) => pull && pull.ok === false);
+}
+
+/** The one line notices that open a section whose pull was not read. */
+function notices(draft: BriefDraft, section: string): string[] {
+	const prefixes = SECTION_PULLS[section] ?? [];
+	return missedPulls(draft)
+		.filter((pull) => prefixes.some((prefix) => asciiDowncase(str(pull.name)).startsWith(prefix)))
+		.map((pull) => (str(pull.note) === "" ? "Not read this run." : `Not read this run: ${str(pull.note)}`));
+}
+
+/** The dropped writes of one kind, each named by the row it came from when the draft has it. */
+function dropped(draft: BriefDraft, kind: string, name: (id: string) => string): RecordStackItem[] {
+	return list(draft.applied?.dropped)
+		.filter((row) => asciiDowncase(str(row.kind)) === kind)
+		.map((row) => ({ title: name(str(row.id)), meta: [], note: str(row.reason) }));
+}
+
+/* ---------- the board ---------- */
+
+/**
+ * Numbered by position, so the numbers always run one to n in the order the
+ * model ranked them and a reply of "3, no" means the third line down.
+ */
+function boardRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.board).map((row, index) => ({
+		title: `${index + 1}. ${str(row.item)}`,
+		url: str(row.link) === "" ? undefined : str(row.link),
+		badge: str(row.area) === "" ? undefined : str(row.area),
+		meta: [],
+		note: str(row.default) === "" ? undefined : `Default: ${str(row.default)}`,
+	}));
+}
+
+/* ---------- money ---------- */
+
+const BUDGETS: { key: "personal" | "atelic"; label: string }[] = [
+	{ key: "personal", label: "Personal" },
+	{ key: "atelic", label: "Atelic" },
+];
+
+type Tally = { budget: string; category: string; count: number; total: number };
+
+/** The high rows by category, Personal first, each with its count and its total. */
+function moneyTallies(draft: BriefDraft): Tally[] {
+	const tallies: Tally[] = [];
+	for (const row of list(draft.money?.rows)) {
+		if (band(row) !== "high") continue;
+		const budget = str(row.budget);
+		const category = str(row.category);
+		const found = tallies.find((tally) => tally.budget === budget && tally.category === category);
+		if (found) {
+			found.count += 1;
+			found.total += num(row.amount);
+		} else tallies.push({ budget, category, count: 1, total: num(row.amount) });
+	}
+	const rank = (budget: string) => (budget === "Personal" ? 0 : 1);
+	return tallies
+		.map((tally, index) => ({ tally, index }))
+		.sort((a, b) => rank(a.tally.budget) - rank(b.tally.budget) || a.index - b.index)
+		.map(({ tally }) => tally);
+}
+
+function moneyRecord(row: MoneyRow): RecordStackItem {
+	const note = [str(row.rule), str(row.reason)].filter((part) => part !== "").join(" · ");
+	return {
+		title: str(row.payee),
+		badge: str(row.budget) === "" ? undefined : str(row.budget),
+		meta: [dayOf(row.date), str(row.category), str(row.memo)],
+		aside: { text: signed(row.amount) },
+		note: note === "" ? undefined : note,
+	};
+}
+
+function moneyRows(draft: BriefDraft, which: string): MoneyRow[] {
+	return list(draft.money?.rows).filter((row) => band(row) === which);
+}
+
+function deleteRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.money?.deletes).map((row) => ({
+		title: str(row.payee),
+		badge: str(row.budget) === "" ? undefined : str(row.budget),
+		meta: [dayOf(row.date)],
+		aside: { text: signed(row.amount) },
+		note: str(row.reason) === "" ? undefined : str(row.reason),
+	}));
+}
+
+function tripMemoRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.money?.trips).map((row) => {
+		const count = list(row.ids).length;
+		return { title: str(row.memo), meta: [`${count} ${count === 1 ? "charge" : "charges"}`] };
+	});
+}
+
+function droppedMoney(draft: BriefDraft): RecordStackItem[] {
+	return dropped(draft, "ynab", (id) => {
+		const row = list(draft.money?.rows).find((candidate) => str(candidate.id) === id);
+		return row ? `${str(row.payee)} ${signed(row.amount)}` : id;
+	});
+}
+
+/** The budgets the entrypoint read, in order, with the ones it could not. */
+function spendBudgets(draft: BriefDraft): { label: string; spend: BudgetSpend | null }[] {
+	return BUDGETS.map(({ key, label }) => {
+		const spend = draft.spend?.[key];
+		return { label, spend: spend && typeof spend === "object" ? spend : null };
+	});
+}
+
+/** "Month So Far · Day 19 of 31", from the first budget that was read. */
+function spendTitle(draft: BriefDraft): string {
+	const read = spendBudgets(draft).find((budget) => budget.spend !== null)?.spend;
+	if (!read) return "Month So Far";
+	const day = str(read.day_of_month);
+	const days = str(read.days_in_month);
+	return day === "" || days === "" ? "Month So Far" : `Month So Far · Day ${day} of ${days}`;
+}
+
+/** The split's one sentence, written once though each budget carries it. */
+function spendRule(draft: BriefDraft): string {
+	for (const { spend } of spendBudgets(draft)) {
+		if (spend && str(spend.rule) !== "") return str(spend.rule);
+	}
+	return "";
+}
+
+function accountsInError(draft: BriefDraft): string {
+	return spendBudgets(draft)
+		.filter(({ spend }) => spend && list(spend.accounts_in_error).length > 0)
+		.map(({ label, spend }) => `${label}: ${list(spend?.accounts_in_error).map(str).join(", ")}`)
+		.join(". ");
+}
+
+function moneyEmpty(draft: BriefDraft): boolean {
+	return (
+		str(draft.money?.read) === "" &&
+		spendBudgets(draft).every(({ spend }) => spend === null) &&
+		list(draft.money?.rows).length === 0 &&
+		list(draft.money?.deletes).length === 0 &&
+		list(draft.money?.trips).length === 0 &&
+		droppedMoney(draft).length === 0
+	);
+}
+
+/* ---------- inbox ---------- */
+
+function inboxRows(draft: BriefDraft, which: string): InboxRow[] {
+	return list(draft.inbox?.rows).filter((row) => band(row) === which);
+}
+
+/** The high rows grouped by the rule that handled them, in the order the rules first appear. */
+function inboxTallies(draft: BriefDraft): { rule: string; count: number }[] {
+	const tallies: { rule: string; count: number }[] = [];
+	for (const row of inboxRows(draft, "high")) {
+		const rule = str(row.rule) === "" ? "No rule named" : str(row.rule);
+		const found = tallies.find((tally) => tally.rule === rule);
+		if (found) found.count += 1;
+		else tallies.push({ rule, count: 1 });
+	}
+	return tallies;
+}
+
+/** "task · label 📑 Admin · green star": what the row proposes, in its parts. */
+function inboxAction(row: InboxRow): string {
+	const action = str(row.action);
+	const labels = list(row.labels).map(str).filter((label) => label !== "");
+	const label = labels.length === 0 ? "" : `label ${labels.join(", ")}`;
+	return [
+		action === "label" && label !== "" ? "" : action,
+		label,
+		str(row.star) === "" ? "" : `${str(row.star)} star`,
+	]
+		.filter((part) => part !== "")
+		.join(" · ");
+}
+
+function inboxRecord(row: InboxRow): RecordStackItem {
+	return {
+		title: str(row.subject) === "" ? "(no subject)" : str(row.subject),
+		url: str(row.link) === "" ? undefined : str(row.link),
+		badge: str(row.mailbox) === "" ? undefined : str(row.mailbox),
+		meta: [str(row.from), str(row.date), inboxAction(row)],
+		note: str(row.what) === "" ? undefined : str(row.what),
+	};
+}
+
+function droppedInbox(draft: BriefDraft): RecordStackItem[] {
+	return dropped(draft, "gmail", (id) => {
+		const row = list(draft.inbox?.rows).find((candidate) => str(candidate.id) === id);
+		return row ? str(row.subject) : id;
+	});
+}
+
+function inboxEmpty(draft: BriefDraft): boolean {
+	return list(draft.inbox?.rows).length === 0 && droppedInbox(draft).length === 0;
+}
+
+/* ---------- work, calendar, tasks ---------- */
+
+function issueURL(key: string): string | undefined {
+	return /^[A-Za-z]+-\d+$/.test(key) ? `https://linear.app/atelic/issue/${key}` : undefined;
+}
+
+function issueTitle(key: string, title: string): string {
+	return [key, title].filter((part) => part !== "").join(" ");
+}
+
+function flagRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.work?.flags).map((row) => ({
+		title: issueTitle(str(row.key), str(row.title)),
+		url: issueURL(str(row.key)),
+		badge: str(row.flag) === "" ? undefined : str(row.flag),
+		meta: [str(row.default) === "" ? "" : `Default: ${str(row.default)}`],
+		note: str(row.what) === "" ? undefined : str(row.what),
+	}));
+}
+
+function unplacedRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.work?.unplaced).map((row) => {
+		const points = str(row.points);
+		return {
+			title: issueTitle(str(row.key), str(row.title)),
+			url: issueURL(str(row.key)),
+			meta: [points === "" ? "" : `${points} ${points === "1" ? "point" : "points"}`, str(row.load)],
+			note: str(row.what) === "" ? undefined : str(row.what),
+		};
+	});
+}
+
+function findingRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.calendar?.findings).map((row) => ({
+		title: str(row.what),
+		badge: str(row.kind) === "" ? undefined : str(row.kind),
+		meta: [str(row.when)],
+		note: str(row.default) === "" ? undefined : `Default: ${str(row.default)}`,
+	}));
+}
+
+function taskRecords(draft: BriefDraft): RecordStackItem[] {
+	return list(draft.tasks?.rows).map((row) => ({
+		title: str(row.content),
+		badge: str(row.kind) === "" ? undefined : str(row.kind),
+		meta: [str(row.due) === "" ? "" : `due ${dayOf(row.due)}`, str(row.priority), str(row.load)],
+		note: str(row.default) === "" ? undefined : `Default: ${str(row.default)}`,
+	}));
+}
+
+/* ---------- the parts of a section ---------- */
+
+/**
+ * A titled block inside a section card: a table or a stack, or the plain
+ * sentence that stands in when it has nothing. `notes` are short asides
+ * that sit under the block, eyebrow first.
+ */
+type Part = {
+	title: string;
+	html: ReactNode | null;
+	text: string | null;
+	empty: string;
+	notes?: { eyebrow: string; text: string; accented: boolean }[];
+};
+
+function stackPart(title: string, records: RecordStackItem[], empty: string): Part {
+	return {
+		title: `${title} · ${records.length}`,
+		html: records.length === 0 ? null : <RecordStack records={records} />,
+		text: records.length === 0 ? null : recordStackText(records),
+		empty,
+	};
+}
+
+function partsHTML(parts: Part[]): ReactNode {
+	return parts.map((part, index) => {
+		const last = index === parts.length - 1;
+		const notes = part.notes ?? [];
+		return (
+			// biome-ignore lint/suspicious/noArrayIndexKey: a part's position is its identity
+			<Fragment key={index}>
+				<SubEyebrow text={part.title} />
+				{part.html === null ? (
+					<EmptyRow text={part.empty} />
+				) : (
+					<RecordsRow last={last || notes.length > 0}>{part.html}</RecordsRow>
+				)}
+				{notes.map((note, n) => (
+					<Note
+						// biome-ignore lint/suspicious/noArrayIndexKey: a note's position is its identity
+						key={n}
+						eyebrowText={note.eyebrow}
+						text={note.text}
+						accented={note.accented}
+						last={n === notes.length - 1}
+					/>
+				))}
+			</Fragment>
+		);
+	});
+}
+
+function partsText(parts: Part[]): string {
+	return parts
+		.map((part) => {
+			let block = `\n${part.title}\n${part.text === null ? wrap(part.empty) : part.text}\n`;
+			for (const note of part.notes ?? []) block += `\n${note.eyebrow}\n${wrap(note.text)}\n`;
+			return block;
+		})
+		.join("");
+}
+
+/** The section's opening: any pull it missed, then its read when the model wrote one. */
+function openingHTML(notes: string[], read: string): ReactNode {
+	return (
+		<>
+			{notes.map((note, index) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: a notice's position is its identity
+				<EmptyRow key={index} text={note} />
+			))}
+			{read === "" ? null : <ReadBlock text={read} divider={true} />}
+		</>
+	);
+}
+
+/** The notices, the read, and the parts, a blank line between each that is there. */
+function sectionText(notes: string[], read: string, body: string): string {
+	return [notes.map((note) => `${wrap(note)}\n`).join(""), read === "" ? "" : textRead(read), body]
+		.filter((block) => block !== "")
+		.join("\n");
+}
+
+/* ---------- each section's parts ---------- */
+
+function spendParts(draft: BriefDraft): Part[] {
+	const budgets = spendBudgets(draft);
+	const read = budgets.filter((budget) => budget.spend !== null);
+	if (read.length === 0) {
+		return [{ title: "Month So Far", html: null, text: null, empty: "Spend was not read this run." }];
+	}
+	const notes: Part["notes"] = [];
+	for (const missing of budgets.filter((budget) => budget.spend === null)) {
+		notes.push({ eyebrow: missing.label, text: "Not read this run.", accented: false });
+	}
+	const errors = accountsInError(draft);
+	if (errors !== "") {
+		notes.push({
+			eyebrow: "Accounts in Error",
+			text: `${errors}. Every number there is a floor until the connection is repaired.`,
+			accented: true,
+		});
+	}
+	if (spendRule(draft) !== "") notes.push({ eyebrow: "How It Splits", text: spendRule(draft), accented: false });
+
+	const typical = read.map(({ label, spend }) => {
+		const spent = num(spend?.typical?.spent);
+		const pace = num(spend?.typical?.pace);
+		return { label, spent, pace, average: num(spend?.typical?.monthly_average) };
+	});
+	const parts: Part[] = [
+		{
+			title: spendTitle(draft),
+			html: (
+				<Records
+					columns={[
+						{ label: "Budget" },
+						// Short heads: a header never wraps, and four of them have to fit a phone.
+						{ label: "Spent", right: true },
+						{ label: "Pace", right: true },
+						{ label: "Avg", right: true },
+					]}
+					rows={typical.map((row) => [
+						{ value: row.label },
+						{ value: usd(row.spent), mono: true, hot: row.spent > row.pace },
+						{ value: usd(row.pace), mono: true },
+						{ value: usd(row.average), mono: true },
+					])}
+				/>
+			),
+			text: textTable(
+				["Budget", "Spent so far", "Pace", "Monthly avg"],
+				typical.map((row) => [row.label, usd(row.spent), usd(row.pace), usd(row.average)]),
+				[1, 2, 3],
+			),
+			empty: "",
+			notes,
+		},
+	];
+
+	for (const { label, spend } of read) {
+		const outliers = list(spend?.outliers);
+		if (outliers.length > 0) {
+			parts.push({
+				title: `Outliers · ${label} · ${outliers.length}`,
+				html: (
+					<Records
+						columns={[
+							{ label: "Date" },
+							{ label: "Payee" },
+							{ label: "Amount", right: true },
+							{ label: "Category" },
+						]}
+						rows={outliers.map((row) => [
+							{ value: unbroken(dayOf(row.date)), mono: true, muted: true },
+							{ value: str(row.payee) },
+							{ value: signed(row.amount), mono: true },
+							{ value: str(row.category) },
+						])}
+					/>
+				),
+				text: textTable(
+					["Date", "Payee", "Amount", "Category"],
+					outliers.map((row) => [dayOf(row.date), str(row.payee), signed(row.amount), str(row.category)]),
+					[2],
+				),
+				empty: "",
+			});
+		}
+		const trips = list(spend?.trips);
+		if (trips.length > 0) {
+			parts.push({
+				title: `Trips · ${label} · ${trips.length}`,
+				html: (
+					<Records
+						columns={[{ label: "Trip" }, { label: "Total", right: true }, { label: "Charges", right: true }]}
+						rows={trips.map((row) => [
+							{ value: str(row.memo) },
+							{ value: usd(num(row.total)), mono: true },
+							{ value: numberString(num(row.count)), mono: true },
+						])}
+					/>
+				),
+				text: textTable(
+					["Trip", "Total", "Charges"],
+					trips.map((row) => [str(row.memo), usd(num(row.total)), numberString(num(row.count))]),
+					[1, 2],
+				),
+				empty: "",
+			});
+		}
+	}
+	return parts;
+}
+
+function moneyParts(draft: BriefDraft): Part[] {
+	const tallies = moneyTallies(draft);
+	const parts: Part[] = [
+		...spendParts(draft),
+		{
+			title: handledTitle(draft),
+			html:
+				tallies.length === 0 ? null : (
+					<Records
+						columns={[
+							{ label: "Budget" },
+							{ label: "Category" },
+							{ label: "Count", right: true },
+							{ label: "Total", right: true },
+						]}
+						rows={tallies.map((tally) => [
+							{ value: tally.budget, muted: true },
+							{ value: tally.category },
+							{ value: numberString(tally.count), mono: true },
+							{ value: signed(tally.total), mono: true },
+						])}
+					/>
+				),
+			text:
+				tallies.length === 0
+					? null
+					: textTable(
+							["Budget", "Category", "Count", "Total"],
+							tallies.map((tally) => [
+								tally.budget,
+								tally.category,
+								numberString(tally.count),
+								signed(tally.total),
+							]),
+							[2, 3],
+						),
+			empty: "No row matched a rule exactly.",
+		},
+		stackPart("Spot Check", moneyRows(draft, "medium").map(moneyRecord), "Nothing to spot check."),
+		stackPart("Decisions", moneyRows(draft, "decision").map(moneyRecord), "No money decisions this week."),
+	];
+	const deletes = deleteRecords(draft);
+	if (deletes.length > 0) parts.push(stackPart("Proposed Deletes", deletes, ""));
+	const memos = tripMemoRecords(draft);
+	if (memos.length > 0) parts.push(stackPart("Proposed Trip Memos", memos, ""));
+	const drops = droppedMoney(draft);
+	if (drops.length > 0) parts.push(stackPart("Dropped", drops, ""));
+	return parts;
+}
+
+function inboxParts(draft: BriefDraft): Part[] {
+	const tallies = inboxTallies(draft);
+	const parts: Part[] = [
+		{
+			title: handledTitle(draft),
+			html:
+				tallies.length === 0 ? null : (
+					<Records
+						columns={[{ label: "Rule" }, { label: "Count", right: true }]}
+						rows={tallies.map((tally) => [
+							{ value: tally.rule },
+							{ value: numberString(tally.count), mono: true },
+						])}
+					/>
+				),
+			text:
+				tallies.length === 0
+					? null
+					: tallies.map((tally) => hang(lpad(numberString(tally.count), 3), tally.rule, 5).replace(/\n$/, "")).join("\n"),
+			empty: "No message matched a rule exactly.",
+		},
+		stackPart("Spot Check", inboxRows(draft, "medium").map(inboxRecord), "Nothing to spot check."),
+		stackPart("Decisions", inboxRows(draft, "decision").map(inboxRecord), "No mail decisions this week."),
+	];
+	const drops = droppedInbox(draft);
+	if (drops.length > 0) parts.push(stackPart("Dropped", drops, ""));
+	return parts;
+}
+
+function workParts(draft: BriefDraft): Part[] {
+	return [
+		stackPart("Flags", flagRecords(draft), "Every issue in the cycle is triaged."),
+		stackPart("Unplaced", unplacedRecords(draft), "Every issue in the cycle has a block."),
+	];
+}
+
+/** Each planning section: its name, whether it has nothing at all, the line that says so, and its parts. */
+function planningSections(draft: BriefDraft): {
+	name: string;
+	read: string;
+	empty: boolean;
+	emptyLine: string;
+	parts: Part[];
+}[] {
+	return [
+		{
+			name: "Money",
+			read: str(draft.money?.read),
+			empty: moneyEmpty(draft),
+			emptyLine: "Spend was not read this run, and nothing in either budget needs you.",
+			parts: moneyParts(draft),
+		},
+		{
+			name: "Inbox",
+			read: "",
+			empty: inboxEmpty(draft),
+			emptyLine: "Nothing in either inbox this week.",
+			parts: inboxParts(draft),
+		},
+		{
+			name: "Work",
+			read: str(draft.work?.read),
+			empty:
+				str(draft.work?.read) === "" &&
+				list(draft.work?.flags).length === 0 &&
+				list(draft.work?.unplaced).length === 0,
+			emptyLine: "Nothing in the cycle to flag or place.",
+			parts: workParts(draft),
+		},
+		{
+			name: "Calendar",
+			read: str(draft.calendar?.read),
+			empty: str(draft.calendar?.read) === "" && list(draft.calendar?.findings).length === 0,
+			emptyLine: "Nothing on the calendar to fix this week.",
+			parts: [stackPart("Findings", findingRecords(draft), "Nothing on the calendar to fix.")],
+		},
+		{
+			name: "Tasks",
+			read: str(draft.tasks?.read),
+			empty: str(draft.tasks?.read) === "" && list(draft.tasks?.rows).length === 0,
+			emptyLine: "No tasks came back from the Schedule filter.",
+			parts: [stackPart("To Place", taskRecords(draft), "No tasks to place.")],
+		},
+	];
+}
+
+/* ---------- this run ---------- */
+
+function runStats(draft: BriefDraft): { label: string; n: string }[] {
+	return [
+		{ label: "Writes", n: writesOn(draft) ? "On" : "Off" },
+		{ label: "YNAB Applied", n: numberString(list(draft.applied?.ynab).length) },
+		{ label: "Mail Applied", n: numberString(list(draft.applied?.gmail).length) },
+		{ label: "Dropped", n: numberString(list(draft.applied?.dropped).length) },
+	];
+}
+
+function missedRecords(draft: BriefDraft): RecordStackItem[] {
+	return missedPulls(draft).map((pull) => ({
+		title: str(pull.name),
+		meta: [],
+		note: str(pull.note) === "" ? undefined : str(pull.note),
+	}));
+}
+
+/* ---------- the planning pass, html ---------- */
+
+function boardHTML(draft: BriefDraft): ReactNode {
+	const records = boardRecords(draft);
+	return (
+		<>
+			<Eyebrow text="Needed From You" />
+			<Card>
+				{records.length === 0 ? (
+					<EmptyRow text="Nothing needs you this week." />
+				) : (
+					<Row last={true}>
+						<RecordStack records={records} />
+					</Row>
+				)}
+			</Card>
+		</>
+	);
+}
+
+function planningHTML(draft: BriefDraft): ReactNode {
+	return planningSections(draft).map((section) => (
+		<Fragment key={section.name}>
+			<Eyebrow text={section.name} />
+			<Card>
+				{openingHTML(notices(draft, section.name), section.read)}
+				{section.empty ? <EmptyRow text={section.emptyLine} /> : partsHTML(section.parts)}
+			</Card>
+		</Fragment>
+	));
+}
+
+function thisRunHTML(draft: BriefDraft): ReactNode {
+	const missed = missedRecords(draft);
+	return (
+		<>
+			<Eyebrow text="This Run" />
+			<Card>
+				<Row last={false}>
+					<StatStrip stats={runStats(draft)} />
+				</Row>
+				{missed.length === 0 ? (
+					<EmptyRow text="Every pull was read." />
+				) : (
+					<>
+						<SubEyebrow text={`Not Read · ${missed.length}`} />
+						<RecordsRow last={true}>
+							<RecordStack records={missed} />
+						</RecordsRow>
+					</>
+				)}
+			</Card>
+		</>
+	);
+}
+
+/* ---------- the planning pass, plain text ---------- */
+
+function boardText(draft: BriefDraft): string {
+	const records = boardRecords(draft);
+	return (
+		textSection("Needed From You") +
+		(records.length === 0 ? "  Nothing needs you this week.\n" : `${recordStackText(records)}\n`)
+	);
+}
+
+function planningText(draft: BriefDraft): string {
+	return planningSections(draft)
+		.map(
+			(section) =>
+				textSection(section.name) +
+				sectionText(
+					notices(draft, section.name),
+					section.read,
+					section.empty ? `${wrap(section.emptyLine)}\n` : partsText(section.parts).replace(/^\n/, ""),
+				),
+		)
+		.join("");
+}
+
+function thisRunText(draft: BriefDraft): string {
+	const missed = missedRecords(draft);
+	let out = textSection("This Run");
+	out += runStats(draft)
+		.map((stat) => `  ${rpad(stat.label, 16)}${stat.n}`)
+		.join("\n");
+	out += "\n";
+	out += missed.length === 0 ? "\n  Every pull was read.\n" : `\nNot Read · ${missed.length}\n${recordStackText(missed)}\n`;
+	return out;
+}
+
 /* ---------- html ---------- */
 
 function sessionsTable(week: Session[]): ReactNode {
@@ -617,6 +1488,8 @@ export function briefHTML(input: unknown, context: RenderContext): string {
 					}
 				/>
 
+				{boardHTML(draft)}
+
 				<Eyebrow text="Movement" />
 				<Card>
 					<ReadBlock text={jqToString(alt(draft.movement_read, ""))} divider={true} />
@@ -654,10 +1527,14 @@ export function briefHTML(input: unknown, context: RenderContext): string {
 					))}
 				</Card>
 
+				{planningHTML(draft)}
+
 				<Eyebrow text="Blind Spots" />
 				<Card>
 					<ReadBlock text={jqToString(alt(draft.blind_spots, ""))} divider={false} />
 				</Card>
+
+				{thisRunHTML(draft)}
 
 				<Footer meta={context.meta} />
 			</>
@@ -689,6 +1566,8 @@ export function briefText(input: unknown, context: RenderContext): string {
 		if (movedNote !== "") out += `\n  ${movedNote}`;
 		out += "\n";
 	}
+
+	out += boardText(draft);
 
 	out += textSection("Movement") + textRead(jqToString(alt(draft.movement_read, "")));
 	out += `\nBy Day\n${days(context.monday, week)
@@ -736,7 +1615,10 @@ export function briefText(input: unknown, context: RenderContext): string {
 		.map((stage) => `\n${stage.name} · ${stage.rows.length}\n${recordStackText(stage.records)}\n`)
 		.join("");
 
+	out += planningText(draft);
+
 	out += textSection("Blind Spots") + textRead(jqToString(alt(draft.blind_spots, "")));
+	out += thisRunText(draft);
 	out += `\n\n${context.meta}\n`;
 	return out;
 }

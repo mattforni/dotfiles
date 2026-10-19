@@ -16,5 +16,20 @@
     "opportunities": [],
     "closed_leads": [],
     "totals": {}
-  }
+  },
+  "board": [],
+  "money": { "read": "", "rows": [], "deletes": [], "trips": [] },
+  "inbox": { "rows": [] },
+  "work": { "read": "", "flags": [], "unplaced": [] },
+  "calendar": { "read": "", "findings": [] },
+  "tasks": { "read": "", "rows": [] },
+  "spend": { "personal": null, "atelic": null },
+  "applied": { "writes": false, "ynab": [], "gmail": [], "dropped": [] },
+  "pulls": [
+    {"name": "ynab", "ok": true, "note": ""},
+    {"name": "inbox", "ok": true, "note": ""},
+    {"name": "linear", "ok": true, "note": ""},
+    {"name": "calendar", "ok": true, "note": ""},
+    {"name": "todoist", "ok": true, "note": ""}
+  ]
 }

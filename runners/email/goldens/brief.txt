@@ -27,6 +27,36 @@ What Moved
 
 
 ================================================================
+NEEDED FROM YOU
+================================================================
+
+  1. Venmo $85.00 to Juniper Hale on Fri 01-30, no rule names it
+  [Money]
+    Default: 🍽️ Dining Out, the Thursday supper club
+
+  2. Delete the Personal Venmo of $60.00 on Wed 01-28, the same
+  charge sits on Atelic [Money]
+    Default: delete it from Personal
+
+  3. The county assessor wants the property questionnaire back by
+  Fri 02-06 [Inbox]
+    Default: keep, label 📑 Admin, green star, and a Todoist task for
+    Tuesday
+
+  4. ATE-901 Rebuild the proposal template has no estimate and no
+  load label [Work]
+    Default: 4 points, 🧠 Sharp
+
+  5. Read the long essay on attention someone sent, a note rather
+  than a task [Tasks]
+    Default: delete and file in Eudy
+
+  6. Thursday's lift at 07:00 overlaps the dentist hold that runs to
+  07:30 [Calendar]
+    Default: move the lift to 08:00
+
+
+================================================================
 MOVEMENT
 ================================================================
 
@@ -138,12 +168,199 @@ Closed · 3
 
 
 ================================================================
+MONEY
+================================================================
+
+The Read
+  The month so far sits a little over the pace on Personal, mostly
+  the one dental bill, and Atelic is well under it. The checking
+  connection on Personal is in error, so its numbers are a floor
+  until it is repaired.
+
+Month So Far · Day 30 of 31
+  Budget    Spent so far       Pace  Monthly avg
+  Personal     $4,012.37  $3,871.29    $4,000.00
+  Atelic         $318.40    $512.90      $530.00
+
+Accounts in Error
+  Personal: Front Range Checking. Every number there is a floor
+  until the connection is repaired.
+
+How It Splits
+  Typical is every charge under $500 that is not on a trip; outliers
+  are the rest, so one large bill never moves the pace.
+
+Outliers · Personal · 1
+  Date       Payee                 Amount  Category
+  Wed 01-14  Clearwater Dental  $1,850.00  🏥 Healthcare
+
+Trips · Personal · 1
+  Trip            Total  Charges
+  🏔️ Leadville  $412.60        3
+
+Handled · Proposed, Writes Were Off
+  Budget    Category     Count   Total
+  Personal  🍽️ Cafés         2  $14.00
+  Personal  🛒 Groceries      1  $84.12
+  Atelic    💻 Software       1  $12.00
+
+Spot Check · 2
+  Little Owl Espresso [Personal]
+    Fri 01-30 · 🍽️ Cafés · $5.50
+    learned-rules Spend Categorization: coffee shops go to 🍽️ Cafés
+    · a coffee shop not in the map
+
+  Paperline Design Tools [Atelic]
+    Thu 01-29 · 💻 Software · $49.00
+    ynab Payee Corrections: a vendor's second invoice follows the
+    first · same category as December's invoice
+
+Decisions · 2
+  Venmo [Personal]
+    Fri 01-30 · supper club · $85.00
+    every Venmo row is a decision
+
+  Pinewood Cabinetry [Atelic]
+    Sat 01-31 · Inflow: Ready to Assign · +$1,750.00
+    a new payee with no rule
+
+Proposed Deletes · 1
+  Venmo [Personal]
+    Wed 01-28 · $60.00
+    the same date and amount sits on Atelic as Granite Print Shop
+
+Proposed Trip Memos · 1
+  🏔️ Leadville
+    3 charges
+
+Dropped · 1
+  Sundown Grocery $84.12
+    category 🛒 Grocery not found in the Personal budget
+
+
+================================================================
+INBOX
+================================================================
+
+Handled · Proposed, Writes Were Off
+    2  email-rules Sender Rules: Bluebird Cleaning to Personal Care,
+       mark read, archive
+    1  email-rules Sender Rules: claude@atelic.me weekly report to
+       Reports, archive
+
+Spot Check · 2
+  Seven essays on slowing down, and one on the opposite [personal]
+    The Long Read Weekly · Fri 01-30 · archive · label 📰 Reading
+    a newsletter issue with nothing time bound in it
+
+  Your January invoice [atelic]
+    Fieldnote Hosting · Tue 01-27 · label 🧾 Receipts
+    the monthly hosting invoice, already paid by card
+
+Decisions · 2
+  Property questionnaire due February 6 [personal]
+    County Assessor · Thu 01-29 · task · label 📑 Admin · green star
+    a questionnaire about the property that needs an answer by Fri
+    02-06
+
+  Re: proposal and next steps for the showroom site [atelic]
+    Pinewood Cabinetry · Sat 01-31 · reply
+    the owner asks whether the second phase can start in March
+
+
+================================================================
+WORK
+================================================================
+
+The Read
+  Nineteen points sit in the cycle against about 24 usable hours, so
+  there is room for one more piece. The proposal template is the one
+  without a shape yet.
+
+Flags · 2
+  ATE-901 Rebuild the proposal template [no estimate]
+    Default: 4 points
+    a cleaner proposal for the small business sites
+
+  ATE-904 Audit the outreach list [no load label]
+    Default: 🍃 Light
+    a pass over the list for closed and moved businesses
+
+Unplaced · 2
+  ATE-902 Write the case study for Harbor Line Plumbing
+    4 points · 🧠 Sharp
+    the first case study, from the finished site
+
+  ATE-905 Renew the domain and the mail plan
+    1 point · 🍃 Light
+    two renewals that lapse in February
+
+
+================================================================
+CALENDAR
+================================================================
+
+The Read
+  The week ahead holds its skeleton, with one overlap on Thursday
+  and one flank missing before the Saturday run.
+
+Findings · 2
+  Thursday's lift at 07:00 overlaps the dentist hold that runs to
+  07:30 [overlap]
+    Thu 07:00
+    Default: move the lift to 08:00
+
+  The Saturday club run at 08:00 has no transition before it
+  [missing flank]
+    Sat 07:30
+    Default: add a 30 minute ↔️ Transition at 07:30
+
+
+================================================================
+TASKS
+================================================================
+
+  Not read this run: the read timed out
+
+The Read
+  Three tasks came back from the Schedule filter: one note, one to
+  slot, and one to defer.
+
+To Place · 3
+  Read the long essay on attention someone sent [note]
+    p4
+    Default: delete and file in Eudy
+
+  Call the insurance agent about the renewal [task]
+    due Tue 02-03 · p2 · ⚖️ Medium
+    Default: slot
+
+  Sort the winter gear bin [task]
+    due Mon 02-02 · p4 · 🍃 Light
+    Default: defer to the next planning Monday
+
+
+================================================================
 BLIND SPOTS
 ================================================================
 
 The Read
   This draft cannot see how the body felt, or anything the sources
   do not carry.
+
+
+================================================================
+THIS RUN
+================================================================
+
+  Writes          Off
+  YNAB Applied    0
+  Mail Applied    0
+  Dropped         1
+
+Not Read · 1
+  todoist
+    the read timed out
 
 
 12m 04s · $0.42 · 9 turns · claude-sonnet
