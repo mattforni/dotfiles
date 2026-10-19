@@ -319,6 +319,7 @@ async function apply(outDir, rowsPath) {
         const batch = [];
         for (const r of list) {
             const t = queue.get(r.id);
+            if (t?.transfer_account_id) { dropped.push({ kind: "ynab", id: r.id, reason: "a transfer is approved uncategorized by the Monday session, never categorized here" }); continue; }
             if (!t) { dropped.push({ kind: "ynab", id: r.id, reason: "not in the unapproved queue this run" }); continue; }
             const categoryId = categories.get(r.category);
             if (!categoryId) {
@@ -327,7 +328,9 @@ async function apply(outDir, rowsPath) {
                 continue;
             }
             const row = { id: r.id, category_id: categoryId, approved: true };
-            if (r.memo) row.memo = String(r.memo).slice(0, 500);
+            // A memo already on the row (Forni's note, the bank's detail) is
+            // never written over; the model's memo fills an empty one only.
+            if (r.memo && !t.memo) row.memo = String(r.memo).slice(0, 500);
             batch.push(row);
             applied.push({ budget: file.budget.name, id: r.id, payee: t.payee_name, amount: t.amount, category: r.category, date: t.date });
         }

@@ -198,7 +198,10 @@ async function apply(outDir, rowsPath) {
         const remove = r.archive ? ["INBOX", "UNREAD"] : [];
         if (add.length === 0 && remove.length === 0) { dropped.push({ kind: "gmail", id: r.id, reason: "nothing to change" }); continue; }
         try {
-            await gmail(token, `messages/${r.id}/modify`, { method: "POST", body: { addLabelIds: add, removeLabelIds: remove } });
+            // The thread, not the message: Gmail keeps a thread in the inbox
+            // while any message in it carries INBOX, so a message level
+            // archive of a two message thread archives nothing.
+            await gmail(token, `threads/${msg.thread_id}/modify`, { method: "POST", body: { addLabelIds: add, removeLabelIds: remove } });
             applied.push({ mailbox: r.mailbox, id: r.id, subject: msg.subject, from: msg.from, labels: r.labels || [], archived: Boolean(r.archive) });
         } catch (e) {
             dropped.push({ kind: "gmail", id: r.id, reason: String(e.message).slice(0, 160) });

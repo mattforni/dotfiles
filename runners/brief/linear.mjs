@@ -89,6 +89,12 @@ async function pull(outDir, team) {
         after = p.pageInfo.endCursor;
         if (i === MAX_PAGES - 1) truncated = true;
     }
+    // An empty active cycle is possible but rare, and the same empty answer
+    // is what a key for another workspace returns (the team filter matches
+    // nothing there), so zero is treated as a failed read rather than a
+    // clean one; the mail then says the cycle was not read instead of
+    // showing a week with no work in it.
+    if (issues.length === 0 || !cycle) throw new Error(`no open issues in an active ${team} cycle; the key may belong to another workspace`);
     issues.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
     writeFileSync(join(outDir, "linear.json"), JSON.stringify({ pulled_at: new Date().toISOString(), team, cycle, issues, truncated }, null, 1));
     log(`${team}: ${issues.length} open issues in the active cycle${truncated ? ", stopped at the page cap" : ""}`);

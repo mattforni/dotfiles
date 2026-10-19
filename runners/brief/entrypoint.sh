@@ -181,8 +181,12 @@ eudy_pull() {
 # ---------- homebase (the planning rules) ----------
 homebase_pull() {
     if [[ -f "$HOMEBASE/$HOMEBASE_RULES" ]]; then
-        echo "homebase: using the checkout at $HOMEBASE ($(git -C "$HOMEBASE" log -1 --format=%h 2>/dev/null || echo 'not a git checkout'))"
-        return 0
+        if [[ "$HOMEBASE" != "$WORK/homebase" ]]; then
+            echo "homebase: using the checkout at $HOMEBASE ($(git -C "$HOMEBASE" log -1 --format=%h 2>/dev/null || echo 'not a git checkout'))"
+            return 0
+        fi
+        # A clone this runner made on an earlier run is replaced, not reused,
+        # so the rules are today's; it is public, shallow and takes seconds.
     fi
     rm -rf "$HOMEBASE"
     if ! GIT_SSH_COMMAND="" timeout 2m git clone --quiet --depth 1 "$HOMEBASE_REPO" "$HOMEBASE" 2>"$WORK/homebase-stderr.txt"; then

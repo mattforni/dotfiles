@@ -45,7 +45,7 @@ while (( $# )); do
     case "$1" in
         --apply)   apply=1; shift ;;
         --create)  create="${2:-}"; [[ -n "$create" ]] || die "--create needs an image"; shift 2 ;;
-        -h|--help) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*)        die "unknown option $1" ;;
         *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
     esac
