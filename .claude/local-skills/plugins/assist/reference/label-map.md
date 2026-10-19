@@ -54,8 +54,7 @@ Always route to the most specific sublabel. Never label with just a parent pilla
 ### Craft (🛠️)
 
 - `🛠️ Craft` (parent)
-- `🛠️ Craft/💼 Vocation` -- career, networking, former employers
-- `🛠️ Craft/💼 Vocation/🔎 Job Search` -- job search, recruiting, applications
+- `🛠️ Craft/💼 Vocation` -- career, networking, former employers, job search and recruiting
 - `🛠️ Craft/💼 Vocation/🏝️ Happy Isles` -- Happy Isles (historical)
 - `🛠️ Craft/💼 Vocation/💻 Atelic` -- Atelic, the practice
 - `🛠️ Craft/💼 Vocation/💻 Atelic/🌽 Pinole` -- Pinole, the meal and training dojo
