@@ -15,7 +15,7 @@ Read before drafting; none of this is duplicated here:
 - **The rubric**: `~/Eudaimonia/Craft/Vocation/role-rubric.md`. Hard filters, dimensions, thresholds, shared with the recruiter.
 - **The profile**: `~/Eudaimonia/Craft/Vocation/README.md`. Background, compensation expectations, role fit tiers. The source for every credential claim in a cover letter.
 - **The plan**: `~/Eudaimonia/Craft/Vocation/Plans/FY27-H2.md`. The positioning frame (Mission Growth Engineering) and the weekly cadence the queue serves.
-- **Voice and email practices**: the life level voice core is `~/Eudaimonia/VOICE.md`, overlaid in register order by `~/Eudaimonia/Admin/Tools/email.md` and `~/Eudaimonia/Craft/Vocation/CLAUDE.md` (Vocation Email Practices, Negotiation Philosophy). Sign off per email.md ("Cheers and chat soon!", never a name; the Gmail signature handles it).
+- **Voice and email practices**: the life level voice core is `~/Eudaimonia/VOICE.md`, overlaid in register order by `~/Eudaimonia/Admin/Tools/email.md` and `~/Eudaimonia/Craft/Vocation/CLAUDE.md` (Vocation Email Practices, Negotiation Philosophy). Job search notes carry no sign off line at all (Follow Up Email below), unlike the email.md default.
 - **The outreach template**: `~/Eudaimonia/Craft/Vocation/templates/07-job-posting-cold-outreach.md` for the follow up email.
 - **The standing form answers**: the Standing Form Answers table in `~/Eudaimonia/Craft/Vocation/work-history.md` holds the eligibility screeners and voluntary self identification answers every ATS form asks. Fill from it, and ask only when a form's wording departs from the question as written there.
 
@@ -54,12 +54,12 @@ Policy (set 2026-07-29): follow up on every application where a real hiring mana
 
 The note's shape (proven on the EnergyHub send, 2026-07-29; Forni called it fantastic), 110 to 120 words, four short paragraphs:
 
-1. **Open:** "I recently applied to your [role, linked] opening and wanted to put a face on the application," then the forward request ("If you're not the right person to chat about this role with, I'd appreciate you forwarding this along to whoever's leading the hire").
+1. **Open:** "I recently applied to your [role, linked] opening and wanted to put a face on the application," then the forward request ("If there is someone else who would be better to chat with about the role, I would appreciate you forwarding this along to them").
 2. **One sentence of credentials, compressed.** The career domain plus the single strongest credential (six years as CTO and co-founder of Gremlin). No customer name lists, no second credential; the resume carries those.
-3. **The middle belongs to the mission.** "Since then I keep choosing climate:" with the climate roles as proof, then one sentence connecting this company's actual work to the crisis. Make that mission sentence the longest in the email, on purpose.
-4. **Close:** "Worth a chat? Here's my scheduling link to make it nice and easy. Either way, I appreciate your time."
+3. **The middle belongs to the mission.** "Since Gremlin I've felt drawn to mission driven work," with the mission roles as proof, then one sentence connecting this company's actual work to what it serves. Make that mission sentence the longest in the email, on purpose.
+4. **Close:** "I hope we get a chance to chat soon. Either way, I appreciate your time and [the work you are doing to ...]." No scheduling link (set 2026-10-19).
 
-Title Case subject (just the role and company, e.g. "Software Architect at EnergyHub"). Never sign a name; the Gmail signature handles it.
+Title Case subject (just the role and company, e.g. "Software Architect at EnergyHub"). The note ends on the close: no "Cheers and chat soon!" and no name (set 2026-10-19, for every job search note).
 
 **One warm touch a week** (a reconnect, a referral ask, or a recruiter check in) is a standing supporting activity: the pass drafts it and, once it has happened, logs it with `pinole work activities log --on <date> --kind networking --employer "<Company or person>" --channel "<Email, LinkedIn, or Phone>" --notes "<what was asked>"`, never as an application. The channel is what the weekly claim reports as the contact method, so it is never left off.
 
