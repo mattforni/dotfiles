@@ -19,8 +19,8 @@
 //
 //   node ynab.mjs apply <out-dir> <rows.json>
 //       Approves the rows at their categories: rows.json is an array of
-//       {budget, id, category, memo?} where category is a name spelled as the
-//       pull spelled it. Resolves the name to an id through the pulled
+//       {budget, id, category} where category is a name spelled as the
+//       pull spelled it. A memo is never written here; a memo is a decision. Resolves the name to an id through the pulled
 //       categories, PATCHes one batch per budget, and prints
 //       {ynab: [applied rows], dropped: [{kind, id, reason}]} as JSON. A row
 //       whose category name does not resolve is dropped, never guessed, and
@@ -349,9 +349,9 @@ async function apply(outDir, rowsPath) {
                 continue;
             }
             const row = { id: r.id, category_id: categoryId, approved: true };
-            // A memo already on the row (Forni's note, the bank's detail) is
-            // never written over; the model's memo fills an empty one only.
-            if (r.memo && !t.memo) row.memo = String(r.memo).slice(0, 500);
+            // A high row is an approval at a category and nothing more: a memo
+            // (a trip, a note) is a decision in the prompt's own terms and is
+            // written by the Monday session on Forni's nod, never here.
             batch.push(row);
             applied.push({ budget: file.budget.name, id: r.id, payee: t.payee_name, amount: t.amount, category: r.category, date: t.date });
         }

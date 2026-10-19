@@ -574,7 +574,7 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; the
     google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; TOKEN_FAILURE="$fail_reason"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; TOKENS_FOR_APPLY=0; }
     # High with a rule cited, or it is not high: the rule is what the band
     # rests on, and a row without one goes to dropped below.
-    jq '[.money.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") != "")) | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
+    jq '[.money.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") != "")) | {budget, id, category}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
     jq '[.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") != "") and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
     # A high row the apply never tries is still accounted for: an action the
     # runner never performs (a star, a trash, a task) and, with no YNAB key,
@@ -588,7 +588,7 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; the
         + [.money.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") == ""))
             | {kind: "ynab", id, reason: "banded high with no rule cited, so it stays proposed"}]
         + (if $nokey == "1" then [.money.rows[] | select((.band // "" | ascii_downcase) == "high") | {kind: "ynab", id, reason: "no YNAB key in the environment, so the row stays proposed"}] else [] end)' \
-        "$DRAFT_JSON" > "$WORK/apply-skipped.json"
+        "$DRAFT_JSON" | jq 'unique_by(.kind + .id)' > "$WORK/apply-skipped.json"
     echo '{"ynab": [], "dropped": []}' > "$WORK/ynab-applied.json"
     echo '{"gmail": [], "dropped": []}' > "$WORK/gmail-applied.json"
     if [[ "$(jq length "$WORK/apply-ynab.json")" != "0" ]]; then
