@@ -90,7 +90,7 @@ async function pull(outDir, team) {
         if (i === MAX_PAGES - 1) truncated = true;
     }
     issues.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
-    writeFileSync(join(outDir, "linear.json"), JSON.stringify({ pulled_at: new Date().toISOString(), team, cycle, issues, truncated }));
+    writeFileSync(join(outDir, "linear.json"), JSON.stringify({ pulled_at: new Date().toISOString(), team, cycle, issues, truncated }, null, 1));
     log(`${team}: ${issues.length} open issues in the active cycle${truncated ? ", stopped at the page cap" : ""}`);
 }
 

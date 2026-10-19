@@ -176,7 +176,7 @@ async function pull(outDir, today) {
             transactions: (transactions.transactions || []).filter((t) => !t.deleted).map(shapeTransaction),
         };
         const stem = join(outDir, `ynab-${budget.name.toLowerCase()}`);
-        writeFileSync(`${stem}.json`, JSON.stringify(file));
+        writeFileSync(`${stem}.json`, JSON.stringify(file, null, 1));
         writeFileSync(`${stem}-history.json`, JSON.stringify(history));
         log(`${budget.name}: ${file.queue.length} unapproved, ${history.transactions.length} since ${since}, ${file.accounts.filter((a) => a.direct_import_in_error && !a.closed).length} accounts in error`);
     }
@@ -306,14 +306,26 @@ async function apply(outDir, rowsPath) {
             for (const r of list) dropped.push({ kind: "ynab", id: r.id, reason: `no pull on disk for the ${r.budget} budget` });
             continue;
         }
-        const categories = new Map(file.categories.filter((c) => !c.deleted && !c.hidden).map((c) => [c.name, c.id]));
+        // A name that two groups share resolves to nothing, never to the
+        // last one written; the row is dropped and the mail says why.
+        const categories = new Map();
+        const ambiguous = new Set();
+        for (const c of file.categories.filter((c) => !c.deleted && !c.hidden)) {
+            if (categories.has(c.name)) ambiguous.add(c.name);
+            categories.set(c.name, c.id);
+        }
+        for (const name of ambiguous) categories.delete(name);
         const queue = new Map(file.queue.map((t) => [t.id, t]));
         const batch = [];
         for (const r of list) {
             const t = queue.get(r.id);
             if (!t) { dropped.push({ kind: "ynab", id: r.id, reason: "not in the unapproved queue this run" }); continue; }
             const categoryId = categories.get(r.category);
-            if (!categoryId) { dropped.push({ kind: "ynab", id: r.id, reason: `category ${r.category} not found on ${file.budget.name}` }); continue; }
+            if (!categoryId) {
+                const why = ambiguous.has(r.category) ? `category ${r.category} names two groups on ${file.budget.name}` : `category ${r.category} not found on ${file.budget.name}`;
+                dropped.push({ kind: "ynab", id: r.id, reason: why });
+                continue;
+            }
             const row = { id: r.id, category_id: categoryId, approved: true };
             if (r.memo) row.memo = String(r.memo).slice(0, 500);
             batch.push(row);

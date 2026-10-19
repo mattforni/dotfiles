@@ -161,9 +161,9 @@ async function pull(outDir, from, to) {
         log(`${cal.name}: ${shaped.length} events`);
     }
     events.sort((a, b) => ((a.start_iso || `${a.date}T00:00:00`) < (b.start_iso || `${b.date}T00:00:00`) ? -1 : 1));
-    writeFileSync(join(outDir, "calendar.json"), JSON.stringify({ pulled_at: new Date().toISOString(), zone: ZONE, from, to, events }));
+    writeFileSync(join(outDir, "calendar.json"), JSON.stringify({ pulled_at: new Date().toISOString(), zone: ZONE, from, to, events }, null, 1));
     const result = lint(events);
-    writeFileSync(join(outDir, "calendar-lint.json"), JSON.stringify(result));
+    writeFileSync(join(outDir, "calendar-lint.json"), JSON.stringify(result, null, 1));
     log(`lint: ${result.findings.length} findings over ${result.counts.timed} timed events`);
 }
 

@@ -6,6 +6,7 @@ import { NEVER_ARCHIVE, addressesFromEnv, shapeMessage } from "../inbox.mjs";
 test("unemployment insurance mail is never archived by the runner", () => {
     assert.equal(NEVER_ARCHIVE.test("cdle_ui-alerts@state.co.us Your claim"), true);
     assert.equal(NEVER_ARCHIVE.test("MyUI+ <noreply@example.com> Questionnaire"), true);
+    assert.equal(NEVER_ARCHIVE.test("Claude <claude@atelic.me> 2026-W43 Recruiter"), true);
     assert.equal(NEVER_ARCHIVE.test("Blue Spruce Maids <info@bluesprucemaids.com> Cleaning"), false);
 });
 import { shapeIssue } from "../linear.mjs";

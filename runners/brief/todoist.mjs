@@ -89,7 +89,7 @@ async function pull(outDir, monday) {
         schedule: shape(schedule),
         landing: shape(landing),
     };
-    writeFileSync(join(outDir, "todoist.json"), JSON.stringify(out));
+    writeFileSync(join(outDir, "todoist.json"), JSON.stringify(out, null, 1));
     log(`${out.schedule.length} in the Schedule filter, ${out.landing.length} more due ${monday}`);
 }
 

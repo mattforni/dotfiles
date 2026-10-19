@@ -293,7 +293,7 @@ google_tokens() {
 # failed pull cannot leave an earlier run's file beside the ledger that says
 # it was not read; the arithmetic's outputs (spend.json, the lint) go too,
 # since they are derived from these.
-PLANNING_FILES=(calendar.json calendar-lint.json inbox.json ynab-personal.json ynab-personal-history.json ynab-atelic.json ynab-atelic-history.json spend.json linear.json todoist.json)
+PLANNING_FILES=(calendar.json calendar-lint.json inbox-personal.json inbox-atelic.json ynab-personal.json ynab-personal-history.json ynab-atelic.json ynab-atelic-history.json spend.json linear.json todoist.json)
 planning_clear() {
     local f
     for f in "${PLANNING_FILES[@]}"; do rm -f "$WORK/$f"; done
@@ -372,6 +372,7 @@ planning_pull() {
     case "$name" in
         ynab)     siblings=(ynab-personal.json ynab-personal-history.json ynab-atelic.json ynab-atelic-history.json spend.json) ;;
         calendar) siblings=(calendar.json calendar-lint.json) ;;
+        inbox)    siblings=(inbox-personal.json inbox-atelic.json) ;;
         *)        siblings=("$file") ;;
     esac
     rm -f "${siblings[@]/#/$WORK/}"
@@ -398,7 +399,7 @@ calendar_pull() {
     GCAL_TOKEN="$PERSONAL_TOKEN" CALENDARS="$CALENDARS" planning_pull calendar calendar.json 4m node "$SELF_DIR/calendar.mjs" pull "$WORK" "$NEXT_MONDAY" "$NEXT_NEXT_MONDAY"
 }
 inbox_pull() {
-    GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" planning_pull inbox inbox.json 10m node "$SELF_DIR/inbox.mjs" pull "$WORK"
+    GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" planning_pull inbox inbox-personal.json 10m node "$SELF_DIR/inbox.mjs" pull "$WORK"
 }
 ynab_pull() {
     if [[ -z "${YNAB_API_KEY:-}" ]]; then pull_note ynab failed "no YNAB_API_KEY in the environment"; echo "ynab: not read, no key"; return 0; fi
@@ -452,7 +453,7 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
         todoist_pull
         echo "pulls: retro files reused from $WORK, planning pulls fresh"
     else
-        for pair in calendar:calendar.json inbox:inbox.json ynab:ynab-personal.json linear:linear.json todoist:todoist.json; do
+        for pair in calendar:calendar.json inbox:inbox-personal.json ynab:ynab-personal.json linear:linear.json todoist:todoist.json; do
             if [[ -s "$WORK/${pair#*:}" ]]; then pull_note "${pair%%:*}" ok "reused from the last pull"; else pull_note "${pair%%:*}" failed "the pulls were skipped and no read was saved"; fi
         done
         echo "pulls: skipped, reusing $WORK"
@@ -484,11 +485,12 @@ if [[ ! -s "$WORK/spend.json" ]]; then echo '{"personal": null, "atelic": null}'
 # reason for the stronger model (the treasurer agent made the same call).
 # RUNNER_MODEL puts it back on Sonnet for a side by side.
 #
-# The whole run has to end inside job.json's task timeout (5400 seconds) or
+# The whole run has to end inside job.json's task timeout (7200 seconds) or
 # Cloud Run kills the task before the EXIT trap can mail anything, not even
-# the failure page. Two attempts of 20 minutes plus the bounded pulls (ten
-# for HubSpot, ten for the inboxes, six for YNAB, four each for the rest)
-# fit under it with room; raise one and look at the other.
+# the failure page. The worst case adds up to about 95 minutes: two attempts
+# of 20 minutes, the bounded pulls (ten for HubSpot, ten for the inboxes, six
+# for YNAB, four each for the calendar, Linear and Todoist, a few for the
+# clones), and ten for the apply step. Raise one and look at the other.
 ATTEMPT_TIMEOUT="${ATTEMPT_TIMEOUT:-20m}"
 runner_claude "$(fill_prompt "$PROMPT_FILE")" --model "$RUNNER_MODEL" --allowedTools "Read" || exit 1
 runner_draft '(.headline | type == "string") and (.coverage | type == "array") and (.what_moved | type == "array")
@@ -508,6 +510,10 @@ runner_draft '(.headline | type == "string") and (.coverage | type == "array") a
 APPLIED="$WORK/applied.json"
 echo '{"writes": false, "ynab": [], "gmail": [], "dropped": []}' > "$APPLIED"
 if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" ]]; then
+    # The Google tokens were minted before the pulls and live an hour, which
+    # the pulls and the model call together can outrun, so they are minted
+    # again here; a failure costs the inbox moves, never the mail.
+    google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; }
     jq '[.money.rows[] | select(.band == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
     jq '[.inbox.rows[] | select(.band == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
     echo '{"ynab": [], "dropped": []}' > "$WORK/ynab-applied.json"
@@ -515,14 +521,14 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" ]]; then
     if [[ "$(jq length "$WORK/apply-ynab.json")" != "0" ]]; then
         if [[ -n "${YNAB_API_KEY:-}" ]]; then
             YNAB_API_KEY="$YNAB_API_KEY" timeout 5m node "$SELF_DIR/ynab.mjs" apply "$WORK" "$WORK/apply-ynab.json" > "$WORK/ynab-applied.json" 2>"$WORK/ynab-apply-stderr.txt" \
-                || { echo "apply: the YNAB batch failed: $(tail -n 1 "$WORK/ynab-apply-stderr.txt" | head -c 200)"; echo '{"ynab": [], "dropped": []}' > "$WORK/ynab-applied.json"; }
+                || { echo "apply: the YNAB batch failed: $(tail -n 1 "$WORK/ynab-apply-stderr.txt" | head -c 200)"; echo '{"ynab": [], "dropped": [{"kind": "ynab", "id": "every high row", "reason": "the apply script failed or timed out, so whether the books hold these rows is unknown; check the queue"}]}' > "$WORK/ynab-applied.json"; }
         else
             echo "apply: no YNAB_API_KEY, the YNAB rows stay proposed"
         fi
     fi
     if [[ "$(jq length "$WORK/apply-gmail.json")" != "0" ]]; then
         GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" timeout 5m node "$SELF_DIR/inbox.mjs" apply "$WORK" "$WORK/apply-gmail.json" > "$WORK/gmail-applied.json" 2>"$WORK/gmail-apply-stderr.txt" \
-            || { echo "apply: the inbox moves failed: $(tail -n 1 "$WORK/gmail-apply-stderr.txt" | head -c 200)"; echo '{"gmail": [], "dropped": []}' > "$WORK/gmail-applied.json"; }
+            || { echo "apply: the inbox moves failed: $(tail -n 1 "$WORK/gmail-apply-stderr.txt" | head -c 200)"; echo '{"gmail": [], "dropped": [{"kind": "gmail", "id": "every high row", "reason": "the apply script failed or timed out, so whether the moves landed is unknown; check the inbox"}]}' > "$WORK/gmail-applied.json"; }
     fi
     jq -s '{writes: true, ynab: (.[0].ynab // []), gmail: (.[1].gmail // []), dropped: ((.[0].dropped // []) + (.[1].dropped // []))}' "$WORK/ynab-applied.json" "$WORK/gmail-applied.json" > "$APPLIED"
     echo "apply: $(jq -r '"\(.ynab | length) YNAB rows approved, \(.gmail | length) messages moved, \(.dropped | length) dropped"' "$APPLIED")"

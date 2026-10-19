@@ -6,9 +6,11 @@
 //       Every message sitting in the inbox of each mailbox whose token is in
 //       the environment, with its headers, snippet, label names, and a link,
 //       plus the mailbox's label list (names and ids) so a later apply can
-//       resolve a name. Writes <out-dir>/inbox.json. A mailbox whose token is
-//       absent is skipped and said so; a mailbox whose list call fails fails
-//       the pull, since the clerk's rules need the whole bag or nothing.
+//       resolve a name. Writes <out-dir>/inbox-personal.json and
+//       <out-dir>/inbox-atelic.json, one per mailbox read. A mailbox whose
+//       token is absent is skipped and said so; a mailbox whose list call
+//       fails fails the pull, since the clerk's rules need the whole bag or
+//       nothing.
 //
 //   node inbox.mjs apply <out-dir> <rows.json>
 //       rows.json is an array of {mailbox, id, labels: [names], archive: bool}.
@@ -33,7 +35,7 @@ import { pathToFileURL } from "node:url";
 
 const API = "https://gmail.googleapis.com/gmail/v1/users/me";
 const log = (s) => process.stderr.write(`inbox: ${s}\n`);
-const MAX_MESSAGES = Number(process.env.INBOX_MAX_MESSAGES || 400);
+const MAX_MESSAGES = Number(process.env.INBOX_MAX_MESSAGES || 200);
 const POOL = 6;
 
 export const addressesFromEnv = (raw = process.env.MAILBOX_ADDRESSES || "personal=mattforni@gmail.com,atelic=matt@atelic.me") => {
@@ -45,7 +47,11 @@ export const addressesFromEnv = (raw = process.env.MAILBOX_ADDRESSES || "persona
     return out;
 };
 
-export const NEVER_ARCHIVE = /state\.co\.us|cdle|myui|colorado division of unemployment/i;
+// Unemployment insurance mail is deadline bearing and never archived by a
+// machine, and the runner's own weekly reports (the brief, the recruiter
+// board, the pipeline board) are read by Forni and the Monday session after
+// this run, so the runner never marks them read or archives them either.
+export const NEVER_ARCHIVE = /state\.co\.us|cdle|myui|colorado division of unemployment|claude@atelic\.me/i;
 
 const MAILBOXES = [
     ["personal", process.env.GMAIL_TOKEN_PERSONAL || ""],
@@ -134,31 +140,41 @@ async function pullMailbox(name, token, address) {
     return { address, labels, messages, truncated: Boolean(pageToken) };
 }
 
+// One file per mailbox, pretty printed with a one space indent: the model
+// reads these with a tool that takes a file by lines, and a mailbox of a few
+// hundred messages on one line is more than it can take in.
+const mailboxFile = (outDir, name) => join(outDir, `inbox-${name}.json`);
+
 async function pull(outDir) {
     mkdirSync(outDir, { recursive: true });
     const addresses = addressesFromEnv();
-    const out = { pulled_at: new Date().toISOString(), mailboxes: {} };
     for (const [name, token] of MAILBOXES) {
         if (!token) {
             log(`${name}: no token in the environment, skipped`);
-            out.mailboxes[name] = null;
             continue;
         }
-        out.mailboxes[name] = await pullMailbox(name, token, addresses[name] || "");
+        const box = await pullMailbox(name, token, addresses[name] || "");
+        writeFileSync(mailboxFile(outDir, name), JSON.stringify({ mailbox: name, pulled_at: new Date().toISOString(), ...box }, null, 1));
     }
-    writeFileSync(join(outDir, "inbox.json"), JSON.stringify(out));
+}
+
+function readMailbox(outDir, name) {
+    try {
+        return JSON.parse(readFileSync(mailboxFile(outDir, name), "utf8"));
+    } catch {
+        return null;
+    }
 }
 
 /* ---------- apply ---------- */
 
 async function apply(outDir, rowsPath) {
     const rows = JSON.parse(readFileSync(rowsPath, "utf8"));
-    const pulled = JSON.parse(readFileSync(join(outDir, "inbox.json"), "utf8"));
     const tokens = Object.fromEntries(MAILBOXES);
     const applied = [];
     const dropped = [];
     for (const r of rows) {
-        const box = pulled.mailboxes?.[r.mailbox];
+        const box = readMailbox(outDir, r.mailbox);
         const token = tokens[r.mailbox];
         if (!box || !token) { dropped.push({ kind: "gmail", id: r.id, reason: `mailbox ${r.mailbox} was not pulled this run` }); continue; }
         const msg = box.messages.find((m) => m.id === r.id);
@@ -176,7 +192,7 @@ async function apply(outDir, rowsPath) {
         // the prompt: unemployment insurance mail is deadline bearing and is
         // never archived unread by a machine, whatever band it was given.
         if (r.archive && NEVER_ARCHIVE.test(`${msg.from} ${msg.subject}`)) {
-            dropped.push({ kind: "gmail", id: r.id, reason: "CDLE and MyUI+ mail is never archived by the runner" });
+            dropped.push({ kind: "gmail", id: r.id, reason: "CDLE, MyUI+ and the runner's own reports are never archived by the runner" });
             continue;
         }
         const remove = r.archive ? ["INBOX", "UNREAD"] : [];
