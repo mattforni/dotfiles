@@ -258,6 +258,27 @@ test("a pull that was not read opens its section with a notice and is listed in 
 	assert.ok(html.stdout.includes(">Not read this run: the cycle read failed<"));
 });
 
+test("a planning half that did not validate is a notice in every section and on the board, never an all clear", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	draft.board = [];
+	draft.money = { read: "", rows: [], deletes: [], trips: [] };
+	draft.inbox = { rows: [] };
+	draft.work = { read: "", flags: [], unplaced: [] };
+	draft.calendar = { read: "", findings: [] };
+	draft.tasks = { read: "", rows: [] };
+	draft.pulls = [{ name: "planning", ok: false, note: "the planning half of the answer did not validate" }];
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	assert.ok(!text.stdout.includes("Nothing needs you this week"), "no all clear on the board");
+	assert.ok(sectionOf(text.stdout, "Needed From You").includes("The planning half was not read this run"), "the board says so");
+	for (const name of ["Money", "Inbox", "Work", "Calendar", "Tasks"]) {
+		assert.ok(sectionOf(text.stdout, name).includes("Not read this run"), `${name} opens on the notice`);
+	}
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	assert.ok(!html.stdout.includes("Nothing needs you this week"));
+});
+
 test("the parity canonicalizer ignores what only the markup differs on", () => {
 	const jqShape = '<table><tr><td style="color:#FC4A1A; padding:2px;">a &#39;b&#39;</td></tr></table>';
 	const reactShape =

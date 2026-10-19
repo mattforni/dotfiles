@@ -624,7 +624,7 @@ skips() {
     if [[ -s "$f" ]]; then jq -c '[.queue[] | select(.transfer_account_id != null) | {id, date, amount, payee: .payee_name, account: .account_name}]' "$f"; else echo '[]'; fi
 }
 jq --argjson ps "$(skips personal)" --argjson atelic_skips "$(skips atelic)" --slurpfile applied "$APPLIED" \
-    '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $atelic_skips},
+    '{personal: [.money.rows[] | select((.budget // "" | ascii_downcase) == "personal")], atelic: [.money.rows[] | select((.budget // "" | ascii_downcase) == "atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $atelic_skips},
       inbox: [.inbox.rows[] | select((.band // "" | ascii_downcase) != "decision") | {mailbox, id, thread_id, from, subject, action, labels: (.labels // []), star, band, rule}],
       work: (.work // {}), calendar: (.calendar // {}), tasks: (.tasks // {}), board: (.board // []),
       applied: $applied[0]}' \

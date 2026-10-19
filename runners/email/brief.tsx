@@ -657,12 +657,29 @@ function handledTitle(draft: BriefDraft): string {
  * still shows in This Run.
  */
 const SECTION_PULLS: Record<string, string[]> = {
-	Money: ["ynab", "spend"],
-	Inbox: ["gmail", "inbox"],
-	Work: ["linear"],
-	Calendar: ["calendar"],
-	Tasks: ["todoist"],
+	Money: ["ynab", "spend", "planning"],
+	Inbox: ["gmail", "inbox", "planning"],
+	Work: ["linear", "planning"],
+	Calendar: ["calendar", "planning"],
+	Tasks: ["todoist", "planning"],
 };
+
+/**
+ * The entrypoint records a pull named "planning" when the model's planning
+ * half did not validate and every planning section was emptied. Every
+ * section then opens on the notice, and the board says so instead of an
+ * all clear, since an empty board on a failed half is the one thing this
+ * mail must never say.
+ */
+function planningMissed(draft: BriefDraft): Pull | undefined {
+	return missedPulls(draft).find((pull) => asciiDowncase(str(pull.name)) === "planning");
+}
+
+function boardEmptyLine(draft: BriefDraft): string {
+	const missed = planningMissed(draft);
+	if (missed === undefined) return "Nothing needs you this week.";
+	return `The planning half was not read this run${str(missed.note) === "" ? "" : `: ${str(missed.note)}`}. Run the Monday session's own passes.`;
+}
 
 function missedPulls(draft: BriefDraft): Pull[] {
 	return list(draft.pulls).filter((pull) => pull && pull.ok === false);
@@ -1312,7 +1329,7 @@ function boardHTML(draft: BriefDraft): ReactNode {
 			<Eyebrow text="Needed From You" />
 			<Card>
 				{records.length === 0 ? (
-					<EmptyRow text="Nothing needs you this week." />
+					<EmptyRow text={boardEmptyLine(draft)} />
 				) : (
 					<Row last={true}>
 						<RecordStack records={records} />
@@ -1365,7 +1382,7 @@ function boardText(draft: BriefDraft): string {
 	const records = boardRecords(draft);
 	return (
 		textSection("Needed From You") +
-		(records.length === 0 ? "  Nothing needs you this week.\n" : `${recordStackText(records)}\n`)
+		(records.length === 0 ? `${wrap(boardEmptyLine(draft))}\n` : `${recordStackText(records)}\n`)
 	);
 }
 
