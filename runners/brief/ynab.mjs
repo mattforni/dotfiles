@@ -338,6 +338,9 @@ async function apply(outDir, rowsPath) {
         for (const r of list) {
             const t = queue.get(r.id);
             if (t?.transfer_account_id) { dropped.push({ kind: "ynab", id: r.id, reason: "a transfer is approved uncategorized by the Monday session, never categorized here" }); continue; }
+            // A split is categorized in its parts; one category on the parent
+            // would collapse them, so the session handles it by hand.
+            if (t?.subtransactions?.length > 0) { dropped.push({ kind: "ynab", id: r.id, reason: "a split transaction is categorized in its parts by the Monday session, never here" }); continue; }
             if (!t) { dropped.push({ kind: "ynab", id: r.id, reason: "not in the unapproved queue this run" }); continue; }
             const categoryId = categories.get(r.category);
             if (!categoryId) {

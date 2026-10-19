@@ -216,13 +216,7 @@ Spot Check · 2
     first · same category as December's invoice
 
 Decisions · 2
-  Venmo [Personal]
-    Fri 01-30 · supper club · $85.00
-    every Venmo row is a decision
-
-  Pinewood Cabinetry [Atelic]
-    Sat 01-31 · Inflow: Ready to Assign · +$1,750.00
-    a new payee with no rule
+  On the board at the top, with their numbers.
 
 Proposed Deletes · 1
   Venmo [Personal]
@@ -258,14 +252,7 @@ Spot Check · 2
     the monthly hosting invoice, already paid by card
 
 Decisions · 2
-  Property questionnaire due February 6 [personal]
-    County Assessor · Thu 01-29 · task · label 📑 Admin · green star
-    a questionnaire about the property that needs an answer by Fri
-    02-06
-
-  Re: proposal and next steps for the showroom site [atelic]
-    Pinewood Cabinetry · Sat 01-31 · reply
-    the owner asks whether the second phase can start in March
+  On the board at the top, with their numbers.
 
 
 ================================================================

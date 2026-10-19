@@ -538,12 +538,21 @@ if [[ ! -s "$WORK/spend.json" ]]; then echo '{"personal": null, "atelic": null}'
 # clones), and ten for the apply step. Raise one and look at the other.
 ATTEMPT_TIMEOUT="${ATTEMPT_TIMEOUT:-20m}"
 runner_claude "$(fill_prompt "$PROMPT_FILE")" --model "$RUNNER_MODEL" --allowedTools "Read" || exit 1
+# The retro keys are the mail: without them there is nothing to send. The
+# planning keys degrade: an answer that carries the retro but a malformed
+# planning half still mails the retro, with every planning section empty and
+# the ledger saying why, the same way a failed pull costs its section.
 runner_draft '(.headline | type == "string") and (.coverage | type == "array") and (.what_moved | type == "array")
     and (.movement_read | type == "string") and (.takeout | type == "array") and (.takeout_read | type == "string")
-    and (.atelic_read | type == "string") and (.blind_spots | type == "string")
-    and (.board | type == "array") and (.money | type == "object") and (.money.rows | type == "array")
+    and (.atelic_read | type == "string") and (.blind_spots | type == "string")' || exit 1
+if ! jq -e '(.board | type == "array") and (.money | type == "object") and (.money.rows | type == "array")
     and (.inbox | type == "object") and (.inbox.rows | type == "array")
-    and (.work | type == "object") and (.calendar | type == "object") and (.tasks | type == "object")' || exit 1
+    and (.work | type == "object") and (.calendar | type == "object") and (.tasks | type == "object")' "$DRAFT_JSON" >/dev/null 2>&1; then
+    echo "planning: the model's planning half did not validate; the retro goes out alone and every planning section is empty"
+    jq '. + {board: [], money: {read: "", rows: [], deletes: [], trips: []}, inbox: {rows: []}, work: {read: "", flags: [], unplaced: []}, calendar: {read: "", findings: []}, tasks: {read: "", rows: []}}' "$DRAFT_JSON" > "$DRAFT_JSON.fixed" \
+        && mv "$DRAFT_JSON.fixed" "$DRAFT_JSON"
+    jq '. + [{name: "planning", ok: false, note: "the planning half of the answer did not validate, so every planning section is empty this run"}]' "$PULLS_JSON" > "$PULLS_JSON.next" && mv "$PULLS_JSON.next" "$PULLS_JSON"
+fi
 
 # ---------- the apply step ----------
 # Only when writes are on and this is not a dry run, and only the rows the
@@ -563,15 +572,21 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; the
     # again here; a failure costs the inbox moves, never the mail.
     TOKENS_FOR_APPLY=1
     google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; TOKEN_FAILURE="$fail_reason"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; TOKENS_FOR_APPLY=0; }
-    jq '[.money.rows[] | select((.band // "" | ascii_downcase) == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
-    jq '[.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
+    # High with a rule cited, or it is not high: the rule is what the band
+    # rests on, and a row without one goes to dropped below.
+    jq '[.money.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") != "")) | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
+    jq '[.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") != "") and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
     # A high row the apply never tries is still accounted for: an action the
     # runner never performs (a star, a trash, a task) and, with no YNAB key,
     # every money row. Each lands in dropped with its reason, so the mail
     # never shows a high row as handled that nothing touched.
     jq --arg nokey "$([[ -n "${YNAB_API_KEY:-}" ]] && echo 0 || echo 1)" '
-        [.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and (.action != "label" and .action != "archive"))
+        [.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") != "") and (.action != "label" and .action != "archive"))
             | {kind: "gmail", id, reason: ("the runner never performs \(.action); the Monday session does")}]
+        + [.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") == ""))
+            | {kind: "gmail", id, reason: "banded high with no rule cited, so it stays proposed"}]
+        + [.money.rows[] | select((.band // "" | ascii_downcase) == "high" and ((.rule // "") == ""))
+            | {kind: "ynab", id, reason: "banded high with no rule cited, so it stays proposed"}]
         + (if $nokey == "1" then [.money.rows[] | select((.band // "" | ascii_downcase) == "high") | {kind: "ynab", id, reason: "no YNAB key in the environment, so the row stays proposed"}] else [] end)' \
         "$DRAFT_JSON" > "$WORK/apply-skipped.json"
     echo '{"ynab": [], "dropped": []}' > "$WORK/ynab-applied.json"
@@ -608,9 +623,11 @@ skips() {
     local f="$WORK/ynab-$1.json"
     if [[ -s "$f" ]]; then jq -c '[.queue[] | select(.transfer_account_id != null) | {id, date, amount, payee: .payee_name, account: .account_name}]' "$f"; else echo '[]'; fi
 }
-jq --argjson ps "$(skips personal)" --argjson as "$(skips atelic)" \
-    '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $as},
-      inbox: [.inbox.rows[] | select((.band // "" | ascii_downcase) != "decision") | {mailbox, id, thread_id, from, subject, action, labels: (.labels // []), star, band, rule}]}' \
+jq --argjson ps "$(skips personal)" --argjson atelic_skips "$(skips atelic)" --slurpfile applied "$APPLIED" \
+    '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $atelic_skips},
+      inbox: [.inbox.rows[] | select((.band // "" | ascii_downcase) != "decision") | {mailbox, id, thread_id, from, subject, action, labels: (.labels // []), star, band, rule}],
+      work: (.work // {}), calendar: (.calendar // {}), tasks: (.tasks // {}), board: (.board // []),
+      applied: $applied[0]}' \
     "$DRAFT_JSON" > "$WORK/plan.json" && ATTACHMENT="$WORK/plan.json"
 
 # The Atelic tables, the Strava sessions, the spend tables, the pull ledger

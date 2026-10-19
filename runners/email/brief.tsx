@@ -447,6 +447,27 @@ type Stage = {
 };
 
 /**
+ * A funnel with more rows than this is drawn as one compact table (company,
+ * stage, touch, reply) instead of a card per company. Gmail clips a message
+ * near 100 KB and a card runs about a kilobyte; on 2026-10-19 thirty one
+ * cards were a third of the mail. The Pipeline mail carries every company in
+ * full.
+ */
+const FUNNEL_CAP = 12;
+
+/** The compact rows of a long funnel: every company in stage order with its touch and reply. */
+function funnelTable(stages: Stage[]): string[][] {
+	return stages.flatMap((stage) =>
+		stage.rows.map((row) => [
+			jqToString(alt(row.company, "")),
+			stage.name,
+			jqToString(alt(row.last_touch, "")),
+			dayOf(row.last_reply),
+		]),
+	);
+}
+
+/**
  * The card a stage draws its rows on, where the stage decides it rather than
  * the table the row came in on: a lead whose company became a customer reads
  * as a deal, and a deal that was lost reads as closed. A stage not named here
@@ -923,12 +944,37 @@ type Part = {
 	notes?: { eyebrow: string; text: string; accented: boolean }[];
 };
 
+/**
+ * How many records a planning list shows in the html before the rest is a
+ * count. Gmail clips a message near 100 KB, and a card runs about a kilobyte,
+ * so the lists are held here; the plain text twin and the attached plan carry
+ * every row.
+ */
+const LIST_CAP = 8;
+
+/**
+ * A section's decisions are the board's rows, drawn once at the top of the
+ * mail with their numbers; here they are a count and a pointer, so the same
+ * card is never drawn twice.
+ */
+function boardPointer(title: string, count: number, empty: string): Part {
+	return {
+		title: `${title} · ${count}`,
+		html: null,
+		text: null,
+		empty: count === 0 ? empty : `On the board at the top, with ${count === 1 ? "its number" : "their numbers"}.`,
+	};
+}
+
 function stackPart(title: string, records: RecordStackItem[], empty: string): Part {
+	const shown = records.slice(0, LIST_CAP);
+	const more = records.length - shown.length;
 	return {
 		title: `${title} · ${records.length}`,
-		html: records.length === 0 ? null : <RecordStack records={records} />,
+		html: records.length === 0 ? null : <RecordStack records={shown} />,
 		text: records.length === 0 ? null : recordStackText(records),
 		empty,
+		notes: more > 0 ? [{ eyebrow: "More", text: `${more} more in the attached plan.json.`, accented: false }] : undefined,
 	};
 }
 
@@ -1031,7 +1077,7 @@ function spendParts(draft: BriefDraft): Part[] {
 					]}
 					rows={typical.map((row) => [
 						{ value: row.label },
-						{ value: usd(row.spent), mono: true, hot: row.spent > row.pace },
+						{ value: usd(row.spent), mono: true, hot: Math.abs(row.spent) > Math.abs(row.pace) },
 						{ value: usd(row.pace), mono: true },
 						{ value: usd(row.average), mono: true },
 					])}
@@ -1141,7 +1187,7 @@ function moneyParts(draft: BriefDraft): Part[] {
 			empty: "No row matched a rule exactly.",
 		},
 		stackPart("Spot Check", moneyRows(draft, "medium").map(moneyRecord), "Nothing to spot check."),
-		stackPart("Decisions", moneyRows(draft, "decision").map(moneyRecord), "No money decisions this week."),
+		boardPointer("Decisions", moneyRows(draft, "decision").length, "No money decisions this week."),
 	];
 	const deletes = deleteRecords(draft);
 	if (deletes.length > 0) parts.push(stackPart("Proposed Deletes", deletes, ""));
@@ -1174,7 +1220,7 @@ function inboxParts(draft: BriefDraft): Part[] {
 			empty: "No message matched a rule exactly.",
 		},
 		stackPart("Spot Check", inboxRows(draft, "medium").map(inboxRecord), "Nothing to spot check."),
-		stackPart("Decisions", inboxRows(draft, "decision").map(inboxRecord), "No mail decisions this week."),
+		boardPointer("Decisions", inboxRows(draft, "decision").length, "No mail decisions this week."),
 	];
 	const drops = droppedInbox(draft);
 	if (drops.length > 0) parts.push(stackPart("Dropped", drops, ""));
@@ -1443,6 +1489,7 @@ export function briefHTML(input: unknown, context: RenderContext): string {
 	const atelic = atelicTargets(draft);
 	const funnelStages = stages(draft);
 	const filled = funnelStages.filter((stage) => stage.rows.length > 0);
+	const funnelRows = filled.reduce((sum, stage) => sum + stage.rows.length, 0);
 	const moved = alt(draft.what_moved, []);
 	const movedNote = jqToString(alt(draft.what_moved_note, ""));
 	const headline = jqToString(alt(draft.headline, ""));
@@ -1532,15 +1579,32 @@ export function briefHTML(input: unknown, context: RenderContext): string {
 							stats={funnelStages.map((stage) => ({ n: stage.rows.length, label: stage.label }))}
 						/>
 					</Row>
-					{filled.map((stage, index) => (
-						// biome-ignore lint/suspicious/noArrayIndexKey: a stage's position is its identity
-						<Fragment key={index}>
-							<SubEyebrow text={`${stage.name} · ${stage.rows.length}`} />
-							<RecordsRow last={index === filled.length - 1}>
-								<RecordStack records={stage.records} />
+					{funnelRows > FUNNEL_CAP ? (
+						<>
+							<SubEyebrow text={`Touched This Week · ${funnelRows}`} />
+							<RecordsRow last={true}>
+								<Records
+									columns={[{ label: "Company" }, { label: "Stage" }, { label: "Touch" }, { label: "Reply" }]}
+									rows={funnelTable(filled).map(([company, stage, touch, reply]) => [
+										{ value: company },
+										{ value: stage, muted: true },
+										{ value: touch },
+										{ value: unbroken(reply), mono: true, muted: true },
+									])}
+								/>
 							</RecordsRow>
-						</Fragment>
-					))}
+						</>
+					) : (
+						filled.map((stage, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: a stage's position is its identity
+							<Fragment key={index}>
+								<SubEyebrow text={`${stage.name} · ${stage.rows.length}`} />
+								<RecordsRow last={index === filled.length - 1}>
+									<RecordStack records={stage.records} />
+								</RecordsRow>
+							</Fragment>
+						))
+					)}
 				</Card>
 
 				{planningHTML(draft)}
@@ -1626,10 +1690,14 @@ export function briefText(input: unknown, context: RenderContext): string {
 	out += `\nThe Funnel\n${funnelStages
 		.map((stage) => `  ${rpad(stage.label, 10)}${stage.rows.length}`)
 		.join("\n")}\n`;
-	out += funnelStages
-		.filter((stage) => stage.rows.length > 0)
-		.map((stage) => `\n${stage.name} · ${stage.rows.length}\n${recordStackText(stage.records)}\n`)
-		.join("");
+	const textFilled = funnelStages.filter((stage) => stage.rows.length > 0);
+	const textRows = textFilled.reduce((sum, stage) => sum + stage.rows.length, 0);
+	out +=
+		textRows > FUNNEL_CAP
+			? `\nTouched This Week · ${textRows}\n${textTable(["Company", "Stage", "Touch", "Reply"], funnelTable(textFilled), [])}\n`
+			: textFilled
+					.map((stage) => `\n${stage.name} · ${stage.rows.length}\n${recordStackText(stage.records)}\n`)
+					.join("");
 
 	out += planningText(draft);
 

@@ -96,7 +96,7 @@ while IFS=$'\t' read -r key value; do
     [[ "$value" == @* ]] || continue
     path="$HOME/.config/headless-report/${value#@}"
     [[ -s "$path" ]] || die "job.json names $key as $value, and $path is missing or empty on this machine"
-    actual="$(tr -d '[:space:]' < "$path")"
+    actual="$(grep -v '^#' "$path" | grep -m1 . | tr -d '[:space:]')"
     jq --arg k "$key" --arg v "$actual" '.job.env[$k] = $v' "$resolved" > "$resolved.next" && mv "$resolved.next" "$resolved"
 done < <(jq -r '.job.env | to_entries[] | "\(.key)\t\(.value)"' "$FILE")
 FILE="$resolved"
