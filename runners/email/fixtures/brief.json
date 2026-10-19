@@ -1,0 +1,797 @@
+{
+  "headline": "An invented week, written so every branch of the renderer has something to render.",
+  "coverage": [
+    {
+      "modality": "Lifts",
+      "logged": "3",
+      "target": "3",
+      "note": "Mon Push · Wed Pull"
+    },
+    {
+      "modality": "Social runs",
+      "logged": "1",
+      "target": "3",
+      "note": "Tue Kestrel"
+    },
+    {
+      "modality": "Yoga",
+      "logged": "0",
+      "target": "0",
+      "note": ""
+    },
+    {
+      "modality": "PT",
+      "logged": "2",
+      "target": "4",
+      "note": "Tue PT Achilles · Thu PT"
+    }
+  ],
+  "what_moved": [
+    {
+      "subject": "Pinewood Cabinetry",
+      "event": "sits at Proposal, $12,000 cash."
+    },
+    {
+      "subject": "Harbor Line Plumbing",
+      "event": "closed won at $4,500."
+    }
+  ],
+  "what_moved_note": "Everything else held its stage.",
+  "movement_read": "Three lifts landed and one social run did, which is the shape of a week that trained alone. The long walk on Sunday is the only thing outside the plan, and it earned its place.",
+  "takeout": [
+    {
+      "day": "Tue 01-27",
+      "vehicle": "Crosstown Noodle"
+    },
+    {
+      "day": "Sat 01-31",
+      "vehicle": "Ember Pizza"
+    }
+  ],
+  "takeout_read": "Two confirmed orders, both late in the evening, both on days with a session earlier.",
+  "atelic_read": "Five first sends went out against a target of five and three bumps against five. Pinewood Cabinetry is the name worth attention on Monday.",
+  "blind_spots": "This draft cannot see how the body felt, or anything the sources do not carry.",
+  "strava": [
+    {
+      "name": "Kestrel Loop with the club",
+      "sport_type": "Run",
+      "start_date_local": "2026-01-27T06:40:00Z",
+      "distance_mi": 5.08,
+      "moving_min": 47,
+      "athlete_count": 4
+    },
+    {
+      "name": "Easy miles with Diego",
+      "sport_type": "TrailRun",
+      "start_date_local": "2026-01-29T07:05:00Z",
+      "distance_mi": 3.5,
+      "moving_min": 33,
+      "athlete_count": 1
+    },
+    {
+      "name": "Solo shakeout",
+      "sport_type": "Run",
+      "start_date_local": "2026-01-26T06:15:00Z",
+      "distance_mi": 2.02,
+      "moving_min": 18,
+      "athlete_count": 1
+    },
+    {
+      "name": "» Push day",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-26T17:30:00Z",
+      "distance_mi": 0,
+      "moving_min": 55,
+      "athlete_count": 1
+    },
+    {
+      "name": "Pull day",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-28T17:20:00Z",
+      "distance_mi": 0,
+      "moving_min": 61,
+      "athlete_count": 1
+    },
+    {
+      "name": "Legs",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-30T17:10:00Z",
+      "distance_mi": 0,
+      "moving_min": 48,
+      "athlete_count": 1
+    },
+    {
+      "name": "Slow flow",
+      "sport_type": "Yoga",
+      "start_date_local": "2026-01-28T20:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 40,
+      "athlete_count": 1
+    },
+    {
+      "name": "Bouldering session",
+      "sport_type": "RockClimbing",
+      "start_date_local": "2026-01-30T19:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 75,
+      "athlete_count": 2
+    },
+    {
+      "name": "Long walk to the reservoir",
+      "sport_type": "Walk",
+      "start_date_local": "2026-02-01T10:00:00Z",
+      "distance_mi": 4.365,
+      "moving_min": 82,
+      "athlete_count": 1
+    },
+    {
+      "name": "Rowing intervals",
+      "sport_type": "Rowing",
+      "start_date_local": "2026-02-01T16:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 24,
+      "athlete_count": 1
+    },
+    {
+      "name": "2026 PT Achilles",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-27T12:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 25,
+      "athlete_count": 1
+    },
+    {
+      "name": "2026 PT",
+      "sport_type": "WeightTraining",
+      "start_date_local": "2026-01-29T12:00:00Z",
+      "distance_mi": 0,
+      "moving_min": 22,
+      "athlete_count": 1
+    },
+    {
+      "name": "Ride to the studio",
+      "sport_type": "Ride",
+      "start_date_local": "2026-01-28T19:30:00Z",
+      "distance_mi": 4.93,
+      "moving_min": 21,
+      "athlete_count": 1
+    },
+    {
+      "name": "Track drills",
+      "sport_type": "Workout",
+      "start_date_local": "2026-01-31T09:00:00Z",
+      "distance_mi": 0.16,
+      "moving_min": 15,
+      "athlete_count": 1
+    }
+  ],
+  "atelic": {
+    "stages": [
+      "Lead",
+      "MQL",
+      "SQL",
+      "Opportunity",
+      "Customer",
+      "Closed"
+    ],
+    "coverage": [
+      {
+        "measure": "first_sends",
+        "logged": "5",
+        "target": "5"
+      },
+      {
+        "measure": "bumps",
+        "logged": "3",
+        "target": "5"
+      }
+    ],
+    "open_leads": [
+      {
+        "company": "Pinewood Cabinetry",
+        "funnel": "SQL",
+        "lifecycle": "salesqualifiedlead",
+        "status": "IN_CONVERSATION",
+        "kind": "email_send",
+        "touches": 4,
+        "opens": "7",
+        "replied": "yes",
+        "last_reply": "2026-01-28",
+        "last_send": "2026-01-27"
+      },
+      {
+        "company": "Harbor Line Plumbing",
+        "funnel": "MQL",
+        "lifecycle": "marketingqualifiedlead",
+        "status": "CONTACTED",
+        "kind": "notes_from_the_call",
+        "last_touch": "Drop off",
+        "touches": 2,
+        "opens": null,
+        "replied": "no",
+        "last_send": "2026-01-28"
+      },
+      {
+        "company": "Sable Creek Landscaping",
+        "funnel": "Lead",
+        "lifecycle": "lead",
+        "status": "NEW",
+        "kind": "walk_in",
+        "touches": null,
+        "opens": "1",
+        "replied": "no",
+        "last_send": "2026-01-29"
+      },
+      {
+        "company": "Ridgeline Glass",
+        "funnel": "Lead",
+        "lifecycle": null,
+        "status": "UNQUALIFIED",
+        "kind": "email_send",
+        "touches": 1,
+        "opens": "0",
+        "replied": "no",
+        "last_send": "2026-01-30",
+        "note": "half applied close: UNQUALIFIED with no Disqualification Reason on the company; set the reason or reopen the contact"
+      }
+    ],
+    "opportunities": [
+      {
+        "company": "Alder Court Dental",
+        "funnel": "Opportunity",
+        "lifecycle": "opportunity",
+        "stage": "Proposal",
+        "cash": "$12,000",
+        "replied": "yes",
+        "last_reply": "2026-01-29",
+        "last_send": "2026-01-29"
+      },
+      {
+        "company": "Fernwood Bakery",
+        "funnel": "Opportunity",
+        "lifecycle": "opportunity",
+        "stage": null,
+        "cash": "-",
+        "last_send": "2026-01-30"
+      },
+      {
+        "company": "Birchwood Tile",
+        "funnel": "Opportunity",
+        "lifecycle": "opportunity",
+        "stage": "Closed Lost",
+        "cash": "-",
+        "last_send": "2026-01-30",
+        "note": "deal lost with no Disqualification Reason on the company; close the company so the reason mirrors"
+      },
+      {
+        "company": "Copper Kettle Catering",
+        "funnel": "Customer",
+        "lifecycle": "opportunity",
+        "stage": "Closed Won",
+        "cash": "$4,500",
+        "last_send": "2026-01-31"
+      },
+      {
+        "company": "Quarry Road Auto",
+        "funnel": "Closed",
+        "lifecycle": "opportunity",
+        "stage": "Closed Lost",
+        "cash": "-",
+        "last_send": "2026-01-31"
+      }
+    ],
+    "closed_leads": [
+      {
+        "company": "Lantern Hill Roofing",
+        "funnel": "Closed",
+        "lifecycle": "other",
+        "status": "UNQUALIFIED",
+        "kind": "email_send",
+        "touches": 3,
+        "opens": "2",
+        "replied": "no",
+        "reason": "NOT_A_FIT",
+        "last_send": "2026-01-26"
+      },
+      {
+        "company": "Thistle Lane Florist",
+        "funnel": "Closed",
+        "lifecycle": "other",
+        "status": "UNQUALIFIED",
+        "kind": "email_send",
+        "touches": 1,
+        "opens": "0",
+        "replied": "no",
+        "reason": "-",
+        "last_send": "2026-01-27"
+      }
+    ],
+    "totals": {
+      "sends": 5,
+      "bumps": 3
+    }
+  },
+  "board": [
+    {
+      "n": 1,
+      "area": "Money",
+      "item": "Venmo $85.00 to Juniper Hale on Fri 01-30, no rule names it",
+      "default": "🍽️ Dining Out, the Thursday supper club",
+      "link": ""
+    },
+    {
+      "n": 2,
+      "area": "Money",
+      "item": "Delete the Personal Venmo of $60.00 on Wed 01-28, the same charge sits on Atelic",
+      "default": "delete it from Personal",
+      "link": ""
+    },
+    {
+      "n": 3,
+      "area": "Inbox",
+      "item": "The county assessor wants the property questionnaire back by Fri 02-06",
+      "default": "keep, label 📑 Admin, green star, and a Todoist task for Tuesday",
+      "link": "https://mail.google.com/mail/u/0/#inbox/invented0003"
+    },
+    {
+      "n": 4,
+      "area": "Work",
+      "item": "ATE-901 Rebuild the proposal template has no estimate and no load label",
+      "default": "4 points, 🧠 Sharp",
+      "link": "https://linear.app/atelic/issue/ATE-901"
+    },
+    {
+      "n": 5,
+      "area": "Tasks",
+      "item": "Read the long essay on attention someone sent, a note rather than a task",
+      "default": "delete and file in Eudy",
+      "link": ""
+    },
+    {
+      "n": 6,
+      "area": "Calendar",
+      "item": "Thursday's lift at 07:00 overlaps the dentist hold that runs to 07:30",
+      "default": "move the lift to 08:00",
+      "link": ""
+    }
+  ],
+  "money": {
+    "read": "The month so far sits a little over the pace on Personal, mostly the one dental bill, and Atelic is well under it. The checking connection on Personal is in error, so its numbers are a floor until it is repaired.",
+    "rows": [
+      {
+        "budget": "Personal",
+        "id": "inv-p-001",
+        "date": "2026-01-27",
+        "amount": "-6.75",
+        "payee": "Copper Kettle Coffee",
+        "category": "🍽️ Cafés",
+        "memo": "",
+        "band": "high",
+        "rule": "learned-rules Spend Categorization: Copper Kettle Coffee to 🍽️ Cafés",
+        "reason": "mapped payee"
+      },
+      {
+        "budget": "Personal",
+        "id": "inv-p-002",
+        "date": "2026-01-29",
+        "amount": "-7.25",
+        "payee": "Copper Kettle Coffee",
+        "category": "🍽️ Cafés",
+        "memo": "",
+        "band": "high",
+        "rule": "learned-rules Spend Categorization: Copper Kettle Coffee to 🍽️ Cafés",
+        "reason": "mapped payee"
+      },
+      {
+        "budget": "Personal",
+        "id": "inv-p-003",
+        "date": "2026-01-28",
+        "amount": "-84.12",
+        "payee": "Sundown Grocery",
+        "category": "🛒 Groceries",
+        "memo": "",
+        "band": "high",
+        "rule": "payee-map Auto Categorize: Sundown Grocery to 🛒 Groceries",
+        "reason": "mapped payee"
+      },
+      {
+        "budget": "Atelic",
+        "id": "inv-a-001",
+        "date": "2026-01-27",
+        "amount": "-12.00",
+        "payee": "Fieldnote Hosting",
+        "category": "💻 Software",
+        "memo": "",
+        "band": "high",
+        "rule": "ynab Payee Corrections: Fieldnote Hosting to 💻 Software",
+        "reason": "mapped payee"
+      },
+      {
+        "budget": "Personal",
+        "id": "inv-p-004",
+        "date": "2026-01-30",
+        "amount": "-5.50",
+        "payee": "Little Owl Espresso",
+        "category": "🍽️ Cafés",
+        "memo": "",
+        "band": "medium",
+        "rule": "learned-rules Spend Categorization: coffee shops go to 🍽️ Cafés",
+        "reason": "a coffee shop not in the map"
+      },
+      {
+        "budget": "Atelic",
+        "id": "inv-a-002",
+        "date": "2026-01-29",
+        "amount": "-49.00",
+        "payee": "Paperline Design Tools",
+        "category": "💻 Software",
+        "memo": "",
+        "band": "medium",
+        "rule": "ynab Payee Corrections: a vendor's second invoice follows the first",
+        "reason": "same category as December's invoice"
+      },
+      {
+        "budget": "Personal",
+        "id": "inv-p-005",
+        "date": "2026-01-30",
+        "amount": "-85.00",
+        "payee": "Venmo",
+        "category": "",
+        "memo": "supper club",
+        "band": "decision",
+        "rule": "",
+        "reason": "every Venmo row is a decision"
+      },
+      {
+        "budget": "Atelic",
+        "id": "inv-a-003",
+        "date": "2026-01-31",
+        "amount": "1750.00",
+        "payee": "Pinewood Cabinetry",
+        "category": "Inflow: Ready to Assign",
+        "memo": "",
+        "band": "decision",
+        "rule": "",
+        "reason": "a new payee with no rule"
+      }
+    ],
+    "deletes": [
+      {
+        "budget": "Personal",
+        "id": "inv-p-006",
+        "date": "2026-01-28",
+        "amount": "-60.00",
+        "payee": "Venmo",
+        "reason": "the same date and amount sits on Atelic as Granite Print Shop"
+      }
+    ],
+    "trips": [
+      {
+        "memo": "🏔️ Leadville",
+        "ids": [
+          "inv-p-007",
+          "inv-p-008",
+          "inv-p-009"
+        ]
+      }
+    ]
+  },
+  "inbox": {
+    "rows": [
+      {
+        "mailbox": "personal",
+        "id": "inv-m-001",
+        "thread_id": "inv-t-001",
+        "from": "Bluebird Cleaning",
+        "subject": "Your cleaning is Thursday",
+        "date": "Sat 01-31",
+        "what": "the recurring cleaning reminder",
+        "action": "archive",
+        "labels": [
+          "🍏 Constitution/🧖 Personal Care"
+        ],
+        "star": "",
+        "band": "high",
+        "rule": "email-rules Sender Rules: Bluebird Cleaning to Personal Care, mark read, archive",
+        "link": "https://mail.google.com/mail/u/0/#inbox/invented0001"
+      },
+      {
+        "mailbox": "personal",
+        "id": "inv-m-002",
+        "thread_id": "inv-t-002",
+        "from": "Bluebird Cleaning",
+        "subject": "Thanks for the review",
+        "date": "Sun 02-01",
+        "what": "a thank you note after last week's visit",
+        "action": "archive",
+        "labels": [
+          "🍏 Constitution/🧖 Personal Care"
+        ],
+        "star": "",
+        "band": "high",
+        "rule": "email-rules Sender Rules: Bluebird Cleaning to Personal Care, mark read, archive",
+        "link": "https://mail.google.com/mail/u/0/#inbox/invented0002"
+      },
+      {
+        "mailbox": "atelic",
+        "id": "inv-m-003",
+        "thread_id": "inv-t-003",
+        "from": "Claude",
+        "subject": "2026-W05 Recruiter",
+        "date": "Mon 01-26",
+        "what": "last week's recruiter board",
+        "action": "archive",
+        "labels": [
+          "📊 Reports"
+        ],
+        "star": "",
+        "band": "high",
+        "rule": "email-rules Sender Rules: claude@atelic.me weekly report to Reports, archive",
+        "link": "https://mail.google.com/mail/u/1/#inbox/invented0004"
+      },
+      {
+        "mailbox": "personal",
+        "id": "inv-m-004",
+        "thread_id": "inv-t-004",
+        "from": "The Long Read Weekly",
+        "subject": "Seven essays on slowing down, and one on the opposite",
+        "date": "Fri 01-30",
+        "what": "a newsletter issue with nothing time bound in it",
+        "action": "archive",
+        "labels": [
+          "📰 Reading"
+        ],
+        "star": "",
+        "band": "medium",
+        "rule": "email-rules Topic Rules: newsletters go to Reading",
+        "link": "https://mail.google.com/mail/u/0/#inbox/invented0005"
+      },
+      {
+        "mailbox": "atelic",
+        "id": "inv-m-005",
+        "thread_id": "inv-t-005",
+        "from": "Fieldnote Hosting",
+        "subject": "Your January invoice",
+        "date": "Tue 01-27",
+        "what": "the monthly hosting invoice, already paid by card",
+        "action": "label",
+        "labels": [
+          "🧾 Receipts"
+        ],
+        "star": "",
+        "band": "medium",
+        "rule": "email-rules Subject Rules: invoices go to Receipts",
+        "link": "https://mail.google.com/mail/u/1/#inbox/invented0006"
+      },
+      {
+        "mailbox": "personal",
+        "id": "inv-m-006",
+        "thread_id": "inv-t-006",
+        "from": "County Assessor",
+        "subject": "Property questionnaire due February 6",
+        "date": "Thu 01-29",
+        "what": "a questionnaire about the property that needs an answer by Fri 02-06",
+        "action": "task",
+        "labels": [
+          "📑 Admin"
+        ],
+        "star": "green",
+        "band": "decision",
+        "rule": "",
+        "link": "https://mail.google.com/mail/u/0/#inbox/invented0003"
+      },
+      {
+        "mailbox": "atelic",
+        "id": "inv-m-007",
+        "thread_id": "inv-t-007",
+        "from": "Pinewood Cabinetry",
+        "subject": "Re: proposal and next steps for the showroom site",
+        "date": "Sat 01-31",
+        "what": "the owner asks whether the second phase can start in March",
+        "action": "reply",
+        "labels": [],
+        "star": "",
+        "band": "decision",
+        "rule": "",
+        "link": "https://mail.google.com/mail/u/1/#inbox/invented0007"
+      }
+    ]
+  },
+  "work": {
+    "read": "Nineteen points sit in the cycle against about 24 usable hours, so there is room for one more piece. The proposal template is the one without a shape yet.",
+    "flags": [
+      {
+        "key": "ATE-901",
+        "title": "Rebuild the proposal template",
+        "what": "a cleaner proposal for the small business sites",
+        "flag": "no estimate",
+        "default": "4 points"
+      },
+      {
+        "key": "ATE-904",
+        "title": "Audit the outreach list",
+        "what": "a pass over the list for closed and moved businesses",
+        "flag": "no load label",
+        "default": "🍃 Light"
+      }
+    ],
+    "unplaced": [
+      {
+        "key": "ATE-902",
+        "title": "Write the case study for Harbor Line Plumbing",
+        "what": "the first case study, from the finished site",
+        "points": 4,
+        "load": "🧠 Sharp"
+      },
+      {
+        "key": "ATE-905",
+        "title": "Renew the domain and the mail plan",
+        "what": "two renewals that lapse in February",
+        "points": 1,
+        "load": "🍃 Light"
+      }
+    ]
+  },
+  "calendar": {
+    "read": "The week ahead holds its skeleton, with one overlap on Thursday and one flank missing before the Saturday run.",
+    "findings": [
+      {
+        "kind": "overlap",
+        "what": "Thursday's lift at 07:00 overlaps the dentist hold that runs to 07:30",
+        "when": "Thu 07:00",
+        "default": "move the lift to 08:00"
+      },
+      {
+        "kind": "missing flank",
+        "what": "The Saturday club run at 08:00 has no transition before it",
+        "when": "Sat 07:30",
+        "default": "add a 30 minute ↔️ Transition at 07:30"
+      }
+    ]
+  },
+  "tasks": {
+    "read": "Three tasks came back from the Schedule filter: one note, one to slot, and one to defer.",
+    "rows": [
+      {
+        "id": "inv-k-001",
+        "content": "Read the long essay on attention someone sent",
+        "due": "",
+        "priority": "p4",
+        "kind": "note",
+        "default": "delete and file in Eudy",
+        "load": ""
+      },
+      {
+        "id": "inv-k-002",
+        "content": "Call the insurance agent about the renewal",
+        "due": "2026-02-03",
+        "priority": "p2",
+        "kind": "task",
+        "default": "slot",
+        "load": "⚖️ Medium"
+      },
+      {
+        "id": "inv-k-003",
+        "content": "Sort the winter gear bin",
+        "due": "2026-02-02",
+        "priority": "p4",
+        "kind": "task",
+        "default": "defer to the next planning Monday",
+        "load": "🍃 Light"
+      }
+    ]
+  },
+  "spend": {
+    "personal": {
+      "month": "2026-01",
+      "day_of_month": 30,
+      "days_in_month": 31,
+      "typical": {
+        "spent": -4012.37,
+        "pace": -3871.29,
+        "monthly_average": -4000,
+        "months": [
+          {
+            "month": "2025-10",
+            "total": -3820.55
+          },
+          {
+            "month": "2025-11",
+            "total": -4102.9
+          },
+          {
+            "month": "2025-12",
+            "total": -4076.55
+          }
+        ]
+      },
+      "outliers": [
+        {
+          "date": "2026-01-14",
+          "payee": "Clearwater Dental",
+          "amount": -1850.00,
+          "category": "🏥 Healthcare",
+          "memo": ""
+        }
+      ],
+      "trips": [
+        {
+          "memo": "🏔️ Leadville",
+          "total": -412.60,
+          "count": 3
+        }
+      ],
+      "accounts_in_error": [
+        "Front Range Checking"
+      ],
+      "rule": "Typical is every charge under $500 that is not on a trip; outliers are the rest, so one large bill never moves the pace."
+    },
+    "atelic": {
+      "month": "2026-01",
+      "day_of_month": 30,
+      "days_in_month": 31,
+      "typical": {
+        "spent": -318.4,
+        "pace": -512.9,
+        "monthly_average": -530,
+        "months": [
+          {
+            "month": "2025-10",
+            "total": -498
+          },
+          {
+            "month": "2025-11",
+            "total": -545.25
+          },
+          {
+            "month": "2025-12",
+            "total": -546.75
+          }
+        ]
+      },
+      "outliers": [],
+      "trips": [],
+      "accounts_in_error": [],
+      "rule": "Typical is every charge under $500 that is not on a trip; outliers are the rest, so one large bill never moves the pace."
+    }
+  },
+  "applied": {
+    "writes": false,
+    "ynab": [],
+    "gmail": [],
+    "dropped": [
+      {
+        "kind": "ynab",
+        "id": "inv-p-003",
+        "reason": "category 🛒 Grocery not found in the Personal budget"
+      }
+    ]
+  },
+  "pulls": [
+    {
+      "name": "ynab",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "name": "inbox",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "name": "linear",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "name": "calendar",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "name": "todoist",
+      "ok": false,
+      "note": "the read timed out"
+    }
+  ]
+}

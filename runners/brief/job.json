@@ -1,0 +1,45 @@
+{
+  "project": "atelic",
+  "region": "us-central1",
+  "job": {
+    "name": "brief",
+    "service_account": "retro-runner@atelic.iam.gserviceaccount.com",
+    "execution_environment": "gen2",
+    "cpu": "1",
+    "memory": "1Gi",
+    "timeout_seconds": 7200,
+    "max_retries": 0,
+    "tasks": 1,
+    "env": {
+      "BRIEF_WRITE": "0",
+      "REPORT_RECIPIENT": "@recipient",
+      "TZ": "America/Denver"
+    },
+    "secrets": {
+      "ATELIC_DEPLOY_KEY": "projects/997457493360/secrets/github-deploy-key-atelic:latest",
+      "CLAUDE_CODE_OAUTH_TOKEN": "projects/997457493360/secrets/claude-code-oauth:latest",
+      "EUDY_DEPLOY_KEY": "projects/211248833971/secrets/github-deploy-key-eudy:latest",
+      "GWS_OAUTH_TOKEN_ATELIC_JSON": "projects/997457493360/secrets/gws-oauth-token-atelic:latest",
+      "GWS_OAUTH_TOKEN_PERSONAL_JSON": "projects/211248833971/secrets/gws-oauth-token-personal:latest",
+      "HUBSPOT_SERVICE_KEY": "projects/997457493360/secrets/hubspot-service-key-atelic:latest",
+      "LINEAR_API_KEY": "projects/997457493360/secrets/linear-cli-atelic:latest",
+      "RESEND_API_KEY": "projects/997457493360/secrets/resend-api-key:latest",
+      "STRAVA_CLIENT_ID": "projects/211248833971/secrets/strava-client-id:latest",
+      "STRAVA_CLIENT_SECRET": "projects/211248833971/secrets/strava-client-secret:latest",
+      "STRAVA_REFRESH_TOKEN": "projects/211248833971/secrets/strava-refresh-token:latest",
+      "TODOIST_API_TOKEN": "projects/211248833971/secrets/todoist-api-token:latest",
+      "YNAB_API_KEY": "projects/211248833971/secrets/ynab-token:latest"
+    }
+  },
+  "schedule": {
+    "name": "brief",
+    "location": "us-central1",
+    "cron": "30 5 * * 1",
+    "time_zone": "America/Denver",
+    "attempt_deadline": "180s",
+    "state": "ENABLED",
+    "http_method": "POST",
+    "uri": "https://us-central1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/897452392033/jobs/brief:run",
+    "oauth_service_account": "retro-runner@atelic.iam.gserviceaccount.com"
+  }
+}

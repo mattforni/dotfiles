@@ -93,6 +93,8 @@ put .claude/agents/third.md
 # with `read`, which trims both, so that line ships the agent and has to match.
 printf '# what beta runs\n\nbeta\n  shared \n' > "$FAKE/runners/beta/agents"
 put runners/alpha/mounts
+put runners/alpha/job.json
+put runners/alpha/tst/alpha.test.mjs
 put runners/localonly/entrypoint.sh
 put runners/localonly/prompt.md
 put runners/lib/runner.sh
@@ -153,7 +155,7 @@ change "a name past ASCII reaches its runner"    "gamma"      "runners/gamma/caf
 change "a name with a space reaches its runner"  "beta"       "runners/beta/two words.jq"
 
 echo "A runner's page reaches only that runner"
-# A bundle is built around one page, so the retro's page is in the retro's
+# A bundle is built around one page, so the brief's page is in the brief's
 # image and no other. Promoting every runner for it would be three builds
 # where one image changed.
 change "a page reaches the runner it is named for" "alpha"     runners/email/alpha.tsx
@@ -203,6 +205,7 @@ expect "and with a shared library file, only the runners that stay" "alpha beta 
 echo "Paths that never ship reach nothing"
 change "a runner's README"                       "" runners/alpha/README.md
 change "a runner's mounts"                       "" runners/alpha/mounts
+change "a runner's job.json and its tests"      "" runners/alpha/job.json runners/alpha/tst/alpha.test.mjs
 change "a runner's out, .build and .env.local"   "" runners/alpha/out/email.html runners/alpha/.build/Dockerfile runners/alpha/.env.local
 change "a name past ASCII under out"             "" "runners/alpha/out/café.html"
 change "the renderer's tests"                    "" runners/email/tst/render.test.mjs

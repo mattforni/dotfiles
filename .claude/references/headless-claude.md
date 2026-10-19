@@ -235,7 +235,7 @@ whether it is on this Mac or in a container:
   arrives from Secret Manager.
 - `REPORT_RECIPIENT`. Locally from `~/.config/headless-report/recipient-<name>`
   if the runner has one, otherwise the shared `recipient`. Who a runner reports
-  to is a property of the runner and not of the machine: the retro is personal
+  to is a property of the runner and not of the machine: the brief is personal
   and goes to the Gmail account, the outreach roster is Atelic work and goes to
   `matt@atelic.me`. The addresses live in `~/.config` rather than the repo
   because homebase is public.
@@ -244,7 +244,7 @@ whether it is on this Mac or in a container:
 Output:
 
 - **A weekly runner subjects its email `YYYY-Www <Name>`**, which is what both
-  live runners do: `2026-W36 Retro` and `2026-W36 Pipeline`. A weekly briefing
+  live runners do: `2026-W36 Brief` and `2026-W36 Pipeline`. A weekly briefing
   is read on the morning it lands, so the week is the handle worth carrying and
   the send date is noise.
 - **A daily status routine uses `[<Routine>] YYYY-MM-DD` instead**, and the

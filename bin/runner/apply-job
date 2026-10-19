@@ -1,0 +1,269 @@
+#!/usr/bin/env bash
+# Make a runner's Cloud Run job and its Cloud Scheduler entry match the
+# runner's job.json.
+#
+# Usage: apply-job <runner-name-or-path> [--apply] [--create <image>]
+#
+#   (no flag)   read the live job and the live schedule, print how each
+#               differs from job.json, and change nothing. Exit 0 when they
+#               match, 1 when they differ.
+#   --apply     make the cloud match the file, then read it back and fail if
+#               it still differs.
+#   --create    the job and the schedule do not exist yet: create the job
+#               from <image> (any image the registry holds; the next merge to
+#               main replaces it through promote) and the schedule, then
+#               apply. Only with --apply.
+#
+# job.json is the definition and the cloud is made to match it, so a change
+# to when a job fires, what it runs as, or which secret feeds which variable
+# is an edit to that file, reviewed like any other, and then this command by
+# hand. The shape of the file, and the first runner to carry one, is the
+# plumber's in the Atelic repository (ATE-656); this is that script made
+# generic so every runner's job is stated in one place and applied by one
+# command (ATE-674, 2026-10-19).
+#
+# Run by a person, as the operator account, and never by a workflow: it
+# changes what production runs as and reads, which takes Forni's yes each
+# time. It refuses any other active gcloud account, in every mode, because a
+# read as the wrong identity is a wrong answer about what is live.
+#
+# What it never touches is the image, except at --create. A merge to main
+# builds the image and points the job at it (.github/workflows/promote.yml,
+# through bin/runner/promote). A secret here is a reference (which secret,
+# which version), never a value.
+set -euo pipefail
+
+LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+[[ -r "$LIB" ]] || { echo "cannot read $LIB" >&2; exit 1; }
+# shellcheck source=lib.sh
+. "$LIB"
+
+OPERATOR="${RUNNER_OPERATOR:-matt@atelic.me}"
+
+name=""; apply=0; create=""
+while (( $# )); do
+    case "$1" in
+        --apply)   apply=1; shift ;;
+        --create)  create="${2:-}"; [[ -n "$create" ]] || die "--create needs an image"; shift 2 ;;
+        -h|--help) sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)        die "unknown option $1" ;;
+        *)         [[ -z "$name" ]] || die "unexpected argument $1"; name="$1"; shift ;;
+    esac
+done
+[[ -n "$name" ]] || die "usage: ${0##*/} <runner-name-or-path> [--apply] [--create <image>]"
+[[ -z "$create" || "$apply" == 1 ]] || die "--create only makes sense with --apply"
+
+dir="$(runner_dir "$name")"
+FILE="$dir/job.json"
+
+command -v gcloud >/dev/null 2>&1 || die "gcloud not found on PATH"
+command -v jq >/dev/null 2>&1 || die "jq not found on PATH"
+[[ -r "$FILE" ]] || die "cannot read $FILE; a runner states its job there"
+jq -e . "$FILE" >/dev/null 2>&1 || die "$FILE is not JSON"
+
+account="$(gcloud config get-value account 2>/dev/null || true)"
+[[ "$account" == "$OPERATOR" ]] \
+    || die "the active gcloud account is '${account:-none}', and this runs as $OPERATOR only. Switch with: gcloud config set account $OPERATOR"
+
+field() { jq -er "$1" "$FILE" 2>/dev/null || die "job.json has no $1"; }
+
+# Every key this reads, checked once before anything is read or changed. A
+# field read inside a gcloud flag runs in a subshell, where its die ends the
+# subshell and not this script, so a missing key would reach gcloud as an
+# empty flag; and a missing env or secrets map would replace the job's whole
+# list with nothing.
+for key in .project .region .job.name .job.service_account .job.execution_environment \
+        .job.cpu .job.memory .job.timeout_seconds .job.max_retries .job.tasks \
+        .schedule.name .schedule.location .schedule.cron .schedule.time_zone \
+        .schedule.attempt_deadline .schedule.state .schedule.http_method .schedule.uri \
+        .schedule.oauth_service_account; do
+    jq -e "$key != null and $key != \"\"" "$FILE" >/dev/null 2>&1 || die "job.json has no $key; nothing was read or changed"
+done
+jq -e '(.job.env | type) == "object"' "$FILE" >/dev/null 2>&1 \
+    || die "job.json has no .job.env map; nothing was read or changed"
+jq -e '(.job.secrets | type) == "object" and (.job.secrets | length) > 0' "$FILE" >/dev/null 2>&1 \
+    || die "job.json has no .job.secrets map, or an empty one, which would strip every secret from the job; nothing was read or changed"
+
+# A value of the form @<file> in the env map is read from
+# ~/.config/headless-report/<file> on this machine, trimmed, before anything
+# is compared or applied: homebase is public, and who a runner reports to
+# lives in ~/.config and never in the repo (runners/README.md). The resolved
+# copy is what the rest of this script reads; the tracked file keeps the
+# placeholder.
+resolved="$(mktemp)"
+jq '.' "$FILE" > "$resolved"
+while IFS=$'\t' read -r key value; do
+    [[ "$value" == @* ]] || continue
+    path="$HOME/.config/headless-report/${value#@}"
+    [[ -s "$path" ]] || die "job.json names $key as $value, and $path is missing or empty on this machine"
+    actual="$(grep -v '^#' "$path" | grep -m1 . | tr -d '[:space:]')"
+    jq --arg k "$key" --arg v "$actual" '.job.env[$k] = $v' "$resolved" > "$resolved.next" && mv "$resolved.next" "$resolved"
+done < <(jq -r '.job.env | to_entries[] | "\(.key)\t\(.value)"' "$FILE")
+FILE="$resolved"
+
+project="$(field .project)"
+region="$(field .region)"
+job="$(field .job.name)"
+schedule="$(field .schedule.name)"
+location="$(field .schedule.location)"
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work" "$resolved"' EXIT
+
+# The pairs gcloud takes, joined on a delimiter it is told about, since a
+# value may hold a comma; one that held the delimiter itself would be split,
+# so it is refused.
+delim=";;"
+pairs() {
+    jq -e --arg d "$delim" '[.job.env[], .job.secrets[]] | any(contains($d))' "$FILE" >/dev/null \
+        && die "a value in job.json holds '$delim', which this uses to separate pairs; nothing was changed"
+    env_pairs="$(jq -r --arg d "$delim" '.job.env | to_entries | map("\(.key)=\(.value)") | join($d)' "$FILE")"
+    secret_pairs="$(jq -r --arg d "$delim" '.job.secrets | to_entries | map("\(.key)=\(.value)") | join($d)' "$FILE")"
+}
+
+# The live job in the file's own shape, so the two can be held side by side.
+# Cloud Run names a secret from another project by an alias it mints and
+# keeps the real name in an annotation on the template, so the reference is
+# put back together here: projects/<number>/secrets/<name>:<version>.
+live_job() {
+    gcloud run jobs describe "$job" --project="$project" --region="$region" --format=json \
+        | jq -S '
+            .spec.template as $t
+            | ($t.metadata.annotations["run.googleapis.com/secrets"] // ""
+                | split(",") | map(select(length > 0) | index(":") as $i | {key: .[:$i], value: .[$i + 1:]}) | from_entries) as $alias
+            | $t.spec.template.spec as $s
+            | $s.containers[0] as $c
+            | {
+                name: .metadata.name,
+                service_account: $s.serviceAccountName,
+                execution_environment: $t.metadata.annotations["run.googleapis.com/execution-environment"],
+                cpu: $c.resources.limits.cpu,
+                memory: $c.resources.limits.memory,
+                timeout_seconds: ($s.timeoutSeconds | if . == null then null else tonumber end),
+                max_retries: ($s.maxRetries // 0),
+                tasks: $t.spec.taskCount,
+                env: ([$c.env[]? | select(has("value")) | {key: .name, value: .value}] | from_entries),
+                secrets: ([$c.env[]? | select(.valueFrom.secretKeyRef != null) | .valueFrom.secretKeyRef as $r
+                    | {key: .name, value: "\($alias[$r.name] // $r.name):\($r.key)"}] | from_entries)
+            }'
+}
+
+live_schedule() {
+    gcloud scheduler jobs describe "$schedule" --project="$project" --location="$location" --format=json \
+        | jq -S '{
+            name: (.name | split("/") | last),
+            location: (.name | split("/") | .[3]),
+            cron: .schedule,
+            time_zone: .timeZone,
+            attempt_deadline: .attemptDeadline,
+            state: .state,
+            http_method: .httpTarget.httpMethod,
+            uri: .httpTarget.uri,
+            oauth_service_account: .httpTarget.oauthToken.serviceAccountEmail
+        }'
+}
+
+# Usage: compare <what> <live file> <key in job.json>
+# Prints the difference, live against the file, and returns 1 when there is one.
+compare() {
+    local what="$1" live="$2" key="$3"
+    jq -S "$key" "$FILE" > "$work/want.json"
+    if diff -u --label "live $what" --label "job.json" "$live" "$work/want.json" > "$work/diff.txt"; then
+        echo "$what: matches job.json"
+        return 0
+    fi
+    echo "$what: differs. A line with - is what is live, a line with + is what job.json says:"
+    sed 's/^/    /' "$work/diff.txt"
+    return 1
+}
+
+read_live() {
+    live_job > "$work/job.json" || die "could not read the Cloud Run job $job in $project/$region; pass --create <image> with --apply to make it"
+    live_schedule > "$work/schedule.json" || die "could not read the Cloud Scheduler job $schedule in $project/$location; pass --create <image> with --apply to make it"
+}
+
+if [[ -n "$create" ]]; then
+    pairs
+    if gcloud run jobs describe "$job" --project="$project" --region="$region" >/dev/null 2>&1; then
+        echo "the Cloud Run job $job already exists; leaving it to the apply below"
+    else
+        echo "creating the Cloud Run job $job from $create"
+        gcloud run jobs create "$job" --project="$project" --region="$region" --image="$create" \
+            --service-account="$(field .job.service_account)" \
+            --execution-environment="$(field .job.execution_environment)" \
+            --cpu="$(field .job.cpu)" --memory="$(field .job.memory)" \
+            --task-timeout="$(field .job.timeout_seconds)s" \
+            --max-retries="$(jq -r '.job.max_retries' "$FILE")" \
+            --tasks="$(field .job.tasks)" \
+            --set-env-vars="^$delim^$env_pairs" \
+            --set-secrets="^$delim^$secret_pairs"
+    fi
+    if gcloud scheduler jobs describe "$schedule" --project="$project" --location="$location" >/dev/null 2>&1; then
+        echo "the Cloud Scheduler job $schedule already exists; leaving it to the apply below"
+    else
+        echo "creating the Cloud Scheduler job $schedule"
+        gcloud scheduler jobs create http "$schedule" --project="$project" --location="$location" \
+            --schedule="$(field .schedule.cron)" --time-zone="$(field .schedule.time_zone)" \
+            --attempt-deadline="$(field .schedule.attempt_deadline)" \
+            --http-method="$(field .schedule.http_method)" --uri="$(field .schedule.uri)" \
+            --oauth-service-account-email="$(field .schedule.oauth_service_account)"
+    fi
+fi
+
+read_live
+job_differs=0; schedule_differs=0
+compare "Cloud Run job $job" "$work/job.json" .job || job_differs=1
+compare "Cloud Scheduler job $schedule" "$work/schedule.json" .schedule || schedule_differs=1
+
+if (( ! job_differs && ! schedule_differs )); then
+    echo "no difference: the cloud matches job.json"
+    exit 0
+fi
+if (( ! apply )); then
+    echo "nothing was changed. Run '${0##*/} $name --apply' as $OPERATOR to make the cloud match the file."
+    exit 1
+fi
+
+if (( job_differs )); then
+    pairs
+    echo "updating the Cloud Run job $job (its image is left as it is)"
+    gcloud run jobs update "$job" --project="$project" --region="$region" \
+        --service-account="$(field .job.service_account)" \
+        --execution-environment="$(field .job.execution_environment)" \
+        --cpu="$(field .job.cpu)" --memory="$(field .job.memory)" \
+        --task-timeout="$(field .job.timeout_seconds)s" \
+        --max-retries="$(jq -r '.job.max_retries' "$FILE")" \
+        --tasks="$(field .job.tasks)" \
+        --set-env-vars="^$delim^$env_pairs" \
+        --set-secrets="^$delim^$secret_pairs"
+fi
+
+if (( schedule_differs )); then
+    echo "updating the Cloud Scheduler job $schedule"
+    gcloud scheduler jobs update http "$schedule" --project="$project" --location="$location" \
+        --schedule="$(field .schedule.cron)" --time-zone="$(field .schedule.time_zone)" \
+        --attempt-deadline="$(field .schedule.attempt_deadline)" \
+        --http-method="$(field .schedule.http_method)" --uri="$(field .schedule.uri)" \
+        --oauth-service-account-email="$(field .schedule.oauth_service_account)"
+    # Paused or running is a command of its own, and only when it is the
+    # thing that differs.
+    want_state="$(field .schedule.state)"
+    have_state="$(jq -r '.state' "$work/schedule.json")"
+    if [[ "$want_state" != "$have_state" ]]; then
+        case "$want_state" in
+            ENABLED) gcloud scheduler jobs resume "$schedule" --project="$project" --location="$location" ;;
+            PAUSED)  gcloud scheduler jobs pause "$schedule" --project="$project" --location="$location" ;;
+            *)       die "job.json asks for the schedule state '$want_state'; ENABLED or PAUSED" ;;
+        esac
+    fi
+fi
+
+# Read back, because an update that was accepted is not the same as a cloud
+# that matches.
+echo "reading it back"
+read_live
+still=0
+compare "Cloud Run job $job" "$work/job.json" .job || still=1
+compare "Cloud Scheduler job $schedule" "$work/schedule.json" .schedule || still=1
+(( ! still )) || die "the cloud still differs from job.json after the update; read the difference above"
+echo "applied: the cloud matches job.json"

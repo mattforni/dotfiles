@@ -354,8 +354,25 @@ runner_local_credentials() {
         [[ -n "$PINOLE_API_TOKEN" ]] && export PINOLE_API_TOKEN || unset PINOLE_API_TOKEN
     fi
 
+    # The YNAB and Todoist tokens the brief runner's planning pulls read, under
+    # the Keychain services the ynab and td CLIs keep them in (the vault secret
+    # of each carries the same name). Exported for the same reason as above: a
+    # container has no Keychain. Only for the brief: a credential a runner does
+    # not need never enters its container, since a runner that reads untrusted
+    # pages (the recruiter) and holds curl is one injection from sending it out.
+    if [[ "$runner" == "brief" ]]; then
+        if [[ -z "${YNAB_API_KEY:-}" ]]; then
+            YNAB_API_KEY="$(security find-generic-password -s ynab-token -w 2>/dev/null)" || true
+            [[ -n "$YNAB_API_KEY" ]] && export YNAB_API_KEY || unset YNAB_API_KEY
+        fi
+        if [[ -z "${TODOIST_API_TOKEN:-}" ]]; then
+            TODOIST_API_TOKEN="$(security find-generic-password -s todoist-api-token -w 2>/dev/null)" || true
+            [[ -n "$TODOIST_API_TOKEN" ]] && export TODOIST_API_TOKEN || unset TODOIST_API_TOKEN
+        fi
+    fi
+
     # Who a runner reports to is a property of the runner, not of the machine:
-    # the retro is personal and the outreach roster is Atelic work, and they go
+    # the brief is personal and the outreach roster is Atelic work, and they go
     # to different mailboxes. So a runner may name its own recipient in
     # recipient-<name>, and recipient is the shared fallback for the rest.
     #
@@ -393,6 +410,11 @@ runner_env_names() {
     {
         [[ -r "$envfile" ]] && sed -n "s/^export \\([A-Za-z_][A-Za-z0-9_]*\\)=.*/\\1/p" "$envfile"
         printf '%s\n' CLAUDE_CODE_OAUTH_TOKEN RESEND_API_KEY PINOLE_API_TOKEN REPORT_RECIPIENT REPORT_SENDER TZ RUNNER_MODEL
+        # The planning credentials and flags cross only into the brief's
+        # container; every other runner's names come from its own .env.local.
+        if [[ "$(basename "$1")" == "brief" ]]; then
+            printf '%s\n' YNAB_API_KEY TODOIST_API_TOKEN LINEAR_API_KEY GWS_OAUTH_TOKEN_PERSONAL_JSON GWS_OAUTH_TOKEN_ATELIC_JSON BRIEF_WRITE PLANNING_PULLS
+        fi
     } | awk 'NF && !seen[$0]++'
 }
 
@@ -498,7 +520,7 @@ runner_execute() {
 # and promotes nothing. `agents`, `context` and `mounts` are the manifests
 # that drive the staging and never ship themselves, though a change to
 # `agents` or `context` changes what does, and changed knows that.
-RUNNER_CONTEXT_EXCLUDES="out .build .env.local agents context mounts"
+RUNNER_CONTEXT_EXCLUDES="out .build .env.local agents context mounts tst job.json"
 
 # Usage: runner_manifest_lines < <manifest>
 # A manifest's lines: blank lines and comments dropped, and the whitespace
@@ -745,7 +767,7 @@ runner_execute_container() {
 
     # The image has no gcloud and no metadata server, so a Strava rotation
     # inside it would have nowhere to write the new refresh token back and the
-    # next cloud run could not refresh (vault_write_back in the retro's
+    # next cloud run could not refresh (vault_write_back in the brief's
     # entrypoint). A run that pulls gets this operator's own access token,
     # minted here, for exactly that one call; a --reuse run never refreshes.
     if (( ! reuse )) && [[ -z "${VAULT_ACCESS_TOKEN:-}" ]]; then

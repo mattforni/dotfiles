@@ -57,6 +57,12 @@ jobs:
       - name: Test
         run: npm test
 
+      # The brief runner's pulls: the spend split, the calendar lint and the
+      # shaping of each pull, on invented rows. They import the scripts beside
+      # the entrypoint and need no package, so node alone runs them.
+      - name: Test the brief runner's pulls
+        run: node --test ../brief/tst/*.test.mjs
+
       # A runner that lives in another repository brings its page with it.
       # The Shell job runs this same file for the staging and stops short of
       # the bundle, since it has no packages; here they are installed, so the

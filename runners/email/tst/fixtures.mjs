@@ -29,8 +29,8 @@ export const CONTEXT = {
 
 /** Every fixture, as the runner it belongs to and the file it lives in. */
 export const CASES = [
-	{ runner: "retro", fixture: "retro" },
-	{ runner: "retro", fixture: "retro-empty" },
+	{ runner: "brief", fixture: "brief" },
+	{ runner: "brief", fixture: "brief-empty" },
 	{ runner: "recruiter", fixture: "recruiter" },
 	{ runner: "recruiter", fixture: "recruiter-empty" },
 ];

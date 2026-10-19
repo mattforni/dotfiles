@@ -40,7 +40,7 @@ for (const { runner, fixture } of CASES) {
  * name straight into its reason. So the fixtures now carry long values, and
  * this holds every line to the 68 columns prose wraps at. The one excuse is a
  * line whose overflow is a single unbreakable last token (a url): take that
- * token away and the rest has to fit. The retro is exempt on purpose: its twin
+ * token away and the rest has to fit. The brief is exempt on purpose: its twin
  * is a byte for byte port of the jq one, wide session tables included.
  */
 const TEXT_WIDTH = 68;
@@ -48,7 +48,7 @@ const columns = (line) => [...line].length;
 const withoutLastToken = (line) => line.replace(/\S+$/, "");
 
 for (const { runner, fixture } of CASES) {
-	if (runner === "retro") continue;
+	if (runner === "brief") continue;
 	test(`${fixture} keeps its text inside ${TEXT_WIDTH} columns`, () => {
 		const lines = render(runner, "text", fixture).stdout.split("\n");
 		const wide = lines.filter(
@@ -81,7 +81,7 @@ test("a long company name never runs into its reason", () => {
 });
 
 test("an unknown runner fails loudly", () => {
-	const result = render("nosuchrunner", "html", "retro", "retro");
+	const result = render("nosuchrunner", "html", "brief", "brief");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /unknown runner/);
 	assert.equal(result.stdout, "");
@@ -93,9 +93,9 @@ test("an unknown runner fails loudly", () => {
  * it has to read exactly like a name nobody has: one line, exit one, no page.
  */
 test("a bundle asked for another runner's page fails the way an unknown runner does", () => {
-	const result = render("recruiter", "html", "recruiter", "retro");
+	const result = render("recruiter", "html", "recruiter", "brief");
 	assert.equal(result.status, 1);
-	assert.equal(result.stderr, 'render: unknown runner "recruiter"; one of retro, failure\n');
+	assert.equal(result.stderr, 'render: unknown runner "recruiter"; one of brief, failure\n');
 	assert.equal(result.stdout, "");
 });
 
@@ -113,32 +113,32 @@ test("every bundle carries the failure page", () => {
 });
 
 test("an unknown format fails loudly", () => {
-	const result = render("retro", "markdown", "retro");
+	const result = render("brief", "markdown", "brief");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /unknown format/);
 });
 
 test("a draft that is not JSON fails loudly", () => {
-	const result = renderRaw("retro", "html", "the agent wrote prose again");
+	const result = renderRaw("brief", "html", "the agent wrote prose again");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /not JSON/);
 	assert.equal(result.stdout, "");
 });
 
 test("a render that throws fails loudly rather than writing half a page", () => {
-	const result = renderRaw("retro", "html", '{"strava": 7}');
+	const result = renderRaw("brief", "html", '{"strava": 7}');
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /render threw/);
 	assert.equal(result.stdout, "");
 });
 
 /*
- * The retro prints the stage the pull put on each row. A draft from before
+ * The brief prints the stage the pull put on each row. A draft from before
  * the pull carried one still renders, with every company on the page under
  * No Stage and the week's stages at zero, rather than throwing or guessing.
  */
-test("a retro row with no stage is listed under No Stage, never dropped", () => {
-	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
+test("a brief row with no stage is listed under No Stage, never dropped", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
 	const tables = ["open_leads", "opportunities", "closed_leads"];
 	const companies = [];
 	for (const table of tables) {
@@ -150,7 +150,7 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
 	draft.atelic.open_leads[0].funnel = "A Stage Nobody Knows";
 	assert.equal(companies.length, 11);
 
-	const text = renderRaw("retro", "text", JSON.stringify(draft));
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
 	assert.equal(text.status, 0, text.stderr);
 	assert.ok(text.stdout.includes("\nNo Stage · 11\n"), "the group is headed with its count");
 	assert.match(text.stdout, /\n  No stage  11\n/);
@@ -158,7 +158,7 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
 	const listed = text.stdout.slice(text.stdout.indexOf("\nNo Stage · 11\n"));
 	for (const company of companies) assert.ok(listed.includes(company), `${company} is listed`);
 
-	const html = renderRaw("retro", "html", JSON.stringify(draft));
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
 	assert.equal(html.status, 0, html.stderr);
 	assert.ok(html.stdout.includes("No Stage · 11"));
 	for (const company of companies) assert.ok(html.stdout.includes(company), `${company} is on the page`);
@@ -169,10 +169,10 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
  * the page keeps no list of its own. A week that names them in another order
  * prints them in that order, and a stage the week does not name is no stage.
  */
-test("the retro's funnel reads its stages and their order from the week", () => {
-	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
+test("the brief's funnel reads its stages and their order from the week", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
 	draft.atelic.stages = ["Closed", "Customer", "Opportunity", "SQL", "MQL"];
-	const text = renderRaw("retro", "text", JSON.stringify(draft));
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
 	assert.equal(text.status, 0, text.stderr);
 	const funnel = text.stdout.slice(text.stdout.indexOf("\nThe Funnel\n"));
 	const order = ["Closed", "Customer", "Oppty", "SQL", "MQL", "No stage"].map((label) =>
@@ -185,6 +185,98 @@ test("the retro's funnel reads its stages and their order from the week", () => 
 	assert.deepEqual([...order].sort((a, b) => a - b), order, "in the week's order");
 	assert.match(funnel, /\n {2}No stage {2}2\n/, "the two Lead rows fall to No stage");
 	assert.ok(!/\n {2}Lead {6}/.test(funnel), "a stage the week does not name is not printed");
+});
+
+/*
+ * The planning pass. The board is what Forni answers by number, so its
+ * numbers are positions, one to n in the order the model ranked, whatever
+ * the draft's own n says.
+ */
+const sectionOf = (text, name) => {
+	const start = text.indexOf(`\n${name.toUpperCase()}\n`);
+	assert.ok(start >= 0, `${name} is on the page`);
+	const next = text.indexOf("\n================================================================\n", start + name.length + 70);
+	return text.slice(start, next < 0 ? undefined : next);
+};
+
+test("the board numbers its rows in order", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	for (const row of draft.board) row.n = 9;
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const board = sectionOf(text.stdout, "Needed From You");
+	const at = draft.board.map((row, index) => board.indexOf(`  ${index + 1}. ${row.item.split(" ").slice(0, 3).join(" ")}`));
+	assert.ok(at.every((position) => position >= 0), "every entry is numbered by its position");
+	assert.deepEqual([...at].sort((a, b) => a - b), at, "in the order the draft ranked them");
+	assert.ok(!board.includes("  9. "), "the draft's own n is not what is printed");
+
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	const order = draft.board.map((_, index) => html.stdout.indexOf(`>${index + 1}. `));
+	assert.ok(order.every((position) => position >= 0));
+	assert.deepEqual([...order].sort((a, b) => a - b), order);
+});
+
+test("a high money row is tallied under Handled and a medium one listed under Spot Check", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	draft.money.rows = [
+		{ budget: "Personal", id: "t-1", date: "2026-01-27", amount: "-9.00", payee: "Tally Only Bakery", category: "🥐 Bakery Test", memo: "", band: "high", rule: "an invented rule", reason: "" },
+		{ budget: "Personal", id: "t-2", date: "2026-01-28", amount: "-11.00", payee: "Spot Check Diner", category: "🍽️ Diner Test", memo: "", band: "medium", rule: "an invented family", reason: "" },
+	];
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const money = sectionOf(text.stdout, "Money");
+	const handled = money.slice(money.indexOf("\nHandled · "), money.indexOf("\nSpot Check · "));
+	const spot = money.slice(money.indexOf("\nSpot Check · "), money.indexOf("\nDecisions · "));
+	assert.match(handled, /🥐 Bakery Test +1 +\$9\.00/, "the high row is counted under its category");
+	assert.ok(!handled.includes("Spot Check Diner"), "the medium row is not tallied");
+	assert.ok(spot.includes("Spot Check Diner"), "the medium row is listed for a spot check");
+	assert.ok(!spot.includes("Tally Only Bakery"), "the high row is not");
+	assert.ok(money.includes("\nHandled · Proposed, Writes Were Off\n"), "writes off reads as proposed");
+
+	draft.applied.writes = true;
+	const on = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.ok(sectionOf(on.stdout, "Money").includes("\nHandled · Applied\n"), "writes on reads as applied");
+});
+
+test("a pull that was not read opens its section with a notice and is listed in This Run", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	draft.pulls = draft.pulls.map((pull) =>
+		pull.name === "linear" ? { ...pull, ok: false, note: "the cycle read failed" } : { ...pull, ok: true, note: "" },
+	);
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	const work = sectionOf(text.stdout, "Work");
+	assert.ok(work.includes("\n  Not read this run: the cycle read failed\n"), "the notice opens Work");
+	assert.ok(work.indexOf("Not read this run") < work.indexOf("The Read"), "before the read");
+	assert.ok(!sectionOf(text.stdout, "Tasks").includes("Not read this run"), "and no other section");
+	const run = sectionOf(text.stdout, "This Run");
+	assert.ok(run.includes("\nNot Read · 1\n  linear\n    the cycle read failed"), "This Run names it");
+
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	assert.ok(html.stdout.includes(">Not read this run: the cycle read failed<"));
+});
+
+test("a planning half that did not validate is a notice in every section and on the board, never an all clear", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
+	draft.board = [];
+	draft.money = { read: "", rows: [], deletes: [], trips: [] };
+	draft.inbox = { rows: [] };
+	draft.work = { read: "", flags: [], unplaced: [] };
+	draft.calendar = { read: "", findings: [] };
+	draft.tasks = { read: "", rows: [] };
+	draft.pulls = [{ name: "planning", ok: false, note: "the planning half of the answer did not validate" }];
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
+	assert.equal(text.status, 0, text.stderr);
+	assert.ok(!text.stdout.includes("Nothing needs you this week"), "no all clear on the board");
+	assert.ok(sectionOf(text.stdout, "Needed From You").includes("The planning half was not read this run"), "the board says so");
+	for (const name of ["Money", "Inbox", "Work", "Calendar", "Tasks"]) {
+		assert.ok(sectionOf(text.stdout, name).includes("Not read this run"), `${name} opens on the notice`);
+	}
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
+	assert.equal(html.status, 0, html.stderr);
+	assert.ok(!html.stdout.includes("Nothing needs you this week"));
 });
 
 test("the parity canonicalizer ignores what only the markup differs on", () => {

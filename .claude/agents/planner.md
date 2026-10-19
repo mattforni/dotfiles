@@ -59,7 +59,7 @@ Read these before pulling anything; they override your judgment.
    `(Domino OR "Illegal Pete" OR DoorDash OR Grubhub OR "Uber Eats" OR Postmates)`
    bounded by the week (Gmail's `before:` is exclusive, so bound with the
    Monday after the week; confirm each hit is a real order). Otherwise the
-   `YYYY-Www Retro` email already carries both and you skip them.
+   `YYYY-Www Brief` email already carries both and you skip them.
 
 Return the pulls compactly: counts, one line per lint finding, one line
 per task (id, title, due, priority, labels, project), the container list,

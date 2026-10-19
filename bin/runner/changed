@@ -31,7 +31,7 @@
 # runners/lib/ or runners/email/ is never an answer about a runner there.
 #
 # What an entrypoint reads from another repository at run time is in no image
-# and so in no rule here: the retro runs the funnel rules from a clone of the
+# and so in no rule here: the brief runs the funnel rules from a clone of the
 # repository that holds them, so a change there is live on its next run and
 # promotes nothing.
 #

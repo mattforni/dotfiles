@@ -312,7 +312,7 @@ else
   same "and it renders through this repository's helpers" "from the first directory 2026-W38" \
     "$(node "$bundle" "$NAME" text "${WEEK[@]}" <<< '{}' 2>&1)"
   check "the bundle carries the failure page" bash -c "node '$bundle' failure html --title T --reason R <<< 'tail' | grep -q '</html>'"
-  check "and no page but its own" bash -c "! node '$bundle' retro text ${WEEK[*]} <<< '{}'"
+  check "and no page but its own" bash -c "! node '$bundle' brief text ${WEEK[*]} <<< '{}'"
   before="$(stat -f %m "$bundle" 2>/dev/null || stat -c %Y "$bundle")"
   runner_email_bundle "$RUNNER" >/dev/null 2>&1
   same "a second ask reuses a fresh bundle" "$before" "$(stat -f %m "$bundle" 2>/dev/null || stat -c %Y "$bundle")"
