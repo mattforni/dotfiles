@@ -138,8 +138,8 @@ The money half of the retro, deferred past the intention only because it needs t
 Present the treasurer's weekly read as one message, in this order:
 
 - **Connections in error** first, by account name, with the note that every number is a floor until the connection is repaired in the YNAB app. None in error is one FYI line.
-- **Month to date against the run rate**: personal everyday and Atelic, each as spent so far against the prorated rate, trips named beside it.
-- **Missing income** and **odd spending**, one line each, only when there is some.
+- **Money goes in tables, in Forni's words.** Say the budget, the month, and the pace; never "spend read" or any other skill phrase. One table of typical spend against the prorated pace for Personal and Atelic, with the mortgage and the HOA inside the typical figure. A second table of outliers: big one offs such as a surgery, and trips named beside them, so the typical line reads clean. State what the pace is (the three month average prorated to today's date) in one plain sentence under the table.
+- **Missing income** and **odd spending** appear only when there is some, one line each. A week with none says nothing about them.
 - **The groom**: Personal, then Atelic, each as the auto decided rows tallied by category, then a bolded "Needed from you" naming how many rows need him across both.
 
 Then walk the held rows and every proposed delete one at a time, Personal before Atelic, per `assist:handle-budget` Phase 3 (the budget walk is exempt from the consolidated board rule, since the walk is what works for it). On his yes to the whole plan, **the main session applies it**: fold his answers into the treasurer's batch files and run one `ynab transactions batch-update` per budget (the Atelic file with `--budget <the Atelic id>`, read from `~/Eudaimonia/Craft/Vocation/Atelic/Tools/ynab.md`, since Personal is the CLI default), check each response count against its plan, then approve the listed skips by id and make any listed deletes, budget by budget: every Atelic write, skip approvals and deletes included, carries the same `--budget`, or it lands on Personal. The agent's own writes were blocked by the permission layer on 2026-09-27; the write belongs in the session that heard the yes. Candidate learned rules from the treasurer go to `## Spend Categorization` in the plugin wide `learned-rules.md` in the session's homebase worktree, and the ones about the Atelic budget to `~/Eudaimonia/Craft/Vocation/Atelic/Tools/ynab.md` in the Atelic repo.
@@ -218,7 +218,7 @@ Prioritize the full task slate, work first, then place the survivors.
 
 - The task's priority and due date
 - Available open slots in the calendar
-- **Cognitive load, which decides the time of day**: 🧠 Sharp lands first thing in a protected morning, ⚖️ Medium midday, 🍃 Light late afternoon on low fuel. The estimate decides how long the block is; the label decides when it sits (see Slotting Rules in the plugin learned-rules.md)
+- **Cognitive load, which decides the day and the time of day** (Sharp prefers Monday and Tuesday, Medium and Light fill Thursday and Friday; the day rule is in the plugin learned-rules.md): 🧠 Sharp lands first thing in a protected morning, ⚖️ Medium midday, 🍃 Light late afternoon on low fuel. The estimate decides how long the block is; the label decides when it sits (see Slotting Rules in the plugin learned-rules.md)
 - Location: if a task requires being somewhere specific, match it to the right day
 
 Present the proposed slots as a board with corrections invited (the board pattern supersedes the one at a time walk; see Learned Rules). Forni can, per task:
