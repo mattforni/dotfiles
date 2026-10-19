@@ -144,6 +144,9 @@ require_tools claude jq curl node timeout git || exit 1
 PULLS_JSON="$WORK/pulls.json"
 pull_note() {
     # Usage: pull_note <name> <ok|failed> [note]
+    # A note after the ledger closed (the token minted again at apply time)
+    # is not a pull and goes nowhere; the apply step says its own piece.
+    [[ "$PULLS_CLOSED" == 1 ]] && return 0
     local ok=false
     [[ "$2" == "ok" ]] && ok=true
     jq -n --arg n "$1" --argjson ok "$ok" --arg note "${3:-}" '{name: $n, ok: $ok, note: $note}' >> "$PULLS_JSON.lines"
@@ -151,7 +154,9 @@ pull_note() {
 pulls_close() {
     if [[ -s "$PULLS_JSON.lines" ]]; then jq -s '.' "$PULLS_JSON.lines" > "$PULLS_JSON"; else echo '[]' > "$PULLS_JSON"; fi
     rm -f "$PULLS_JSON.lines"
+    PULLS_CLOSED=1
 }
+PULLS_CLOSED=0
 
 # ---------- Eudaimonia ----------
 # The first pull is the repo itself: the block doc is the one source for what
@@ -507,19 +512,31 @@ runner_draft '(.headline | type == "string") and (.coverage | type == "array") a
 # ---------- the apply step ----------
 # Only when writes are on and this is not a dry run, and only the rows the
 # model banded high: YNAB rows approved at their category, inbox rows labeled
+# (and archived when the rule says archive, never otherwise)
 # and archived. The scripts resolve every name to an id through their own
 # pulls and drop a row whose name does not resolve, so a misspelled category
 # or label is a line in the mail, never a guess in the books. What was done
 # and what was dropped goes into applied.json for the Handled rollups.
 APPLIED="$WORK/applied.json"
 echo '{"writes": false, "ynab": [], "gmail": [], "dropped": []}' > "$APPLIED"
-if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" ]]; then
+# Writes need this run's own pulls: a reused queue or inbox is a night old at
+# best, and a PATCH against it would land on rows that may have moved.
+if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; then
     # The Google tokens were minted before the pulls and live an hour, which
     # the pulls and the model call together can outrun, so they are minted
     # again here; a failure costs the inbox moves, never the mail.
     google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; }
-    jq '[.money.rows[] | select(.band == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
-    jq '[.inbox.rows[] | select(.band == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
+    jq '[.money.rows[] | select((.band | ascii_downcase) == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
+    jq '[.inbox.rows[] | select((.band | ascii_downcase) == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
+    # A high row the apply never tries is still accounted for: an action the
+    # runner never performs (a star, a trash, a task) and, with no YNAB key,
+    # every money row. Each lands in dropped with its reason, so the mail
+    # never shows a high row as handled that nothing touched.
+    jq --arg nokey "$([[ -n "${YNAB_API_KEY:-}" ]] && echo 0 || echo 1)" '
+        [.inbox.rows[] | select((.band | ascii_downcase) == "high" and (.action != "label" and .action != "archive"))
+            | {kind: "gmail", id, reason: ("the runner never performs \(.action); the Monday session does")}]
+        + (if $nokey == "1" then [.money.rows[] | select((.band | ascii_downcase) == "high") | {kind: "ynab", id, reason: "no YNAB key in the environment, so the row stays proposed"}] else [] end)' \
+        "$DRAFT_JSON" > "$WORK/apply-skipped.json"
     echo '{"ynab": [], "dropped": []}' > "$WORK/ynab-applied.json"
     echo '{"gmail": [], "dropped": []}' > "$WORK/gmail-applied.json"
     if [[ "$(jq length "$WORK/apply-ynab.json")" != "0" ]]; then
@@ -534,7 +551,7 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" ]]; then
         GMAIL_TOKEN_PERSONAL="$PERSONAL_TOKEN" GMAIL_TOKEN_ATELIC="$ATELIC_TOKEN" timeout 5m node "$SELF_DIR/inbox.mjs" apply "$WORK" "$WORK/apply-gmail.json" > "$WORK/gmail-applied.json" 2>"$WORK/gmail-apply-stderr.txt" \
             || { echo "apply: the inbox moves failed: $(tail -n 1 "$WORK/gmail-apply-stderr.txt" | head -c 200)"; echo '{"gmail": [], "dropped": [{"kind": "gmail", "id": "every high row", "reason": "the apply script failed or timed out, so whether the moves landed is unknown; check the inbox"}]}' > "$WORK/gmail-applied.json"; }
     fi
-    jq -s '{writes: true, ynab: (.[0].ynab // []), gmail: (.[1].gmail // []), dropped: ((.[0].dropped // []) + (.[1].dropped // []))}' "$WORK/ynab-applied.json" "$WORK/gmail-applied.json" > "$APPLIED"
+    jq -s '{writes: true, ynab: (.[0].ynab // []), gmail: (.[1].gmail // []), dropped: ((.[0].dropped // []) + (.[1].dropped // []) + (.[2] // []))}' "$WORK/ynab-applied.json" "$WORK/gmail-applied.json" "$WORK/apply-skipped.json" > "$APPLIED"
     echo "apply: $(jq -r '"\(.ynab | length) YNAB rows approved, \(.gmail | length) messages moved, \(.dropped | length) dropped"' "$APPLIED")"
 else
     echo "apply: writes are off (BRIEF_WRITE=$BRIEF_WRITE, DRY_RUN=$DRY_RUN); every row stays proposed"
@@ -550,7 +567,8 @@ skips() {
     if [[ -s "$f" ]]; then jq -c '[.queue[] | select(.transfer_account_id != null) | {id, date, amount, payee: .payee_name, account: .account_name}]' "$f"; else echo '[]'; fi
 }
 jq --argjson ps "$(skips personal)" --argjson as "$(skips atelic)" \
-    '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $as}}' \
+    '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $as},
+      inbox: [.inbox.rows[] | select((.band | ascii_downcase) != "decision") | {mailbox, id, thread_id, from, subject, action, labels: (.labels // []), star, band, rule}]}' \
     "$DRAFT_JSON" > "$WORK/plan.json" && ATTACHMENT="$WORK/plan.json"
 
 # The Atelic tables, the Strava sessions, the spend tables, the pull ledger

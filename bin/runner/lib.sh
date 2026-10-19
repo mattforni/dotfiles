@@ -520,7 +520,7 @@ runner_execute() {
 # and promotes nothing. `agents`, `context` and `mounts` are the manifests
 # that drive the staging and never ship themselves, though a change to
 # `agents` or `context` changes what does, and changed knows that.
-RUNNER_CONTEXT_EXCLUDES="out .build .env.local agents context mounts"
+RUNNER_CONTEXT_EXCLUDES="out .build .env.local agents context mounts tst job.json"
 
 # Usage: runner_manifest_lines < <manifest>
 # A manifest's lines: blank lines and comments dropped, and the whitespace

@@ -75,10 +75,11 @@ test("a change of location with no flank is a finding, and a transition between 
     assert.deepEqual(lint(flanked).findings, []);
 });
 
-test("an event with no label is a finding, except on the Todoist feed", () => {
+test("an event with no label is a finding on Life only; Atelic and the Todoist feed carry none by design", () => {
     const events = [
         { ...ev("Dentist", "2026-10-22T09:00:00-06:00", "2026-10-22T10:00:00-06:00"), label_id: null },
         { ...ev("Pay Jeff", "2026-10-22T10:30:00-06:00", "2026-10-22T11:00:00-06:00", { calendar: "todoist" }), label_id: null },
+        { ...ev("🙈 Deep Work", "2026-10-22T13:00:00-06:00", "2026-10-22T15:00:00-06:00", { calendar: "atelic" }), label_id: null },
     ];
     const { findings } = lint(events);
     assert.deepEqual(findings.map((f) => [f.kind, f.what.split(" (")[0]]), [["unlabeled", "Dentist"]]);

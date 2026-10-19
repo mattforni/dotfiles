@@ -143,7 +143,9 @@ export function lint(events) {
         if (flankBetween) continue;
         findings.push({ kind: "missing flank", when: `${cur.day} ${cur.start}`, what: `${prev.summary} at ${prev.location} ends ${prev.end} and ${cur.summary} at ${cur.location} starts ${cur.start}, with no transition between them` });
     }
-    const unlabeled = timed.filter((e) => !e.label_id && e.calendar !== "todoist").map((e) => ({ kind: "unlabeled", when: `${e.day} ${e.start}`, what: `${e.summary} (${e.calendar}) carries no label` }));
+    // Only the Life calendar carries labels; Atelic events have none by design
+    // (google-calendar.md) and the Todoist feed is not ours to label.
+    const unlabeled = timed.filter((e) => !e.label_id && e.calendar === "life").map((e) => ({ kind: "unlabeled", when: `${e.day} ${e.start}`, what: `${e.summary} (${e.calendar}) carries no label` }));
     return { findings: findings.concat(unlabeled), counts: { events: events.length, timed: timed.length, opaque: opaque.length } };
 }
 

@@ -1,7 +1,12 @@
 // The shaping behind the inbox, Linear and Todoist pulls, on invented records.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { NEVER_ARCHIVE, addressesFromEnv, shapeMessage } from "../inbox.mjs";
+import { NEVER_ARCHIVE, addressOf, addressesFromEnv, shapeMessage } from "../inbox.mjs";
+
+test("the address inside a From header comes out bare and lowercased", () => {
+    assert.equal(addressOf("Blue Spruce Maids <Info@BlueSpruceMaids.com>"), "info@bluesprucemaids.com");
+    assert.equal(addressOf("someone@example.com"), "someone@example.com");
+});
 
 test("unemployment insurance mail is never archived by the runner", () => {
     assert.equal(NEVER_ARCHIVE.test("cdle_ui-alerts@state.co.us Your claim"), true);

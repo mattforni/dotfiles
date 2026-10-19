@@ -53,6 +53,14 @@ export const addressesFromEnv = (raw = process.env.MAILBOX_ADDRESSES || "persona
 // this run, so the runner never marks them read or archives them either.
 export const NEVER_ARCHIVE = /state\.co\.us|cdle|myui|colorado division of unemployment|claude@atelic\.me/i;
 
+/** The bare address inside a From header, lowercased. */
+export const addressOf = (from) => {
+    const m = String(from || "").match(/<([^>]+)>/);
+    return (m ? m[1] : String(from || "")).trim().toLowerCase();
+};
+/** Forni's own addresses; a reply of his in a thread is not another correspondent. */
+const OWN = new Set(Object.values(addressesFromEnv()).map((a) => a.toLowerCase()).concat(["claude@atelic.me"]));
+
 const MAILBOXES = [
     ["personal", process.env.GMAIL_TOKEN_PERSONAL || ""],
     ["atelic", process.env.GMAIL_TOKEN_ATELIC || ""],
@@ -200,7 +208,19 @@ async function apply(outDir, rowsPath) {
         try {
             // The thread, not the message: Gmail keeps a thread in the inbox
             // while any message in it carries INBOX, so a message level
-            // archive of a two message thread archives nothing.
+            // archive of a two message thread archives nothing. The rule was
+            // read against one message, so before the whole thread moves,
+            // every message in it is read: a protected sender anywhere in it,
+            // or a second correspondent (a person who replied), and the
+            // thread stays for the Monday session.
+            if (r.archive) {
+                const thread = await gmail(token, `threads/${msg.thread_id}`, { params: { format: "metadata", metadataHeaders: ["From", "Subject"] } });
+                const others = (thread.messages || []).filter((m) => m.id !== msg.id);
+                const protectedOne = others.find((m) => NEVER_ARCHIVE.test(`${header(m, "From")} ${header(m, "Subject")}`));
+                if (protectedOne) { dropped.push({ kind: "gmail", id: r.id, reason: "another message in the thread is protected mail; the thread stays" }); continue; }
+                const strangers = others.filter((m) => addressOf(header(m, "From")) !== addressOf(msg.from) && !OWN.has(addressOf(header(m, "From"))));
+                if (strangers.length > 0) { dropped.push({ kind: "gmail", id: r.id, reason: `the thread holds ${strangers.length} message${strangers.length === 1 ? "" : "s"} from another sender; the session decides` }); continue; }
+            }
             await gmail(token, `threads/${msg.thread_id}/modify`, { method: "POST", body: { addLabelIds: add, removeLabelIds: remove } });
             applied.push({ mailbox: r.mailbox, id: r.id, subject: msg.subject, from: msg.from, labels: r.labels || [], archived: Boolean(r.archive) });
         } catch (e) {
