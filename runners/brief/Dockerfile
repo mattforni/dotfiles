@@ -1,4 +1,4 @@
-# The Retro Runner (ATE-471). A Cloud Run Job image: the entrypoint
+# The Brief Runner (ATE-471, renamed from retro under ATE-674). A Cloud Run Job image: the entrypoint
 # pulls the week from Strava, Gmail, and HubSpot, then headless Claude Code
 # writes the retrospective from those files and Resend delivers it. The
 # HubSpot week is the Atelic repo's own script, run from a clone the
@@ -16,7 +16,7 @@
 FROM node:24-slim AS email
 WORKDIR /email
 COPY email/ /email/
-RUN npm ci && RUNNER=retro npm run build
+RUN npm ci && RUNNER=brief npm run build
 
 FROM node:24-slim
 
@@ -39,7 +39,7 @@ COPY --chown=runner:runner prompt.md /home/runner/prompt.md
 COPY --chown=runner:runner lib/ /home/runner/lib/
 # The bundled renderer, at the first place runner.sh looks for it, and the
 # only renderer in the image since the jq one retired (ATE-563).
-COPY --from=email --chown=runner:runner /email/dist/render-retro.cjs /home/runner/lib/render.cjs
+COPY --from=email --chown=runner:runner /email/dist/render-brief.cjs /home/runner/lib/render.cjs
 RUN chmod +x /home/runner/entrypoint.sh
 
 # GitHub's published ed25519 host key, pinned so the clones never trust

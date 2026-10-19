@@ -153,7 +153,7 @@ change "a name past ASCII reaches its runner"    "gamma"      "runners/gamma/caf
 change "a name with a space reaches its runner"  "beta"       "runners/beta/two words.jq"
 
 echo "A runner's page reaches only that runner"
-# A bundle is built around one page, so the retro's page is in the retro's
+# A bundle is built around one page, so the brief's page is in the brief's
 # image and no other. Promoting every runner for it would be three builds
 # where one image changed.
 change "a page reaches the runner it is named for" "alpha"     runners/email/alpha.tsx

@@ -3,8 +3,8 @@
  * Builds one runner's bundle of the renderer: render.tsx, that runner's page,
  * and the failure page, as one CommonJS file.
  *
- *   RUNNER=retro npm run build        an image's first stage, and a local run
- *   node build.mjs retro recruiter    several at once, which is what the tests do
+ *   RUNNER=brief npm run build        an image's first stage, and a local run
+ *   node build.mjs brief recruiter    several at once, which is what the tests do
  *
  * A bundle carries one page and not all of them, so an image holds only what
  * its own runner mails and a page can live with its runner in another

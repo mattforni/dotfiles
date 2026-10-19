@@ -97,7 +97,7 @@ type FunnelRow = {
 	note?: unknown;
 };
 
-export type RetroDraft = {
+export type BriefDraft = {
 	headline?: unknown;
 	coverage?: CoverageRow[] | null;
 	what_moved?: MovedRow[] | null;
@@ -175,7 +175,7 @@ type Session = {
 	miles: number | null;
 };
 
-function sessions(draft: RetroDraft): Session[] {
+function sessions(draft: BriefDraft): Session[] {
 	const activities = [...alt(draft.strava, [])];
 	activities.sort((a, b) => {
 		const left = alt(a.start_date_local, "");
@@ -235,7 +235,7 @@ function modalityLabel(value: unknown): string {
 }
 
 /** The model's coverage, with its note. */
-function movementTargets(draft: RetroDraft): Target[] {
+function movementTargets(draft: BriefDraft): Target[] {
 	return alt(draft.coverage, []).map((row) => ({
 		label: modalityLabel(row.modality),
 		logged: num(row.logged),
@@ -245,7 +245,7 @@ function movementTargets(draft: RetroDraft): Target[] {
 }
 
 /** Takeout as a bare count: nothing measures it. */
-function takeoutTarget(draft: RetroDraft): Target {
+function takeoutTarget(draft: BriefDraft): Target {
 	const orders = alt(draft.takeout, []);
 	return {
 		label: "Takeout",
@@ -261,7 +261,7 @@ function takeoutTarget(draft: RetroDraft): Target {
 }
 
 /** The outreach measures from HubSpot, each graded against its target. */
-function atelicTargets(draft: RetroDraft): Target[] {
+function atelicTargets(draft: BriefDraft): Target[] {
 	return alt(draft.atelic?.coverage, []).map((row) => {
 		const logged = num(row.logged);
 		const target = num(row.target);
@@ -274,11 +274,11 @@ function atelicTargets(draft: RetroDraft): Target[] {
 	});
 }
 
-function graded(draft: RetroDraft): Target[] {
+function graded(draft: BriefDraft): Target[] {
 	return [...movementTargets(draft), ...atelicTargets(draft)];
 }
 
-function verdict(draft: RetroDraft): string {
+function verdict(draft: BriefDraft): string {
 	const all = graded(draft);
 	if (all.length === 0) return "No targets graded.";
 	const hit = all.filter((row) => row.target !== null && row.logged >= row.target).length;
@@ -303,7 +303,7 @@ const NO_STAGE = "No Stage";
 const STAGE_LABELS: Record<string, string> = { Opportunity: "Oppty" };
 
 /** The week's stage names, in funnel order. */
-function stageNames(draft: RetroDraft): string[] {
+function stageNames(draft: BriefDraft): string[] {
 	return alt(draft.atelic?.stages, []).filter((name): name is string => typeof name === "string");
 }
 
@@ -322,7 +322,7 @@ function staged(
 }
 
 /** Every row with its stage, and the card its own table would draw for it. */
-function funnel(draft: RetroDraft, names: string[]): Staged[] {
+function funnel(draft: BriefDraft, names: string[]): Staged[] {
 	const atelic = alt(draft.atelic, {});
 	return [
 		...staged(atelic.open_leads, leadRecord, names),
@@ -440,7 +440,7 @@ const STAGE_CARDS: Record<string, (row: FunnelRow) => RecordStackItem> = {
 };
 
 /** Each stage with its rows and the records that list them, in the week's order. */
-function stages(draft: RetroDraft): Stage[] {
+function stages(draft: BriefDraft): Stage[] {
 	const names = stageNames(draft);
 	const all = funnel(draft, names);
 	const known: Stage[] = names.map((name) => {
@@ -549,8 +549,8 @@ function totalLines(week: Session[]): TotalLine[] {
 	return lines;
 }
 
-export function retroHTML(input: unknown, context: RenderContext): string {
-	const draft = input as RetroDraft;
+export function briefHTML(input: unknown, context: RenderContext): string {
+	const draft = input as BriefDraft;
 	const week = sessions(draft);
 	const movement = [...movementTargets(draft), takeoutTarget(draft)];
 	const atelic = atelicTargets(draft);
@@ -561,11 +561,11 @@ export function retroHTML(input: unknown, context: RenderContext): string {
 	const headline = jqToString(alt(draft.headline, ""));
 
 	return renderEmail({
-		title: `${context.week} Retro`,
+		title: `${context.week} Brief`,
 		preheader: headline,
 		children: (
 			<>
-				<Masthead title={`Retro · Week ${weekNumber(context.week)}`} />
+				<Masthead title={`Brief · Week ${weekNumber(context.week)}`} />
 				<TitleCard
 					eyebrowText={rangeLine(context.monday, context.sunday)}
 					headlineLines={[verdict(draft)]}
@@ -667,8 +667,8 @@ export function retroHTML(input: unknown, context: RenderContext): string {
 
 /* ---------- plain text ---------- */
 
-export function retroText(input: unknown, context: RenderContext): string {
-	const draft = input as RetroDraft;
+export function briefText(input: unknown, context: RenderContext): string {
+	const draft = input as BriefDraft;
 	const week = sessions(draft);
 	const number = weekNumber(context.week);
 	const movement = [...movementTargets(draft), takeoutTarget(draft)];
@@ -677,7 +677,7 @@ export function retroText(input: unknown, context: RenderContext): string {
 	const moved = alt(draft.what_moved, []);
 	const movedNote = jqToString(alt(draft.what_moved_note, ""));
 
-	let out = `ATELIC · RETRO · WEEK ${number}\n${rangeLine(context.monday, context.sunday)}\n\n`;
+	let out = `ATELIC · BRIEF · WEEK ${number}\n${rangeLine(context.monday, context.sunday)}\n\n`;
 	out += `${asciiUpcase(verdict(draft))}\n\n`;
 	out += `${unindent(wrap(jqToString(alt(draft.headline, ""))))}\n\n\n`;
 	out += `SCOREBOARD\n\nMovement\n${movement.map(textTarget).join("\n")}\n`;
@@ -742,4 +742,4 @@ export function retroText(input: unknown, context: RenderContext): string {
 }
 
 /** What the bundle built for this runner renders: build.mjs aliases "runner-page" to this file. */
-export const page: Page = { html: retroHTML, text: retroText };
+export const page: Page = { html: briefHTML, text: briefText };

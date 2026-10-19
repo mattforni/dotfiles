@@ -244,12 +244,12 @@ meta_line() {
 # prompt, and the arguments to claude; the scaffold handles the rest.
 
 # Usage: runner_init <name> <Title> [current|previous|upcoming]
-# The name is the runner's directory name (retro, recruiter, pipeline), named
+# The name is the runner's directory name (brief, recruiter, plumber), named
 # explicitly because inside an image the entrypoint lives at /home/runner and
 # its directory says nothing. Title is how the runner names itself everywhere
-# a reader sees it: the subject ("2026-W38 Retro"), the masthead, the failure
+# a reader sees it: the subject ("2026-W38 Brief"), the masthead, the failure
 # page. The third argument says which week is the default when WEEK is not
-# set: the week in progress, the week yesterday belonged to (the retro
+# set: the week in progress, the week yesterday belonged to (the brief
 # fires on a week's last night, about the week that is closing), or the week
 # tomorrow belongs to (the plumber and the recruiter fire on that same night
 # to prepare the week that opens in the morning; on any other day that is

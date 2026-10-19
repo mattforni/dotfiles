@@ -355,7 +355,7 @@ runner_local_credentials() {
     fi
 
     # Who a runner reports to is a property of the runner, not of the machine:
-    # the retro is personal and the outreach roster is Atelic work, and they go
+    # the brief is personal and the outreach roster is Atelic work, and they go
     # to different mailboxes. So a runner may name its own recipient in
     # recipient-<name>, and recipient is the shared fallback for the rest.
     #
@@ -745,7 +745,7 @@ runner_execute_container() {
 
     # The image has no gcloud and no metadata server, so a Strava rotation
     # inside it would have nowhere to write the new refresh token back and the
-    # next cloud run could not refresh (vault_write_back in the retro's
+    # next cloud run could not refresh (vault_write_back in the brief's
     # entrypoint). A run that pulls gets this operator's own access token,
     # minted here, for exactly that one call; a --reuse run never refreshes.
     if (( ! reuse )) && [[ -z "${VAULT_ACCESS_TOKEN:-}" ]]; then

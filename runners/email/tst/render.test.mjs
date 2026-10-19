@@ -40,7 +40,7 @@ for (const { runner, fixture } of CASES) {
  * name straight into its reason. So the fixtures now carry long values, and
  * this holds every line to the 68 columns prose wraps at. The one excuse is a
  * line whose overflow is a single unbreakable last token (a url): take that
- * token away and the rest has to fit. The retro is exempt on purpose: its twin
+ * token away and the rest has to fit. The brief is exempt on purpose: its twin
  * is a byte for byte port of the jq one, wide session tables included.
  */
 const TEXT_WIDTH = 68;
@@ -48,7 +48,7 @@ const columns = (line) => [...line].length;
 const withoutLastToken = (line) => line.replace(/\S+$/, "");
 
 for (const { runner, fixture } of CASES) {
-	if (runner === "retro") continue;
+	if (runner === "brief") continue;
 	test(`${fixture} keeps its text inside ${TEXT_WIDTH} columns`, () => {
 		const lines = render(runner, "text", fixture).stdout.split("\n");
 		const wide = lines.filter(
@@ -81,7 +81,7 @@ test("a long company name never runs into its reason", () => {
 });
 
 test("an unknown runner fails loudly", () => {
-	const result = render("nosuchrunner", "html", "retro", "retro");
+	const result = render("nosuchrunner", "html", "brief", "brief");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /unknown runner/);
 	assert.equal(result.stdout, "");
@@ -93,9 +93,9 @@ test("an unknown runner fails loudly", () => {
  * it has to read exactly like a name nobody has: one line, exit one, no page.
  */
 test("a bundle asked for another runner's page fails the way an unknown runner does", () => {
-	const result = render("recruiter", "html", "recruiter", "retro");
+	const result = render("recruiter", "html", "recruiter", "brief");
 	assert.equal(result.status, 1);
-	assert.equal(result.stderr, 'render: unknown runner "recruiter"; one of retro, failure\n');
+	assert.equal(result.stderr, 'render: unknown runner "recruiter"; one of brief, failure\n');
 	assert.equal(result.stdout, "");
 });
 
@@ -113,32 +113,32 @@ test("every bundle carries the failure page", () => {
 });
 
 test("an unknown format fails loudly", () => {
-	const result = render("retro", "markdown", "retro");
+	const result = render("brief", "markdown", "brief");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /unknown format/);
 });
 
 test("a draft that is not JSON fails loudly", () => {
-	const result = renderRaw("retro", "html", "the agent wrote prose again");
+	const result = renderRaw("brief", "html", "the agent wrote prose again");
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /not JSON/);
 	assert.equal(result.stdout, "");
 });
 
 test("a render that throws fails loudly rather than writing half a page", () => {
-	const result = renderRaw("retro", "html", '{"strava": 7}');
+	const result = renderRaw("brief", "html", '{"strava": 7}');
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /render threw/);
 	assert.equal(result.stdout, "");
 });
 
 /*
- * The retro prints the stage the pull put on each row. A draft from before
+ * The brief prints the stage the pull put on each row. A draft from before
  * the pull carried one still renders, with every company on the page under
  * No Stage and the week's stages at zero, rather than throwing or guessing.
  */
-test("a retro row with no stage is listed under No Stage, never dropped", () => {
-	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
+test("a brief row with no stage is listed under No Stage, never dropped", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
 	const tables = ["open_leads", "opportunities", "closed_leads"];
 	const companies = [];
 	for (const table of tables) {
@@ -150,7 +150,7 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
 	draft.atelic.open_leads[0].funnel = "A Stage Nobody Knows";
 	assert.equal(companies.length, 11);
 
-	const text = renderRaw("retro", "text", JSON.stringify(draft));
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
 	assert.equal(text.status, 0, text.stderr);
 	assert.ok(text.stdout.includes("\nNo Stage · 11\n"), "the group is headed with its count");
 	assert.match(text.stdout, /\n  No stage  11\n/);
@@ -158,7 +158,7 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
 	const listed = text.stdout.slice(text.stdout.indexOf("\nNo Stage · 11\n"));
 	for (const company of companies) assert.ok(listed.includes(company), `${company} is listed`);
 
-	const html = renderRaw("retro", "html", JSON.stringify(draft));
+	const html = renderRaw("brief", "html", JSON.stringify(draft));
 	assert.equal(html.status, 0, html.stderr);
 	assert.ok(html.stdout.includes("No Stage · 11"));
 	for (const company of companies) assert.ok(html.stdout.includes(company), `${company} is on the page`);
@@ -169,10 +169,10 @@ test("a retro row with no stage is listed under No Stage, never dropped", () => 
  * the page keeps no list of its own. A week that names them in another order
  * prints them in that order, and a stage the week does not name is no stage.
  */
-test("the retro's funnel reads its stages and their order from the week", () => {
-	const draft = JSON.parse(readFileSync(fixturePath("retro"), "utf8"));
+test("the brief's funnel reads its stages and their order from the week", () => {
+	const draft = JSON.parse(readFileSync(fixturePath("brief"), "utf8"));
 	draft.atelic.stages = ["Closed", "Customer", "Opportunity", "SQL", "MQL"];
-	const text = renderRaw("retro", "text", JSON.stringify(draft));
+	const text = renderRaw("brief", "text", JSON.stringify(draft));
 	assert.equal(text.status, 0, text.stderr);
 	const funnel = text.stdout.slice(text.stdout.indexOf("\nThe Funnel\n"));
 	const order = ["Closed", "Customer", "Oppty", "SQL", "MQL", "No stage"].map((label) =>

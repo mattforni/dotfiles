@@ -12,7 +12,7 @@ import { useEmailTheme } from "@atelic-action/ui/email";
  * here.
  */
 
-/* ---------- retro ---------- */
+/* ---------- brief ---------- */
 
 export type RecordsRowProps = { last: boolean; children?: ReactNode };
 

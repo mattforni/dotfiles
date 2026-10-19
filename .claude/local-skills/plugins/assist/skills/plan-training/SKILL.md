@@ -63,7 +63,7 @@ The Monday morning training pass. Runs as part of `/assist:plan-week` plan mode 
 
 ### Phase 1: Retrospective on the Previous Week
 
-The emailed retro (the runner's `YYYY-Www Retro`, consumed by `assist:plan-week` Review Week) is the coverage read: lifts, social runs, and yoga against the block doc, plus the takeout count. Add only what it cannot see, how the heel and body felt, collected in Review Week's blind spot ask. Retro precedes scheduling, always; drift compounds otherwise. Mode: retro below is the standalone form for a direct ask; do not rerun it here.
+The emailed retro (the runner's `YYYY-Www Brief`, consumed by `assist:plan-week` Review Week) is the coverage read: lifts, social runs, and yoga against the block doc, plus the takeout count. Add only what it cannot see, how the heel and body felt, collected in Review Week's blind spot ask. Retro precedes scheduling, always; drift compounds otherwise. Mode: retro below is the standalone form for a direct ask; do not rerun it here.
 
 ### Phase 2: Detect Existing Placeholders
 

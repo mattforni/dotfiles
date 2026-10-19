@@ -4,7 +4,7 @@ Headless Claude routines that run on a schedule. One directory per runner, each 
 
 | Runner | Runs On | What It Does |
 |---|---|---|
-| [retro/](retro/README.md) | Cloud Run | Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Retro`. |
+| [brief/](brief/README.md) | Cloud Run | Pulls the ISO week from Strava, Gmail, and HubSpot, has Claude write the retrospective, and emails it as `YYYY-Www Brief`. Named `retro` until 2026-10-19 (ATE-674), when the email took on the Monday planning pass beside the retrospective. |
 | [recruiter/](recruiter/README.md) | Cloud Run | Pulls the job boards with curl, runs the `recruiter` agent over the pulled listings so the week's sweep is done before the Tuesday work search block, upserts the judged rows into the Pinole work ledger and logs the sweep as an activity, and emails the board as `YYYY-Www Recruiter`; the ledger rows live in the API and never in the mail. Promoted 2026-09-11. |
 
 **A third runner, the plumber, lives in the practice's own repository and is built with this tooling** ([A Runner in Another Repository](#a-runner-in-another-repository)), where it moved with its page, its agent and its tests on 2026-10-13 (ATE-656).
@@ -13,7 +13,7 @@ The runtime one pager (why Cloud Run over Routines, the service accounts and the
 
 **Homebase keeps the machinery that runs any job, and everything a job knows about the Atelic business lives in the Atelic repo.** The scaffold, the mail, the renderer, the promote and the generic pulls are here. The funnel rules are not: the retro's HubSpot week is `plugins/atelic/scripts/lib/hubspot.mjs` in the Atelic repo, run from the checkout its entrypoint puts in place, so the runner and the manual commands there read one copy (ATE-656, 2026-10-13). No image here carries it, so a rule changed there is live on the retro's next run and promotes nothing here, and that run executes whatever the Atelic repo's main holds at that moment, unpinned. A runner that lives in that repository pins the rules it runs to its own image, through its `context` manifest.
 
-**The retro and the recruiter are personal work that runs in the Atelic cloud project, on purpose** (Forni, 2026-10-13, ATE-656). The compute is pennies and both jobs work, so a second project for them would be work with no gain. The retro reads the Atelic HubSpot only through the Atelic repo's own `week` command and keeps no funnel rule of its own.
+**The brief and the recruiter are personal work that runs in the Atelic cloud project, on purpose** (Forni, 2026-10-13, ATE-656). The compute is pennies and both jobs work, so a second project for them would be work with no gain. The brief reads the Atelic HubSpot only through the Atelic repo's own `week` command and keeps no funnel rule of its own.
 
 **When a runner fires is not written down anywhere in this repo.** For a runner here the Cloud Scheduler entry is the only statement of it, and the command that reads it is in Eudy's `Admin/Tools/cloud-run.md`. A day or a clock copied into a README, a comment, an agent, or a skill is a second copy that drifts (ATE-649), so look it up when it matters and never write it down. One thing does depend on it: each runner's default week in `runner_init` (`runners/lib/runner.sh`) assumes the fire falls on the night before a week opens, so a move to another night is a scheduler change and a look at those defaults together.
 
@@ -36,7 +36,7 @@ the only thing a plist has to name. Adding one back is a plist and nothing else.
 
 **Who a runner reports to is a property of the runner**, so it may name its own
 recipient in `~/.config/headless-report/recipient-<name>`, falling back to the
-shared `recipient`. The retro is personal work and the outreach roster is Atelic
+shared `recipient`. The brief is personal work and the outreach roster is Atelic
 work, and they go to different mailboxes. The addresses stay in `~/.config`
 rather than the repo, because homebase is public.
 
@@ -280,8 +280,8 @@ A runner's page (`runners/email/<name>.tsx`) composes what the package exports: 
 The build is `build.mjs`, one esbuild call per runner, and it is CommonJS on purpose:
 
 ```bash
-RUNNER=retro npm run build          # writes dist/render-retro.cjs
-node build.mjs retro recruiter      # several at once, which is what the tests do
+RUNNER=brief npm run build          # writes dist/render-brief.cjs
+node build.mjs brief recruiter      # several at once, which is what the tests do
 ```
 
 It is the esbuild call it always was (`--bundle --platform=node --format=cjs --target=node24 --jsx=automatic`, production React, `--minify-syntax`) with two additions: the alias from `runner-page` to the page, and the runner's name defined as `RUNNER_NAME`. With no runner named it stops and says so.
@@ -297,10 +297,10 @@ It is the esbuild call it always was (`--bundle --platform=node --format=cjs --t
 **Parity, before any of that lands.** Render the same draft before and after the change and compare the parsed documents, which is how a `ui` bump is held to the layout it claims to leave alone:
 
 ```bash
-bin/runner/render-local retro --no-open && cp runners/retro/out/email.html /tmp/before.html
+bin/runner/render-local brief --no-open && cp runners/brief/out/email.html /tmp/before.html
 # bump the pin, npm ci, then render again
-bin/runner/render-local retro --no-open
-node runners/email/parity.mjs runners/retro/out/email.html /tmp/before.html
+bin/runner/render-local brief --no-open
+node runners/email/parity.mjs runners/brief/out/email.html /tmp/before.html
 ```
 
 `parity.mjs` exits 0 only when the two parse to the same canonical tree and prints the first difference with its path otherwise; it ignores what only the markup differs on, which is what made it the check against the jq renderer this one replaced. For a change where the pixels are the question, screenshot both files at 800 and at 390 wide and compare them with `magick compare -metric AE`; zero at both widths is the bar the port was held to. `npm --prefix runners/email test` is the standing version of the same check: four invented fixtures, html and text, each frozen as a golden that has to match byte for byte. It builds each runner's bundle first, the way that runner's image does, and every render goes through the built file. A page that lives with its runner in another repository keeps its fixtures, its goldens and its tests there.
@@ -319,7 +319,7 @@ for candidate in "$SELF_DIR/lib/runner.sh" "$SELF_DIR/../lib/runner.sh"; do   # 
     [[ -r "$candidate" ]] && { . "$candidate"; RUNNER_LIB="$candidate"; break; }
 done
 
-runner_init retro "Retro" previous    # the directory name, the title a reader sees, current or previous week by default
+runner_init brief "Brief" previous    # the directory name, the title a reader sees, current or previous week by default
 require CLAUDE_CODE_OAUTH_TOKEN ... || exit 1
 require_tools claude jq curl ... || exit 1
 

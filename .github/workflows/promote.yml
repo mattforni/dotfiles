@@ -27,7 +27,7 @@ on:
         options:
           - all
           - recruiter
-          - retro
+          - brief
 
 # Read only by default. The promote job alone adds id-token, which is what
 # lets it ask Google for a short lived credential. No key exists anywhere.

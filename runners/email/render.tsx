@@ -14,13 +14,13 @@ import type { Page, RenderContext } from "./types";
  * than a draft:
  *
  *   node render.cjs failure html \
- *       --title Retro --eyebrow "Retro · 2026-W38" --reason "the render failed"
+ *       --title Brief --eyebrow "Brief · 2026-W38" --reason "the render failed"
  *
  * The page leaves on stdout with exactly one trailing newline, which is what
  * every caller downstream counts on. A bundle answers to its own runner's
  * name and to no other: the page is whichever one build.mjs aliased
  * "runner-page" to, under the name it defined as RUNNER_NAME, so asking the
- * retro's bundle for another runner's page is an unknown name like any other.
+ * brief's bundle for another runner's page is an unknown name like any other.
  * A bad runner name, a draft that is not
  * JSON, and a render that throws each print one line to stderr and exit non
  * zero, so the scaffold can say why in the log; for the failure page that is

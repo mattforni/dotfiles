@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# The Retro Runner. Fired weekly by Cloud Scheduler.
+# The Brief Runner. Fired weekly by Cloud Scheduler.
 #
 # Shape: deterministic pulls first (curl, into $WORK/*.json), then one headless
 # Claude Code call that reads those files and writes the retrospective, then
-# one Resend send as "YYYY-Www Retro". Read only against the world, with one
+# one Resend send as "YYYY-Www Brief". Read only against the world, with one
 # exception: Strava invalidates the old refresh token whenever it issues a new
 # one, so the rotated token is written back to the vault through the Secret
 # Manager REST API using the job's service account.
@@ -20,7 +20,7 @@
 #   ATELIC_DEPLOY_KEY         atelic-keys/github-deploy-key-atelic (read only deploy key on the Atelic repo); required
 #                             up front whenever the pulls run and no checkout is at $ATELIC
 # Plain configuration:
-#   REPORT_RECIPIENT          where the retro goes
+#   REPORT_RECIPIENT          where the brief goes
 #   REPORT_SENDER             defaults to Claude <claude@atelic.me>
 #   STRAVA_SECRET_RESOURCE    defaults to projects/forni-keys/secrets/strava-refresh-token
 #   ATELIC                    the Atelic checkout, whose funnel rules the HubSpot pull runs; defaults to its place
@@ -52,11 +52,11 @@ if [[ -z "${RUNNER_LIB:-}" ]]; then
     exit 1
 fi
 
-# The retro is for the ISO week that is closing. The job fires in that week's
+# The brief is for the ISO week that is closing. The job fires in that week's
 # last hours, and the default is read off yesterday's date rather than
 # today's: Saturday names the same week, and a retry that slips past midnight
 # into Monday still reads Sunday and gets it right.
-runner_init retro "Retro" previous
+runner_init brief "Brief" previous
 
 STRAVA_SECRET_RESOURCE="${STRAVA_SECRET_RESOURCE:-projects/forni-keys/secrets/strava-refresh-token}"
 AFTER_EPOCH="$(midnight_epoch "$MONDAY")"
@@ -280,7 +280,7 @@ runner_draft '(.headline | type == "string") and (.coverage | type == "array") a
 # after the model, so nothing it writes can move a number, and the renderer
 # builds the session list and the day strip from them directly.
 if ! jq -s '.[0] * {atelic: .[1], strava: .[2]}' "$DRAFT_JSON" "$WORK/atelic.json" "$WORK/strava.json" > "$DRAFT_JSON.merged" 2>"$WORK/merge-stderr.txt"; then
-    fail_reason="could not merge the Atelic and Strava data into the retro: $(head -c 300 "$WORK/merge-stderr.txt")"
+    fail_reason="could not merge the Atelic and Strava data into the brief: $(head -c 300 "$WORK/merge-stderr.txt")"
     exit 1
 fi
 mv "$DRAFT_JSON.merged" "$DRAFT_JSON"
