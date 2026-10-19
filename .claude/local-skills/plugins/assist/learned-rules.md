@@ -135,7 +135,7 @@ Payee corrections (session 2026-10-19):
 - `Genesee Country` (fuel, Golden) -> `🚙 Transportation`. Fuel bought on the way to a trip carries no trip memo.
 - `Sherpa House` (Golden) -> `🍽️ Dining Out`.
 - A `Coinbase` ACH deposit -> `Inflow: Ready to Assign`, memo naming the coin sold (`🪙 Sold ETH`). It is cash moved out of an untracked holding, not income.
-- Alaska Airlines award taxes and fees -> `🌏 Adventure` with the trip memo (`🇹🇭 Thailand`).
+- Alaska Airlines award taxes and fees -> `🌏 Adventure` with the memo of the trip it was booked for (the Thailand award, `🇹🇭 Thailand`); ask when more than one trip is open.
 
 Payee cleanup mechanics (session 2026-07-18, hard-won):
 

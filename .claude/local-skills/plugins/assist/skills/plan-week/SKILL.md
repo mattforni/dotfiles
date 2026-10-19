@@ -218,7 +218,7 @@ Prioritize the full task slate, work first, then place the survivors.
 
 - The task's priority and due date
 - Available open slots in the calendar
-- **Cognitive load, which decides the time of day**: 🧠 Sharp lands first thing in a protected morning, ⚖️ Medium midday, 🍃 Light late afternoon on low fuel. The estimate decides how long the block is; the label decides when it sits (see Slotting Rules in the plugin learned-rules.md)
+- **Cognitive load, which decides the day and the time of day** (Sharp prefers Monday and Tuesday, Medium and Light fill Thursday and Friday; the day rule is in the plugin learned-rules.md): 🧠 Sharp lands first thing in a protected morning, ⚖️ Medium midday, 🍃 Light late afternoon on low fuel. The estimate decides how long the block is; the label decides when it sits (see Slotting Rules in the plugin learned-rules.md)
 - Location: if a task requires being somewhere specific, match it to the right day
 
 Present the proposed slots as a board with corrections invited (the board pattern supersedes the one at a time walk; see Learned Rules). Forni can, per task:
