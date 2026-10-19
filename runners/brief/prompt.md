@@ -34,7 +34,7 @@ Rules, in reading order:
 
 Pulled files, each already reduced to what you need:
 
-- {{WORK}}/ynab-personal.json and {{WORK}}/ynab-atelic.json: for each budget, accounts (with direct_import_in_error), categories (name and id, with their group), payees, the unapproved queue, and every transaction since the first of the month three full months back. Amounts are dollars, negative for outflows.
+- {{WORK}}/ynab-personal.json and {{WORK}}/ynab-atelic.json: for each budget, accounts (with direct_import_in_error), categories (name and id, with their group), and the unapproved queue. Amounts are dollars, negative for outflows. The three months of history behind spend.json sit in {{WORK}}/ynab-personal-history.json and {{WORK}}/ynab-atelic-history.json; they are large and the caller has already done their arithmetic, so read one only when a queue row needs a payee's past (an always confirm payee, a charge far off its usual, the Venmo cross check against Atelic), and then look for that payee alone.
 - {{WORK}}/spend.json: the month to date tables, computed by the caller (typical spend against the pace, outliers, trips, the pace figure and the three months behind it). Do not recompute any of it and do not copy it; read it only to write money.read.
 - {{WORK}}/inbox.json: every message in both inboxes (personal and atelic), with id, thread id, from, subject, date, snippet, label names, starred, unread, and a link. Also each mailbox's label list.
 - {{WORK}}/linear.json: every open issue in the active ATE cycle with its state, estimate, labels, due date, project, and the first lines of its description.

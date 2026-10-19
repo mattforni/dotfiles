@@ -49,7 +49,7 @@ export const RECURRING_MONTHS = Number(process.env.YNAB_RECURRING_MONTHS || 3);
 export const EXCLUDED_WORDS = (process.env.YNAB_EXCLUDED_CATEGORIES || "Adventure,Legal,Home Improvement")
     .split(",").map((s) => s.trim()).filter(Boolean);
 // Memos that start with an emoji but are not trips.
-export const NON_TRIP_MEMOS = (process.env.YNAB_NON_TRIP_MEMOS || "Business Coffee,Sold ,HSA ,w/ ")
+export const NON_TRIP_MEMOS = (process.env.YNAB_NON_TRIP_MEMOS || "Business Coffee,Client Coffee,Coffee,Sold ,HSA ,w/ ")
     .split(",").filter(Boolean);
 
 export const RULE = `Typical spend is every categorized row this month except outliers and trips; the pace is the average of the three full months before it, prorated to today. An outlier is a single charge of $${OUTLIER_DOLLARS} or more from a payee seen in fewer than ${RECURRING_MONTHS} months of the window, so the mortgage and the HOA stay typical. A trip is any row whose memo opens with an emoji and a name. ${EXCLUDED_WORDS.join(", ")} never count as typical on Personal.`;
@@ -153,6 +153,11 @@ async function pull(outDir, today) {
             api(`${base}/transactions?type=unapproved`),
             api(`${base}/transactions?since_date=${since}`),
         ]);
+        // Two files per budget. The model reads the first (the queue, the
+        // accounts, the categories), which stays small; the three months of
+        // history and the payee list go beside it for the arithmetic and the
+        // apply, since 400 rows of history is more than the model's Read
+        // takes in one go and it needs none of them.
         const file = {
             budget,
             pulled_at: new Date().toISOString(),
@@ -162,13 +167,18 @@ async function pull(outDir, today) {
                 direct_import_linked: Boolean(a.direct_import_linked), direct_import_in_error: Boolean(a.direct_import_in_error),
             })),
             categories: flattenCategories(categories.category_groups),
-            payees: (payees.payees || []).filter((p) => !p.deleted).map((p) => ({ id: p.id, name: p.name })),
             queue: (queue.transactions || []).filter((t) => !t.deleted).map(shapeTransaction),
+        };
+        const history = {
+            budget,
+            since,
+            payees: (payees.payees || []).filter((p) => !p.deleted).map((p) => ({ id: p.id, name: p.name })),
             transactions: (transactions.transactions || []).filter((t) => !t.deleted).map(shapeTransaction),
         };
-        const path = join(outDir, `ynab-${budget.name.toLowerCase()}.json`);
-        writeFileSync(path, JSON.stringify(file));
-        log(`${budget.name}: ${file.queue.length} unapproved, ${file.transactions.length} since ${since}, ${file.accounts.filter((a) => a.direct_import_in_error && !a.closed).length} accounts in error`);
+        const stem = join(outDir, `ynab-${budget.name.toLowerCase()}`);
+        writeFileSync(`${stem}.json`, JSON.stringify(file));
+        writeFileSync(`${stem}-history.json`, JSON.stringify(history));
+        log(`${budget.name}: ${file.queue.length} unapproved, ${history.transactions.length} since ${since}, ${file.accounts.filter((a) => a.direct_import_in_error && !a.closed).length} accounts in error`);
     }
 }
 
@@ -248,9 +258,17 @@ export function spendFor(file, today, personal) {
 
 const round = (n) => Math.round(n * 100) / 100;
 
+/** Both files of a budget as the one object spendFor and apply read; null when the pull is not on disk. */
 function readBudget(outDir, name) {
     try {
-        return JSON.parse(readFileSync(join(outDir, `ynab-${name}.json`), "utf8"));
+        const file = JSON.parse(readFileSync(join(outDir, `ynab-${name}.json`), "utf8"));
+        let history = { payees: [], transactions: [] };
+        try {
+            history = JSON.parse(readFileSync(join(outDir, `ynab-${name}-history.json`), "utf8"));
+        } catch {
+            // An older pull kept everything in one file; read what is there.
+        }
+        return { ...file, payees: file.payees || history.payees || [], transactions: file.transactions || history.transactions || [] };
     } catch {
         return null;
     }

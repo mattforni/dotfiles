@@ -411,9 +411,18 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
         # The retro half's pulls are what rotate a token and cost a HubSpot
         # walk; the planning half's rotate nothing, so a rehearsal of the
         # planning half can reuse the retro files and still pull fresh here.
-        google_tokens || exit 1
-        calendar_pull
-        inbox_pull
+        # Without a Google token the two Google pulls are not read and the
+        # rest still run; the retro half's own Gmail pull is reused here, so
+        # nothing is fatal about it.
+        if google_tokens; then
+            calendar_pull
+            inbox_pull
+        else
+            pull_note calendar failed "$fail_reason"
+            pull_note inbox failed "$fail_reason"
+            echo "calendar, inbox: not read, $fail_reason"
+            fail_reason=""
+        fi
         ynab_pull
         linear_pull
         todoist_pull

@@ -35,6 +35,8 @@ WORKDIR /home/runner
 
 COPY --chown=runner:runner entrypoint.sh /home/runner/entrypoint.sh
 COPY --chown=runner:runner prompt.md /home/runner/prompt.md
+# The pull scripts beside the entrypoint: the planning half's reads and writes.
+COPY --chown=runner:runner ynab.mjs inbox.mjs calendar.mjs linear.mjs todoist.mjs /home/runner/
 # The shared library: runner.sh for the entrypoint, the pull script beside it.
 COPY --chown=runner:runner lib/ /home/runner/lib/
 # The bundled renderer, at the first place runner.sh looks for it, and the
