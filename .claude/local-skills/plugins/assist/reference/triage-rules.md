@@ -108,7 +108,7 @@ Use these to determine pillar sublabel assignment. Always prefer the most specif
 
 **Craft signals:**
 
-- Job search, recruiting, applications -> `🛠️ Craft/💼 Vocation/🔎 Job Search`
+- Job search, recruiting, applications -> `🛠️ Craft/💼 Vocation`
 - Career, networking, mentorship, former employers (Gremlin, Zero Homes) -> `🛠️ Craft/💼 Vocation`; Happy Isles mail -> `🛠️ Craft/💼 Vocation/🏝️ Happy Isles`
 - Software, dev tools, GitHub -> `🛠️ Craft/🧑‍💻 Development`
 - Atelic, RYLLC, consulting -> `🛠️ Craft/💼 Vocation/💻 Atelic`; the Pinole app, its hosting, and its users -> `🛠️ Craft/💼 Vocation/💻 Atelic/🌽 Pinole`
