@@ -46,7 +46,7 @@ The email routing rule sets (Sender Rules, Topic Rules, Subject Rules, Star Sema
 
 - **Never destroy contact info when retitling a task.** A bare email address or phone number as a task title IS the payload; a rename must carry it into the description or a mailto link in the title. Codified 2026-08-02 after a retitle stripped an email address and left the task unactionable.
 
-- **Sharp work goes first to Monday and Tuesday mornings; Thursday and Friday carry the Medium and Light load.** The load label picks the day of the week as well as the hour (Medium and Light still take midday and afternoons on any day, per the hour rule above): Forni is sharpest early in the week after a weekend away from the screen.
+- **Sharp work sits in Monday and Tuesday mornings; Medium and Light work fills Thursday and Friday.** The load label picks the day of the week as well as the hour: Forni is sharpest early in the week after a weekend away from the screen. Legal and admin drafting such as the Operating Agreement is afternoon work.
 
 ## Codification Rules
 
