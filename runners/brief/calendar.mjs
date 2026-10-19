@@ -88,8 +88,11 @@ async function list(token, calendarId, timeMin, timeMax) {
 
 export function shapeEvent(e, calendar) {
     const allDay = Boolean(e.start?.date);
-    const startIso = allDay ? null : e.start?.dateTime;
-    const endIso = allDay ? null : e.end?.dateTime;
+    // The instants are kept as UTC, so two events from calendars with
+    // different offsets (the Todoist feed's -07:00 beside Google's -06:00)
+    // sort and compare as plain strings everywhere below.
+    const startIso = allDay ? null : new Date(e.start?.dateTime).toISOString();
+    const endIso = allDay ? null : new Date(e.end?.dateTime).toISOString();
     const s = startIso ? local(startIso) : null;
     const t = endIso ? local(endIso) : null;
     return {

@@ -40,6 +40,16 @@ test("two opaque events that overlap are a finding; a transparent hold is not", 
     assert.match(findings[0].what, /Strength .* overlaps 📞 Call/);
 });
 
+test("events from calendars with different offsets compare as instants, not as strings", () => {
+    // 09:30 Pacific is 10:30 Mountain, so this Todoist task sits inside the Mountain meeting.
+    const events = [
+        ev("📞 Meeting", "2026-10-20T10:00:00-06:00", "2026-10-20T11:00:00-06:00"),
+        ev("Pay Jeff", "2026-10-20T09:30:00-07:00", "2026-10-20T10:00:00-07:00", { calendar: "todoist" }),
+    ].map((e) => ({ ...e, label_id: "l" }));
+    assert.equal(events[1].start_iso, "2026-10-20T16:30:00.000Z");
+    assert.deepEqual(lint(events).findings.map((f) => f.kind), ["overlap"]);
+});
+
 test("a named ATE block holds its slot even when it is free", () => {
     const events = [
         ev("📖 ATE-670: The Read", "2026-10-20T11:00:00-06:00", "2026-10-20T13:00:00-06:00", { transparency: "transparent", calendar: "atelic" }),

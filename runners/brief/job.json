@@ -7,7 +7,7 @@
     "execution_environment": "gen2",
     "cpu": "1",
     "memory": "1Gi",
-    "timeout_seconds": 3600,
+    "timeout_seconds": 5400,
     "max_retries": 0,
     "tasks": 1,
     "env": {

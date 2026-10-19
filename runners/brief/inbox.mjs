@@ -45,6 +45,8 @@ export const addressesFromEnv = (raw = process.env.MAILBOX_ADDRESSES || "persona
     return out;
 };
 
+export const NEVER_ARCHIVE = /state\.co\.us|cdle|myui|colorado division of unemployment/i;
+
 const MAILBOXES = [
     ["personal", process.env.GMAIL_TOKEN_PERSONAL || ""],
     ["atelic", process.env.GMAIL_TOKEN_ATELIC || ""],
@@ -170,6 +172,13 @@ async function apply(outDir, rowsPath) {
             add.push(id);
         }
         if (missing) { dropped.push({ kind: "gmail", id: r.id, reason: `label ${missing} not found in the ${r.mailbox} mailbox` }); continue; }
+        // The one hard rule in the sender rules, enforced here as well as in
+        // the prompt: unemployment insurance mail is deadline bearing and is
+        // never archived unread by a machine, whatever band it was given.
+        if (r.archive && NEVER_ARCHIVE.test(`${msg.from} ${msg.subject}`)) {
+            dropped.push({ kind: "gmail", id: r.id, reason: "CDLE and MyUI+ mail is never archived by the runner" });
+            continue;
+        }
         const remove = r.archive ? ["INBOX", "UNREAD"] : [];
         if (add.length === 0 && remove.length === 0) { dropped.push({ kind: "gmail", id: r.id, reason: "nothing to change" }); continue; }
         try {

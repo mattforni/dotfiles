@@ -80,11 +80,10 @@ if [[ -z "${RUNNER_LIB:-}" ]]; then
 fi
 
 # The brief is for the ISO week that is closing and the one that opens next.
-# The job fires in the closing week's last hours, and the default is read off
-# yesterday's date rather than today's: Saturday names the same week, and a
-# retry that slips past midnight into Monday still reads Sunday and gets it
-# right. A fire on Monday morning, which job.json may choose so the inbox pull
-# is fresh, reads Sunday the same way.
+# job.json says when the job fires; whether that is the closing week's last
+# hours or the morning its successor opens, the default week is read off
+# yesterday's date rather than today's, so Saturday, Sunday and the small
+# hours of Monday all name the week that is closing.
 runner_init brief "Brief" previous
 
 # The week ahead, the planning target: the one that opens on NEXT_MONDAY.
@@ -280,8 +279,24 @@ google_tokens() {
     fi
     PERSONAL_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_PERSONAL_JSON")" || { fail_reason="the personal Google token could not be refreshed; the vaulted authorized_user JSON may be revoked or stale"; return 1; }
     if [[ -n "${GWS_OAUTH_TOKEN_ATELIC_JSON:-}" ]]; then
-        ATELIC_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_ATELIC_JSON")" || { echo "atelic Google token: could not be refreshed; the Atelic inbox is not read this run"; ATELIC_TOKEN=""; }
+        ATELIC_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_ATELIC_JSON")" || {
+            echo "atelic Google token: could not be refreshed; the Atelic inbox is not read this run"
+            pull_note inbox-atelic failed "the Atelic mailbox was not read; its token could not be refreshed"
+            ATELIC_TOKEN=""
+        }
+    else
+        pull_note inbox-atelic failed "the Atelic mailbox was not read; no GWS_OAUTH_TOKEN_ATELIC_JSON in the environment"
     fi
+}
+
+# Every file the planning pulls write, cleared before a fresh pull so a
+# failed pull cannot leave an earlier run's file beside the ledger that says
+# it was not read; the arithmetic's outputs (spend.json, the lint) go too,
+# since they are derived from these.
+PLANNING_FILES=(calendar.json calendar-lint.json inbox.json ynab-personal.json ynab-personal-history.json ynab-atelic.json ynab-atelic-history.json spend.json linear.json todoist.json)
+planning_clear() {
+    local f
+    for f in "${PLANNING_FILES[@]}"; do rm -f "$WORK/$f"; done
 }
 
 # ---------- Gmail (the overconsumption tally) ----------
@@ -351,15 +366,23 @@ planning_pull() {
     # Usage: planning_pull <name> <file> <timeout> <command...>
     local name="$1" file="$2" limit="$3"; shift 3
     local rc err="$WORK/$name-stderr.txt"
-    rm -f "$WORK/$file"
+    # A failure removes the pull's every output, the siblings included (the
+    # YNAB history files, the calendar lint), so nothing partial is read.
+    local siblings=()
+    case "$name" in
+        ynab)     siblings=(ynab-personal.json ynab-personal-history.json ynab-atelic.json ynab-atelic-history.json spend.json) ;;
+        calendar) siblings=(calendar.json calendar-lint.json) ;;
+        *)        siblings=("$file") ;;
+    esac
+    rm -f "${siblings[@]/#/$WORK/}"
     timeout "$limit" "$@" 2>"$err"
     rc=$?
     if (( rc == 124 )); then
-        rm -f "$WORK/$file"
+        rm -f "${siblings[@]/#/$WORK/}"
         pull_note "$name" failed "the read timed out after $limit"
         echo "$name: not read, timed out after $limit"
     elif (( rc != 0 )) || [[ ! -s "$WORK/$file" ]]; then
-        rm -f "$WORK/$file"
+        rm -f "${siblings[@]/#/$WORK/}"
         local why
         why="$(tail -n 1 "$err" 2>/dev/null | head -c 160 | tr '\n' ' ')"
         pull_note "$name" failed "${why:-the read returned nothing}"
@@ -414,6 +437,7 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
         # Without a Google token the two Google pulls are not read and the
         # rest still run; the retro half's own Gmail pull is reused here, so
         # nothing is fatal about it.
+        planning_clear
         if google_tokens; then
             calendar_pull
             inbox_pull
@@ -436,6 +460,7 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
     pulls_close
 else
     rm -f "$PULLS_JSON.lines"
+    planning_clear
     eudy_pull || exit 1
     homebase_pull || exit 1
     strava_pull || exit 1
@@ -458,7 +483,13 @@ if [[ ! -s "$WORK/spend.json" ]]; then echo '{"personal": null, "atelic": null}'
 # high becomes a write to the books or the inbox, and that asymmetry is the
 # reason for the stronger model (the treasurer agent made the same call).
 # RUNNER_MODEL puts it back on Sonnet for a side by side.
-ATTEMPT_TIMEOUT="${ATTEMPT_TIMEOUT:-30m}"
+#
+# The whole run has to end inside job.json's task timeout (5400 seconds) or
+# Cloud Run kills the task before the EXIT trap can mail anything, not even
+# the failure page. Two attempts of 20 minutes plus the bounded pulls (ten
+# for HubSpot, ten for the inboxes, six for YNAB, four each for the rest)
+# fit under it with room; raise one and look at the other.
+ATTEMPT_TIMEOUT="${ATTEMPT_TIMEOUT:-20m}"
 runner_claude "$(fill_prompt "$PROMPT_FILE")" --model "$RUNNER_MODEL" --allowedTools "Read" || exit 1
 runner_draft '(.headline | type == "string") and (.coverage | type == "array") and (.what_moved | type == "array")
     and (.movement_read | type == "string") and (.takeout | type == "array") and (.takeout_read | type == "string")
@@ -501,9 +532,16 @@ fi
 
 # The YNAB plan rides as an attachment for the Monday session: every row the
 # model proposed with its band, the deletes and the trips, grouped by budget,
-# so the session applies the corrected rows without recomputing them.
-jq '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // [])}' "$DRAFT_JSON" > "$WORK/plan.json" \
-    && ATTACHMENT="$WORK/plan.json"
+# plus the skips (the unapproved transfers and card payments the model was
+# told not to list), so the session approves those uncategorized and applies
+# the corrected rows without recomputing anything.
+skips() {
+    local f="$WORK/ynab-$1.json"
+    if [[ -s "$f" ]]; then jq -c '[.queue[] | select(.transfer_account_id != null) | {id, date, amount, payee: .payee_name, account: .account_name}]' "$f"; else echo '[]'; fi
+}
+jq --argjson ps "$(skips personal)" --argjson as "$(skips atelic)" \
+    '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $as}}' \
+    "$DRAFT_JSON" > "$WORK/plan.json" && ATTACHMENT="$WORK/plan.json"
 
 # The Atelic tables, the Strava sessions, the spend tables, the pull ledger
 # and the apply record are data, not draft: they go in after the model, so

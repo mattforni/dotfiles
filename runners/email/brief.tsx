@@ -687,11 +687,18 @@ const BUDGETS: { key: "personal" | "atelic"; label: string }[] = [
 
 type Tally = { budget: string; category: string; count: number; total: number };
 
-/** The high rows by category, Personal first, each with its count and its total. */
+/**
+ * The handled rows by category, Personal first, each with its count and its
+ * total. With writes on these are the rows the entrypoint actually approved,
+ * so a write that failed or was dropped never shows as handled; with writes
+ * off they are the rows the model banded high, which is what would have been.
+ */
 function moneyTallies(draft: BriefDraft): Tally[] {
+	const handled: { budget?: unknown; category?: unknown; amount?: unknown }[] = writesOn(draft)
+		? list(draft.applied?.ynab)
+		: list(draft.money?.rows).filter((row) => band(row) === "high");
 	const tallies: Tally[] = [];
-	for (const row of list(draft.money?.rows)) {
-		if (band(row) !== "high") continue;
+	for (const row of handled) {
 		const budget = str(row.budget);
 		const category = str(row.category);
 		const found = tallies.find((tally) => tally.budget === budget && tally.category === category);
@@ -795,10 +802,19 @@ function inboxRows(draft: BriefDraft, which: string): InboxRow[] {
 	return list(draft.inbox?.rows).filter((row) => band(row) === which);
 }
 
-/** The high rows grouped by the rule that handled them, in the order the rules first appear. */
+/**
+ * The handled messages grouped by the rule that handled them, in the order
+ * the rules first appear. With writes on these are the messages the
+ * entrypoint moved, each traced back to its row for the rule; with writes off
+ * they are the rows the model banded high.
+ */
 function inboxTallies(draft: BriefDraft): { rule: string; count: number }[] {
+	const rows = list(draft.inbox?.rows);
+	const handled: InboxRow[] = writesOn(draft)
+		? list(draft.applied?.gmail).map((done) => rows.find((row) => str(row.id) === str(done.id)) ?? { rule: "" })
+		: inboxRows(draft, "high");
 	const tallies: { rule: string; count: number }[] = [];
-	for (const row of inboxRows(draft, "high")) {
+	for (const row of handled) {
 		const rule = str(row.rule) === "" ? "No rule named" : str(row.rule);
 		const found = tallies.find((tally) => tally.rule === rule);
 		if (found) found.count += 1;

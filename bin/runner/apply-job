@@ -123,7 +123,7 @@ live_job() {
                 cpu: $c.resources.limits.cpu,
                 memory: $c.resources.limits.memory,
                 timeout_seconds: ($s.timeoutSeconds | if . == null then null else tonumber end),
-                max_retries: $s.maxRetries,
+                max_retries: ($s.maxRetries // 0),
                 tasks: $t.spec.taskCount,
                 env: ([$c.env[]? | select(has("value")) | {key: .name, value: .value}] | from_entries),
                 secrets: ([$c.env[]? | select(.valueFrom.secretKeyRef != null) | .valueFrom.secretKeyRef as $r

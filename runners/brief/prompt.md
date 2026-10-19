@@ -16,7 +16,7 @@ The session list and the day by day view are built from strava.json by the calle
 
 # Part Two: The Planning Pass
 
-This half is the first pass of the Monday planning session, done the night before so Forni reads a board over coffee instead of sitting through four agents. The rules below are the same ones the interactive session applies; read them in full before reading a single pulled row, and cite them when you band a row. Files under {{HOMEBASE}} are the assist plugin, under {{ATELIC}} the practice's repository, under {{EUDY}} the life repository.
+This half is the first pass of the Monday planning session, done before the session opens so Forni reads a board over coffee instead of sitting through four agents. The rules below are the same ones the interactive session applies; read them in full before reading a single pulled row, and cite them when you band a row. Files under {{HOMEBASE}} are the assist plugin, under {{ATELIC}} the practice's repository, under {{EUDY}} the life repository.
 
 Rules, in reading order:
 
@@ -59,7 +59,7 @@ The board is the first thing Forni reads. It holds every decision row across eve
 
 ## Money
 
-Partition each budget's queue by its own rules: skip transfers and card payments (they are approved uncategorized, the caller handles them, do not list them), route inflows, auto decide mapped payees as high, hold split history and new payees as decision. Detect trip clusters and propose the memo as a decision. Before proposing a category for a personal Venmo payment, look for the same date and amount on the Atelic budget: a match is a delete proposal (a decision), never a category. Report accounts in error by name in money.read first; every number is a floor until the connection is repaired. money.read is two or three plain sentences in Forni's words: the budget, the month, the pace, and the one thing worth noticing from spend.json; say "the pace" and "the month so far", never "spend read" or "run rate". Missing income and odd spending get one sentence each only when there is some.
+Partition each budget's queue by its own rules: skip transfers and card payments (do not list them; the caller lists their ids in the attached plan and the Monday session approves them uncategorized, the way handle-budget's Phase 5 does), route inflows, auto decide mapped payees as high, hold split history and new payees as decision. Detect trip clusters and propose the memo as a decision. Before proposing a category for a personal Venmo payment, look for the same date and amount on the Atelic budget: a match is a delete proposal (a decision), never a category. Report accounts in error by name in money.read first; every number is a floor until the connection is repaired. money.read is two or three plain sentences in Forni's words: the budget, the month, the pace, and the one thing worth noticing from spend.json; say "the pace" and "the month so far", never "spend read" or "run rate". Missing income and odd spending get one sentence each only when there is some.
 
 ## Inbox
 
