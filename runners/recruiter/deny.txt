@@ -42,3 +42,9 @@ ChargePoint
 Mill
 Span
 Molg
+
+# Kind three, employers Forni has declined by name: the card is accurate and
+# the role may qualify, but he does not want to work there. Never recheck;
+# only he takes one off.
+Temporal
+Temporal Technologies
