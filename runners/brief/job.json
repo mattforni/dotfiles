@@ -34,7 +34,7 @@
   "schedule": {
     "name": "brief",
     "location": "us-central1",
-    "cron": "30 5 * * 1",
+    "cron": "0 0 * * 1",
     "time_zone": "America/Denver",
     "attempt_deadline": "180s",
     "state": "ENABLED",
