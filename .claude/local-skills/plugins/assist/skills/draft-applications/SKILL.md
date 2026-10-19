@@ -16,7 +16,7 @@ Read before drafting; none of this is duplicated here:
 - **The profile**: `~/Eudaimonia/Craft/Vocation/README.md`. Background, compensation expectations, role fit tiers. The source for every credential claim in a cover letter.
 - **The plan**: `~/Eudaimonia/Craft/Vocation/Plans/FY27-H2.md`. The positioning frame (Mission Growth Engineering) and the weekly cadence the queue serves.
 - **Voice and email practices**: the life level voice core is `~/Eudaimonia/VOICE.md`, overlaid in register order by `~/Eudaimonia/Admin/Tools/email.md` and `~/Eudaimonia/Craft/Vocation/CLAUDE.md` (Vocation Email Practices, Negotiation Philosophy). Job search notes carry no sign off line at all (Follow Up Email below), unlike the email.md default.
-- **The outreach template**: `~/Eudaimonia/Craft/Vocation/templates/07-job-posting-cold-outreach.md` for the follow up email.
+- **The outreach template**: `~/Eudaimonia/Craft/Vocation/templates/07-job-posting-cold-outreach.md` for the follow up email's mechanics; the Follow Up Email section below supersedes it on the note's shape, close, and sign off.
 - **The standing form answers**: the Standing Form Answers table in `~/Eudaimonia/Craft/Vocation/work-history.md` holds the eligibility screeners and voluntary self identification answers every ATS form asks. Fill from it, and ask only when a form's wording departs from the question as written there.
 
 ## The Motion (One Role at a Time)
@@ -32,7 +32,7 @@ Bracket the drain with the session timer per Session Timers in `~/Eudaimonia/Adm
 5. **Draft the cover letter** (250 to 350 words, structure below).
 6. **Draft responses** to every application question the posting asks.
 7. **Find the hiring manager** (search order below).
-8. **Draft the follow up email** from template 07 as a Gmail draft (`gws gmail +send --draft --html`), then add the label `🛠️ Craft/💼 Vocation` with `users messages modify` on the draft's message id, since a draft refuses labels at create (the July 2026 taxonomy; the old Craft and RYLLC labels no longer exist). The draft carries no Gmail signature; `~/Eudaimonia/Admin/Tools/gws.md` has the recipe. **Draft only, never send:** outbound email to any human requires Forni's explicit approval of the exact final artifact, every time.
+8. **Draft the follow up email** from template 07, with the note shaped per the Follow Up Email section below, as a Gmail draft (`gws gmail +send --draft --html`), then add the label `🛠️ Craft/💼 Vocation` with `users messages modify` on the draft's message id, since a draft refuses labels at create (the July 2026 taxonomy; the old Craft and RYLLC labels no longer exist). The draft carries no Gmail signature; `~/Eudaimonia/Admin/Tools/gws.md` has the recipe. **Draft only, never send:** outbound email to any human requires Forni's explicit approval of the exact final artifact, every time.
 9. **Present the package** and stop. Forni reviews, submits in the portal, and says so.
 10. **On his confirmation only**, two calls in this order: log the application activity, `pinole work activities log --on <date> --kind application --employer "<Company>" --position "<Role>" --url <posting url> --posting <id> --channel "Online (<ATS>)"`, then mark the posting applied, `pinole work postings update <id> --status applied` (the API stamps `applied_on` itself). An email only application takes `--channel Email` instead. A hiring manager becomes a HubSpot contact only when a real relationship forms.
 
