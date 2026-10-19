@@ -526,16 +526,16 @@ if [[ "$BRIEF_WRITE" == "1" && "$DRY_RUN" != "1" && "$SKIP_PULLS" != "1" ]]; the
     # the pulls and the model call together can outrun, so they are minted
     # again here; a failure costs the inbox moves, never the mail.
     google_tokens || { echo "apply: $fail_reason; the inbox moves stay proposed"; fail_reason=""; PERSONAL_TOKEN=""; ATELIC_TOKEN=""; }
-    jq '[.money.rows[] | select((.band | ascii_downcase) == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
-    jq '[.inbox.rows[] | select((.band | ascii_downcase) == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
+    jq '[.money.rows[] | select((.band // "" | ascii_downcase) == "high") | {budget, id, category, memo}]' "$DRAFT_JSON" > "$WORK/apply-ynab.json"
+    jq '[.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and (.action == "label" or .action == "archive")) | {mailbox, id, labels: (.labels // []), archive: (.action == "archive")}]' "$DRAFT_JSON" > "$WORK/apply-gmail.json"
     # A high row the apply never tries is still accounted for: an action the
     # runner never performs (a star, a trash, a task) and, with no YNAB key,
     # every money row. Each lands in dropped with its reason, so the mail
     # never shows a high row as handled that nothing touched.
     jq --arg nokey "$([[ -n "${YNAB_API_KEY:-}" ]] && echo 0 || echo 1)" '
-        [.inbox.rows[] | select((.band | ascii_downcase) == "high" and (.action != "label" and .action != "archive"))
+        [.inbox.rows[] | select((.band // "" | ascii_downcase) == "high" and (.action != "label" and .action != "archive"))
             | {kind: "gmail", id, reason: ("the runner never performs \(.action); the Monday session does")}]
-        + (if $nokey == "1" then [.money.rows[] | select((.band | ascii_downcase) == "high") | {kind: "ynab", id, reason: "no YNAB key in the environment, so the row stays proposed"}] else [] end)' \
+        + (if $nokey == "1" then [.money.rows[] | select((.band // "" | ascii_downcase) == "high") | {kind: "ynab", id, reason: "no YNAB key in the environment, so the row stays proposed"}] else [] end)' \
         "$DRAFT_JSON" > "$WORK/apply-skipped.json"
     echo '{"ynab": [], "dropped": []}' > "$WORK/ynab-applied.json"
     echo '{"gmail": [], "dropped": []}' > "$WORK/gmail-applied.json"
@@ -568,7 +568,7 @@ skips() {
 }
 jq --argjson ps "$(skips personal)" --argjson as "$(skips atelic)" \
     '{personal: [.money.rows[] | select(.budget == "Personal")], atelic: [.money.rows[] | select(.budget == "Atelic")], deletes: (.money.deletes // []), trips: (.money.trips // []), skips: {personal: $ps, atelic: $as},
-      inbox: [.inbox.rows[] | select((.band | ascii_downcase) != "decision") | {mailbox, id, thread_id, from, subject, action, labels: (.labels // []), star, band, rule}]}' \
+      inbox: [.inbox.rows[] | select((.band // "" | ascii_downcase) != "decision") | {mailbox, id, thread_id, from, subject, action, labels: (.labels // []), star, band, rule}]}' \
     "$DRAFT_JSON" > "$WORK/plan.json" && ATTACHMENT="$WORK/plan.json"
 
 # The Atelic tables, the Strava sessions, the spend tables, the pull ledger

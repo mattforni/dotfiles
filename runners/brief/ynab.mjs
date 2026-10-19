@@ -48,8 +48,10 @@ export const RECURRING_MONTHS = Number(process.env.YNAB_RECURRING_MONTHS || 3);
 // Read exclusions); matched on the category name containing the word.
 export const EXCLUDED_WORDS = (process.env.YNAB_EXCLUDED_CATEGORIES || "Adventure,Legal,Home Improvement")
     .split(",").map((s) => s.trim()).filter(Boolean);
-// Memos that start with an emoji but are not trips.
-export const NON_TRIP_MEMOS = (process.env.YNAB_NON_TRIP_MEMOS || "Business Coffee,Client Coffee,Coffee,Sold ,HSA ,w/ ")
+// Memos that start with an emoji but are not trips: matched at the start of
+// the words after the emoji, never anywhere inside, so a trip named
+// "🇹🇭 Thailand w/ Jas" stays a trip.
+export const NON_TRIP_MEMOS = (process.env.YNAB_NON_TRIP_MEMOS || "Business Coffee,Client Coffee,Sold ,HSA ,w/ ")
     .split(",").filter(Boolean);
 
 export const RULE = `Typical spend is every categorized row this month except outliers and trips; the pace is the average of the three full months before it, prorated to today. An outlier is a single charge of $${OUTLIER_DOLLARS} or more from a payee seen in fewer than ${RECURRING_MONTHS} months of the window, so the mortgage and the HOA stay typical. A trip is any row whose memo opens with an emoji and a name. ${EXCLUDED_WORDS.join(", ")} never count as typical on Personal.`;
@@ -194,7 +196,7 @@ export const isTripMemo = (memo) => {
     if (!EMOJI_START.test(m)) return false;
     const rest = m.replace(/^[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}‍️\s]+/u, "");
     if (!/^[A-Z]/.test(rest)) return false;
-    return !NON_TRIP_MEMOS.some((x) => rest.startsWith(x.trim()) || m.includes(x));
+    return !NON_TRIP_MEMOS.some((x) => rest.startsWith(x.trimStart()));
 };
 
 /**

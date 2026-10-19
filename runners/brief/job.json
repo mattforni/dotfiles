@@ -12,7 +12,7 @@
     "tasks": 1,
     "env": {
       "BRIEF_WRITE": "0",
-      "REPORT_RECIPIENT": "mattforni@gmail.com",
+      "REPORT_RECIPIENT": "@recipient",
       "TZ": "America/Denver"
     },
     "secrets": {

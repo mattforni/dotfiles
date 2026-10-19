@@ -156,14 +156,25 @@ const mailboxFile = (outDir, name) => join(outDir, `inbox-${name}.json`);
 async function pull(outDir) {
     mkdirSync(outDir, { recursive: true });
     const addresses = addressesFromEnv();
+    let read = 0, failed = 0;
     for (const [name, token] of MAILBOXES) {
         if (!token) {
             log(`${name}: no token in the environment, skipped`);
             continue;
         }
-        const box = await pullMailbox(name, token, addresses[name] || "");
-        writeFileSync(mailboxFile(outDir, name), JSON.stringify({ mailbox: name, pulled_at: new Date().toISOString(), ...box }, null, 1));
+        // One mailbox failing costs that mailbox, not the other: its file is
+        // simply absent, which the entrypoint's ledger and the prompt both
+        // read as not read. Both failing fails the pull.
+        try {
+            const box = await pullMailbox(name, token, addresses[name] || "");
+            writeFileSync(mailboxFile(outDir, name), JSON.stringify({ mailbox: name, pulled_at: new Date().toISOString(), ...box }, null, 1));
+            read += 1;
+        } catch (e) {
+            log(`${name}: not read, ${String(e.message).slice(0, 160)}`);
+            failed += 1;
+        }
     }
+    if (read === 0 && failed > 0) throw new Error("no mailbox could be read");
 }
 
 function readMailbox(outDir, name) {
@@ -182,9 +193,10 @@ async function apply(outDir, rowsPath) {
     const applied = [];
     const dropped = [];
     for (const r of rows) {
-        const box = readMailbox(outDir, r.mailbox);
-        const token = tokens[r.mailbox];
-        if (!box || !token) { dropped.push({ kind: "gmail", id: r.id, reason: `mailbox ${r.mailbox} was not pulled this run` }); continue; }
+        const mailbox = String(r.mailbox || "").toLowerCase();
+        const box = readMailbox(outDir, mailbox);
+        const token = tokens[mailbox];
+        if (!box || !token) { dropped.push({ kind: "gmail", id: r.id, reason: `mailbox ${mailbox} was not pulled this run` }); continue; }
         const msg = box.messages.find((m) => m.id === r.id);
         if (!msg) { dropped.push({ kind: "gmail", id: r.id, reason: "not in the inbox this run" }); continue; }
         const byName = new Map(box.labels.map((l) => [l.name, l.id]));
@@ -195,7 +207,7 @@ async function apply(outDir, rowsPath) {
             if (!id) { missing = name; break; }
             add.push(id);
         }
-        if (missing) { dropped.push({ kind: "gmail", id: r.id, reason: `label ${missing} not found in the ${r.mailbox} mailbox` }); continue; }
+        if (missing) { dropped.push({ kind: "gmail", id: r.id, reason: `label ${missing} not found in the ${mailbox} mailbox` }); continue; }
         // The one hard rule in the sender rules, enforced here as well as in
         // the prompt: unemployment insurance mail is deadline bearing and is
         // never archived unread by a machine, whatever band it was given.
@@ -222,7 +234,7 @@ async function apply(outDir, rowsPath) {
                 if (strangers.length > 0) { dropped.push({ kind: "gmail", id: r.id, reason: `the thread holds ${strangers.length} message${strangers.length === 1 ? "" : "s"} from another sender; the session decides` }); continue; }
             }
             await gmail(token, `threads/${msg.thread_id}/modify`, { method: "POST", body: { addLabelIds: add, removeLabelIds: remove } });
-            applied.push({ mailbox: r.mailbox, id: r.id, subject: msg.subject, from: msg.from, labels: r.labels || [], archived: Boolean(r.archive) });
+            applied.push({ mailbox, id: r.id, subject: msg.subject, from: msg.from, labels: r.labels || [], archived: Boolean(r.archive) });
         } catch (e) {
             dropped.push({ kind: "gmail", id: r.id, reason: String(e.message).slice(0, 160) });
         }

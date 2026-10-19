@@ -34,6 +34,8 @@ test("a trip memo opens with an emoji and a name; the practice's memo convention
     assert.equal(isTripMemo("☕️ Business Coffee"), false);
     assert.equal(isTripMemo("☕️ Client Coffee"), false);
     assert.equal(isTripMemo("🤝 w/ Titus, working dinner"), false);
+    assert.equal(isTripMemo("🇹🇭 Thailand w/ Jas"), true);
+    assert.equal(isTripMemo("🇮🇹 Italy Coffee Tour"), true);
     assert.equal(isTripMemo("🪙 Sold ETH"), false);
     assert.equal(isTripMemo("🏥 HSA premium reimbursement"), false);
     assert.equal(isTripMemo("groceries for the week"), false);
