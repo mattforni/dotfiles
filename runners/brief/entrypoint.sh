@@ -272,9 +272,15 @@ vault_write_back() {
 PERSONAL_TOKEN=""
 ATELIC_TOKEN=""
 google_tokens() {
-    PERSONAL_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_PERSONAL_JSON")" || { fail_reason="personal Google token: $fail_reason"; return 1; }
+    # google_access_token sets fail_reason inside the command substitution,
+    # where it cannot reach this shell, so the reason is spelled out here.
+    if [[ -z "$GWS_OAUTH_TOKEN_PERSONAL_JSON" ]]; then
+        fail_reason="no GWS_OAUTH_TOKEN_PERSONAL_JSON (or GWS_OAUTH_TOKEN_JSON) in the environment"
+        return 1
+    fi
+    PERSONAL_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_PERSONAL_JSON")" || { fail_reason="the personal Google token could not be refreshed; the vaulted authorized_user JSON may be revoked or stale"; return 1; }
     if [[ -n "${GWS_OAUTH_TOKEN_ATELIC_JSON:-}" ]]; then
-        ATELIC_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_ATELIC_JSON")" || { echo "atelic Google token: $fail_reason"; fail_reason=""; ATELIC_TOKEN=""; }
+        ATELIC_TOKEN="$(google_access_token "$GWS_OAUTH_TOKEN_ATELIC_JSON")" || { echo "atelic Google token: could not be refreshed; the Atelic inbox is not read this run"; ATELIC_TOKEN=""; }
     fi
 }
 
@@ -397,7 +403,9 @@ if [[ "$SKIP_PULLS" == "1" ]]; then
         [[ -f "$WORK/$cached" ]] || { fail_reason="SKIP_PULLS is set but $WORK/$cached is missing; run once without it"; exit 1; }
     done
     [[ -f "$EUDY/$BLOCK_DOC" ]] || { fail_reason="SKIP_PULLS is set but the Eudaimonia clone at $EUDY has no $BLOCK_DOC; run once without it"; exit 1; }
-    [[ -f "$HOMEBASE/$HOMEBASE_RULES" ]] || { fail_reason="SKIP_PULLS is set but no homebase checkout is at $HOMEBASE; run once without it"; exit 1; }
+    # The rules clone is keyless and cheap, so a reused run still makes it
+    # when none is on disk; the model reads the rules as they stand today.
+    homebase_pull || exit 1
     rm -f "$PULLS_JSON.lines"
     if [[ "${PLANNING_PULLS:-0}" == "1" ]]; then
         # The retro half's pulls are what rotate a token and cost a HubSpot

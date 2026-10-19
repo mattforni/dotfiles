@@ -4,3 +4,6 @@
 # here runs the funnel rules of the checkout on this machine and needs no
 # secret this machine lacks.
 $HOME/Eudaimonia/Craft/Vocation/Atelic:/home/runner/Eudaimonia/Craft/Vocation/Atelic:ro
+# The homebase checkout on this machine, mounted read only, so a local run
+# reads the planning rules from here instead of cloning the public repo.
+$HOME/Eudaimonia/Craft/Development/personal/homebase:/home/runner/Eudaimonia/Craft/Development/personal/homebase:ro
