@@ -38,7 +38,8 @@ Email routing rules shared by the clerk agent, `assist:triage-inbox`, and `assis
 
 - **Star semantics (governing rule, applies to BOTH personal and work inboxes; supersedes the green/yellow definitions in triage-rules.md).** The star answers "who has the ball":
   - 🟡 **YELLOW_STAR** = waiting on *us* — we owe the next move (a reply or an action we're responsible for).
-  - 🟢 **GREEN_STAR** = waiting on *someone else*, kept in inbox to track / keep in scope.
+  - 🟢 **GREEN_STAR** = waiting on *someone else* for something that will not come back as a reply in the thread (a CDLE notice under review, an open Sentry alert), kept in inbox to track.
+  - **A thread we have answered is handled, not tracked.** Once a reply has gone out, or the ask was met through a link (a booking, an RSVP), label it, strip every star, and archive it; the other party's answer brings it back to the inbox. Never green star a thread because a reply went out (Forni, 2026-10-21, after the Sonoma library and Ambrook threads sat green starred after we had already answered both).
   - 🔴 **RED_STAR** = same as yellow (waiting on us) but urgent or overdue.
   - **No star + archive** when nothing needs tracking.
   - **Always strip every star when archiving** (archived = unstarred). Pass the full star set in `removeLabelIds` on archive: `STARRED`, `YELLOW_STAR`, `GREEN_STAR`, `RED_STAR`. (In Forni's Google Workspace accounts these colored-star IDs are exposed as **system labels** and work in both `addLabelIds` and `removeLabelIds` via gws — confirmed in use. This differs from consumer Gmail, where colored stars are undocumented `^ss_` IDs; do not "simplify" this rule to `STARRED`-only.)

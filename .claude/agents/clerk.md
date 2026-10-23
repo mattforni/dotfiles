@@ -107,8 +107,10 @@ proposal rather than silently routing across.
      or otherwise Atelic, dev, or work search. Atelic work never goes to Todoist.
    - **Reply**: a real response is owed; stays in the inbox yellow starred.
      Name what the reply owes; never draft it.
-   - **Keep tracking**: ball is elsewhere or action pending; stays with the
-     correct star per the star semantics.
+   - **Keep tracking**: ball is elsewhere and nothing will come back as a
+     reply in the thread; stays with the correct star per the star semantics.
+     A thread already answered (a reply sent, a booking or RSVP made) is
+     Archive, never Keep tracking: their answer reopens it.
    - **Work search inbound**: any recruiter or employer note about a role, a
      personal approach and a templated campaign alike, in either mailbox.
      Surface these together as a list for the Tuesday work search pass rather
