@@ -61,10 +61,10 @@ Same conflict handling: stop on conflict, do not proceed to setup.sh.
 
 setup.sh installs Claude plugins from cached marketplace clones at `~/.claude/plugins/marketplaces/`, not from source repos directly. If any clone lags behind its remote, setup.sh installs stale plugin contents and recently merged skills do not appear after Claude Code restarts. Claude Code does not auto refresh these clones; mise owns keeping them current.
 
-This sync is purely mechanical, so it lives in a committed script rather than in this prose. Run it from the homebase path:
+This sync is purely mechanical, so it lives in a committed script rather than in this prose. Run it by its deployed path, exactly as written, so it matches its allow rule:
 
 ```bash
-./bin/sync-marketplaces
+~/bin/sync-marketplaces
 ```
 
 The script iterates every clone, skips non git directories (`claude-plugins-official` is a flat manifest) and scratch `temp_*` clones, detects each clone's default branch, fast forwards it, and hard resets to the remote when a clone has drifted. It always exits 0 so one broken clone never blocks the rest, and it prints one status line per clone plus a final aggregate.
@@ -77,13 +77,13 @@ Why this was extracted into a script: the headless run (`bin/run-mise`) pre-allo
 
 ### Step 4: Run setup.sh
 
-From the homebase path, run `./setup.sh` in the foreground so Forni sees output. If it exits non-zero, capture the tail of stderr and stop; do not retry. setup.sh is idempotent, so the right fix for a transient failure is usually to resolve the root cause and re-run mise, not to auto-retry.
+Run `~/Eudaimonia/Craft/Development/personal/homebase/setup.sh` by that path, exactly as written so it matches its allow rule, in the foreground so Forni sees output (setup.sh finds its own directory, so the cwd does not matter). If it exits non-zero, capture the tail of stderr and stop; do not retry. setup.sh is idempotent, so the right fix for a transient failure is usually to resolve the root cause and re-run mise, not to auto-retry.
 
 ### Step 5: Summary
 
 One compact report:
 
-- per repo (Eudy, Homebase): branch name at start, stash applied? (and whether the pop was clean), merge from `origin/main` applied? (for non-main case)
+- per repo (Eudy, Homebase): commits pulled, and whether local edits were autostashed and reapplied
 - marketplaces: aggregate counts plus one line per clone that needed a reset (called out by name with the reason)
 - setup.sh outcome
 
@@ -91,36 +91,24 @@ Keep it short. A handful of lines. If everything was already up to date and setu
 
 ## Sync Routine
 
-Given a repo path `$REPO`:
+Given a repo path `$REPO`, written out as a literal path (never a variable) in every command:
+
+**Through the gates.** Both targets are primary checkouts, where the worktree gate hook denies `stash`, `commit`, `checkout`, and `reset`, and the auto mode classifier refuses `WT_GATE_BYPASS=1`. So every command mise runs is one plain command whose first word matches an allow rule: `git -C <repo> ...` (the `Bash(git:*)` rule), `~/bin/sync-marketplaces`, and the setup.sh path. Never stash, never prefix the bypass, never chain commands with `&&`, and never wrap git in an inline loop. A refused command is a stop, reported as it stands.
 
 ### If on `main`
 
-1. Check for dirty tree: `git -C "$REPO" status --porcelain`. Remember whether it was dirty.
-2. If dirty, stash with a tagged message: `git -C "$REPO" stash push -u -m "mise auto-stash $(date -Iseconds)"`.
-3. `git -C "$REPO" pull --ff-only origin main`.
-4. If we stashed, `git -C "$REPO" stash pop`. If the pop reports conflicts, leave the conflict state, abort mise immediately, and surface the details in the summary — do not attempt to resolve, do not proceed to the next repo, and do not run `setup.sh`. A conflicted pop means the working tree has unresolved markers; deploying that state via `setup.sh` would land broken config into `$HOME`.
+1. `git -C <repo> pull --ff-only --autostash origin main`. One command: `--autostash` sets aside any tracked edits and puts them back after the fast forward, and untracked files stay where they are. Neither needs a stash on the primary.
+2. If the pull refuses (main diverged, an incoming file would overwrite an untracked one, or the autostash cannot reapply cleanly), stop mise and surface git's message in the summary. Do not resolve it, do not continue to the next repo, and do not run setup.sh, which would deploy a half merged tree into `$HOME`.
 
-### If on a non-main branch
+### If on any other branch
 
-The user is mid-feature on this repo. The goal is to preserve any in-flight work, bring main current, and merge main forward so the branch keeps pace.
-
-1. Check for dirty tree: `git -C "$REPO" status --porcelain`.
-2. **If dirty**, save the work in progress on the branch: stage it, commit it with a `WIP` message, and push, with no PR. Run every command as `git -C "$REPO"` so it lands in the right repo.
-3. **If clean**, skip the WIP commit entirely. A clean feature branch (e.g., one with an open PR that's awaiting review) should flow straight to the merge step.
-4. Fetch and merge main into the current branch:
-
-   ```bash
-   git -C "$REPO" fetch origin main
-   git -C "$REPO" merge origin/main
-   ```
-
-5. If the merge surfaces conflicts, leave the branch in the conflicted state and abort mise. Forni resolves the merge; he can rerun mise after.
+A primary checkout lives on main; a branch belongs in a worktree. Stop mise and name the repo and its branch, so Forni can move the work into a worktree and switch the primary back to main. Committing or switching branches on a primary is exactly what the gate denies.
 
 ## Why each edge case matters
 
 - **Worktree abort:** In a worktree, the current session's cwd and branch are deliberately detached from main. Running mise here would either re-sync main in the parent checkout (leaving the worktree diverged) or silently pull the worktree's branch (surprising). Cleaner to refuse.
-- **Stash-pop over force-reset:** Dirty working tree on main is almost always half-finished editing, not intentional divergence. Stash preserves it; pop restores it. Conflict on pop is rare but recoverable.
-- **Checkpoint + merge-main over rebase:** On a feature branch, mise keeps the branch alive and in sync rather than rewriting history. Forni's preference is to preserve WIP commits (even ugly ones) and merge main forward. Rebasing would rewrite what was already pushed by checkpoint.
+- **Autostash over a hand stash:** a dirty tree on main is almost always half finished editing. `--autostash` preserves it inside the one pull command, which the gate allows, where a separate `git stash` on a primary is denied.
+- **Stop on a branch:** a primary checkout off main is work that belongs in a worktree. Mise used to commit WIP and merge main forward there, which needs a commit on a primary, and the gate denies that.
 - **Stop on conflict:** Running setup.sh on a repo in a conflicted state would deploy half-merged config into `$HOME`. Better to stop.
 - **Pull every marketplace clone:** Every clone under `~/.claude/plugins/marketplaces/` is the cache that backs its plugin installs. Skipping pulls means setup.sh installs prior versions of those plugins even when their source repos have newer ones. The first time this matters, Forni notices a freshly merged skill missing after restart; the rule prevents that. This includes external mirrors (superpowers, anthropic skills, etc.) — Claude Code does not auto refresh them.
 - **Auto reset on drift instead of abort:** Marketplace clones are caches, not user work. When a clone has diverged from its remote (local merge artifact from a prior install, history rewrite upstream, etc.), the right move is `reset --hard origin/<default>` and log it. Aborting mise leaves the clone permanently stale and forces manual cleanup. The 2026-05-12 incident — `~/.claude/plugins/marketplaces/skillset` stuck 235 commits behind on a local merge SHA, sdlc:design running the v2.0.0 instructions with no `EnterWorktree` call — is exactly what this guards against. Log the reset loudly so Forni sees it happened.
@@ -132,7 +120,7 @@ The user is mid-feature on this repo. The goal is to preserve any in-flight work
 Mise complete ✓
 
 Eudy (main): pulled, already up to date
-Homebase (main): pulled 2 commits, stash popped clean
+Homebase (main): pulled 2 commits, local edits autostashed and reapplied
 Marketplaces (6 total): 4 pulled, 1 reset (skillset — drift), 1 already current
 setup.sh: ✓ (brew cache warm, no changes)
 ```
@@ -159,7 +147,7 @@ Resolve the merge and re-run /assist:mise.
 
 ## Anti-patterns
 
-- Do not stash on a non-main branch. Commit the work in progress to the branch instead, which is what Forni expects to find when he resumes.
+- Do not stash, commit, or switch branches on a primary checkout, and do not reach for `WT_GATE_BYPASS=1`. The gate denies the first three and the classifier refuses the last; `pull --ff-only --autostash` is the whole sync.
 - Do not modify `origin` remotes or branches. mise is a local-station operation.
 - Do not skip setup.sh because "nothing changed". Brewfile updates and plugin manifest tweaks are common and cheap to apply.
 - Do not surface setup.sh's full stdout in the summary. Point at where the output went; keep the summary scannable.
