@@ -55,6 +55,8 @@
       "Bash(unzip:*)",
       "Bash(vercel:*)",
       "Bash(wc:*)",
+      "Bash(~/bin/sync-marketplaces)",
+      "Bash(~/Eudaimonia/Craft/Development/personal/homebase/setup.sh)",
       "Bash(ynab:*)",
       "Read(//$HOME/**)",
       "Skill(assist:*)",
